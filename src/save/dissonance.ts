@@ -1,0 +1,96 @@
+import { formatNumberForDisplay } from '../formatting/index'
+import { DISSONANCE_TYPE_KEYS, type DissonanceTypeKey } from '../internal/dissonance-calcs-local-state'
+import { type SharedDissonanceCalculatorState } from '../internal/shared-tool-inputs-extended'
+import {
+  deriveDissonanceCalculatorStateFromSaveRoot,
+  DISSONANCE_BOOST_SAVE_FIELD_BY_TYPE,
+  readDissonanceBoostWavesByTypeFromSaveRoot,
+} from './shared-tool-inputs-from-save-extended'
+import { MAX_CAMPAIGN_TIER } from '../data/campaign-tier'
+
+export interface DissonanceTierPreviewRow {
+  tier: number
+  attack: string
+  defense: string
+  utility: string
+  uw: string
+  hasData: boolean
+}
+
+export interface DissonanceSaveExtract {
+  tierRows: DissonanceTierPreviewRow[]
+  tiersWithData: number
+  warnings: string[]
+  derived: Partial<SharedDissonanceCalculatorState>
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object' && !Array.isArray(value)
+}
+
+function formatWaveValue(wave: number, isMax: boolean): string {
+  if (wave <= 0) return '—'
+  const formatted = formatNumberForDisplay(wave)
+  return isMax ? `${formatted} (max)` : formatted
+}
+
+function buildTierPreviewRowFromDerived(
+  tier: number,
+  derived: Partial<SharedDissonanceCalculatorState>,
+): DissonanceTierPreviewRow {
+  const key = String(tier)
+  const waves = derived.wavesByTier?.[key]
+  const maxFlags = derived.maxByTier?.[key]
+
+  const cell = (type: DissonanceTypeKey) => {
+    const wave = waves?.[type] ?? 0
+    if (wave <= 0) return '—'
+    return formatWaveValue(wave, maxFlags?.[type] ?? false)
+  }
+
+  const hasData = waves != null && DISSONANCE_TYPE_KEYS.some(type => (waves[type] ?? 0) > 0)
+
+  return {
+    tier,
+    attack: cell('attack'),
+    defense: cell('defense'),
+    utility: cell('utility'),
+    uw: cell('uw'),
+    hasData,
+  }
+}
+
+export function extractDissonanceFromSaveRoot(root: unknown): DissonanceSaveExtract | null {
+  if (!isRecord(root)) return null
+
+  const warnings: string[] = []
+  const boostSourceFields = Object.values(DISSONANCE_BOOST_SAVE_FIELD_BY_TYPE)
+  const missingBoostFields = boostSourceFields.filter(field => root[field] == null)
+  if (missingBoostFields.length === boostSourceFields.length) {
+    warnings.push('No dissonance wave data found in this save.')
+  }
+
+  readDissonanceBoostWavesByTypeFromSaveRoot(root)
+  const derived = deriveDissonanceCalculatorStateFromSaveRoot(root)
+
+  const tierRows = Array.from({ length: MAX_CAMPAIGN_TIER }, (_, index) =>
+    buildTierPreviewRowFromDerived(index + 1, derived),
+  )
+  const tiersWithData = tierRows.filter(row => row.hasData).length
+
+  if (tiersWithData === 0 && warnings.length === 0) {
+    warnings.push('No dissonance wave data found in this save.')
+  }
+
+  return {
+    tierRows,
+    tiersWithData,
+    warnings,
+    derived,
+  }
+}
+
+export function canImportDissonanceFromSave(extract: DissonanceSaveExtract | null | undefined): boolean {
+  if (!extract) return false
+  return extract.tiersWithData > 0 || extract.derived.echoLabsLocked === false
+}

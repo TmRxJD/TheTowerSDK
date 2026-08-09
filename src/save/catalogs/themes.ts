@@ -1,0 +1,36 @@
+import {
+  IMPORT_CATALOG_META,
+  THEME_CATALOG,
+} from './indexes'
+
+export type ThemeCatalogCategory = 'tower' | 'background' | 'menu' | 'profileBanner' | 'guardian' | 'song'
+
+export interface ThemeCatalogRow {
+  category: ThemeCatalogCategory
+  catalogIndex: number
+  name: string
+  label: string
+}
+
+const themeRows = (): readonly ThemeCatalogRow[] =>
+  THEME_CATALOG as unknown as readonly ThemeCatalogRow[]
+
+export function listThemeCatalogRows(): readonly ThemeCatalogRow[] {
+  return themeRows()
+}
+
+export function listThemeCatalogRowsByCategory(category: ThemeCatalogCategory): readonly ThemeCatalogRow[] {
+  return themeRows().filter(row => row.category === category)
+}
+
+export function resolveThemeCatalogLabel(category: ThemeCatalogCategory, catalogIndex: number): string | null {
+  return themeRows().find(row => row.category === category && row.catalogIndex === catalogIndex)?.label ?? null
+}
+
+export function isThemeCatalogPopulated(): boolean {
+  return IMPORT_CATALOG_META.populated.themes && themeRows().length > 0
+}
+
+export function buildThemeCatalogLookup(): ReadonlyMap<string, ThemeCatalogRow> {
+  return new Map(themeRows().map(row => [`${row.category}:${row.catalogIndex}`, row]))
+}

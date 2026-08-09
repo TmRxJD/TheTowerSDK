@@ -1,0 +1,15 @@
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const dir = path.dirname(fileURLToPath(import.meta.url))
+const assets = ['data/workshop.json']
+
+for (const rel of assets) {
+  const from = path.resolve(dir, '../src', rel)
+  const to = path.resolve(dir, '../dist', rel)
+  if (!fs.existsSync(from)) throw new Error(`[sdk] missing asset ${from}`)
+  fs.mkdirSync(path.dirname(to), { recursive: true })
+  fs.copyFileSync(from, to)
+  console.log(`[sdk] copied asset ${rel}`)
+}

@@ -1,0 +1,44 @@
+TheTowerSDK
+Copyright (c) 2026 TmRxJD
+
+This product includes work derived from other open source projects.
+
+
+-------------------------------------------------------------------------------
+tower-idle-toolkit
+-------------------------------------------------------------------------------
+
+https://github.com/tower-idle-toolkit/tower-idle-toolkit
+https://www.npmjs.com/package/tower-idle-toolkit
+
+Author: skye
+License: ISC (declared in the published package manifest; the repository does
+         not contain a separate LICENSE file)
+
+Derived from tower-idle-toolkit:
+
+  - `src/mechanics/wave-base-empirical-scaling.ts` and
+    `src/mechanics/wave-scaling-regression-profile.ts` — from `statFormula.ts`.
+    The polynomial body, milestone-offset and compound-growth structure, the
+    milestone divisors, and the HP/damage exponent bases originate there.
+    Coefficients have since been refitted and the code restructured, but the
+    approach and several constants are that project's work.
+  - `src/mechanics/damage.ts` — from `damageFormula.ts`.
+  - `src/mechanics/bonuses.ts` — from `plusFormulas.ts`.
+  - `src/formatting/duration.ts` — from `formatTime.ts`.
+
+ISC License:
+
+  Copyright (c) 2023 skye
+
+  Permission to use, copy, modify, and/or distribute this software for any
+  purpose with or without fee is hereby granted, provided that the above
+  copyright notice and this permission notice appear in all copies.
+
+  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+  WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+  MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+  SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+  WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
+  OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+  CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.

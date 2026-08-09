@@ -1,0 +1,39 @@
+import { parseDurationToHours } from '../formatting/index'
+import { labs as staticLabs } from '../data/labs-static'
+
+export function getStaticLabWorkingLevelDurationHours(
+  displayName: string | null | undefined,
+  completedLevel: number,
+  labSpeedLevel = 0,
+): number | null {
+  if (!displayName) return null
+  const lab = staticLabs.find(entry => entry.name === displayName)
+  if (!lab?.levels?.length) return null
+
+  const workingLevel = Math.max(1, Math.floor(Number(completedLevel) || 0) + 1)
+  const levelData = lab.levels.find(entry => entry.level === workingLevel)
+    ?? lab.levels.find(entry => entry.level === completedLevel)
+  if (!levelData) return null
+
+  const baseHours = parseDurationToHours(levelData.time)
+  if (!Number.isFinite(baseHours) || baseHours <= 0) return null
+
+  const normalized = displayName.toLowerCase()
+  const isSpeedLab = normalized.includes('lab speed') || normalized.includes('labs speed')
+  const speedMultiplier = isSpeedLab ? 1 : 1 + Math.max(0, Number(labSpeedLevel) || 0) * 0.02
+  return baseHours / speedMultiplier
+}
+
+export function estimateLabLevelRemainingSeconds(
+  displayName: string | null | undefined,
+  completedLevel: number,
+  percentComplete: number | null | undefined,
+  labSpeedLevel = 0,
+): number | null {
+  const durationHours = getStaticLabWorkingLevelDurationHours(displayName, completedLevel, labSpeedLevel)
+  if (durationHours == null) return null
+
+  const progress = Math.max(0, Math.min(1, Number(percentComplete) || 0))
+  const remainingHours = durationHours * (1 - progress)
+  return Math.max(0, Math.round(remainingHours * 3600))
+}

@@ -1,0 +1,383 @@
+import {
+  type BattleConditionSelection,
+  buildDefaultTournamentBattleConditions,
+  buildStandardTierBattleConditions,
+  ENEMY_STATS_BC_COUNTER_LAB_SLUGS,
+  mergeEnemyStatsBattleConditions,
+} from '../mechanics/battle-condition-config'
+import {
+  ELS_ATTACK_MODULE_SUBSTAT_LABEL,
+  ELS_HEALTH_MODULE_SUBSTAT_LABEL,
+} from '../mechanics/els-module-cluster'
+import {
+  ELS_MODULE_SUBSTAT_NONE,
+  type ElsModuleSubstatRarityChoice,
+  inferElsModuleRarityFromDisplayPct,
+} from '../mechanics/els-calculator-options'
+import type { EnemyWaveEnemyType } from './enemy-wave-stats'
+import {
+  normalizeTierSelection,
+  resolveTierSelection,
+  type TierSelectionInput,
+} from '../data/tournaments'
+import { createNormalizerPersistenceSchema } from './local-persistence-types'
+
+export type EnemyStatsCalcsMode = 'wave' | 'hp' | 'damage' | 'els-path'
+export type EnemyStatsCalcsElsFocus = 'combined' | 'attack' | 'health'
+export type EnemyStatsCalcsTierSelection = TierSelectionInput
+export type EnemyStatsCalcsLabLevels = Record<string, number>
+
+export const ENEMY_STATS_CALCS_RESEARCH_LAB_SLUGS = [
+  'common_enemy_health',
+  'common_enemy_attack',
+  'fast_enemy_health',
+  'fast_enemy_attack',
+  'tank_enemy_health',
+  'tank_enemy_attack',
+  'ranged_enemy_health',
+  'ranged_enemy_attack',
+  'boss_health',
+  'boss_attack',
+  'protector_health',
+  'protector_radius',
+  'ray_enemy_health',
+  'ray_enemy_attack',
+  'vampire_enemy_health',
+  'vampire_enemy_attack',
+  'scatter_enemy_health',
+  'scatter_enemy_attack',
+] as const
+
+export type EnemyStatsCalcsResearchLabSlug = typeof ENEMY_STATS_CALCS_RESEARCH_LAB_SLUGS[number]
+
+const ENEMY_WAVE_TYPES: EnemyWaveEnemyType[] = [
+  'Basic',
+  'Fast',
+  'Tank',
+  'Ranged',
+  'Boss',
+  'Protector',
+  'Vampire',
+  'Scatter',
+  'Ray',
+  'Saboteur',
+  'Commander',
+  'Overcharge',
+]
+
+export type EnemyStatsCalcsLocalState = {
+  mode: EnemyStatsCalcsMode
+  tierSelection: EnemyStatsCalcsTierSelection
+  wave: number
+  reverseEnemyType: EnemyWaveEnemyType
+  targetHpVal: string
+  targetDamageVal: string
+  perkEnemyHpMinus50: boolean
+  perkBossHpX8: boolean
+  perkBossHpMinus70: boolean
+  perkEnemyDmgMinus50: boolean
+  perkEnemyDmgX25: boolean
+  perkRangedDmgX3: boolean
+  healthSkipInput: string
+  attackSkipInput: string
+  enemyLabLevels: EnemyStatsCalcsLabLevels
+  improveTradeOffLabLevel: number
+  bcCounterLabLevels: Record<string, number>
+  battleConditions: BattleConditionSelection[]
+  elsAttackLevel: number
+  elsHealthLevel: number
+  elsEnhancementLevel: number
+  elsReferenceWave: number
+  elsUtilityDiscountPct: number
+  elsEnhancementDiscountPct: number
+  elsEnhancementVaultDiscountPct: number
+  /** Power vault 0.5% Enemy Attack Skip stars (0–3). */
+  elsVaultAttackStars: number
+  /** Power vault 0.5% Enemy Health Skip stars (0–3). */
+  elsVaultHealthStars: number
+  elsModulePrimaryAttackPct: number
+  elsModuleAssistAttackPct: number
+  elsModulePrimaryHealthPct: number
+  elsModuleAssistHealthPct: number
+  elsModulePrimaryAttackRarity: ElsModuleSubstatRarityChoice
+  elsModuleAssistAttackRarity: ElsModuleSubstatRarityChoice
+  elsModulePrimaryHealthRarity: ElsModuleSubstatRarityChoice
+  elsModuleAssistHealthRarity: ElsModuleSubstatRarityChoice
+  elsAssistSubstatEfficiency: number
+  elsLabAttackLevel: number
+  elsLabHealthLevel: number
+  elsFocus: EnemyStatsCalcsElsFocus
+  elsMaxSteps: number
+  elsCoinBudgetVal: string
+  /** ELS path table pagination — `-1` shows all rows. */
+  elsPathItemsPerPage: number
+  elsPathCurrentPage: number
+}
+
+function createDefaultEnemyLabLevels(): EnemyStatsCalcsLabLevels {
+  return Object.fromEntries(ENEMY_STATS_CALCS_RESEARCH_LAB_SLUGS.map(slug => [slug, 0]))
+}
+
+function createDefaultBcCounterLabLevels(): Record<string, number> {
+  return Object.fromEntries(ENEMY_STATS_BC_COUNTER_LAB_SLUGS.map(slug => [slug, 0]))
+}
+
+export const defaultEnemyStatsCalcsLocalState = (): EnemyStatsCalcsLocalState => ({
+  mode: 'wave',
+  tierSelection: 1,
+  wave: 100,
+  reverseEnemyType: 'Basic',
+  targetHpVal: '',
+  targetDamageVal: '',
+  perkEnemyHpMinus50: false,
+  perkBossHpX8: false,
+  perkBossHpMinus70: false,
+  perkEnemyDmgMinus50: false,
+  perkEnemyDmgX25: false,
+  perkRangedDmgX3: false,
+  healthSkipInput: '',
+  attackSkipInput: '',
+  enemyLabLevels: createDefaultEnemyLabLevels(),
+  improveTradeOffLabLevel: 0,
+  bcCounterLabLevels: createDefaultBcCounterLabLevels(),
+  battleConditions: buildDefaultTournamentBattleConditions(),
+  elsAttackLevel: 0,
+  elsHealthLevel: 0,
+  elsEnhancementLevel: 0,
+  elsReferenceWave: 1000,
+  elsUtilityDiscountPct: 0,
+  elsEnhancementDiscountPct: 0,
+  elsEnhancementVaultDiscountPct: 0,
+  elsVaultAttackStars: 0,
+  elsVaultHealthStars: 0,
+  elsModulePrimaryAttackPct: 0,
+  elsModuleAssistAttackPct: 0,
+  elsModulePrimaryHealthPct: 0,
+  elsModuleAssistHealthPct: 0,
+  elsModulePrimaryAttackRarity: ELS_MODULE_SUBSTAT_NONE,
+  elsModuleAssistAttackRarity: ELS_MODULE_SUBSTAT_NONE,
+  elsModulePrimaryHealthRarity: ELS_MODULE_SUBSTAT_NONE,
+  elsModuleAssistHealthRarity: ELS_MODULE_SUBSTAT_NONE,
+  elsAssistSubstatEfficiency: 100,
+  elsLabAttackLevel: 0,
+  elsLabHealthLevel: 0,
+  elsFocus: 'combined',
+  elsMaxSteps: 25,
+  elsCoinBudgetVal: '',
+  elsPathItemsPerPage: 25,
+  elsPathCurrentPage: 1,
+})
+
+function clampNumber(value: unknown, fallback: number, min: number, max: number): number {
+  const numberValue = Number(value)
+  if (!Number.isFinite(numberValue)) return fallback
+  return Math.min(max, Math.max(min, numberValue))
+}
+
+function normalizeMode(value: unknown): EnemyStatsCalcsMode {
+  return value === 'hp' || value === 'damage' || value === 'els-path' ? value : 'wave'
+}
+
+function normalizeElsFocus(value: unknown): EnemyStatsCalcsElsFocus {
+  return value === 'attack' || value === 'health' ? value : 'combined'
+}
+
+const ELS_MODULE_RARITIES: ElsModuleSubstatRarityChoice[] = [
+  ELS_MODULE_SUBSTAT_NONE,
+  'Epic',
+  'Legendary',
+  'Mythic',
+  'Ancestral',
+]
+
+function normalizeElsModuleRarity(
+  value: unknown,
+  legacyPct: unknown,
+  label: string,
+): ElsModuleSubstatRarityChoice {
+  if (typeof value === 'string' && ELS_MODULE_RARITIES.includes(value as ElsModuleSubstatRarityChoice)) {
+    return value as ElsModuleSubstatRarityChoice
+  }
+  return inferElsModuleRarityFromDisplayPct(label, clampNumber(legacyPct, 0, 0, 100))
+}
+
+function normalizeEnemyType(value: unknown): EnemyWaveEnemyType {
+  return ENEMY_WAVE_TYPES.includes(value as EnemyWaveEnemyType)
+    ? (value as EnemyWaveEnemyType)
+    : 'Basic'
+}
+
+function normalizeOptionalSkipCount(value: unknown): number | null {
+  if (value == null || value === '') return null
+  const n = Number(value)
+  if (!Number.isFinite(n) || n < 0) return null
+  return Math.floor(n)
+}
+
+function normalizeSkipInput(value: unknown, legacyCount: unknown, legacyPct: unknown): string {
+  if (typeof value === 'string') return value
+  const count = normalizeOptionalSkipCount(legacyCount)
+  if (count != null) return String(count)
+  const pct = clampNumber(legacyPct, 0, 0, 100)
+  return pct > 0 ? `${pct}%` : ''
+}
+
+function normalizeEnemyLabLevels(value: unknown): EnemyStatsCalcsLabLevels {
+  const defaults = createDefaultEnemyLabLevels()
+  if (!value || typeof value !== 'object') return defaults
+
+  const source = value as Record<string, unknown>
+  const out: EnemyStatsCalcsLabLevels = { ...defaults }
+  for (const slug of ENEMY_STATS_CALCS_RESEARCH_LAB_SLUGS) {
+    if (slug in source) {
+      out[slug] = clampNumber(source[slug], 0, 0, 30)
+    }
+  }
+  return out
+}
+
+const ELS_PATH_ITEMS_PER_PAGE_OPTIONS = [10, 25, 50, 100, -1] as const
+
+function normalizeElsPathItemsPerPage(value: unknown, fallback: number): number {
+  const numberValue = Number(value)
+  return ELS_PATH_ITEMS_PER_PAGE_OPTIONS.includes(numberValue as typeof ELS_PATH_ITEMS_PER_PAGE_OPTIONS[number])
+    ? numberValue
+    : fallback
+}
+
+function normalizeBattleConditions(value: unknown): BattleConditionSelection[] {
+  if (!Array.isArray(value)) return buildDefaultTournamentBattleConditions()
+  const saved: BattleConditionSelection[] = []
+  for (const item of value) {
+    if (!item || typeof item !== 'object') continue
+    const row = item as Record<string, unknown>
+    const name = row.name
+    if (typeof name !== 'string') continue
+    saved.push({
+      name: name as BattleConditionSelection['name'],
+      enabled: typeof row.enabled === 'boolean' ? row.enabled : false,
+      level: 0,
+    })
+  }
+  return mergeEnemyStatsBattleConditions(saved)
+}
+
+function normalizeBcCounterLabLevels(value: unknown): Record<string, number> {
+  if (!value || typeof value !== 'object') return {}
+  const out: Record<string, number> = {}
+  for (const [key, raw] of Object.entries(value as Record<string, unknown>)) {
+    const max = key === 'battle_condition_reduction' ? 10 : 20
+    out[key] = clampNumber(raw, 0, 0, max)
+  }
+  return out
+}
+
+export function normalizeEnemyStatsCalcsLocalState(
+  input: unknown,
+  base: EnemyStatsCalcsLocalState = defaultEnemyStatsCalcsLocalState(),
+): EnemyStatsCalcsLocalState {
+  const data = input && typeof input === 'object' ? input as Record<string, unknown> : {}
+  const bcCounterLabLevels = {
+    ...createDefaultBcCounterLabLevels(),
+    ...normalizeBcCounterLabLevels(data.bcCounterLabLevels),
+  }
+  const legacyBcLab = clampNumber(data.bcLabLevel, 0, 0, 10)
+  if (legacyBcLab > 0 && bcCounterLabLevels['enemy_level_skip_reduction'] === 0) {
+    bcCounterLabLevels['enemy_level_skip_reduction'] = legacyBcLab
+  }
+
+  let battleConditions = mergeEnemyStatsBattleConditions(
+    normalizeBattleConditions(data.battleConditions),
+  )
+  const tierSelection = normalizeTierSelection(data.tierSelection, data.tournamentLeague)
+  const resolved = resolveTierSelection(tierSelection)
+  if (!resolved.tournament && resolved.tier >= 14) {
+    battleConditions = mergeEnemyStatsBattleConditions(
+      buildStandardTierBattleConditions(resolved.tier),
+    )
+  }
+
+  return {
+    mode: normalizeMode(data.mode),
+    tierSelection,
+    wave: clampNumber(data.wave, base.wave, 1, 10_000_000),
+    reverseEnemyType: normalizeEnemyType(data.reverseEnemyType),
+    targetHpVal: typeof data.targetHpVal === 'string' ? data.targetHpVal : base.targetHpVal,
+    targetDamageVal: typeof data.targetDamageVal === 'string' ? data.targetDamageVal : base.targetDamageVal,
+    perkEnemyHpMinus50: typeof data.perkEnemyHpMinus50 === 'boolean' ? data.perkEnemyHpMinus50 : base.perkEnemyHpMinus50,
+    perkBossHpX8: typeof data.perkBossHpX8 === 'boolean' ? data.perkBossHpX8 : base.perkBossHpX8,
+    perkBossHpMinus70: typeof data.perkBossHpMinus70 === 'boolean' ? data.perkBossHpMinus70 : base.perkBossHpMinus70,
+    perkEnemyDmgMinus50: typeof data.perkEnemyDmgMinus50 === 'boolean' ? data.perkEnemyDmgMinus50 : base.perkEnemyDmgMinus50,
+    perkEnemyDmgX25: typeof data.perkEnemyDmgX25 === 'boolean' ? data.perkEnemyDmgX25 : base.perkEnemyDmgX25,
+    perkRangedDmgX3: typeof data.perkRangedDmgX3 === 'boolean' ? data.perkRangedDmgX3 : base.perkRangedDmgX3,
+    healthSkipInput: normalizeSkipInput(data.healthSkipInput, data.healthSkipCount, data.healthSkipPct),
+    attackSkipInput: normalizeSkipInput(data.attackSkipInput, data.attackSkipCount, data.attackSkipPct),
+    enemyLabLevels: normalizeEnemyLabLevels(data.enemyLabLevels),
+    improveTradeOffLabLevel: clampNumber(data.improveTradeOffLabLevel, base.improveTradeOffLabLevel, 0, 10),
+    bcCounterLabLevels,
+    battleConditions,
+    elsAttackLevel: clampNumber(data.elsAttackLevel, base.elsAttackLevel, 0, 999_999),
+    elsHealthLevel: clampNumber(data.elsHealthLevel, base.elsHealthLevel, 0, 999_999),
+    elsEnhancementLevel: clampNumber(data.elsEnhancementLevel, base.elsEnhancementLevel, 0, 999_999),
+    elsReferenceWave: clampNumber(data.elsReferenceWave, base.elsReferenceWave, 1, 10_000_000),
+    elsUtilityDiscountPct: clampNumber(data.elsUtilityDiscountPct, base.elsUtilityDiscountPct, 0, 100),
+    elsEnhancementDiscountPct: clampNumber(data.elsEnhancementDiscountPct, base.elsEnhancementDiscountPct, 0, 100),
+    elsEnhancementVaultDiscountPct: clampNumber(data.elsEnhancementVaultDiscountPct, base.elsEnhancementVaultDiscountPct, 0, 100),
+    elsVaultAttackStars: clampNumber(
+      data.elsVaultAttackStars ?? data.elsVaultAttackLevel,
+      base.elsVaultAttackStars,
+      0,
+      3,
+    ),
+    elsVaultHealthStars: clampNumber(
+      data.elsVaultHealthStars ?? data.elsVaultHealthLevel,
+      base.elsVaultHealthStars,
+      0,
+      3,
+    ),
+    elsModulePrimaryAttackPct: clampNumber(
+      data.elsModulePrimaryAttackPct ?? data.elsModuleClusterAttackPct,
+      base.elsModulePrimaryAttackPct,
+      0,
+      100,
+    ),
+    elsModuleAssistAttackPct: clampNumber(data.elsModuleAssistAttackPct, base.elsModuleAssistAttackPct, 0, 100),
+    elsModulePrimaryHealthPct: clampNumber(
+      data.elsModulePrimaryHealthPct ?? data.elsModuleClusterHealthPct,
+      base.elsModulePrimaryHealthPct,
+      0,
+      100,
+    ),
+    elsModuleAssistHealthPct: clampNumber(data.elsModuleAssistHealthPct, base.elsModuleAssistHealthPct, 0, 100),
+    elsModulePrimaryAttackRarity: normalizeElsModuleRarity(
+      data.elsModulePrimaryAttackRarity,
+      data.elsModulePrimaryAttackPct ?? data.elsModuleClusterAttackPct,
+      ELS_ATTACK_MODULE_SUBSTAT_LABEL,
+    ),
+    elsModuleAssistAttackRarity: normalizeElsModuleRarity(
+      data.elsModuleAssistAttackRarity,
+      data.elsModuleAssistAttackPct,
+      ELS_ATTACK_MODULE_SUBSTAT_LABEL,
+    ),
+    elsModulePrimaryHealthRarity: normalizeElsModuleRarity(
+      data.elsModulePrimaryHealthRarity,
+      data.elsModulePrimaryHealthPct ?? data.elsModuleClusterHealthPct,
+      ELS_HEALTH_MODULE_SUBSTAT_LABEL,
+    ),
+    elsModuleAssistHealthRarity: normalizeElsModuleRarity(
+      data.elsModuleAssistHealthRarity,
+      data.elsModuleAssistHealthPct,
+      ELS_HEALTH_MODULE_SUBSTAT_LABEL,
+    ),
+    elsAssistSubstatEfficiency: clampNumber(data.elsAssistSubstatEfficiency, base.elsAssistSubstatEfficiency, 1, 100),
+    elsLabAttackLevel: clampNumber(data.elsLabAttackLevel, base.elsLabAttackLevel, 0, 30),
+    elsLabHealthLevel: clampNumber(data.elsLabHealthLevel, base.elsLabHealthLevel, 0, 30),
+    elsFocus: normalizeElsFocus(data.elsFocus),
+    elsMaxSteps: clampNumber(data.elsMaxSteps, base.elsMaxSteps, 1, 200),
+    elsCoinBudgetVal: typeof data.elsCoinBudgetVal === 'string' ? data.elsCoinBudgetVal : base.elsCoinBudgetVal,
+    elsPathItemsPerPage: normalizeElsPathItemsPerPage(data.elsPathItemsPerPage, base.elsPathItemsPerPage),
+    elsPathCurrentPage: clampNumber(data.elsPathCurrentPage, base.elsPathCurrentPage, 1, 10_000),
+  }
+}
+
+export const enemyStatsCalcsLocalPersistenceSchema = createNormalizerPersistenceSchema(normalizeEnemyStatsCalcsLocalState)

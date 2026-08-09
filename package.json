@@ -1,0 +1,119 @@
+{
+  "name": "thetowersdk",
+  "version": "0.1.0",
+  "description": "Game data and save-file reading for The Tower — build your own calculators and tools.",
+  "license": "MIT",
+  "author": "TmRxJD (https://github.com/TmRxJD)",
+  "homepage": "https://github.com/TmRxJD/thetowersdk#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TmRxJD/thetowersdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/TmRxJD/thetowersdk/issues"
+  },
+  "type": "commonjs",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "sideEffects": false,
+  "keywords": [
+    "the-tower",
+    "thetower",
+    "tower-defense",
+    "game-data",
+    "save-file",
+    "calculator",
+    "sdk"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "pnpm run clean && tsc -p tsconfig.build.json && node scripts/copy-assets.mjs",
+    "clean": "node -e \"const fs=require('fs');fs.rmSync('dist',{recursive:true,force:true})\"",
+    "test": "vitest run",
+    "type-check": "tsc -p tsconfig.build.json --noEmit",
+    "prepublishOnly": "pnpm run clean && pnpm run build"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./data": {
+      "types": "./dist/data/index.d.ts",
+      "require": "./dist/data/index.js",
+      "default": "./dist/data/index.js"
+    },
+    "./save": {
+      "types": "./dist/save/index.d.ts",
+      "require": "./dist/save/index.js",
+      "default": "./dist/save/index.js"
+    },
+    "./node": {
+      "types": "./dist/node/index.d.ts",
+      "require": "./dist/node/index.js",
+      "default": "./dist/node/index.js"
+    },
+    "./formatting": {
+      "types": "./dist/formatting/index.d.ts",
+      "require": "./dist/formatting/index.js",
+      "default": "./dist/formatting/index.js"
+    },
+    "./mechanics": {
+      "types": "./dist/mechanics/index.d.ts",
+      "require": "./dist/mechanics/index.js",
+      "default": "./dist/mechanics/index.js"
+    },
+    "./internal/*": {
+      "types": "./dist/*.d.ts",
+      "require": "./dist/*.js",
+      "default": "./dist/*.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "typesVersions": {
+    "*": {
+      "data": [
+        "dist/data/index.d.ts"
+      ],
+      "save": [
+        "dist/save/index.d.ts"
+      ],
+      "node": [
+        "dist/node/index.d.ts"
+      ],
+      "formatting": [
+        "dist/formatting/index.d.ts"
+      ],
+      "mechanics": [
+        "dist/mechanics/index.d.ts"
+      ],
+      "internal/*": [
+        "dist/*.d.ts"
+      ],
+      "*": [
+        "dist/index.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "CONTRIBUTING.md",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "dependencies": {
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "typescript": "~5.8.3",
+    "vitest": "^3.0.0"
+  }
+}
