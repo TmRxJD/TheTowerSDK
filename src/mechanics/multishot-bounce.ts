@@ -118,7 +118,7 @@ export function priorityMaskIncludesType(
 const INFINITY_DISTANCE = Number.POSITIVE_INFINITY
 
 export interface TargetCandidate {
-  /** Index in Main.enemyList. */
+  /** Index into the active enemy list. */
   index: number
   distanceFromTower: number
   enemyType: number

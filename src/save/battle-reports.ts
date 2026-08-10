@@ -7,10 +7,6 @@ import { resolveKilledByFromSave } from './killed-by'
 import { normalizeTrackerDateText, normalizeTrackerTimeText } from '../internal/tracker-cloud-schemas'
 import { formatCompact } from '../internal/tool-formatting'
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
-}
-
 export function readBattleDateFromSave(raw: unknown): Date {
   const ms = parseSaveDateTimeToMs(raw)
   return ms != null ? new Date(ms) : new Date()
@@ -27,10 +23,6 @@ function readNumber(raw: unknown, fallback = 0): number {
 
 function toIsoDate(date: Date): string {
   return date.toISOString().slice(0, 10)
-}
-
-function toUtcTimeString(date: Date): string {
-  return date.toISOString().slice(11, 19)
 }
 
 function toTimeString(date: Date): string {
@@ -132,19 +124,10 @@ export function buildBattleRunDeduplicationKey(run: {
   ].join('|')
 }
 
+/** A dedup key is only usable when every part of it is present. */
 export function isPopulatedBattleRunDedupKey(key: string): boolean {
   const [tier, wave, runDate, runTime] = key.split('|')
   return Boolean(tier && wave && runDate && runTime)
-}
-
-function pickFirstNonEmptyString(source: Record<string, unknown>, keys: string[]): string | null {
-  for (const key of keys) {
-    const value = source[key]
-    if (value != null && String(value).trim().length > 0) {
-      return String(value)
-    }
-  }
-  return null
 }
 
 /** Normalize any stored/imported battle run date to `YYYY-MM-DD` for dedup keys. */

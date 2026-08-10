@@ -2,10 +2,12 @@
  * Module drop, shatter, and reroll constants from tower mechanics tables.
  */
 
-import { MAX_CAMPAIGN_TIER } from '../data/index'
-import { findLabResearchBySlug } from '../data/index'
-import { getSharedToolLabs, resolveLabValueAtLevel } from '../data/index'
-import type { SharedEnemyDropsInputs } from '../internal/enemy-drops-calcs-local-state'
+import {
+  MAX_CAMPAIGN_TIER,
+  findLabResearchBySlug,
+  getSharedToolLabs,
+  resolveLabValueAtLevel,
+} from '../data/index'
 import { clamp } from './math'
 
 /** labBenefit × 0.01 + base. */

@@ -1,10 +1,10 @@
 /**
- * Enemy↔tower distance cache — `CalculateEnemyDistances`.
+ * Enemy↔tower distance cache.
  *
  * ## Full calculation pipeline (every frame, per enemy)
  *
- *   towerPos = Main.towerLocation.position
- *   enemyPos = enemy.transform.position
+ *   towerPos = tower position
+ *   enemyPos = enemy position
  *   dx = towerPos.x − enemyPos.x
  *   dy = towerPos.y − enemyPos.y
  *   sumSq = dx² + dy²

@@ -47,21 +47,6 @@ export const unitMultipliers: Record<string, number> = {
   ...buildTowerInGameDoubleLetterUnitMultipliers(),
 }
 
-const DISPLAY_NOTATIONS = {
-  K: 1e3,
-  M: 1e6,
-  B: 1e9,
-  T: 1e12,
-  q: 1e15,
-  Q: 1e18,
-  s: 1e21,
-  S: 1e24,
-  O: 1e27,
-  N: 1e30,
-  D: 1e33,
-  ...buildTowerInGameDoubleLetterNotations(),
-} as const
-
 /** Matches in-game `formatValue`: divide by 1000 per suffix until coefficient < 1000. */
 const COMPACT_NUMBER_SUFFIX_ORDER = [
   'K',

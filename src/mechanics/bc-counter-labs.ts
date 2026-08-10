@@ -106,7 +106,7 @@ function labBenefitIncreaseFraction(raw: number): number {
   return raw >= 1 ? raw * 0.01 : raw
 }
 
-/** Enemy Level Skip Reduction lab fraction for BC tooltip display (`GetTotalBCModifier` [209] table). */
+/** Enemy Level Skip Reduction lab fraction, as the BC tooltip displays it. */
 export function elsBcReductionLabBenefitFraction(
   bcCounterLabLevels: Readonly<Record<string, number>>,
 ): number {
@@ -121,7 +121,7 @@ export function elsBcReductionLabBenefitFraction(
 
 /**
  * Skip Reduction − Subtract tooltip % (game BC panel).
- * `bcLevel × 0.5% × GetTotalBCModifier([199] global + [209] ELS-specific)`.
+ * `bcLevel × 0.5% × (global counter lab × ELS-specific counter lab)`.
  * This is how much the BC shaves off skip — not total ELS and not the raw BC level.
  */
 export function computeElsBcSkipReductionDisplayPct(
@@ -327,18 +327,21 @@ function totalSkipsAtWorkshopPct(
 }
 
 /**
- * Infer workshop skip % (Main+0x4C8/0x4CC) from a tracked skip counter at the current BC lab snapshot.
+ * Infer the stored workshop skip % from a tracked skip counter at the current BC lab snapshot.
  * Counter simulation uses stored skip only — BC subtract applies when displaying effective skip %.
  * Cached per wave+count so BC lab dropdown changes recompute effective skip without re-inferring.
+ *
+ * The trailing battle-condition arguments are accepted but deliberately unused: they keep the
+ * signature interchangeable with `computeEffectiveEnemySkipPctWithBcLabs`, which does apply them.
  */
 export function inferWorkshopSkipPctFromSkipCount(
   wave: number,
   skipCount: number,
   bcCounterLabLevels: Readonly<Record<string, number>>,
   tier: number,
-  tournament = false,
-  tournamentLeague: TournamentLeague | null = null,
-  battleConditions: readonly BattleConditionSelection[] = [],
+  _tournament = false,
+  _tournamentLeague: TournamentLeague | null = null,
+  _battleConditions: readonly BattleConditionSelection[] = [],
 ): number {
   const w = Math.max(1, Math.floor(wave))
   const target = Math.max(0, Math.floor(skipCount))
@@ -401,7 +404,7 @@ export function resolveEnemyStatLevelWithBcLabs(
 ): number {
   const w = Math.max(1, Math.floor(wave))
   if (skipCount != null && Number.isFinite(skipCount)) {
-    // Wave Info: GetWaveBase*(currentWave − enemy*LevelSkips) @ Main.NewWave 0x15B931C.
+    // Enemy stats are looked up at (current wave − skips already banked this run).
     return Math.max(1, w - Math.max(0, Math.floor(skipCount)))
   }
   const workshopPct = resolveWorkshopSkipPctFromSkipInput(

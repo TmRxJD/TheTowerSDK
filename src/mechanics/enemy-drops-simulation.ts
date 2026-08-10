@@ -260,7 +260,6 @@ function cellsPerKillUpgradeCoinCost(
 
 /** Unconditional expected skips when Wave Skip procs (from chart @ 19% card). */
 const WAVE_SKIP_EXPECTED_SKIPS_NO_MASTERY = 1.235
-const WAVE_SKIP_EXPECTED_SKIPS_MASTERY_UNLOCK = 1.52
 const WAVE_SKIP_EXPECTED_SKIPS_MAX_MASTERY = 2.85
 
 export function waveSkipExpectedSkipsPerProc(masteryLevel: number): number {

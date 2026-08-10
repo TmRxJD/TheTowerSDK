@@ -1,15 +1,14 @@
 /**
- * Ultimate weapon hit damage — shared Enemy hit paths.
+ * Ultimate weapon hit damage.
  *
- * Common pattern across `BlackHoleDamage`, `LightningDamage`, `DeathRayDamage`,
- * `DropLandMineDamage`, and similar:
+ * Black Hole, Chain Lightning, Death Ray, Land Mines and similar all share:
  *
- *   moduleMult = GetModuleBonus(slot) + 1.0
+ *   moduleMult = module bonus for the slot + 1.0
  *   effective  = max(0, incomingDamage − enemyAbsorbPool)
  *
- * Absorb pool depletes first; negative remainder spills into Main damage accounting.
+ * The absorb pool depletes first; whatever is left over counts as tower damage.
  *
- * ## Chain Lightning — `LightningDamage`
+ * ## Chain Lightning
  *
  *   base = incoming × moduleMult
  *   if elite (type 7–8) and lab active:

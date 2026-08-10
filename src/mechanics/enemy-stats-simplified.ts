@@ -3,10 +3,7 @@ import { clampCampaignTier } from '../data/index'
 import { getBasicEnemyWaveStats } from '../internal/enemy-wave-stats'
 import { getTierBattleConditionLevel } from '../data/index'
 import type { TournamentLeague } from '../data/index'
-import {
-  applyTierBattleConditionsToSkipChance,
-  estimatedEnemyStatLevelFromSkip,
-} from './enemy-level-skip'
+import { applyTierBattleConditionsToSkipChance } from './enemy-level-skip'
 import {
   type BattleConditionSelection,
   BC_TIER_MIN,
@@ -208,16 +205,6 @@ export function computeEffectiveEnemySkipPct(
   })
 
   return Math.min(100, Math.max(0, adjusted * 100))
-}
-
-function resolveStatLevel(
-  wave: number,
-  skipPct: number,
-  tier: number,
-  battleConditions: readonly BattleConditionSelection[],
-): number {
-  const effectivePct = computeEffectiveEnemySkipPct(skipPct, tier, wave, battleConditions)
-  return estimatedEnemyStatLevelFromSkip(wave, effectivePct / 100)
 }
 
 export function getEnemyStatsAtWave(

@@ -43,7 +43,6 @@ import {
   RANGE_UPGRADE_STEP,
   RANGE_WORKSHOP_UPGRADE_INDEX,
 } from './constants'
-import { safeMul } from './math'
 
 export interface RangePipelineInput {
   rangeLabBase: number

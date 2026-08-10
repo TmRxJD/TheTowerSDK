@@ -199,13 +199,13 @@ function computeWaveInfoTypeRules(input: WaveInfoEnemyStatsInput): { hp: number,
     } else {
       hp *= enemyLabMult(enemyType, 'hp', ctx)
     }
-  } else if ('hpFixedMultRodata' in rules && rules.hpFixedMultRodata === 'protectorHpMult') {
+  } else if ('hpFixedMult' in rules && rules.hpFixedMult === 'protectorHpMult') {
     hp = waveBaseHp * WAVE_INFO_PROTECTOR_HP_MULT * rowDisplayMult('Protector', 'hp', ctx)
   } else if ('hpWorkshop' in rules && rules.hpWorkshop) {
     hp = waveBaseHp * rowDisplayMult(enemyType, 'hp', ctx)
   }
 
-  if ('damageWaveBaseRodataMult' in rules && rules.damageWaveBaseRodataMult === 'overchargeWaveDamageMult') {
+  if ('damageWaveBaseMult' in rules && rules.damageWaveBaseMult === 'overchargeWaveDamageMult') {
     // Pinned to wave 1 — Overcharge's attack damage no longer tracks the wave.
     damage = (waveOneBaseDamage ?? waveBaseDamage) * WAVE_INFO_OVERCHARGE_DAMAGE_MULT
   } else if ('damageMainTowerMaxMult' in rules && rules.damageMainTowerMaxMult) {

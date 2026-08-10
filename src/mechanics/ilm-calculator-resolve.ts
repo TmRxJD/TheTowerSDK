@@ -95,7 +95,7 @@ function isAcpEquipped(rarity: IlmUniqueModuleRarityChoice): boolean {
   return rarity !== ILM_MODULE_SUBSTAT_NONE
 }
 
-/** Attack (Cannon) modules scale Main.damage before ILM detonation. */
+/** Attack (Cannon) modules scale tower damage before ILM detonation. */
 export function resolveIlmCannonModuleMult(staticSettings: IlmCalcsStaticSettings): number {
   return resolveCombinedModuleMult(
     staticSettings.primaryCannon,

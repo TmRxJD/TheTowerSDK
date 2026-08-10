@@ -96,7 +96,7 @@ describe('ilm-charge', () => {
 })
 
 describe('ilm-calculator-resolve', () => {
-  it('cannon modules scale Main.damage', () => {
+  it('cannon modules scale tower damage', () => {
     const base = defaultIlmCalcsSettings()
     const workshopOnly = resolveTowerDamageFromAttackLevel(base.static.attackDamageLevel)
     const withCannon = patchIlmCalcsSettings(base, {

@@ -13,7 +13,6 @@ function flattenNestedRunValues(data: RunDataRecordLike): RunDataRecordLike {
     return { ...data }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { values: _values, ...rest } = data
   return {
     ...values,

@@ -258,7 +258,7 @@ export function waveInfoSpawnChancePct(input: WaveInfoPanelStatsInput): number {
   return chances[input.enemyType as keyof WaveInfoSpawnChances] ?? 0
 }
 
-/** Main.enemySpawnChance — Wave Accelerator mastery chart lookup (tier unused). */
+/** Enemy spawn chance — Wave Accelerator mastery chart lookup (tier unused). */
 export function enemySpawnRateCap(
   wave: number,
   _tier: number,

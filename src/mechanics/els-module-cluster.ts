@@ -97,8 +97,8 @@ function buildElsSkipChanceBuildInput(
 }
 
 /**
- * Stored skip chance for one track — `GetOutOfRound*LevelSkipChance` term order
- * via {@link buildLevelSkipChanceRaw}.
+ * Stored skip chance for one track, in the out-of-round term order
+ * used by {@link buildLevelSkipChanceRaw}.
  */
 export function computeElsTrackSkipChance(
   kind: LevelSkipKind,

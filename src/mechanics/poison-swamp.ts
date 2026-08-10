@@ -1,10 +1,10 @@
 /**
- * Poison Swamp — ultimate weapon index 6 (`SwampController`).
+ * Poison Swamp — ultimate weapon index 6.
  *
  * ## Tick damage pipeline
  *
- *   baseDamage = Main.poisonSwampDamage
- *   moduleMult = GetModulePoisonMult(Main)              // ≥ 1
+ *   baseDamage = poison swamp damage stat
+ *   moduleMult = equipped-module poison multiplier      // ≥ 1
  *   globalMult = shared UW damage scalar
  *
  *   tickDamage = baseDamage
@@ -41,7 +41,7 @@
  *
  * ## Stun chance weight
  *
- *   stunWeight = labLevel[swamp_stun_chance] × Main.uwStunModifier + 1.0
+ *   stunWeight = labLevel[swamp_stun_chance] × ultimate-weapon stun modifier + 1.0
  *
  * Actual proc uses cumulative RNG gates (below), not flat percent.
  *

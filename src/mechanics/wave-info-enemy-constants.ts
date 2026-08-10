@@ -69,7 +69,7 @@ export const WAVE_INFO_ENEMY_RULES = {
   },
   'Protector': {
     'hpWorkshop': true,
-    'hpFixedMultRodata': 'protectorHpMult',
+    'hpFixedMult': 'protectorHpMult',
     'damagePlainWaveBase': true,
   },
   'Scatter': {
@@ -94,6 +94,6 @@ export const WAVE_INFO_ENEMY_RULES = {
   },
   'Overcharge': {
     'hpFixedMult': 20.0,
-    'damageWaveBaseRodataMult': 'overchargeWaveDamageMult',
+    'damageWaveBaseMult': 'overchargeWaveDamageMult',
   },
 } as const

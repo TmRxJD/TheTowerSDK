@@ -75,21 +75,3 @@ export const V283_NATIVE_HEAT_LEVELS_BY_TIER = {
     20,
   ],
 } as const
-
-export const V283_COIN_TIER_BL_SITES = [
-  {
-    "tier_candidate": 22,
-    "call_site": "0x1eb19b4",
-    "target": "0x2170224",
-  },
-  {
-    "tier_candidate": 23,
-    "call_site": "0x1eb19e4",
-    "target": "0x2170224",
-  },
-  {
-    "tier_candidate": 24,
-    "call_site": "0x1eb1a14",
-    "target": "0x2170224",
-  },
-] as const

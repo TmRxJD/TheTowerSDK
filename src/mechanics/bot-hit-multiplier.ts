@@ -39,7 +39,7 @@ export interface EnemyHitMultiplierInput {
   amplifyBot?: AmplifyBotRangeInput
   flameModuleDebuff?: FlameModuleDebuffInput
   shockwaveMultiplier?: number
-  /** Main.protectorDamageReduction — typically <1; reduces damage under Protector aura. */
+  /** Protector aura damage reduction — typically <1. */
   protectorDamageReduction?: number
 }
 

@@ -2,9 +2,9 @@
  * ELS vs ELS+ upgrade path — coin ROI from skip-chance simulation.
  *
  * Standard utility ELS (`upgradeWorkshopUtilityLevel[11|12]`):
- *   workshopBase from `workshop.json` (+0.0005 / level, 0.05% display step)
+ *   workshop base rises +0.0005 per level (0.05% display step)
  *
- * Enhancement ELS+ (`WSP_ENEMY_LEVEL_SKIP` → `Main.enemyLevelSkipEnhancement`):
+ * Enhancement ELS+ (workshop key `WSP_ENEMY_LEVEL_SKIP`):
  *   mult = 1 + enhancementLevel × 0.01 on `(workshop + module cluster)` for both tracks.
  *
  * ROI % ranks upgrades by coin efficiency at the reference wave:
@@ -248,7 +248,7 @@ export function resolveElsLeadFromWorkshopTrackerBlob(blob: Record<string, unkno
   return hasData ? lead : null
 }
 
-/** Workshop enhancement level → `Main.enemyLevelSkipEnhancement` field value. */
+/** Workshop enhancement level → enhancement multiplier contribution (level × 0.01). */
 export const ELS_ENHANCEMENT_FIELD_SCALE = 0.01
 
 export type ElsUpgradeKind = 'attack' | 'health' | 'enhancement'
@@ -431,9 +431,9 @@ export function computeWorkshopSkipChances(
 }
 
 /**
- * Sources for in-run effective BC (matches game run utility %).
- * Workshop dropdown keeps full cluster + labs; run UI applies BC to primary-only stored
- * without research-lab addon (@ `GetOutOfRound*` vs in-run `Main+0x4C8` path).
+ * Sources for in-run effective BC (matches the utility % shown during a run).
+ * The workshop dropdown keeps the full module cluster plus labs; the in-run display applies
+ * battle conditions to the stored primary only, without the research-lab addition.
  */
 export function elsSkipSourcesForInRunEffectiveBc(
   sources: ElsSkipSourceInput,
@@ -481,27 +481,11 @@ export function applyElsTierSkipAdjustments(
   }
 }
 
-function effectiveWorkshopSkipChances(
-  levels: ElsWorkshopLevels,
-  sources: ElsSkipSourceInput,
-  adjustments?: TierSkipChanceAdjustments,
-): ElsSkipChanceSnapshot {
-  return applyElsTierSkipAdjustments(computeWorkshopSkipChances(levels, sources), adjustments)
-}
-
 function workshopSkipSnapshot(
   levels: ElsWorkshopLevels,
   skipSources: ElsSkipSourceInput,
 ): ElsSkipChanceSnapshot {
   return computeWorkshopSkipChances(levels, skipSources)
-}
-
-function effectiveSkipSnapshot(
-  levels: ElsWorkshopLevels,
-  skipSources: ElsSkipSourceInput,
-  adjustments?: TierSkipChanceAdjustments,
-): ElsSkipChanceSnapshot {
-  return effectiveWorkshopSkipChances(levels, skipSources, adjustments)
 }
 
 /** Path table + summary display — stored workshop skip (matches level dropdown parentheses). */

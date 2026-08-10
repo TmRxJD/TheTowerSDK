@@ -1,8 +1,5 @@
 import { z } from 'zod'
-import {
-  type BattleConditionSelection,
-  mergeEnemyStatsBattleConditions,
-} from '../mechanics/battle-condition-config'
+import type { BattleConditionSelection } from '../mechanics/battle-condition-config'
 import {
   BOT_MEDAL_SPLITTER_PRESET_COUNT,
   type BotMedalSplitterPreset,
@@ -493,13 +490,6 @@ function normalizeStringRecord(value: unknown): Record<string, string> {
 
 function serializeTierSelection(value: TierSelectionInput): number | string {
   return typeof value === 'number' ? value : value
-}
-
-function normalizeBattleConditions(value: unknown): BattleConditionSelection[] {
-  if (!Array.isArray(value)) return []
-  return mergeEnemyStatsBattleConditions(
-    value.filter(entry => entry && typeof entry === 'object') as BattleConditionSelection[],
-  )
 }
 
 export function extractSharedEnemyStatsCore(state: Pick<

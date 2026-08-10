@@ -26,14 +26,14 @@
  *
  * ## Step 2 — Module cluster add-on
  *
- *   moduleCluster = GetEquippedClusterBenefit(46|47)
+ *   moduleCluster = equipped-cluster benefit for module index 46 | 47
  *
  * Cluster **46 / 47** are module indices, not utility level indices. Typical attack
  * cluster contribution is ~0.16 (e.g. 0.08 + 0.08 from two equipped modules).
  *
  * ## Step 3 — Enhancement field
  *
- *   enhancementMult = 1 + Main.enemyLevelSkipEnhancement  (field = workshop ELS+ level × 0.01)
+ *   enhancementMult = 1 + enhancement  (enhancement = workshop ELS+ level × 0.01)
  *   skip = (workshop + lab[124|125]×0.01 + modules + tech tree + cached bonus) × enhancementMult
  *
  * Lab indices 124 / 125: `researchBenefitIncrease[124|125] × 0.01` added to workshop before modules.
@@ -210,8 +210,8 @@ export function levelSkipEnhancementMultiplier(enhancementLevel: number): number
 }
 
 /**
- * `Main.enemyLevelSkipEnhancement` — workshop level × 0.01.
- * Multiplier is `1 + field` (not additive skip chance).
+ * Enhancement value — workshop level × 0.01.
+ * The multiplier is `1 + enhancement`, not an additive skip chance.
  */
 export function levelSkipEnhancementMultiplierFromField(enemyLevelSkipEnhancementField: number): number {
   return 1 + Math.max(0, enemyLevelSkipEnhancementField)
@@ -287,7 +287,7 @@ export interface LevelSkipChanceInput {
   workshopStat?: number
   utilityLevel?: number
   moduleClusterBenefit?: number
-  /** `Main.enemyLevelSkipEnhancement` field value. */
+  /** Enhancement value: workshop ELS+ level × 0.01. */
   enemyLevelSkipEnhancement?: number
   /** @deprecated Alias for {@link enemyLevelSkipEnhancement}. */
   enhancementLevel?: number
@@ -624,9 +624,9 @@ export function deterministicSkipLevelsFromChance(
  *   counter += storedSkipChance
  *   when counter > 1: counter -= 1 and `enemy*LevelSkips`++
  *
- * Header stat lookup (`NewWave`):
- *   GetWaveBaseHealth(currentWave − enemyHealthLevelSkips)
- *   GetWaveBaseDamage(currentWave − enemyAttackLevelSkips)
+ * Header stats are then read at the reduced wave:
+ *   base health at (currentWave − enemyHealthLevelSkips)
+ *   base damage at (currentWave − enemyAttackLevelSkips)
  */
 export function simulateEnemyLevelSkips(
   runWave: number,

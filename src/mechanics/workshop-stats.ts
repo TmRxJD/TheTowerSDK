@@ -1,10 +1,10 @@
 /**
- * Workshop preview stats — `GetOutOfRound*` getter pattern.
+ * Workshop preview stats — the out-of-round value for each workshop stat.
  *
  * Battle values use `upgradeLevel[]` + labs + cards + modules.
  * Workshop preview uses `upgradeWorkshopLevel[]` through the same combiner family.
  *
- * ## Generic pipeline (all 48 getters share this shape; stat-specific curves differ)
+ * ## Generic pipeline (all 48 stats share this shape; the curves differ)
  *
  *   base = labResearchTerm(statLabIndex, workshopLevel)
  *   raw = base × workshopLevelCurve(statUpgradeIndex, workshopLevel)

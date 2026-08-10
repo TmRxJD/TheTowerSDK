@@ -1,15 +1,15 @@
 /**
- * Bot effective range — `Bot.UpdateSize`.
+ * Bot effective range.
  *
  * ## Pipeline
  *
  *   t = clamp((maxDistance − 3) / (12 − 3), 0, 1)    // 30 m → 120 m internal
  *   towerFactor = t × 0.6 + 0.7                         // 0.7 at 30 m, 1.3 at 120 m
  *
- *   botRangeBenefit = Bots.GetBotBenefit(botIndex, botLevel)
+ *   botRangeBenefit = bot benefit at (botIndex, botLevel)
  *   effectiveRadius = (botRangeBenefit / 10) × towerFactor
  *
- * Then × relic/tech-tree bot range (TechTreeStat.Bot_Range = 13) and Singularity Harness
+ * Then × relic/tech-tree bot range (tech tree stat 13) and Singularity Harness
  * bonus for Flame bot (type 0).
  *
  * ## GetBotBenefit

@@ -5,7 +5,6 @@ export {
   V283_MAX_CAMPAIGN_TIER,
   V283_COIN_BONUS_BY_TIER,
   V283_NATIVE_HEAT_LEVELS_BY_TIER,
-  V283_COIN_TIER_BL_SITES,
 } from './campaign-tier-native.generated'
 export {
   V283_RELIC_SLICE,

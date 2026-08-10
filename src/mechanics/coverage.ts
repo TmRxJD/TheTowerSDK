@@ -33,7 +33,7 @@ export const MECHANICS_COVERAGE: readonly MechanicCoverage[] = [
   { id: 'crowd-control', name: 'CC timers & decay', status: 'confirmed', module: 'crowd-control.ts' },
   { id: 'knockback', name: 'Knockback force', status: 'confirmed', module: 'knockback.ts' },
   { id: 'enemy-wave-stats', name: 'Wave HP/damage scaling (native curve)', status: 'partial', module: 'enemy-wave-stats.ts', gaps: ['GetWaveBase* only — Wave Info uses NewWave skip subtraction; paste live counters', 'Alt tournament body gate needs runtime array state', 'Workshop cache bypass not modeled', 'High-tier tournament float unverified at T15+'] },
-  { id: 'enemy-level-skip', name: 'Enemy level skip', status: 'partial', module: 'enemy-level-skip.ts', gaps: ['Card paths on stored chance not wired', 'Per-wave roll threshold incomplete (Main.field)', 'UI skip % is rounded — full float or live skip counters needed for exact header match'] },
+  { id: 'enemy-level-skip', name: 'Enemy level skip', status: 'partial', module: 'enemy-level-skip.ts', gaps: ['Card paths on stored chance not wired', 'Per-wave roll threshold incomplete', 'UI skip % is rounded — full float or live skip counters needed for exact header match'] },
   { id: 'battle-conditions', name: 'Tier skip decay/reduction (BC apply)', status: 'partial', module: 'battle-conditions.ts', gaps: ['Isolated BC math only; useless if upstream stored chance is wrong'] },
   { id: 'workshop-stats', name: 'Workshop combiner pattern', status: 'confirmed', module: 'workshop-stats.ts' },
   { id: 'damage-reduction', name: 'Damage reduction chain', status: 'confirmed', module: 'damage-reduction.ts' },

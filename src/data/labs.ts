@@ -71,11 +71,6 @@ export const TOOL_LAB_OVERVIEW_CATEGORY_ORDER = [
 
 export const TOOL_LAB_SPEEDUP_OPTIONS = [1, 1.5, 2, 3, 4, 5, 6, 7, 8] as const
 
-const TOOL_LAB_SPECIAL_LABELS: Record<string, string> = {
-  labs_speed: 'Lab Speed',
-  labs_coin_discount: 'Lab Coin Discount',
-}
-
 export function isToolLabOverviewCategoryLabel(name: string | null | undefined): boolean {
   const trimmed = String(name || '').trim()
   if (!trimmed) return false

@@ -1,7 +1,7 @@
 /**
  * Tournament heat → BC level math.
  *
- * - `GetEnemyLevelSkipReductionSubtract`: `GetTotalBCModifier(209) × heatLevel[22] × 0.005`
+ * - ELS reduction subtract = ELS counter-lab modifier × heatLevel[22] × 0.005
  * - Guaranteed league ELS caps: Gold 10, Platinum 20, Champion 30, Legend 50
  * - Heat ramps with wave via the same breakpoint table used by thorns / Wave Info
  */

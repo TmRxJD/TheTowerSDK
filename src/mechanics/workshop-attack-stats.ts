@@ -24,11 +24,11 @@
  * Final getter multiplies `core + Σ tiers` by catalog table row, workshop
  * card mult, and relic chain.
  *
- * ## Critical multiplier — `GetOutOfRoundCriticalMultiplier`
+ * ## Critical multiplier (workshop preview)
  *
  *   levelTerm   = workshopLevel × 0.1 + 1.2
  *   moduleCrit  = module critical multiplier bonus
- *   upgradeCrit = GetWorkshopUpgrade(crit slot) + 1.0
+ *   upgradeCrit = workshop upgrade in the crit slot + 1.0
  *   cardMult    = card critical mult
  *   relicMult   = relic critical mult
  *

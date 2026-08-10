@@ -6,10 +6,13 @@ export const MODULE_REROLL_COSTS_BY_LOCKED_SUBSTATS: readonly number[] = [
   40, 160, 500, 1000, 1600, 2250, 3000, 0,
 ]
 
-/** @deprecated Use `MODULE_REROLL_COSTS_BY_LOCKED_SUBSTATS`. Kept for existing imports. */
-export const MAIN_SUB_COSTS: number[] = Array.from({ length: 69 }, (_, i) => 15 + i * 3)
+/**
+ * Stone cost to take a module's main substat from level `i` to `i + 1`, indexed from 0.
+ * Linear: 15 stones for the first level, +3 per level after.
+ */
+export const MAIN_SUB_COSTS: readonly number[] = Array.from({ length: 69 }, (_, i) => 15 + i * 3)
 
-const COIN_RODATA_PAIRS: ReadonlyArray<readonly [number, number]> = [
+const COIN_COST_TIER_PAIRS: ReadonlyArray<readonly [number, number]> = [
   [10_000, 25_000], // levels 2–5 vs 6–10
   [45_000, 60_000], // levels 11–15 vs 16–20
   [120_000, 180_000], // levels 21–25 vs 26–30
@@ -23,30 +26,30 @@ const COIN_RODATA_PAIRS: ReadonlyArray<readonly [number, number]> = [
 const COIN_HIGH_POLY_SCALE = 5e17
 
 function coinPair(index: number, targetLevel: number, threshold: number): number {
-  const [low, high] = COIN_RODATA_PAIRS[index]
+  const [low, high] = COIN_COST_TIER_PAIRS[index]
   return targetLevel > threshold ? high : low
 }
 
 function coinHighLinear(targetLevel: number): number {
-  const slope = 0x2d79883d2000n
-  const intercept = 0x9184e72a000n
-  const offset = BigInt(targetLevel - 0xA1)
+  const slope = 50_000_000_000_000n
+  const intercept = 10_000_000_000_000n
+  const offset = BigInt(targetLevel - 161)
   return Number(BigInt.asIntN(64, offset * slope + intercept))
 }
 
 function coinHighQuadratic(targetLevel: number): number {
-  const a = targetLevel - 0xC8
-  const b = targetLevel - 0xC9
+  const a = targetLevel - 200
+  const b = targetLevel - 201
   let product = a * b
   if (product < 0) product += 1
   product = (product >> 1) + 2
-  const multiplier = 0x470de4df82000n
+  const multiplier = 1_250_000_000_000_000n
   return Number(BigInt.asIntN(64, BigInt(product) * multiplier))
 }
 
 function coinHighPolynomial(targetLevel: number): number {
-  const a = targetLevel - 0xF0
-  const b = targetLevel - 0xF1
+  const a = targetLevel - 240
+  const b = targetLevel - 241
   return ((b * a * 0.5) + 2.0) * COIN_HIGH_POLY_SCALE
 }
 
@@ -54,47 +57,46 @@ function coinHighPolynomial(targetLevel: number): number {
 export function getModuleCoinUpgradeCost(targetLevel: number): number {
   const level = Math.max(1, Math.floor(Number(targetLevel) || 1))
 
-  if (level >= 0xA1) {
-    if (level > 0xF0) return coinHighPolynomial(level)
-    if (level > 0xC8) return coinHighQuadratic(level)
+  if (level >= 161) {
+    if (level > 240) return coinHighPolynomial(level)
+    if (level > 200) return coinHighQuadratic(level)
     return coinHighLinear(level)
   }
-  if (level >= 0x79) return coinPair(7, level, 0x8C)
-  if (level >= 0x51) return coinPair(6, level, 0x64)
-  if (level >= 0x3D) return coinPair(5, level, 0x46)
-  if (level >= 0x29) return coinPair(4, level, 0x32)
-  if (level >= 0x1F) return coinPair(3, level, 0x23)
-  if (level >= 0x15) return coinPair(2, level, 0x19)
-  if (level >= 0x0B) return coinPair(1, level, 0x0F)
+  if (level >= 121) return coinPair(7, level, 140)
+  if (level >= 81) return coinPair(6, level, 100)
+  if (level >= 61) return coinPair(5, level, 70)
+  if (level >= 41) return coinPair(4, level, 50)
+  if (level >= 31) return coinPair(3, level, 35)
+  if (level >= 21) return coinPair(2, level, 25)
+  if (level >= 11) return coinPair(1, level, 15)
   return coinPair(0, level, 5)
 }
 
 function shardBucket(targetLevel: number): number {
   const level = Math.max(1, Math.floor(Number(targetLevel) || 1))
 
-  if (level >= 0x29) {
-    if (level >= 0x79) {
-      if (level >= 0xA1) {
-        if (level > 0xF0) return level * 0x1F4 - 100_500
-        if (level > 0xC8) return level * 0xFA - 40_250
-        return level * 0x7D - 15_125
+  if (level >= 41) {
+    if (level >= 121) {
+      if (level >= 161) {
+        if (level > 240) return level * 500 - 100_500
+        if (level > 200) return level * 250 - 40_250
+        return level * 125 - 15_125
       }
-      if (level >= 0x8D) return level > 0x96 ? 0xFA0 : 0xBB8
-      if (level >= 0x82) return level > 0x82 ? 0x9C4 : 0x708
-      return level > 0x82 ? 0x9C4 : 0x708
+      if (level >= 141) return level > 150 ? 4000 : 3000
+      return level > 130 ? 2500 : 1800
     }
-    if (level >= 0x51) {
-      if (level >= 0x65) return level > 0x6E ? 0x514 : 0x3E8
-      return level > 0x5A ? 0x2BC : 0x1F4
+    if (level >= 81) {
+      if (level >= 101) return level > 110 ? 1300 : 1000
+      return level > 90 ? 700 : 500
     }
-    if (level >= 0x3D) return level > 0x46 ? 0x15E : 0xFA
-    return level > 0x32 ? 0xB4 : 0x78
+    if (level >= 61) return level > 70 ? 350 : 250
+    return level > 50 ? 180 : 120
   }
-  if (level >= 0x15) {
-    if (level >= 0x1F) return level > 0x23 ? 0x5A : 0x4B
-    return level > 0x19 ? 0x32 : 0x28
+  if (level >= 21) {
+    if (level >= 31) return level > 35 ? 90 : 75
+    return level > 25 ? 50 : 40
   }
-  if (level >= 0x0B) return level > 0x0F ? 0x19 : 0x14
+  if (level >= 11) return level > 15 ? 25 : 20
   return level > 5 ? 12 : 7
 }
 

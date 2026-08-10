@@ -27,10 +27,13 @@ function band(wave: number, divisor: number): number {
   return Math.floor(Math.max(1, Math.floor(wave)) / divisor)
 }
 
+/** Reciprocal-multiply form of an integer divide; kept literal so the baseline stays bit-exact. */
+const CROSS_BAND_RECIPROCAL = 843_314_851
+
 function damageCrossBandExponent(wave: number): number {
   const w = Math.max(1, Math.floor(wave)) >>> 0
-  const iVar6 = Math.floor((w * 0x323e34a3) / 2 ** 32)
-  return (iVar6 + ((w - iVar6) >> 1)) >> 6
+  const high = Math.floor((w * CROSS_BAND_RECIPROCAL) / 2 ** 32)
+  return (high + ((w - high) >> 1)) >> 6
 }
 
 function evalPoly(w: number, terms: readonly BandTerm[], plusOne: boolean): number {

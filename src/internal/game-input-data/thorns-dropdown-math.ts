@@ -114,9 +114,7 @@ const THORNS_HEAT_WAVE_TABLE = [
   { wave: 1000, t11: 20, t14: 5 },
 ] as const
 
-export function buildThornsHeatWaveEntries(tournamentTier: string | null | undefined): readonly GameDropdownOptionEntry[] {
-  const useT11 = tournamentTier === 't11'
-  const useT14 = tournamentTier === 't14' || tournamentTier === 't17'
+export function buildThornsHeatWaveEntries(_tournamentTier: string | null | undefined): readonly GameDropdownOptionEntry[] {
   return THORNS_HEAT_WAVE_TABLE.map((row, index) => ({
     value: index,
     baseValue: index,

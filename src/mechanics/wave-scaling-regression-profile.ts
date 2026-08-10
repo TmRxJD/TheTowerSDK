@@ -88,7 +88,7 @@ export const DAMAGE_TIER_ATTENUATION: readonly number[] = [
   53906251776,
   /** T21 — matches legacy `tierCapDivisor` path pre-v28.3. */
   269531250688,
-  /** T22–24 — native rodata table @ 0xbe6940..0xbe6950 (v28.3 arm64). */
+  /** T22–24 — tabulated divisors, added in v28.3. */
   1.34765625344e12,
   6.7382812672e12,
   3.3691406336e13,

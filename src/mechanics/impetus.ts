@@ -6,7 +6,7 @@
  *   damageMultiplier =
  *     impetus × 0.01 × distanceMeters × extraMultiplier × distanceMultiplier + 1.0
  *
- * - `impetus` = Main.impetus (raw; UI shows ÷100 as ×/m)
+ * - `impetus` = raw impetus stat (the UI shows it ÷100, as ×/m)
  * - `distanceMeters` = **display meters** at call site (not internal dm field)
  * - `extraMultiplier` = card/module context factor
  * - `distanceMultiplier` = secondary distance scaling (often 1.0)

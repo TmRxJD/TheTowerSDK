@@ -1,7 +1,5 @@
 import { normalizeSharedCardsProgressInputs, type SharedCardsProgressInputs } from '../internal/cards-progress-inputs'
-import type { SharedEnemyDropsInputs } from '../internal/enemy-drops-calcs-local-state'
-import { findLabResearchBySlug } from '../data/index'
-import { resolveResearchLabLevel } from '../data/index'
+import { findLabResearchBySlug, resolveResearchLabLevel } from '../data/index'
 import type {
   SharedBotMedalSplitterPlanner,
   SharedLabsCalcByLab,
