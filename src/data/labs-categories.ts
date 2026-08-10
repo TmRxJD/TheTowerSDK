@@ -31,6 +31,27 @@ export const SITE_LAB_SLUG_ALIASES: Readonly<Record<string, string>> = {
   // research levels, so do not add that back.
 }
 
+/**
+ * Canonical slug -> the name the generated level table happens to use.
+ *
+ * The level tables were generated with the site's older names for some labs, so
+ * a lab the research catalog calls `coins_wave` has its costs stored under
+ * `coins_per_wave`. The tracker asks by the catalog slug, missed, and rendered
+ * the row with a real level and max but 0 for every time, gem and coin column --
+ * which reads as "this lab is free" rather than "we could not find its costs".
+ *
+ * Derived by inverting SITE_LAB_SLUG_ALIASES so there is one list, not two.
+ */
+export const LAB_LEVEL_TABLE_NAME_BY_SLUG: Readonly<Record<string, string>> = Object.fromEntries(
+  Object.entries(SITE_LAB_SLUG_ALIASES).map(([siteSlug, canonicalSlug]) => [canonicalSlug, siteSlug]),
+)
+
+/** Names to try, in order, when looking a lab's level table up by slug. */
+export function labLevelTableLookupNames(slug: string): string[] {
+  const alias = LAB_LEVEL_TABLE_NAME_BY_SLUG[slug]
+  return alias && alias !== slug ? [slug, alias] : [slug]
+}
+
 const SPECIAL_SITE_LAB_LABELS: Readonly<Record<string, string>> = {
   labs_speed: 'Lab Speed',
   labs_coin_discount: 'Lab Coin Discount',
