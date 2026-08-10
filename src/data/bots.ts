@@ -140,6 +140,9 @@ export const BOT_UPGRADES_DATA: BotData[] = [
     },
     labInfo: [
       { name: 'Cooldown', maxLevel: 25, maxValue: '-25s' },
+      // Not used by any calculation yet; listed so the lab the player actually
+      // has ("Thunder Bot - Linger Time") is imported and shown like the rest.
+      { name: 'Linger Time', maxLevel: 20, maxValue: '+20' },
     ],
     plus: createPlusData('TB+', 'Titan Shock', {
       0: '5%', 1: '6%', 2: '7%', 3: '8%', 4: '9%', 5: '10%', 6: '11%', 7: '12%', 8: '13%', 9: '14%', 10: '15%',

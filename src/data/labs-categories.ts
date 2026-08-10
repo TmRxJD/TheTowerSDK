@@ -21,10 +21,14 @@ export const SITE_LAB_SLUG_ALIASES: Readonly<Record<string, string>> = {
   scatter_amp: 'lightning_amplifier_scatter',
   chain_lightning_shock_chance: 'shock_chance',
   chain_lightning_shock_multiplier: 'shock_multiplier',
-  bot_bot_cooldown: 'amplify_bot_cooldown',
-  bot_bot_duration: 'amplify_bot_duration',
+  // `amp_bot_*` is shorthand the site used for Amplify Bot; it is not a slug in
+  // the research catalog, so mapping it across is right.
   amp_bot_cooldown: 'amplify_bot_cooldown',
   amp_bot_duration: 'amplify_bot_duration',
+  // `bot_bot_*` is NOT shorthand. Bot Bot and Amplify Bot are separate bots with
+  // separate labs -- the catalog carries "Bot Bot - Cooldown" and "Amplify Bot -
+  // Cooldown" as distinct records. Aliasing them made Bot Bot read Amplify Bot's
+  // research levels, so do not add that back.
 }
 
 const SPECIAL_SITE_LAB_LABELS: Readonly<Record<string, string>> = {
