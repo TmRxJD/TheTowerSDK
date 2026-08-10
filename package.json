@@ -1,6 +1,6 @@
 {
   "name": "thetowersdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Game data and save-file reading for The Tower — build your own calculators and tools.",
   "license": "MIT",
   "author": "TmRxJD (https://github.com/TmRxJD)",

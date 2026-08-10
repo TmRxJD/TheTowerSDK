@@ -38,6 +38,8 @@ function loadSdk () {
 }
 
 const sdk = loadSdk()
+/** Read, not hard-coded, so it cannot drift from the package on a release. */
+const { version: VERSION } = require(path.join(HERE, '..', 'package.json'))
 const ENTRIES = ['data', 'save', 'node', 'mechanics', 'formatting']
 
 /** Values are often huge tables; never return one whole by accident. */
@@ -218,7 +220,7 @@ const handlers = {
   initialize: () => ({
     protocolVersion: '2024-11-05',
     capabilities: { tools: {} },
-    serverInfo: { name: 'thetowersdk', version: '0.1.0' },
+    serverInfo: { name: 'thetowersdk', version: VERSION },
   }),
   'tools/list': () => ({
     tools: Object.entries(TOOLS).map(([name, t]) => ({

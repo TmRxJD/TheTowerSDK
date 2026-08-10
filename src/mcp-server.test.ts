@@ -7,7 +7,7 @@
  * stays covered on a fresh clone where nobody has a save to hand.
  */
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
@@ -64,6 +64,10 @@ describeServer('mcp server', () => {
     const init = await rpc('initialize', {})
     expect(init.result.protocolVersion).toBe('2024-11-05')
     expect(init.result.serverInfo.name).toBe('thetowersdk')
+    // Must track package.json rather than a literal, or it silently goes stale.
+    expect(init.result.serverInfo.version).toBe(
+      JSON.parse(readFileSync(path.join(HERE, '..', 'package.json'), 'utf8')).version,
+    )
 
     const list = await rpc('tools/list', {})
     const names = list.result.tools.map((tool: { name: string }) => tool.name).sort()
