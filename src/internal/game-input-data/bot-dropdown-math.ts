@@ -1,0 +1,115 @@
+import type { UptimeBotFieldMap } from '../shared-uptime-inputs'
+
+export const BOT_CD_LEVEL_COUNT = 16
+export const BOT_DUR_LEVEL_COUNT = 31
+export const BOT_CD_LAB_COUNT = 26
+export const BOT_DUR_LAB_COUNT = 21
+export const BOT_CD_LAB_CAP = 25
+export const BOT_DUR_LAB_CAP = 20
+export const THUNDER_BOT_DUR_LEVEL_COUNT = 11
+
+export type BotGameInputKind = 'cd_level' | 'dur_level' | 'cd_lab' | 'dur_lab'
+
+function formatSecondsNumber(seconds: number): string {
+  return seconds.toLocaleString('en-US', { maximumFractionDigits: 2 })
+}
+
+export function formatBotCooldownReductionLabel(seconds: number): string {
+  return `-${formatSecondsNumber(Math.max(0, seconds))}s`
+}
+
+export function formatBotDurationBonusLabel(seconds: number): string {
+  return `+${formatSecondsNumber(Math.max(0, seconds))}s`
+}
+
+export function computeBotCooldownSecondsAtLevel(
+  prefix: string,
+  level: number,
+  labLevel: number,
+): number {
+  const lab = Math.min(BOT_CD_LAB_CAP, Math.max(0, Math.floor(Number(labLevel) || 0)))
+  const cappedLevel = Math.max(0, Math.min(BOT_CD_LEVEL_COUNT - 1, Math.floor(Number(level) || 0)))
+
+  if (prefix === 'fb') {
+    const base = Math.max(30, 75 - (cappedLevel * 3))
+    return Math.max(5, base - lab)
+  }
+
+  return Math.max(50, 120 - (cappedLevel * 3) - lab)
+}
+
+export function computeBotDurationSecondsAtLevel(
+  prefix: string,
+  level: number,
+  labLevel: number,
+): number {
+  const cappedLevel = Math.max(0, Math.floor(Number(level) || 0))
+
+  if (prefix === 'tb') {
+    return Math.min(15, Math.max(0, 5 + cappedLevel))
+  }
+
+  const lab = Math.min(BOT_DUR_LAB_CAP, Math.max(0, Math.floor(Number(labLevel) || 0)))
+  const cappedDurLevel = Math.min(BOT_DUR_LEVEL_COUNT - 1, cappedLevel)
+  return Math.max(0, 20 + (cappedDurLevel * 0.5) + (lab * 0.5))
+}
+
+export function computeBotDurationLabBonusSeconds(labLevel: number): number {
+  return Math.max(0, Math.floor(Number(labLevel) || 0)) * 0.5
+}
+
+export function buildBotLevelOptionLabel(
+  kind: BotGameInputKind,
+  prefix: string,
+  level: number,
+  labLevel: number,
+): string {
+  switch (kind) {
+    case 'cd_level': {
+      const seconds = computeBotCooldownSecondsAtLevel(prefix, level, labLevel)
+      return `${formatSecondsNumber(Math.max(0, seconds))}s`
+    }
+    case 'dur_level': {
+      const seconds = computeBotDurationSecondsAtLevel(prefix, level, labLevel)
+      return `${formatSecondsNumber(Math.max(0, seconds))}s`
+    }
+    case 'cd_lab':
+      return `${formatSecondsNumber(Math.max(0, level))}s`
+    case 'dur_lab':
+      return `${formatSecondsNumber(Math.max(0, computeBotDurationLabBonusSeconds(level)))}s`
+    default:
+      return String(level)
+  }
+}
+
+export function resolveUptimeLabFieldName(
+  mapping: UptimeBotFieldMap,
+  kind: BotGameInputKind,
+): string | null {
+  switch (kind) {
+    case 'cd_level':
+    case 'cd_lab':
+      return `${mapping.prefix}CdLab`
+    case 'dur_level':
+    case 'dur_lab':
+      return mapping.durLab ? `${mapping.prefix}DurLab` : null
+    default:
+      return null
+  }
+}
+
+export function resolveBotLabStatName(
+  mapping: UptimeBotFieldMap,
+  kind: BotGameInputKind,
+): string | null {
+  switch (kind) {
+    case 'cd_level':
+    case 'cd_lab':
+      return mapping.cdLab
+    case 'dur_level':
+    case 'dur_lab':
+      return mapping.durLab
+    default:
+      return null
+  }
+}

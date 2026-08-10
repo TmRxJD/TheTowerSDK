@@ -1,0 +1,406 @@
+export type CloudStateDirection = 'cloud-newer' | 'local-newer' | 'unknown'
+
+export type RetryScheduleState = {
+  attemptCount: number
+  nextRetryAt: number
+}
+
+export type RetryQueueDisposition = 'ready' | 'deferred' | 'exhausted'
+
+export type RetryQueuePartition<T> = {
+  readyItems: T[]
+  deferredItems: T[]
+  exhaustedItems: T[]
+}
+
+export type RetryQueueProcessResult<Key> = {
+  key: Key
+  status: 'succeeded' | 'failed'
+  error?: string
+}
+
+export type RetryQueueFailedItem<T> = {
+  item: T
+  error?: string
+}
+
+export type RetryQueueSettlement<T> = {
+  readyItems: T[]
+  deferredItems: T[]
+  exhaustedItems: T[]
+  succeededItems: T[]
+  failedItems: RetryQueueFailedItem<T>[]
+  nextItems: T[]
+}
+
+export type UniqueQueueEnqueueResult<T> = {
+  items: T[]
+  changed: boolean
+}
+
+export type ReplaceOrInsertQueueItemResult<T> = {
+  items: T[]
+  previousItem: T | null
+  changed: boolean
+}
+
+export type RetryScheduleUpdateOptions = {
+  nowMs?: number
+  baseDelayMs?: number
+  maxDelayMs?: number
+  maxExponent?: number
+}
+
+export function normalizeRetryAttemptCount(value: unknown): number {
+  return Number.isFinite(Number(value)) ? Math.max(0, Math.floor(Number(value))) : 0
+}
+
+function normalizeForStableSerialize(value: unknown, seen: WeakSet<object>): unknown {
+  if (value === null || value === undefined) {
+    return value
+  }
+
+  if (typeof value !== 'object') {
+    return value
+  }
+
+  if (value instanceof Date) {
+    return value.toISOString()
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(item => normalizeForStableSerialize(item, seen))
+  }
+
+  const record = value as Record<string, unknown>
+  if (seen.has(record)) {
+    return '__cycle__'
+  }
+
+  seen.add(record)
+  const normalized: Record<string, unknown> = {}
+  const sortedKeys = Object.keys(record).sort((left, right) => left.localeCompare(right))
+  for (const key of sortedKeys) {
+    normalized[key] = normalizeForStableSerialize(record[key], seen)
+  }
+  seen.delete(record)
+
+  return normalized
+}
+
+export function stableSerialize(value: unknown): string {
+  const normalized = normalizeForStableSerialize(value, new WeakSet<object>())
+  return JSON.stringify(normalized)
+}
+
+export function stableEquals(left: unknown, right: unknown): boolean {
+  return stableSerialize(left) === stableSerialize(right)
+}
+
+export function enqueueUniqueItemsByKey<T, Key>(input: {
+  existingItems: readonly T[]
+  incomingItems: readonly T[]
+  getKey: (item: T) => Key
+}): UniqueQueueEnqueueResult<T> {
+  const mergedItems = [...input.existingItems]
+  const existingKeys = new Set(mergedItems.map(item => input.getKey(item)))
+  let changed = false
+
+  for (const item of input.incomingItems) {
+    const key = input.getKey(item)
+    if (existingKeys.has(key)) continue
+    existingKeys.add(key)
+    mergedItems.push(item)
+    changed = true
+  }
+
+  return {
+    items: mergedItems,
+    changed,
+  }
+}
+
+export function replaceOrInsertMatchingItem<T>(input: {
+  existingItems: readonly T[]
+  matchesExisting: (item: T) => boolean
+  buildItem: (previousItem: T | null) => T
+}): ReplaceOrInsertQueueItemResult<T> {
+  const existingIndex = input.existingItems.findIndex(input.matchesExisting)
+  const previousItem = existingIndex >= 0 ? input.existingItems[existingIndex] : null
+  const nextItem = input.buildItem(previousItem)
+
+  if (existingIndex < 0) {
+    return {
+      items: [...input.existingItems, nextItem],
+      previousItem: null,
+      changed: true,
+    }
+  }
+
+  if (stableEquals(previousItem, nextItem)) {
+    return {
+      items: [...input.existingItems],
+      previousItem,
+      changed: false,
+    }
+  }
+
+  const items = [...input.existingItems]
+  items[existingIndex] = nextItem
+  return {
+    items,
+    previousItem,
+    changed: true,
+  }
+}
+
+export function toObjectRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return null
+  }
+
+  return value as Record<string, unknown>
+}
+
+export function parseIsoTimestampToMillis(value: unknown): number | null {
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    return null
+  }
+
+  const parsed = Date.parse(value)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+export function computeCloudStateDirection(
+  localUpdatedAt: number | null,
+  cloudUpdatedAt: number | null,
+): CloudStateDirection {
+  if (!Number.isFinite(localUpdatedAt) || !Number.isFinite(cloudUpdatedAt)) {
+    return 'unknown'
+  }
+
+  if ((cloudUpdatedAt ?? 0) > (localUpdatedAt ?? 0)) {
+    return 'cloud-newer'
+  }
+
+  if ((localUpdatedAt ?? 0) > (cloudUpdatedAt ?? 0)) {
+    return 'local-newer'
+  }
+
+  return 'unknown'
+}
+
+export function computeExponentialBackoffMs(input: {
+  attemptCount: number
+  baseDelayMs?: number
+  maxDelayMs?: number
+  maxExponent?: number
+}): number {
+  const baseDelayMs = Number.isFinite(input.baseDelayMs) ? Number(input.baseDelayMs) : 2_000
+  const maxDelayMs = Number.isFinite(input.maxDelayMs) ? Number(input.maxDelayMs) : 5 * 60_000
+  const maxExponent = Number.isFinite(input.maxExponent) ? Number(input.maxExponent) : 12
+  const safeAttemptCount = Number.isFinite(input.attemptCount) ? Number(input.attemptCount) : 0
+
+  const exponent = Math.max(0, Math.min(Math.floor(safeAttemptCount), Math.floor(maxExponent)))
+  const rawDelay = baseDelayMs * (2 ** exponent)
+  return Math.min(rawDelay, maxDelayMs)
+}
+
+export function createRetryScheduleState(nowMs = Date.now()): RetryScheduleState {
+  return {
+    attemptCount: 0,
+    nextRetryAt: nowMs,
+  }
+}
+
+export function parseRetryScheduleState(input: {
+  attemptCount?: unknown
+  nextRetryAt?: unknown
+  nowMs?: number
+}): RetryScheduleState {
+  const fallback = createRetryScheduleState(input.nowMs)
+  const parsedNextRetryAt = Number(input.nextRetryAt)
+  return {
+    attemptCount: normalizeRetryAttemptCount(input.attemptCount),
+    nextRetryAt: Number.isFinite(parsedNextRetryAt) ? parsedNextRetryAt : fallback.nextRetryAt,
+  }
+}
+
+export function advanceRetryScheduleState(input: {
+  attemptCount?: unknown
+  nowMs?: number
+  baseDelayMs?: number
+  maxDelayMs?: number
+  maxExponent?: number
+}): RetryScheduleState {
+  const previousAttemptCount = normalizeRetryAttemptCount(input.attemptCount)
+  const attemptCount = previousAttemptCount + 1
+  const nowMs = Number.isFinite(Number(input.nowMs)) ? Number(input.nowMs) : Date.now()
+
+  return {
+    attemptCount,
+    nextRetryAt: nowMs + computeExponentialBackoffMs({
+      attemptCount,
+      baseDelayMs: input.baseDelayMs,
+      maxDelayMs: input.maxDelayMs,
+      maxExponent: input.maxExponent,
+    }),
+  }
+}
+
+export function applyRetryFailureState<T>(input: {
+  item: T
+  getAttemptCount: (item: T) => unknown
+  updateItem: (item: T, retryState: RetryScheduleState) => T
+} & RetryScheduleUpdateOptions): T {
+  const retryState = advanceRetryScheduleState({
+    attemptCount: input.getAttemptCount(input.item),
+    nowMs: input.nowMs,
+    baseDelayMs: input.baseDelayMs,
+    maxDelayMs: input.maxDelayMs,
+    maxExponent: input.maxExponent,
+  })
+  return input.updateItem(input.item, retryState)
+}
+
+export function isRetryScheduleReady(nextRetryAt: unknown, nowMs = Date.now()): boolean {
+  const parsedNextRetryAt = Number(nextRetryAt)
+  if (!Number.isFinite(parsedNextRetryAt)) return true
+  return parsedNextRetryAt <= nowMs
+}
+
+export function hasReachedRetryLimit(input: {
+  attemptCount?: unknown
+  maxRetryCount?: unknown
+}): boolean {
+  const maxRetryCount = Number.isFinite(Number(input.maxRetryCount))
+    ? Math.max(0, Math.floor(Number(input.maxRetryCount)))
+    : 0
+  return normalizeRetryAttemptCount(input.attemptCount) >= maxRetryCount
+}
+
+export function resolveRetryQueueDisposition(input: {
+  attemptCount?: unknown
+  nextRetryAt?: unknown
+  nowMs?: number
+  maxRetryCount?: unknown
+}): RetryQueueDisposition {
+  const hasRetryLimit = input.maxRetryCount !== null && input.maxRetryCount !== undefined
+  if (hasRetryLimit && hasReachedRetryLimit({
+    attemptCount: input.attemptCount,
+    maxRetryCount: input.maxRetryCount,
+  })) {
+    return 'exhausted'
+  }
+
+  return isRetryScheduleReady(input.nextRetryAt, input.nowMs) ? 'ready' : 'deferred'
+}
+
+export function partitionRetryQueueItems<T>(input: {
+  items: readonly T[]
+  getAttemptCount: (item: T) => unknown
+  getNextRetryAt: (item: T) => unknown
+  nowMs?: number
+  maxRetryCount?: unknown
+}): RetryQueuePartition<T> {
+  const readyItems: T[] = []
+  const deferredItems: T[] = []
+  const exhaustedItems: T[] = []
+
+  for (const item of input.items) {
+    const disposition = resolveRetryQueueDisposition({
+      attemptCount: input.getAttemptCount(item),
+      nextRetryAt: input.getNextRetryAt(item),
+      nowMs: input.nowMs,
+      maxRetryCount: input.maxRetryCount,
+    })
+
+    if (disposition === 'ready') {
+      readyItems.push(item)
+      continue
+    }
+
+    if (disposition === 'deferred') {
+      deferredItems.push(item)
+      continue
+    }
+
+    exhaustedItems.push(item)
+  }
+
+  return {
+    readyItems,
+    deferredItems,
+    exhaustedItems,
+  }
+}
+
+export async function settleRetryQueueItems<T, Key>(input: {
+  items: readonly T[]
+  getKey: (item: T) => Key
+  getAttemptCount: (item: T) => unknown
+  getNextRetryAt: (item: T) => unknown
+  processReadyItems: (readyItems: readonly T[]) => Promise<readonly RetryQueueProcessResult<Key>[]>
+  updateFailedItem: (item: T, retryState: RetryScheduleState) => T
+  nowMs?: number
+  maxRetryCount?: unknown
+}): Promise<RetryQueueSettlement<T>> {
+  const partition = partitionRetryQueueItems({
+    items: input.items,
+    getAttemptCount: input.getAttemptCount,
+    getNextRetryAt: input.getNextRetryAt,
+    nowMs: input.nowMs,
+    maxRetryCount: input.maxRetryCount,
+  })
+
+  const readyResults = await input.processReadyItems(partition.readyItems)
+  const resultByKey = new Map<Key, RetryQueueProcessResult<Key>>()
+  for (const result of readyResults) {
+    resultByKey.set(result.key, result)
+  }
+
+  const readyKeySet = new Set(partition.readyItems.map(item => input.getKey(item)))
+  const exhaustedKeySet = new Set(partition.exhaustedItems.map(item => input.getKey(item)))
+
+  const succeededItems: T[] = []
+  const failedItems: RetryQueueFailedItem<T>[] = []
+  const nextItems: T[] = []
+
+  for (const item of input.items) {
+    const key = input.getKey(item)
+
+    if (exhaustedKeySet.has(key)) {
+      continue
+    }
+
+    if (!readyKeySet.has(key)) {
+      nextItems.push(item)
+      continue
+    }
+
+    const result = resultByKey.get(key)
+    if (result?.status === 'succeeded') {
+      succeededItems.push(item)
+      continue
+    }
+
+    const retryState = advanceRetryScheduleState({
+      attemptCount: input.getAttemptCount(item),
+      nowMs: input.nowMs,
+    })
+    nextItems.push(input.updateFailedItem(item, retryState))
+    failedItems.push({
+      item,
+      error: result?.error,
+    })
+  }
+
+  return {
+    readyItems: [...partition.readyItems],
+    deferredItems: [...partition.deferredItems],
+    exhaustedItems: [...partition.exhaustedItems],
+    succeededItems,
+    failedItems,
+    nextItems,
+  }
+}

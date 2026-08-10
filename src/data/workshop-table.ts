@@ -1,0 +1,18 @@
+import workshopData from './workshop.json'
+
+/**
+ * One workshop upgrade level: the stat value it grants and what it costs.
+ *
+ * Deliberately a type alias rather than an interface -- aliases get an implicit
+ * index signature, so this stays assignable to generic JSON-shaped types that
+ * consumers use for rendering and serialization.
+ */
+export type WorkshopDataRow = {
+  value: number
+  cash: number
+  coins: number
+}
+
+export type WorkshopData = Record<string, Record<string, WorkshopDataRow>>
+
+export const WORKSHOP_DATA = workshopData as WorkshopData

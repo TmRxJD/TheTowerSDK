@@ -1,0 +1,236 @@
+/**
+ * Wave Info enemy row HP/damage (`CalculateEnemyValues`).
+ *
+ * Every row starts from the same skip-adjusted GetWaveBaseHealth / GetWaveBaseDamage.
+ * Type rules (×5 Tank, ×20 fleet, ×2 Vampire, …) and per-row BC/labs apply on that wave
+ * base — never on another enemy row's adjusted stats.
+ *
+ * Panel display order:
+ *   1. Wave base (tier + stat level from skips)
+ *   2. Battle conditions (resistance BC workshop offsets)
+ *   3. Enemy type rules
+ *   4. Enemy research labs (−0.4% per level additive on matching row)
+ *   5. Page perks — enemy-wave-info-pipeline / enemy-stat-display
+ */
+import type { EnemyWaveEnemyType } from '../internal/enemy-wave-stats'
+import {
+  aggregateWorkshopTableFloat,
+  type BattleConditionSelection,
+  workshopMultFromTableFloat,
+} from './battle-condition-config'
+import {
+  waveInfoBossHpWorkshopMult,
+  waveInfoEnemyLabMultiplierForRow,
+} from './enemy-wave-info-labs'
+import {
+  WAVE_INFO_BOSS_OVERHEAL_MULTS,
+  WAVE_INFO_BOSS_OVERHEAL_WAVE_THRESHOLDS,
+  WAVE_INFO_ENEMY_RULES,
+  WAVE_INFO_OVERCHARGE_DAMAGE_MULT,
+  WAVE_INFO_PROTECTOR_HP_MULT,
+  WAVE_INFO_WORKSHOP_OFFSETS,
+} from './wave-info-enemy-constants'
+
+export type WaveInfoEnemyStatsInput = {
+  waveBaseHp: number
+  waveBaseDamage: number
+  /**
+   * Wave-1 base damage for this tier. Overcharge's attack damage is pinned to
+   * wave 1 rather than scaling with the current wave, so it reads this instead
+   * of `waveBaseDamage`. Falls back to `waveBaseDamage` when omitted, which
+   * reproduces the older wave-scaled behaviour.
+   */
+  waveOneBaseDamage?: number
+  wave: number
+  tier: number
+  enemyType: EnemyWaveEnemyType
+  battleConditions: readonly BattleConditionSelection[]
+  bcLabLevels: Readonly<Record<string, number>>
+  labBenefitIncreaseAtLevel: (slug: string, level: number) => number
+  enemyLabLevels?: Readonly<Record<string, number>>
+  enemyLabBenefitAtLevel?: (slug: string, level: number) => number
+  /** Per-level `value` from boss_health lab record (default 0.3). */
+  bossHealthLabValuePerLevel?: number
+  bossUltimateHeatFactor?: number
+  towerMaxHealth?: number | null
+}
+
+type RowContext = {
+  battleConditions: readonly BattleConditionSelection[]
+  bcLabLevels: Readonly<Record<string, number>>
+  labBenefitIncreaseAtLevel: (slug: string, level: number) => number
+  enemyLabLevels?: Readonly<Record<string, number>>
+  enemyLabBenefitAtLevel?: (slug: string, level: number) => number
+  bossHealthLabValuePerLevel?: number
+}
+
+function workshopOffsetFor(type: EnemyWaveEnemyType, stat: 'hp' | 'damage'): number | undefined {
+  const row = WAVE_INFO_WORKSHOP_OFFSETS[type as keyof typeof WAVE_INFO_WORKSHOP_OFFSETS]
+  if (!row) return undefined
+  return stat === 'hp' ? row.hp : ('damage' in row ? row.damage : undefined)
+}
+
+function bcWorkshopMult(offset: number, ctx: RowContext): number {
+  const tableFloat = aggregateWorkshopTableFloat(
+    offset,
+    ctx.battleConditions,
+    ctx.bcLabLevels,
+    ctx.labBenefitIncreaseAtLevel,
+  )
+  return workshopMultFromTableFloat(tableFloat)
+}
+
+function enemyLabMult(
+  enemyType: EnemyWaveEnemyType,
+  stat: 'hp' | 'attack',
+  ctx: RowContext,
+): number {
+  if (!ctx.enemyLabLevels || !ctx.enemyLabBenefitAtLevel) return 1
+  return waveInfoEnemyLabMultiplierForRow(
+    enemyType,
+    stat,
+    ctx.enemyLabLevels,
+    ctx.enemyLabBenefitAtLevel,
+  )
+}
+
+/**
+ * Per-row lab mult for workshop offsets.
+ *
+ * When computing from raw skip-adjusted wave base (calculators, tests), apply
+ * `aggregateWorkshopTableFloat` via the row's workshop offset. Persisted
+ * CustomizeGame workshop floats already include BC contributions — do not
+ * stack this on top of those values (≈44× double-count on tier 20+).
+ */
+function rowDisplayMult(
+  enemyType: EnemyWaveEnemyType,
+  stat: 'hp' | 'damage',
+  ctx: RowContext,
+): number {
+  const labMult = enemyLabMult(enemyType, stat as 'hp' | 'attack', ctx)
+  const offset = workshopOffsetFor(enemyType, stat)
+  if (offset == null) return labMult
+  return bcWorkshopMult(offset, ctx) * labMult
+}
+
+export function bossOverhealWaveMult(wave: number): number {
+  const w = Math.max(1, Math.floor(wave))
+  let mult = 1
+  const [t100, t200, t300] = WAVE_INFO_BOSS_OVERHEAL_WAVE_THRESHOLDS
+  if (w >= t100) mult *= WAVE_INFO_BOSS_OVERHEAL_MULTS.wave100
+  if (w >= t200) mult *= WAVE_INFO_BOSS_OVERHEAL_MULTS.wave200
+  if (w >= t300) {
+    for (const threshold of WAVE_INFO_BOSS_OVERHEAL_WAVE_THRESHOLDS.slice(2)) {
+      if (w >= threshold) mult *= WAVE_INFO_BOSS_OVERHEAL_MULTS.wave300Plus
+    }
+  }
+  return mult
+}
+
+export function getWaveInfoEnemyStatsUnfloored(input: WaveInfoEnemyStatsInput): { hp: number, damage: number } {
+  return computeWaveInfoTypeRules(input)
+}
+
+export function getWaveInfoEnemyStats(input: WaveInfoEnemyStatsInput): { hp: number, damage: number } {
+  const stats = computeWaveInfoTypeRules(input)
+  return {
+    hp: Math.floor(stats.hp),
+    damage: Math.floor(stats.damage),
+  }
+}
+
+function computeWaveInfoTypeRules(input: WaveInfoEnemyStatsInput): { hp: number, damage: number } {
+  const {
+    waveBaseHp,
+    waveBaseDamage,
+    waveOneBaseDamage,
+    enemyType,
+    battleConditions,
+    bcLabLevels,
+    labBenefitIncreaseAtLevel,
+    enemyLabLevels,
+    enemyLabBenefitAtLevel,
+    bossHealthLabValuePerLevel = 0.3,
+    towerMaxHealth = null,
+  } = input
+
+  const ctx: RowContext = {
+    battleConditions,
+    bcLabLevels,
+    labBenefitIncreaseAtLevel,
+    enemyLabLevels,
+    enemyLabBenefitAtLevel,
+    bossHealthLabValuePerLevel,
+  }
+
+  const rules = WAVE_INFO_ENEMY_RULES[enemyType as keyof typeof WAVE_INFO_ENEMY_RULES]
+  if (!rules) {
+    return {
+      hp: waveBaseHp,
+      damage: waveBaseDamage,
+    }
+  }
+
+  let hp = waveBaseHp
+  let damage = waveBaseDamage
+
+  if ('damageZero' in rules && rules.damageZero) {
+    damage = 0
+  }
+
+  if ('hpDoubleWaveBase' in rules && rules.hpDoubleWaveBase) {
+    hp = waveBaseHp * 2 * rowDisplayMult(enemyType, 'hp', ctx)
+  } else if ('hpPlainWaveBase' in rules && rules.hpPlainWaveBase) {
+    hp = waveBaseHp * rowDisplayMult(enemyType, 'hp', ctx)
+  } else if ('hpProtectorStyleWorkshopOffset' in rules && rules.hpProtectorStyleWorkshopOffset != null) {
+    hp = waveBaseHp * WAVE_INFO_PROTECTOR_HP_MULT * rowDisplayMult('Protector', 'hp', ctx)
+  } else if ('hpWorkshopOffset' in rules && rules.hpWorkshopOffset != null) {
+    hp = waveBaseHp * rowDisplayMult(enemyType, 'hp', ctx)
+  } else if ('hpFixedMult' in rules && rules.hpFixedMult != null) {
+    hp = waveBaseHp * Number(rules.hpFixedMult)
+    if (enemyType === 'Boss') {
+      hp *= waveInfoBossHpWorkshopMult(
+        ctx.enemyLabLevels ?? {},
+        ctx.enemyLabBenefitAtLevel ?? (() => 0),
+        ctx.bossHealthLabValuePerLevel ?? 0.3,
+      )
+    } else if ('hpWorkshop' in rules && rules.hpWorkshop) {
+      hp *= rowDisplayMult(enemyType, 'hp', ctx)
+    } else {
+      hp *= enemyLabMult(enemyType, 'hp', ctx)
+    }
+  } else if ('hpFixedMult' in rules && rules.hpFixedMult === 'protectorHpMult') {
+    hp = waveBaseHp * WAVE_INFO_PROTECTOR_HP_MULT * rowDisplayMult('Protector', 'hp', ctx)
+  } else if ('hpWorkshop' in rules && rules.hpWorkshop) {
+    hp = waveBaseHp * rowDisplayMult(enemyType, 'hp', ctx)
+  }
+
+  if ('damageWaveBaseMult' in rules && rules.damageWaveBaseMult === 'overchargeWaveDamageMult') {
+    // Pinned to wave 1 — Overcharge's attack damage no longer tracks the wave.
+    damage = (waveOneBaseDamage ?? waveBaseDamage) * WAVE_INFO_OVERCHARGE_DAMAGE_MULT
+  } else if ('damageMainTowerMaxMult' in rules && rules.damageMainTowerMaxMult) {
+    const towerHp = towerMaxHealth != null && Number.isFinite(towerMaxHealth) && towerMaxHealth > 0
+      ? towerMaxHealth
+      : 0
+    damage = towerHp * WAVE_INFO_OVERCHARGE_DAMAGE_MULT
+  } else if ('damagePlainWaveBase' in rules && rules.damagePlainWaveBase) {
+    damage = waveBaseDamage * rowDisplayMult(enemyType, 'damage', ctx)
+  } else if ('damageHalfWaveBase' in rules && rules.damageHalfWaveBase) {
+    damage = waveBaseDamage * 0.5 * rowDisplayMult(enemyType, 'damage', ctx)
+  } else if ('damageWorkshopOffset' in rules && rules.damageWorkshopOffset != null) {
+    damage = waveBaseDamage * rowDisplayMult(enemyType, 'damage', ctx)
+  } else if ('damageWorkshop' in rules && rules.damageWorkshop) {
+    damage = waveBaseDamage * rowDisplayMult(enemyType, 'damage', ctx)
+  }
+
+  return {
+    hp,
+    damage,
+  }
+}
+
+export {
+  WAVE_INFO_ENEMY_RULES,
+  WAVE_INFO_OVERCHARGE_DAMAGE_MULT,
+  WAVE_INFO_WORKSHOP_OFFSETS,
+} from './wave-info-enemy-constants'

@@ -1,0 +1,95 @@
+/**
+ * Enemy↔tower distance cache.
+ *
+ * ## Full calculation pipeline (every frame, per enemy)
+ *
+ *   towerPos = tower position
+ *   enemyPos = enemy position
+ *   dx = towerPos.x − enemyPos.x
+ *   dy = towerPos.y − enemyPos.y
+ *   sumSq = dx² + dy²
+ *
+ *   distanceFromTower =
+ *     sumSq < 1e-4 ? 0 : sqrt(sumSq)     // Euclidean center-to-center (internal dm)
+ *
+ *   distanceFromTowerPhysics =
+ *     distanceFromTower − enemy.collider.radius
+ *
+ *   inTowerMeleeAttackDistance =
+ *     distanceFromTowerPhysics ≤ towerScaleAmplifier × 0.3
+ *
+ * ## Which distance answers which question?
+ *
+ * | Question                         | Uses                          |
+ * |----------------------------------|-------------------------------|
+ * | Normal tower fire in range?      | distanceFromTower < towerRangeDistance (ring) |
+ * | Multishot eligible?              | distanceFromTower < maxDistance (stat)        |
+ * | Impetus damage bonus?            | distanceFromTower (caller may convert to m)   |
+ * | Melee / touch attack?            | distanceFromTowerPhysics                      |
+ */
+
+import { MELEE_REACH_FACTOR } from './constants'
+import { DISTANCE_EPSILON_SQ } from './units'
+
+export interface EnemyDistanceInput {
+  towerX: number
+  towerY: number
+  enemyX: number
+  enemyY: number
+  colliderRadius: number
+  towerScaleAmplifier: number
+}
+
+export interface EnemyDistanceResult {
+  /** Center-to-center distance, internal dm. Stored at Enemy.distanceFromTower. */
+  distanceFromTower: number
+  /** Edge distance for melee. Stored at Enemy.distanceFromTowerPhysics. */
+  distanceFromTowerPhysics: number
+  /** Stored at Enemy.inTowerMeleeAttackDistance. */
+  inTowerMeleeAttackDistance: boolean
+}
+
+export function calculateEnemyDistances(input: EnemyDistanceInput): EnemyDistanceResult {
+  const dx = input.towerX - input.enemyX
+  const dy = input.towerY - input.enemyY
+  const sumSq = dx * dx + dy * dy
+
+  const distanceFromTower = sumSq < DISTANCE_EPSILON_SQ ? 0 : Math.sqrt(sumSq)
+  const distanceFromTowerPhysics = distanceFromTower - input.colliderRadius
+  const meleeReach = input.towerScaleAmplifier * MELEE_REACH_FACTOR
+
+  return {
+    distanceFromTower,
+    distanceFromTowerPhysics,
+    inTowerMeleeAttackDistance: distanceFromTowerPhysics <= meleeReach,
+  }
+}
+
+/** Normal fire eligibility — compares to range ring transform, not maxDistance stat. */
+export function isEnemyInNormalFireRange(
+  distanceFromTower: number,
+  towerRangeDistance: number,
+): boolean {
+  return distanceFromTower < towerRangeDistance
+}
+
+/** Multishot eligibility — uses maxDistance stat, not ring transform. */
+export function isEnemyInMultishotRange(
+  distanceFromTower: number,
+  maxDistance: number,
+): boolean {
+  return distanceFromTower < maxDistance
+}
+
+/**
+ * Black Hole range-line distance (Euclidean, internal dm).
+ *
+ *   towerToRangeLineDistance =
+ *     (maxDistance − 3) / (maxDistance × towerScaleAmplifier + 2) + 3.3
+ */
+export function blackHoleRangeLineDistance(
+  maxDistance: number,
+  towerScaleAmplifier: number,
+): number {
+  return (maxDistance - 3) / (maxDistance * towerScaleAmplifier + 2) + 3.3
+}

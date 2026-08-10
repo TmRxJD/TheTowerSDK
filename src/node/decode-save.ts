@@ -1,0 +1,49 @@
+import { gunzipSync } from 'node:zlib'
+
+import { listImportableBattleRuns } from '../save/battle-history'
+import { NRBFReader } from './nrbf/nrbf-reader'
+import { nrbfToJSON } from './nrbf/nrbf-to-json'
+
+export type PlayerInfoSaveDecodeResult = {
+  parsedRoot: Record<string, unknown>
+  wasGzip: boolean
+  battleRunCount: number
+}
+
+function toUint8Array(input: Uint8Array | Buffer | ArrayBuffer): Uint8Array {
+  if (input instanceof Uint8Array) {
+    return input
+  }
+  if (Buffer.isBuffer(input)) {
+    return new Uint8Array(input.buffer, input.byteOffset, input.byteLength)
+  }
+  return new Uint8Array(input)
+}
+
+function inflateIfGzip(bytes: Uint8Array): { inflated: Uint8Array; wasGzip: boolean } {
+  const isGzip = bytes.length >= 2 && bytes[0] === 0x1f && bytes[1] === 0x8b
+  if (!isGzip) {
+    return { inflated: bytes, wasGzip: false }
+  }
+  const inflated = gunzipSync(Buffer.from(bytes))
+  return { inflated: new Uint8Array(inflated), wasGzip: true }
+}
+
+/**
+ * Decodes a playerInfo.dat buffer (optionally gzip-compressed) into a parsed save root.
+ */
+export function decodePlayerInfoSaveBytes(input: Uint8Array | Buffer | ArrayBuffer): PlayerInfoSaveDecodeResult {
+  const bytes = toUint8Array(input)
+  const { inflated, wasGzip } = inflateIfGzip(bytes)
+  const decoded = NRBFReader.readStream(inflated)
+  const parsed = nrbfToJSON(decoded)
+  if (!parsed || typeof parsed !== 'object') {
+    throw new Error('Failed to decode playerInfo.dat: NRBF root was not an object')
+  }
+  const parsedRoot = parsed as Record<string, unknown>
+  return {
+    parsedRoot,
+    wasGzip,
+    battleRunCount: listImportableBattleRuns(parsedRoot).length,
+  }
+}

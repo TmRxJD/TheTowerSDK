@@ -1,0 +1,354 @@
+/**
+ * Multishot (MST) and Bounce Shot (BST) targeting.
+ *
+ * ## Multishot range filter
+ *
+ *   eligibleForMultishot = (distanceFromTower < maxDistance)
+ *
+ * Normal fire uses towerRangeDistance (ring); multishot uses maxDistance stat.
+ *
+ * ## GetEnemyTargetIndex — priority bucket lookup
+ *
+ *   if enemyType > 12: return 0
+ *   else: return ENEMY_TYPE_TO_PRIORITY_BUCKET[enemyType]
+ *
+ * ## MatchesTargetPriority — sort key order
+ *
+ * **Phase 1 — mark** (per enemy, when custom priority list active):
+ *   - alive, distance < bounce reference range
+ *   - tier bitmask matches priority mask (default 0x2c0)
+ *   - store tier byte; set eligible flag from towerRangeDistance
+ *
+ * **Phase 2 — bucket winners** (eligible: alive, flagged, not blocked, type ≠ 10):
+ *   1. **Primary** — globally closest distance → primaryTargetIndex
+ *   2. **targetPriority mode 1** — single secondary bucket: closest distance
+ *   3. **targetPriority mode ≥ 2** — per-type bucket via ENEMY_TYPE_TO_SORT_BUCKET
+ *   Slot 0 of targetPriorityList is always the primary after the pass.
+ *
+ * Tie-break within a bucket: **strictly closer distance wins**.
+ *
+ * ## MultishotBullet — scan order (not sorted list order)
+ *
+ *   for index in enemyList order:
+ *     skip if dead, distance ≥ maxDistance, blocked, index == primary, already shot,
+ *            or enemyType == 10
+ *     fire while count < MultishotTargets
+ *
+ * ## Bounce shot — FindNextBounceTarget
+ *
+ *   thresholdSq = (bounceRange × 0.5)²
+ *   pick alive enemy with min squared distance from current target position
+ *   where distSq < thresholdSq and not in alreadyHit[]
+ */
+
+import { BOUNCE_ANGLE_HALF_CIRCLE, BOUNCE_DISTANCE_EPSILON } from './constants'
+import { isEnemyInMultishotRange } from './distances'
+
+/**
+ * Enemy type index (0–12) → priority bucket for GetEnemyTargetIndex.
+ * Index 7 (Ray) → bucket 8 per live enum probe.
+ */
+export const ENEMY_TYPE_TO_PRIORITY_BUCKET: readonly number[] = [
+  1, 2, 3, 5, 4, 7, 8, 8, 8, 8, 9, 9, 9,
+]
+
+/** Sort-pass table — index 10 maps to bucket 0 (excluded from per-type buckets). */
+export const ENEMY_TYPE_TO_SORT_BUCKET: readonly number[] = [
+  1, 2, 3, 5, 4, 7, 8, 8, 8, 8, 0, 9, 9,
+]
+
+/** Default targetPriorityList bitmask when custom list is active. */
+export const DEFAULT_TARGET_PRIORITY_MASK = 0x2c0
+/** Enemy.type == 3 — boss branch in MatchesTargetPriority. */
+export const BOSS_ENEMY_TYPE = 3
+/** Enemy.type == 10 — skipped by MultishotBullet and sort pass. */
+export const MULTISHOT_EXCLUDED_ENEMY_TYPE = 10
+/** FindNextBounceTarget compares against (bounceRange × this)². */
+export const BOUNCE_RANGE_HALF_MULT = 0.5
+export const MAX_ENEMY_TYPE_INDEX = 12
+
+export type TargetPriorityMode = 1 | 2
+
+export interface MultishotTargetFilterInput {
+  distanceFromTower: number
+  maxDistance: number
+}
+
+export function isMultishotEligible(input: MultishotTargetFilterInput): boolean {
+  return isEnemyInMultishotRange(input.distanceFromTower, input.maxDistance)
+}
+
+export type BounceGeometryMode = 'standard' | 'blackHole'
+
+export interface BounceTargetInput {
+  primaryDistanceSq: number
+  bounceRange: number
+  mode: BounceGeometryMode
+}
+
+/** Black Hole bounce path uses squared distance with epsilon guard. */
+export function bounceDistancePassesEpsilon(distanceSq: number): boolean {
+  return distanceSq >= BOUNCE_DISTANCE_EPSILON
+}
+
+export function maxBounceChainLength(bounceShotTargets: number): number {
+  return Math.max(0, Math.floor(bounceShotTargets))
+}
+
+/** GetEnemyTargetIndex — jump table lookup. */
+export function enemyTypePriorityBucket(
+  enemyType: number,
+  table: 'lookup' | 'sort' = 'lookup',
+): number {
+  if (enemyType < 0 || enemyType > MAX_ENEMY_TYPE_INDEX) return 0
+  const src = table === 'sort' ? ENEMY_TYPE_TO_SORT_BUCKET : ENEMY_TYPE_TO_PRIORITY_BUCKET
+  return src[enemyType] ?? 0
+}
+
+/** Phase-1 mask test: `(tierBit << enemyType) & priorityMask`. */
+export function priorityMaskIncludesType(
+  priorityMask: number,
+  enemyType: number,
+  tierBit: number,
+): boolean {
+  if (enemyType < 0 || enemyType > 9) return false
+  return ((tierBit << enemyType) & priorityMask) !== 0
+}
+
+const INFINITY_DISTANCE = Number.POSITIVE_INFINITY
+
+export interface TargetCandidate {
+  /** Index into the active enemy list. */
+  index: number
+  distanceFromTower: number
+  enemyType: number
+  alive: boolean
+  /** Marked eligible in MatchesTargetPriority phase 1. */
+  priorityEligible?: boolean
+  /** Blocks MST sort pass when set. */
+  blocked?: boolean
+}
+
+function isSortEligible(candidate: TargetCandidate): boolean {
+  return candidate.alive
+    && candidate.priorityEligible !== false
+    && !candidate.blocked
+    && candidate.enemyType !== MULTISHOT_EXCLUDED_ENEMY_TYPE
+}
+
+export interface TargetPriorityWinners {
+  primaryIndex: number | null
+  primaryDistance: number
+  /** Mode 1 secondary bucket winner. */
+  secondaryIndex: number | null
+  /** Mode ≥ 2: bucket id → { index, distance }. */
+  bucketWinners: ReadonlyMap<number, { index: number, distance: number }>
+}
+
+/**
+ * MatchesTargetPriority phase-2 bucket selection.
+ * Tie-break: strictly smaller distanceFromTower wins within each bucket.
+ */
+export function buildTargetPriorityWinners(
+  candidates: readonly TargetCandidate[],
+  mode: TargetPriorityMode,
+): TargetPriorityWinners {
+  let primaryIndex: number | null = null
+  let primaryDistance = INFINITY_DISTANCE
+  let secondaryIndex: number | null = null
+  let secondaryDistance = INFINITY_DISTANCE
+  const bucketWinners = new Map<number, { index: number, distance: number }>()
+
+  for (const c of candidates) {
+    if (!isSortEligible(c)) continue
+
+    if (c.distanceFromTower < primaryDistance) {
+      primaryDistance = c.distanceFromTower
+      primaryIndex = c.index
+    }
+
+    if (mode === 1) {
+      if (c.distanceFromTower < secondaryDistance) {
+        secondaryDistance = c.distanceFromTower
+        secondaryIndex = c.index
+      }
+      continue
+    }
+
+    const bucket = enemyTypePriorityBucket(c.enemyType, 'sort')
+    if (bucket <= 0) continue
+
+    const prev = bucketWinners.get(bucket)
+    if (!prev || c.distanceFromTower < prev.distance) {
+      bucketWinners.set(bucket, { index: c.index, distance: c.distanceFromTower })
+    }
+  }
+
+  return { primaryIndex, primaryDistance, secondaryIndex, bucketWinners }
+}
+
+/**
+ * Ordered target indices for BST / primary-fire after MatchesTargetPriority.
+ * Slot 0 is always primary; remaining slots follow targetPriorityList bucket order.
+ */
+export function orderedTargetPriorityList(
+  winners: TargetPriorityWinners,
+  mode: TargetPriorityMode,
+  bucketOrder: readonly number[],
+): number[] {
+  const out: number[] = []
+  if (winners.primaryIndex !== null) out.push(winners.primaryIndex)
+
+  if (mode === 1) {
+    if (winners.secondaryIndex !== null && winners.secondaryIndex !== winners.primaryIndex) {
+      out.push(winners.secondaryIndex)
+    }
+    return out
+  }
+
+  for (const bucket of bucketOrder) {
+    const win = winners.bucketWinners.get(bucket)
+    if (!win || win.index === winners.primaryIndex || out.includes(win.index)) continue
+    out.push(win.index)
+  }
+  return out
+}
+
+export interface MultishotScanInput {
+  candidates: readonly TargetCandidate[]
+  maxDistance: number
+  multishotTargets: number
+  primaryTargetIndex: number | null
+  alreadyShot: ReadonlySet<number>
+}
+
+/** MultishotBullet — linear enemyList scan, not sorted-list order. */
+export function selectMultishotTargetsByScanOrder(input: MultishotScanInput): number[] {
+  const selected: number[] = []
+  const limit = Math.max(0, Math.floor(input.multishotTargets))
+
+  for (const c of input.candidates) {
+    if (selected.length >= limit) break
+    if (!c.alive) continue
+    if (!isEnemyInMultishotRange(c.distanceFromTower, input.maxDistance)) continue
+    if (c.blocked) continue
+    if (input.primaryTargetIndex !== null && c.index === input.primaryTargetIndex) continue
+    if (input.alreadyShot.has(c.index)) continue
+    if (c.enemyType === MULTISHOT_EXCLUDED_ENEMY_TYPE) continue
+    selected.push(c.index)
+  }
+
+  return selected
+}
+
+export interface BounceCandidate {
+  index: number
+  x: number
+  y: number
+  alive: boolean
+}
+
+export interface FindNextBounceTargetInput {
+  fromX: number
+  fromY: number
+  bounceRange: number
+  candidates: readonly BounceCandidate[]
+  alreadyHit: ReadonlySet<number>
+}
+
+/** FindNextBounceTarget — closest enemy within (bounceRange × 0.5)². */
+export function findNextBounceTargetByDistance(input: FindNextBounceTargetInput): number | null {
+  const thresholdSq = (input.bounceRange * BOUNCE_RANGE_HALF_MULT) ** 2
+  let bestIndex: number | null = null
+  let bestDistSq = INFINITY_DISTANCE
+
+  for (const c of input.candidates) {
+    if (!c.alive || input.alreadyHit.has(c.index)) continue
+    const dx = input.fromX - c.x
+    const dy = input.fromY - c.y
+    const distSq = dx * dx + dy * dy
+    if (distSq >= thresholdSq) continue
+    if (distSq < bestDistSq) {
+      bestDistSq = distSq
+      bestIndex = c.index
+    }
+  }
+
+  return bestIndex
+}
+
+export type BounceComputeMode = 'standard' | 'blackHole'
+
+/**
+ * ComputeBounceTargets — angle normalization.
+ * Clamps bounce bearing to (−180°, 180°] with ±360° wrap.
+ */
+export function normalizeBounceAngleDegrees(angle: number, mirrorNegativeScale: boolean): number {
+  let a = angle
+  if (mirrorNegativeScale) {
+    a += BOUNCE_ANGLE_HALF_CIRCLE
+  }
+  if (a > BOUNCE_ANGLE_HALF_CIRCLE) {
+    a -= BOUNCE_ANGLE_HALF_CIRCLE * 2
+  }
+  if (a <= -BOUNCE_ANGLE_HALF_CIRCLE) {
+    a += BOUNCE_ANGLE_HALF_CIRCLE * 2
+  }
+  return a
+}
+
+export interface BounceRangeLineInput {
+  towerScale: number
+  scaleSign: number
+  bounceRange: number
+  /** Primary offset along range line (geometry delta). */
+  lineOffset: number
+}
+
+/** Standard mode range-line bounce offset. Returns adjusted lateral offset along bounce direction. */
+export function standardBounceLineOffset(input: BounceRangeLineInput): number {
+  const signedScale = input.scaleSign < 0 ? -input.towerScale : input.towerScale
+  const base = input.lineOffset - signedScale
+  return base * input.bounceRange
+}
+
+export interface BlackHoleBounceRangeInput {
+  dx: number
+  dy: number
+  /** Effective reach — compared as distSq < reach². */
+  effectiveReach: number
+}
+
+/** Black Hole mode — squared-distance gate with ε guard. */
+export function blackHoleBounceInRange(input: BlackHoleBounceRangeInput): boolean {
+  const distSq = input.dx * input.dx + input.dy * input.dy
+  if (!bounceDistancePassesEpsilon(distSq)) return false
+  return distSq < input.effectiveReach * input.effectiveReach
+}
+
+/**
+ * Bounce target distance factor.
+ *   factor = (sqrt(distSq) / effectiveReach − 1) × bounceRange + 1
+ */
+export function bounceTargetDistanceFactor(
+  distSq: number,
+  effectiveReach: number,
+  bounceRange: number,
+  chainParityOdd: boolean,
+): number {
+  if (effectiveReach <= 0) return 1
+  const normalized = Math.sqrt(Math.max(0, distSq)) / effectiveReach - 1
+  const scaled = normalized * bounceRange + 1
+  return chainParityOdd ? scaled : 1
+}
+
+/** Game method names for targeting pipeline cross-reference. */
+export const TARGETING_METHODS = {
+  matchesTargetPriority: 'MatchesTargetPriority',
+  getEnemyTargetIndex: 'GetEnemyTargetIndex',
+  computeBounceTargets: 'ComputeBounceTargets',
+  findNextBounceTarget: 'FindNextBounceTarget',
+  hitAllBounceTargets: 'HitAllBounceTargets',
+  multishotBullet: 'MultishotBullet',
+  lightspeedMultishot: 'LightspeedMultishot',
+} as const

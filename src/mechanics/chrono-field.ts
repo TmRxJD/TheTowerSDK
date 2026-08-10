@@ -1,0 +1,34 @@
+export const CHRONO_KNOT_1 = 4 / 11
+export const CHRONO_KNOT_2 = 8 / 11
+export const CHRONO_KNOT_3 = 10 / 11
+export const CHRONO_SLOW_COEFF = 7.5625
+export const CHRONO_SLOW_MID = 0.75
+export const CHRONO_SLOW_HIGH = 0.9375
+
+export function chronoFieldSizeFactor(maxDistance: number): number {
+  if (maxDistance < 1) return (maxDistance / 3) * 0.5
+  return ((maxDistance / 3) + 2) * 0.5
+}
+
+export function chronoSlowStrength(x: number): number {
+  const v = Math.max(0, Math.min(1, x))
+  if (v < CHRONO_KNOT_1) return CHRONO_SLOW_COEFF * v * v
+  if (v < CHRONO_KNOT_2) return CHRONO_SLOW_MID
+  if (v < CHRONO_KNOT_3) return CHRONO_SLOW_HIGH
+  const t = v - CHRONO_KNOT_3
+  return Math.min(1, CHRONO_SLOW_COEFF * t * t + CHRONO_SLOW_HIGH)
+}
+
+/** Effective enemy speed multiplier inside chrono field. */
+export function chronoFieldSpeedMultiplier(reductionInput: number): number {
+  const x = Math.max(0, Math.min(1, reductionInput))
+  if (x <= 0.5) {
+    const mapped = 1 - 2 * x
+    return (1 - chronoSlowStrength(mapped)) * 0.5
+  }
+  return 1 - chronoSlowStrength(x)
+}
+
+export function chronoFieldDamageTakenMultiplier(lab54Mult: number): number {
+  return lab54Mult
+}

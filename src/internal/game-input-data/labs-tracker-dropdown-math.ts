@@ -1,0 +1,203 @@
+import {
+  formatLabDisplayName,
+  getLabMaxLevel,
+  getSharedToolLabs,
+  isLabsTrackerResearchLabName,
+  normalizeToolLabCategory,
+  type ToolLabRecord,
+} from '../../data/index'
+import type { GameDropdownOptionEntry, StandardDropdownOption } from './types'
+
+export type LabsTrackerLevelMode = 'current' | 'next' | 'target'
+
+export interface LabsNamePickerEntry {
+  name: string
+  label: string
+  type: string
+}
+
+function findLabRecordByName(labName: string): ToolLabRecord | undefined {
+  const trimmed = labName.trim()
+  if (!trimmed) return undefined
+  return getSharedToolLabs().find(lab =>
+    lab.name === trimmed
+    || formatLabDisplayName(String(lab.displayName ?? lab.name)) === trimmed,
+  )
+}
+
+export function resolveLabsTrackerMaxLevel(labName: string | null | undefined): number {
+  if (!labName?.trim()) return 0
+  const lab = findLabRecordByName(labName)
+  return lab ? getLabMaxLevel(lab) : 30
+}
+
+function resolveNamePickerSource(runtimeEntries?: readonly LabsNamePickerEntry[]): LabsNamePickerEntry[] {
+  if (runtimeEntries && runtimeEntries.length > 0) {
+    return runtimeEntries.filter(entry => isLabsTrackerResearchLabName(entry.name))
+  }
+  return getSharedToolLabs()
+    .filter(lab => isLabsTrackerResearchLabName(lab.name) || isLabsTrackerResearchLabName(lab.displayName))
+    .map(lab => ({
+      name: lab.name,
+      label: formatLabDisplayName(String(lab.displayName ?? lab.name)),
+      type: normalizeToolLabCategory(lab.type),
+    }))
+}
+
+export function filterLabsForNamePicker(
+  typeFilter: string | undefined,
+  includeLabNames: readonly string[] = [],
+  runtimeEntries?: readonly LabsNamePickerEntry[],
+): LabsNamePickerEntry[] {
+  const filter = typeFilter ?? 'All'
+  const source = resolveNamePickerSource(runtimeEntries)
+  const filtered = (filter === 'All'
+    ? source
+    : source.filter(entry => entry.type === filter))
+    .slice()
+    .sort((a, b) => {
+      const typeDiff = a.type.localeCompare(b.type)
+      if (typeDiff !== 0) return typeDiff
+      return a.label.localeCompare(b.label)
+    })
+
+  const entries: LabsNamePickerEntry[] = filtered.map(entry => ({ ...entry }))
+
+  for (const extraName of includeLabNames) {
+    if (!extraName || !isLabsTrackerResearchLabName(extraName)) continue
+    if (entries.some(entry => entry.name === extraName)) continue
+    const lab = findLabRecordByName(extraName)
+    entries.push({
+      name: extraName,
+      label: lab ? formatLabDisplayName(String(lab.displayName ?? lab.name)) : extraName,
+      type: lab ? normalizeToolLabCategory(lab.type) : '',
+    })
+  }
+
+  return entries
+}
+
+export function buildLabsNamePickerEntries(
+  typeFilter: string | undefined,
+  includeLabNames: readonly string[] = [],
+  showTypePrefix = false,
+  runtimeEntries?: readonly LabsNamePickerEntry[],
+): readonly GameDropdownOptionEntry[] {
+  return filterLabsForNamePicker(typeFilter, includeLabNames, runtimeEntries).map((entry, index) => ({
+    value: index,
+    baseValue: index,
+    meta: {
+      labName: entry.name,
+      label: showTypePrefix && (typeFilter ?? 'All') === 'All'
+        ? `${entry.type || 'Other'} — ${entry.label}`
+        : entry.label,
+      subtitle: entry.type || undefined,
+    },
+  }))
+}
+
+type LabsNamePickerDropdownMeta = {
+  labName: string
+  label: string
+  subtitle?: string
+}
+
+/** O(n) dropdown options — use instead of re-filtering per index in evaluators. */
+export function buildLabsNamePickerStandardOptions(
+  typeFilter: string | undefined,
+  includeLabNames: readonly string[] = [],
+  showTypePrefix = false,
+  runtimeEntries?: readonly LabsNamePickerEntry[],
+): StandardDropdownOption[] {
+  return buildLabsNamePickerEntries(typeFilter, includeLabNames, showTypePrefix, runtimeEntries).map(entry => {
+    const meta = (entry as GameDropdownOptionEntry & { meta?: LabsNamePickerDropdownMeta }).meta
+    return {
+      value: entry.value,
+      label: meta?.label ?? String(entry.value),
+      subtitle: meta?.subtitle,
+    }
+  })
+}
+
+export function buildLabsNamePickerOptionLabel(
+  index: number,
+  typeFilter: string | undefined,
+  includeLabNames: readonly string[] = [],
+  showTypePrefix = false,
+  runtimeEntries?: readonly LabsNamePickerEntry[],
+): string {
+  const entries = filterLabsForNamePicker(typeFilter, includeLabNames, runtimeEntries)
+  const clamped = Math.max(0, Math.min(entries.length - 1, Math.floor(Number(index) || 0)))
+  const entry = entries[clamped]
+  if (!entry) return String(index)
+  return showTypePrefix && (typeFilter ?? 'All') === 'All'
+    ? `${entry.type || 'Other'} — ${entry.label}`
+    : entry.label
+}
+
+export function buildLabsNamePickerOptionSubtitle(
+  index: number,
+  typeFilter: string | undefined,
+  includeLabNames: readonly string[] = [],
+  runtimeEntries?: readonly LabsNamePickerEntry[],
+): string | undefined {
+  const entries = filterLabsForNamePicker(typeFilter, includeLabNames, runtimeEntries)
+  const clamped = Math.max(0, Math.min(entries.length - 1, Math.floor(Number(index) || 0)))
+  return entries[clamped]?.type || undefined
+}
+
+export function resolveLabsNamePickerIndex(
+  labName: unknown,
+  typeFilter: string | undefined,
+  includeLabNames: readonly string[] = [],
+  runtimeEntries?: readonly LabsNamePickerEntry[],
+): number {
+  if (typeof labName !== 'string' || !labName) return -1
+  const entries = filterLabsForNamePicker(typeFilter, includeLabNames, runtimeEntries)
+  return entries.findIndex(entry => entry.name === labName)
+}
+
+export function resolveLabsNamePickerByIndex(
+  index: number,
+  typeFilter: string | undefined,
+  includeLabNames: readonly string[] = [],
+  runtimeEntries?: readonly LabsNamePickerEntry[],
+): string | null {
+  const entries = filterLabsForNamePicker(typeFilter, includeLabNames, runtimeEntries)
+  const clamped = Math.max(0, Math.min(entries.length - 1, Math.floor(Number(index) || 0)))
+  return entries[clamped]?.name ?? null
+}
+
+function resolveLevelBounds(
+  labName: string | null | undefined,
+  mode: LabsTrackerLevelMode,
+  minOverride?: number,
+  maxOverride?: number,
+): { min: number; max: number } {
+  const max = maxOverride ?? resolveLabsTrackerMaxLevel(labName)
+  if (mode === 'next') {
+    return { min: minOverride ?? 1, max: Math.max(1, max) }
+  }
+  if (mode === 'target') {
+    return { min: minOverride ?? 1, max: Math.max(1, max) }
+  }
+  return { min: minOverride ?? 0, max: Math.max(0, max) }
+}
+
+export function buildLabsTrackerLevelEntries(
+  labName: string | null | undefined,
+  mode: LabsTrackerLevelMode = 'current',
+  minOverride?: number,
+  maxOverride?: number,
+): readonly GameDropdownOptionEntry[] {
+  const { min, max } = resolveLevelBounds(labName, mode, minOverride, maxOverride)
+  if (max < min) return []
+  return Array.from({ length: max - min + 1 }, (_, offset) => {
+    const value = min + offset
+    return { value, baseValue: value }
+  })
+}
+
+export function buildLabsTrackerLevelOptionLabel(level: number): string {
+  return String(Math.max(0, Math.floor(Number(level) || 0)))
+}

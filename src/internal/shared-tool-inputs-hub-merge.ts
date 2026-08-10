@@ -1,0 +1,132 @@
+import {
+  defaultSharedEnemyStatsCore,
+  type SharedEnemyStatsCore,
+} from './shared-tool-inputs-extended'
+import {
+  defaultSharedUptimeInputs,
+  extractSharedUptimeInputs,
+  type SharedUptimeInputs,
+} from './shared-uptime-inputs'
+
+/** Site defaults used only for display/simulation — not written to the hub until a page sets a value. */
+export const SHARED_HUB_SITE_DEFAULTS = {
+  enemyStatsCore: defaultSharedEnemyStatsCore,
+  uptimeInputs: defaultSharedUptimeInputs,
+} as const
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+}
+
+function valuesEqual(a: unknown, b: unknown): boolean {
+  return JSON.stringify(a) === JSON.stringify(b)
+}
+
+/**
+ * Merge a hub scalar/object field from a tool-store delta.
+ * Incoming wins when the user changed the tool store; existing hub values are preserved when
+ * the tool still holds a site-default bootstrap value.
+ */
+export function mergeHubField<T>(
+  existing: T,
+  incoming: T,
+  siteDefault: T,
+  incomingChangedFromToolBaseline: boolean,
+): T {
+  if (incomingChangedFromToolBaseline) return incoming
+  if (!valuesEqual(existing, siteDefault)) return existing
+  return existing
+}
+
+export function mergeEnemyStatsCoreHub(
+  existing: SharedEnemyStatsCore,
+  incoming: SharedEnemyStatsCore,
+  changedKeys: ReadonlySet<string>,
+): SharedEnemyStatsCore {
+  const def = SHARED_HUB_SITE_DEFAULTS.enemyStatsCore
+  const changed = (key: keyof SharedEnemyStatsCore) => changedKeys.has(`enemyStatsCore.${String(key)}`)
+
+  return {
+    tierSelection: mergeHubField(existing.tierSelection, incoming.tierSelection, def.tierSelection, changed('tierSelection')),
+    wave: mergeHubField(existing.wave, incoming.wave, def.wave, changed('wave')),
+    healthSkipInput: mergeHubField(existing.healthSkipInput, incoming.healthSkipInput, def.healthSkipInput, changed('healthSkipInput')),
+    attackSkipInput: mergeHubField(existing.attackSkipInput, incoming.attackSkipInput, def.attackSkipInput, changed('attackSkipInput')),
+    reverseEnemyType: mergeHubField(existing.reverseEnemyType, incoming.reverseEnemyType, def.reverseEnemyType, changed('reverseEnemyType')),
+    targetHpVal: mergeHubField(existing.targetHpVal, incoming.targetHpVal, def.targetHpVal, changed('targetHpVal')),
+    targetDamageVal: mergeHubField(existing.targetDamageVal, incoming.targetDamageVal, def.targetDamageVal, changed('targetDamageVal')),
+    battleConditions: changed('battleConditions') && incoming.battleConditions.length
+      ? incoming.battleConditions
+      : existing.battleConditions,
+  }
+}
+
+/** Resolved uptime defaults (extractSharedUptimeInputs fills per-field site defaults). */
+export function resolveSharedUptimeHubDefaults(): SharedUptimeInputs {
+  return extractSharedUptimeInputs({})
+}
+
+export function mergeSharedUptimeInputsHub(
+  existing: SharedUptimeInputs,
+  incoming: SharedUptimeInputs,
+  changedKeys: ReadonlySet<string>,
+): SharedUptimeInputs {
+  const def = resolveSharedUptimeHubDefaults()
+  const merged: Record<string, unknown> = { ...existing }
+
+  for (const [key, value] of Object.entries(incoming)) {
+    if (value === undefined) continue
+    const path = `uptimeInputs.${key}`
+    const existingValue = merged[key]
+    const defaultValue = def[key as keyof SharedUptimeInputs]
+
+    if (changedKeys.has(path)) {
+      merged[key] = value
+      continue
+    }
+
+    if (existingValue !== undefined && !valuesEqual(existingValue, defaultValue)) {
+      continue
+    }
+  }
+
+  return extractSharedUptimeInputs(merged)
+}
+
+export function diffChangedHubKeys(
+  baseline: Record<string, unknown>,
+  current: Record<string, unknown>,
+  prefix = '',
+): Set<string> {
+  const changed = new Set<string>()
+
+  for (const [key, value] of Object.entries(current)) {
+    const path = prefix ? `${prefix}.${key}` : key
+    const baseValue = baseline[key]
+
+    if (isPlainObject(value) && isPlainObject(baseValue)) {
+      for (const nested of diffChangedHubKeys(baseValue, value, path)) {
+        changed.add(nested)
+      }
+      continue
+    }
+
+    if (!valuesEqual(value, baseValue)) {
+      changed.add(path)
+    }
+  }
+
+  return changed
+}
+
+export function pickNonDefaultRecordFields<T extends Record<string, unknown>>(
+  value: T,
+  defaults: T,
+): Partial<T> {
+  const out: Partial<T> = {}
+  for (const [key, fieldValue] of Object.entries(value)) {
+    if (!valuesEqual(fieldValue, defaults[key as keyof T])) {
+      out[key as keyof T] = fieldValue as T[keyof T]
+    }
+  }
+  return out
+}

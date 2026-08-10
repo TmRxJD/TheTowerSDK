@@ -1,0 +1,143 @@
+import type { GameDropdownOptionEntry } from './types'
+
+export type ThornsTierValue = number | 't11' | 't14' | 't17'
+
+const THORNS_TIER_EFFECTIVENESS = [
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0.80, 0.70, 0.60, 0.50, 0.40, 0.30, 0.20, 0.10,
+] as const
+
+export const THORNS_TIER_VALUES: readonly ThornsTierValue[] = [
+  ...THORNS_TIER_EFFECTIVENESS.map((_, index) => index + 1),
+  't11',
+  't14',
+  't17',
+]
+
+export function buildThornsTierEntries(): readonly GameDropdownOptionEntry[] {
+  return THORNS_TIER_VALUES.map((value, index) => ({
+    value: index,
+    baseValue: index,
+    meta: { tier: value },
+  }))
+}
+
+export function buildThornsTierOptionLabel(index: number): string {
+  const clamped = Math.max(0, Math.min(THORNS_TIER_VALUES.length - 1, Math.floor(Number(index) || 0)))
+  const tier = THORNS_TIER_VALUES[clamped]
+  if (typeof tier === 'number') {
+    const effectiveness = THORNS_TIER_EFFECTIVENESS[tier - 1] ?? 1
+    return `${tier} - ${Math.round(effectiveness * 100)}%`
+  }
+  if (tier === 't11') return 'T11+ (Tournament)'
+  if (tier === 't14') return 'T14+ (Tournament)'
+  return 'T17+ (Tournament)'
+}
+
+export function resolveThornsTierIndex(tier: ThornsTierValue | null | undefined): number {
+  const idx = THORNS_TIER_VALUES.indexOf((tier ?? 1) as ThornsTierValue)
+  return idx >= 0 ? idx : 0
+}
+
+export function resolveThornsTierByIndex(index: number): ThornsTierValue {
+  const clamped = Math.max(0, Math.min(THORNS_TIER_VALUES.length - 1, Math.floor(Number(index) || 0)))
+  return THORNS_TIER_VALUES[clamped] ?? 1
+}
+
+export function buildThornsPlasmaCannonLevelEntries(): readonly GameDropdownOptionEntry[] {
+  return Array.from({ length: 8 }, (_, level) => ({ value: level, baseValue: level }))
+}
+
+export function buildThornsPlasmaCannonLevelOptionLabel(level: number): string {
+  const clamped = Math.max(0, Math.min(7, Math.floor(Number(level) || 0)))
+  const pct = clamped === 0 ? 0 : 30 + (clamped - 1) * 4
+  return `${clamped} - ${pct}%`
+}
+
+export function buildThornsPlasmaCannonMasteryEntries(): readonly GameDropdownOptionEntry[] {
+  return Array.from({ length: 10 }, (_, level) => ({ value: level, baseValue: level }))
+}
+
+export function buildThornsPlasmaCannonMasteryOptionLabel(level: number): string {
+  const clamped = Math.max(0, Math.min(9, Math.floor(Number(level) || 0)))
+  return `${clamped} - ${clamped * 5}%`
+}
+
+export function buildThornsBcGlobalLabEntries(): readonly GameDropdownOptionEntry[] {
+  return Array.from({ length: 11 }, (_, level) => ({ value: level, baseValue: level }))
+}
+
+export function buildThornsBcGlobalLabOptionLabel(level: number): string {
+  const clamped = Math.max(0, Math.min(10, Math.floor(Number(level) || 0)))
+  return `${clamped} - ${clamped * 2}%`
+}
+
+export function buildThornsBcReductionLabEntries(): readonly GameDropdownOptionEntry[] {
+  return Array.from({ length: 21 }, (_, level) => ({ value: level, baseValue: level }))
+}
+
+export function buildThornsBcReductionLabOptionLabel(level: number): string {
+  const clamped = Math.max(0, Math.min(20, Math.floor(Number(level) || 0)))
+  return `${clamped} - ${clamped}%`
+}
+
+export function buildThornsWallThornsEntries(): readonly GameDropdownOptionEntry[] {
+  return Array.from({ length: 20 }, (_, index) => {
+    const level = index + 1
+    return { value: level, baseValue: level }
+  })
+}
+
+export function buildThornsWallThornsOptionLabel(level: number): string {
+  const clamped = Math.max(1, Math.min(20, Math.floor(Number(level) || 1)))
+  return `${clamped} - ${clamped}%`
+}
+
+const THORNS_HEAT_WAVE_TABLE = [
+  { wave: 0, t11: 95, t14: 95 },
+  { wave: 20, t11: 90, t14: 90 },
+  { wave: 40, t11: 80, t14: 80 },
+  { wave: 60, t11: 75, t14: 75 },
+  { wave: 80, t11: 70, t14: 70 },
+  { wave: 100, t11: 65, t14: 65 },
+  { wave: 150, t11: 60, t14: 60 },
+  { wave: 200, t11: 58, t14: 58 },
+  { wave: 250, t11: 56, t14: 56 },
+  { wave: 300, t11: 54, t14: 54 },
+  { wave: 350, t11: 52, t14: 50 },
+  { wave: 400, t11: 50, t14: 45 },
+  { wave: 450, t11: 48, t14: 40 },
+  { wave: 500, t11: 46, t14: 35 },
+  { wave: 600, t11: 44, t14: 30 },
+  { wave: 700, t11: 40, t14: 25 },
+  { wave: 800, t11: 35, t14: 20 },
+  { wave: 900, t11: 30, t14: 15 },
+  { wave: 1000, t11: 20, t14: 5 },
+] as const
+
+export function buildThornsHeatWaveEntries(_tournamentTier: string | null | undefined): readonly GameDropdownOptionEntry[] {
+  return THORNS_HEAT_WAVE_TABLE.map((row, index) => ({
+    value: index,
+    baseValue: index,
+    meta: { wave: row.wave },
+  }))
+}
+
+export function buildThornsHeatWaveOptionLabel(index: number, tournamentTier: string | null | undefined): string {
+  const useT11 = tournamentTier === 't11'
+  const useT14 = tournamentTier === 't14' || tournamentTier === 't17'
+  const clamped = Math.max(0, Math.min(THORNS_HEAT_WAVE_TABLE.length - 1, Math.floor(Number(index) || 0)))
+  const row = THORNS_HEAT_WAVE_TABLE[clamped]
+  if (!row) return String(index)
+  const pct = useT11 ? row.t11 : useT14 ? row.t14 : row.t11
+  return `${row.wave} - ${pct}%`
+}
+
+export function resolveThornsHeatWaveIndex(wave: number | null | undefined): number {
+  const idx = THORNS_HEAT_WAVE_TABLE.findIndex(row => row.wave === Math.floor(Number(wave) || 0))
+  return idx >= 0 ? idx : 0
+}
+
+export function resolveThornsHeatWaveByIndex(index: number): number {
+  const clamped = Math.max(0, Math.min(THORNS_HEAT_WAVE_TABLE.length - 1, Math.floor(Number(index) || 0)))
+  return THORNS_HEAT_WAVE_TABLE[clamped]?.wave ?? 0
+}

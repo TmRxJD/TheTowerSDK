@@ -1,0 +1,166 @@
+import { MAX_ASSIST_MULTIPLIER_EFFICIENCY_PCT } from '../internal/assist-module-efficiency'
+import { MODULE_SUBSTAT_CANONICAL_DATA } from '../data/module-substats'
+import { buildLevelOptions } from '../data/module-levels'
+import { parseModuleElsBonusPercent } from './els-module-cluster'
+import { getWorkshopEnhancementDefinitions } from '../data/workshop-enhancement-tracker-definitions'
+import { getWorkshopStatDefinitions } from '../data/workshop-tracker-definitions'
+import {
+  ELS_ATTACK_MODULE_SUBSTAT_LABEL,
+  ELS_HEALTH_MODULE_SUBSTAT_LABEL,
+  VAULT_ELS_MAX_STARS,
+} from './els-module-cluster'
+import { ELS_ATTACK_WORKSHOP_KEY, ELS_ENHANCEMENT_KEY, ELS_HEALTH_WORKSHOP_KEY } from './els-upgrade-path'
+
+export type ElsSelectOption<T = number> = { title: string; value: T }
+
+export const ELS_MODULE_SUBSTAT_NONE = 'none' as const
+export type ElsModuleSubstatRarityChoice =
+  | typeof ELS_MODULE_SUBSTAT_NONE
+  | 'Epic'
+  | 'Legendary'
+  | 'Mythic'
+  | 'Ancestral'
+
+const WORKSHOP_DISCOUNT_STEP = 0.5
+const ENHANCEMENT_DISCOUNT_STEP = 0.3
+const WORKSHOP_VAULT_DISCOUNT_STEP = 2.5
+
+export function buildWorkshopUtilityDiscountOptions(maxPct = 49.5): ElsSelectOption[] {
+  const count = Math.floor(maxPct / WORKSHOP_DISCOUNT_STEP) + 1
+  return Array.from({ length: count }, (_, index) => {
+    const value = Number((index * WORKSHOP_DISCOUNT_STEP).toFixed(1))
+    return { title: `${value.toFixed(1)}%`, value }
+  })
+}
+
+export function buildWorkshopEnhancementDiscountOptions(maxPct = 30): ElsSelectOption[] {
+  const count = Math.floor(maxPct / ENHANCEMENT_DISCOUNT_STEP) + 1
+  return Array.from({ length: count }, (_, index) => {
+    const value = Number((index * ENHANCEMENT_DISCOUNT_STEP).toFixed(1))
+    return { title: `${value.toFixed(1)}%`, value }
+  })
+}
+
+/** Workshop vault discount (enhancement section) — not Power Vault skip nodes. */
+export function buildWorkshopVaultDiscountOptions(maxPct = 25): ElsSelectOption[] {
+  const count = Math.floor(maxPct / WORKSHOP_VAULT_DISCOUNT_STEP) + 1
+  return Array.from({ length: count }, (_, index) => {
+    const value = Number((index * WORKSHOP_VAULT_DISCOUNT_STEP).toFixed(1))
+    return { title: `${value.toFixed(1)}%`, value }
+  })
+}
+
+export function buildVaultElsStarOptions(): ElsSelectOption[] {
+  return Array.from({ length: VAULT_ELS_MAX_STARS + 1 }, (_, stars) => ({
+    title: stars === 0 ? '0 stars' : `${stars} star${stars === 1 ? '' : 's'} (+${(stars * 0.5).toFixed(1)}%)`,
+    value: stars,
+  }))
+}
+
+export function buildAssistSubstatEfficiencyOptions(): ElsSelectOption[] {
+  return Array.from({ length: MAX_ASSIST_MULTIPLIER_EFFICIENCY_PCT }, (_, index) => ({
+    title: `${index + 1}%`,
+    value: index + 1,
+  }))
+}
+
+function elsSubstatDefinition(label: string) {
+  return MODULE_SUBSTAT_CANONICAL_DATA.Generator.substats.find(entry => entry.label === label)
+}
+
+export function buildElsModuleSubstatRarityOptions(
+  label: typeof ELS_ATTACK_MODULE_SUBSTAT_LABEL | typeof ELS_HEALTH_MODULE_SUBSTAT_LABEL,
+): ElsSelectOption<ElsModuleSubstatRarityChoice>[] {
+  const definition = elsSubstatDefinition(label)
+  const options: ElsSelectOption<ElsModuleSubstatRarityChoice>[] = [
+    { title: 'None', value: ELS_MODULE_SUBSTAT_NONE },
+  ]
+  if (!definition) return options
+
+  for (const rarity of definition.availableRarities) {
+    const display = definition.valuesByRarity[rarity]
+    if (!display) continue
+    options.push({
+      title: `${rarity} (${display})`,
+      value: rarity as ElsModuleSubstatRarityChoice,
+    })
+  }
+  return options
+}
+
+export function elsModuleRarityToDisplayPct(
+  label: string,
+  rarity: ElsModuleSubstatRarityChoice,
+): number {
+  if (rarity === ELS_MODULE_SUBSTAT_NONE) return 0
+  const definition = elsSubstatDefinition(label)
+  const raw = definition?.valuesByRarity[rarity]
+  return parseModuleElsBonusPercent(raw) * 100
+}
+
+export function inferElsModuleRarityFromDisplayPct(
+  label: string,
+  displayPct: number,
+): ElsModuleSubstatRarityChoice {
+  if (!Number.isFinite(displayPct) || displayPct <= 0) return ELS_MODULE_SUBSTAT_NONE
+  const definition = elsSubstatDefinition(label)
+  if (!definition) return ELS_MODULE_SUBSTAT_NONE
+
+  for (const rarity of definition.availableRarities) {
+    const pct = elsModuleRarityToDisplayPct(label, rarity as ElsModuleSubstatRarityChoice)
+    if (Math.abs(pct - displayPct) < 0.05) return rarity as ElsModuleSubstatRarityChoice
+  }
+  return ELS_MODULE_SUBSTAT_NONE
+}
+
+export function buildWorkshopUtilityLevelOptions(statKey: string): ElsSelectOption[] {
+  const stat = getWorkshopStatDefinitions().find(entry => entry.key === statKey)
+  if (!stat) return [{ title: '0', value: 0 }]
+  return Array.from({ length: stat.maxLevel + 1 }, (_, level) => ({
+    title: String(level),
+    value: level,
+  }))
+}
+
+/** ELS+ workshop level → in-run multiplier (`1 + level × 0.01`). */
+export function elsEnhancementMultiplierFromLevel(level: number): number {
+  return 1 + Math.max(0, Math.floor(level)) * 0.01
+}
+
+export function formatElsEnhancementMultiplierLabel(level: number): string {
+  return `×${elsEnhancementMultiplierFromLevel(level).toFixed(2)}`
+}
+
+export function buildElsEnhancementLevelOptions(): ElsSelectOption[] {
+  const stat = getWorkshopEnhancementDefinitions().find(entry => entry.key === ELS_ENHANCEMENT_KEY)
+  if (!stat) return [{ title: `0 (${formatElsEnhancementMultiplierLabel(0)})`, value: 0 }]
+  return Array.from({ length: stat.maxLevel - stat.minLevel + 1 }, (_, index) => {
+    const value = stat.minLevel + index
+    return { title: `${value} (${formatElsEnhancementMultiplierLabel(value)})`, value }
+  })
+}
+
+export const ELS_WORKSHOP_ATTACK_LEVEL_OPTIONS = () =>
+  buildWorkshopUtilityLevelOptions(ELS_ATTACK_WORKSHOP_KEY)
+export const ELS_WORKSHOP_HEALTH_LEVEL_OPTIONS = () =>
+  buildWorkshopUtilityLevelOptions(ELS_HEALTH_WORKSHOP_KEY)
+
+function workshopUtilityMaxLevel(statKey: string): number {
+  const stat = getWorkshopStatDefinitions().find(entry => entry.key === statKey)
+  return stat?.maxLevel ?? 0
+}
+
+/** Numeric items for v-autocomplete level pickers (0 … max). */
+export function buildElsWorkshopAttackLevelAutocomplete(): number[] {
+  return buildLevelOptions(workshopUtilityMaxLevel(ELS_ATTACK_WORKSHOP_KEY), 0)
+}
+
+export function buildElsWorkshopHealthLevelAutocomplete(): number[] {
+  return buildLevelOptions(workshopUtilityMaxLevel(ELS_HEALTH_WORKSHOP_KEY), 0)
+}
+
+export function buildElsEnhancementLevelAutocomplete(): number[] {
+  const stat = getWorkshopEnhancementDefinitions().find(entry => entry.key === ELS_ENHANCEMENT_KEY)
+  if (!stat) return [0]
+  return buildLevelOptions(stat.maxLevel, stat.minLevel)
+}

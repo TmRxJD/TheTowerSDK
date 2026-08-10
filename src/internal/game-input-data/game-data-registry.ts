@@ -1,0 +1,271 @@
+import {
+  buildCardGameLevelEntries,
+  buildCardMasteryLevelEntries,
+  buildCardMasterySelectLevelEntries,
+  buildGoldenBotCooldownLevelEntries,
+  buildUptimeWaLevelEntries,
+} from './registry-builders'
+import {
+  BOT_GAME_INPUT_SPECS,
+  type BotGameDataKey,
+  buildBotGameInputLevelEntries,
+  GAME_DATA_KEY_ALIASES,
+} from './bot-game-input-keys'
+import {
+  buildGuardianGameInputLevelEntries,
+  GUARDIAN_GAME_INPUT_SPECS,
+  type GuardianGameDataKey,
+} from './guardian-game-input-keys'
+import {
+  UPTIME_RESEARCH_LAB_SPECS,
+  type UptimeResearchLabDataKey,
+} from './uptime-research-lab-keys'
+import { buildUptimeResearchLabLevelEntries } from './uptime-research-lab-math'
+import {
+  DISSONANCE_ECHO_LAB_SPECS,
+  type DissonanceEchoLabDataKey,
+} from './dissonance-echo-lab-keys'
+import { buildDissonanceEchoLabLevelEntries } from './dissonance-echo-lab-dropdown-math'
+import { gameDropdownOptionEntrySchema } from './types'
+import type { GameDataRegistryItem } from './types'
+
+const STATIC_REGISTRY = {
+  gold_bot_cooldown: {
+    schema: gameDropdownOptionEntrySchema,
+    data: buildGoldenBotCooldownLevelEntries(),
+  },
+  wave_accelerator_level: {
+    schema: gameDropdownOptionEntrySchema,
+    data: buildCardGameLevelEntries(),
+  },
+  card_game_level: {
+    schema: gameDropdownOptionEntrySchema,
+    data: buildCardGameLevelEntries(),
+  },
+  card_mastery: {
+    schema: gameDropdownOptionEntrySchema,
+    data: buildCardMasteryLevelEntries(),
+  },
+  card_mastery_select: {
+    schema: gameDropdownOptionEntrySchema,
+    data: buildCardMasterySelectLevelEntries(),
+  },
+  uptime_wa_level: {
+    schema: gameDropdownOptionEntrySchema,
+    data: buildUptimeWaLevelEntries(),
+  },
+} as const satisfies Record<string, GameDataRegistryItem>
+
+const BOT_REGISTRY = Object.fromEntries(
+  BOT_GAME_INPUT_SPECS.map(spec => [
+    spec.key,
+    {
+      schema: gameDropdownOptionEntrySchema,
+      data: buildBotGameInputLevelEntries(spec),
+    },
+  ]),
+) as { [K in BotGameDataKey]: GameDataRegistryItem }
+
+const GUARDIAN_REGISTRY = Object.fromEntries(
+  GUARDIAN_GAME_INPUT_SPECS.map(spec => [
+    spec.key,
+    {
+      schema: gameDropdownOptionEntrySchema,
+      data: buildGuardianGameInputLevelEntries(spec.mapping, spec.kind),
+    },
+  ]),
+) as { [K in GuardianGameDataKey]: GameDataRegistryItem }
+
+const UPTIME_RESEARCH_LAB_REGISTRY = Object.fromEntries(
+  UPTIME_RESEARCH_LAB_SPECS.map(spec => [
+    spec.key,
+    {
+      schema: gameDropdownOptionEntrySchema,
+      data: buildUptimeResearchLabLevelEntries(spec),
+    },
+  ]),
+) as { [K in UptimeResearchLabDataKey]: GameDataRegistryItem }
+
+const DISSONANCE_ECHO_LAB_REGISTRY = Object.fromEntries(
+  DISSONANCE_ECHO_LAB_SPECS.map(spec => [
+    spec.key,
+    {
+      schema: gameDropdownOptionEntrySchema,
+      data: buildDissonanceEchoLabLevelEntries(spec),
+    },
+  ]),
+) as { [K in DissonanceEchoLabDataKey]: GameDataRegistryItem }
+
+const PARAMETRIC_REGISTRY = {
+  research_lab_level: {
+    schema: gameDropdownOptionEntrySchema,
+    data: [],
+  },
+  workshop_enhancement_level: {
+    schema: gameDropdownOptionEntrySchema,
+    data: [],
+  },
+  guardian_stat_level: {
+    schema: gameDropdownOptionEntrySchema,
+    data: [],
+  },
+  uw_stat_level: {
+    schema: gameDropdownOptionEntrySchema,
+    data: [],
+  },
+  workshop_stat_level: {
+    schema: gameDropdownOptionEntrySchema,
+    data: [],
+  },
+  workshop_tier_level: {
+    schema: gameDropdownOptionEntrySchema,
+    data: [],
+  },
+  module_rarity: {
+    schema: gameDropdownOptionEntrySchema,
+    data: [],
+  },
+  module_level: {
+    schema: gameDropdownOptionEntrySchema,
+    data: [],
+  },
+  module_quantity: {
+    schema: gameDropdownOptionEntrySchema,
+    data: [],
+  },
+  module_substat_rarity: {
+    schema: gameDropdownOptionEntrySchema,
+    data: [],
+  },
+  module_discount_pct: {
+    schema: gameDropdownOptionEntrySchema,
+    data: [],
+  },
+  module_assist_efficiency: {
+    schema: gameDropdownOptionEntrySchema,
+    data: [],
+  },
+  uptime_substat_pick: {
+    schema: gameDropdownOptionEntrySchema,
+    data: [],
+  },
+  uptime_mvn_mode: {
+    schema: gameDropdownOptionEntrySchema,
+    data: [],
+  },
+  uptime_compressor: {
+    schema: gameDropdownOptionEntrySchema,
+    data: [],
+  },
+  uptime_waves_per_boss: {
+    schema: gameDropdownOptionEntrySchema,
+    data: [],
+  },
+  uptime_assist_efficiency: {
+    schema: gameDropdownOptionEntrySchema,
+    data: [],
+  },
+  els_module_substat_rarity: {
+    schema: gameDropdownOptionEntrySchema,
+    data: [],
+  },
+  els_workshop_utility_discount: {
+    schema: gameDropdownOptionEntrySchema,
+    data: [],
+  },
+  els_workshop_enhancement_discount: {
+    schema: gameDropdownOptionEntrySchema,
+    data: [],
+  },
+  els_workshop_vault_discount: {
+    schema: gameDropdownOptionEntrySchema,
+    data: [],
+  },
+  els_vault_star_level: {
+    schema: gameDropdownOptionEntrySchema,
+    data: [],
+  },
+  els_assist_substat_efficiency: {
+    schema: gameDropdownOptionEntrySchema,
+    data: [],
+  },
+  enemy_tier_selection: { schema: gameDropdownOptionEntrySchema, data: [] },
+  els_focus: { schema: gameDropdownOptionEntrySchema, data: [] },
+  module_type_category: { schema: gameDropdownOptionEntrySchema, data: [] },
+  module_lab_efficiency_level: { schema: gameDropdownOptionEntrySchema, data: [] },
+  module_stone_cost_level: { schema: gameDropdownOptionEntrySchema, data: [] },
+  generic_lab_level: { schema: gameDropdownOptionEntrySchema, data: [] },
+  thorns_tier: { schema: gameDropdownOptionEntrySchema, data: [] },
+  thorns_plasma_cannon_level: { schema: gameDropdownOptionEntrySchema, data: [] },
+  thorns_plasma_cannon_mastery: { schema: gameDropdownOptionEntrySchema, data: [] },
+  thorns_bc_global_lab_level: { schema: gameDropdownOptionEntrySchema, data: [] },
+  thorns_bc_reduction_lab_level: { schema: gameDropdownOptionEntrySchema, data: [] },
+  thorns_wall_thorns_level: { schema: gameDropdownOptionEntrySchema, data: [] },
+  thorns_heat_wave: { schema: gameDropdownOptionEntrySchema, data: [] },
+  workshop_calc_section: { schema: gameDropdownOptionEntrySchema, data: [] },
+  workshop_calc_stat: { schema: gameDropdownOptionEntrySchema, data: [] },
+  workshop_calc_discount: { schema: gameDropdownOptionEntrySchema, data: [] },
+  damage_reduction_cf_reduction: { schema: gameDropdownOptionEntrySchema, data: [] },
+  damage_reduction_flame_bot: { schema: gameDropdownOptionEntrySchema, data: [] },
+  damage_reduction_bot_bonus: { schema: gameDropdownOptionEntrySchema, data: [] },
+  damage_reduction_nmp_reduction: { schema: gameDropdownOptionEntrySchema, data: [] },
+  damage_reduction_nmp_orb_hits: { schema: gameDropdownOptionEntrySchema, data: [] },
+  damage_reduction_primordial_collapse: { schema: gameDropdownOptionEntrySchema, data: [] },
+  damage_reduction_ct_level: { schema: gameDropdownOptionEntrySchema, data: [] },
+  damage_reduction_cl_plus_level: { schema: gameDropdownOptionEntrySchema, data: [] },
+  damage_reduction_avg_cl_hits: { schema: gameDropdownOptionEntrySchema, data: [] },
+  ilm_amplify_bot_bonus: { schema: gameDropdownOptionEntrySchema, data: [] },
+  ilm_amplify_bot_level: { schema: gameDropdownOptionEntrySchema, data: [] },
+  ilm_module_substat_rarity: { schema: gameDropdownOptionEntrySchema, data: [] },
+  ilm_unique_module_rarity: { schema: gameDropdownOptionEntrySchema, data: [] },
+  ilm_shock_stack: { schema: gameDropdownOptionEntrySchema, data: [] },
+  card_copies_owned: { schema: gameDropdownOptionEntrySchema, data: [] },
+  card_equipped_slots: { schema: gameDropdownOptionEntrySchema, data: [] },
+  module_tracker_type_filter: { schema: gameDropdownOptionEntrySchema, data: [] },
+  module_tracker_rarity_filter: { schema: gameDropdownOptionEntrySchema, data: [] },
+  module_tracker_sort: { schema: gameDropdownOptionEntrySchema, data: [] },
+  card_tracker_sort: { schema: gameDropdownOptionEntrySchema, data: [] },
+  labs_tracker_sort: { schema: gameDropdownOptionEntrySchema, data: [] },
+  module_template_picker: { schema: gameDropdownOptionEntrySchema, data: [] },
+  card_template_picker: { schema: gameDropdownOptionEntrySchema, data: [] },
+  module_equipped_picker: { schema: gameDropdownOptionEntrySchema, data: [] },
+  module_substat_type_picker: { schema: gameDropdownOptionEntrySchema, data: [] },
+  workshop_tracker_category_filter: { schema: gameDropdownOptionEntrySchema, data: [] },
+  workshop_tracker_sort: { schema: gameDropdownOptionEntrySchema, data: [] },
+  workshop_overview_layout: { schema: gameDropdownOptionEntrySchema, data: [] },
+  bots_tracker_sort: { schema: gameDropdownOptionEntrySchema, data: [] },
+  bots_tracker_preset: { schema: gameDropdownOptionEntrySchema, data: [] },
+  guardians_tracker_sort: { schema: gameDropdownOptionEntrySchema, data: [] },
+  uw_tracker_sort: { schema: gameDropdownOptionEntrySchema, data: [] },
+  uw_overview_view: { schema: gameDropdownOptionEntrySchema, data: [] },
+  relics_bonus_sort: { schema: gameDropdownOptionEntrySchema, data: [] },
+  relics_themes_sort: { schema: gameDropdownOptionEntrySchema, data: [] },
+  labs_speedup_multiplier: { schema: gameDropdownOptionEntrySchema, data: [] },
+  labs_type_filter: { schema: gameDropdownOptionEntrySchema, data: [] },
+  labs_name_picker: { schema: gameDropdownOptionEntrySchema, data: [] },
+  labs_tracker_level: { schema: gameDropdownOptionEntrySchema, data: [] },
+  lifetime_average_period: { schema: gameDropdownOptionEntrySchema, data: [] },
+  lifetime_chart_line_type: { schema: gameDropdownOptionEntrySchema, data: [] },
+  ui_dynamic_dropdown: { schema: gameDropdownOptionEntrySchema, data: [] },
+} as const satisfies Record<string, GameDataRegistryItem>
+
+export const GAME_DATA_REGISTRY = {
+  ...STATIC_REGISTRY,
+  ...BOT_REGISTRY,
+  ...GUARDIAN_REGISTRY,
+  ...UPTIME_RESEARCH_LAB_REGISTRY,
+  ...DISSONANCE_ECHO_LAB_REGISTRY,
+  ...PARAMETRIC_REGISTRY,
+} as const satisfies Record<string, GameDataRegistryItem>
+
+export type GameDataKey = keyof typeof GAME_DATA_REGISTRY
+
+export function isGameDataKey(key: string): key is GameDataKey {
+  const normalized = (GAME_DATA_KEY_ALIASES as Record<string, string>)[key] ?? key
+  return normalized in GAME_DATA_REGISTRY
+}
+
+export function resolveRegistryGameDataKey(key: string): GameDataKey | null {
+  const normalized = (GAME_DATA_KEY_ALIASES as Record<string, string>)[key] ?? key
+  return normalized in GAME_DATA_REGISTRY ? normalized as GameDataKey : null
+}

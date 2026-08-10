@@ -1,0 +1,19 @@
+export function getWavesToSkipForIntroSprint(input: {
+  cardActive: boolean
+  introSprintLevel: number
+  milestoneTargetWave: number
+  currentWaveIndex: number
+}): number {
+  if (!input.cardActive || input.introSprintLevel < 2) return 0
+  if (input.currentWaveIndex >= input.milestoneTargetWave) return 0
+
+  const level = input.introSprintLevel
+  const decade = Math.floor(level / 10) * 10
+  const candidate = decade - level + 10 + level
+  const target = input.milestoneTargetWave
+
+  if (candidate > target) {
+    return Math.max(0, target - level)
+  }
+  return Math.max(0, candidate - level)
+}

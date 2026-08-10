@@ -1,0 +1,30 @@
+/**
+ * Thorn damage on enemy contact.
+ *
+ * Damage scales with enemy factor, thorn multiplier, optional lab tier, and module benefit.
+ */
+
+export const THORN_DAMAGE_SCALE = 0.01
+export const THORN_LAB_INDEX = 28
+export const THORN_MODULE_BENEFIT_SLOT = 2
+
+export interface ThornDamageInput {
+  enemyFactor: number
+  thornMultiplier: number
+  contactDamage: number
+  thornLabActive?: boolean
+  moduleBenefit?: number
+}
+
+export function thornDamageOnHit(input: ThornDamageInput): number {
+  const scale = input.thornLabActive ? THORN_DAMAGE_SCALE : 1
+  let dmg = input.enemyFactor * input.thornMultiplier * scale * input.contactDamage
+  if (input.moduleBenefit != null) {
+    dmg *= input.moduleBenefit
+  }
+  return dmg
+}
+
+export function thornAccumulatorNext(existing: number, thornMultiplier: number): number {
+  return existing + thornMultiplier + 1
+}
