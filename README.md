@@ -11,6 +11,8 @@ npm install thetowersdk
   and the vault, with their cost curves and effect values, as typed arrays.
 - **Save reading** — turn a player's `playerInfo.dat` into typed values: what they've researched,
   what they own, what's equipped, their run history.
+- **Formulas** — enemy scaling, damage, ultimates, drops, workshop stats: the calculation layer
+  behind the Run Tracker's own calculators.
 
 TypeScript, one runtime dependency (`zod`), MIT licensed.
 
@@ -73,7 +75,7 @@ can run as many as you like over the same root.
 | `thetowersdk/save` | `extract*FromSaveRoot()` and save inspection | Yes |
 | `thetowersdk/node` | The save decoder | Node — [see below](#decoding-in-a-browser) |
 | `thetowersdk/formatting` | Number and duration formatting matching the game | Yes |
-| `thetowersdk/mechanics` | Game formulas — enemy scaling, damage, bonuses | Yes |
+| `thetowersdk/mechanics` | Game formulas — see [below](#formulas) | Yes |
 
 `import { … } from 'thetowersdk'` re-exports `data`, `save` and `formatting` together. Prefer the
 subpaths in real projects so your bundler can drop what you don't use.
@@ -226,6 +228,26 @@ Runnable, in [`examples/`](examples):
 ```bash
 npx tsx examples/01-browse-game-data.ts
 npx tsx examples/02-read-a-save-file.ts ~/playerInfo.dat
+```
+
+---
+
+## Formulas
+
+`thetowersdk/mechanics` is the calculation layer — the same one the Run Tracker's calculators use:
+
+- **Enemy scaling** — wave/tier base health and damage, enemy type multipliers, level skip,
+  elite spawn chance, wave-info panel values
+- **Damage** — thorns, knockback, multishot and bounce, rend armor, projectile damage, crowd
+  control, damage reduction, tower fire and range
+- **Ultimates** — chronofield, poison swamp, land mines and charge, wildfire, black hole, shockwave
+- **Economy** — coin and enemy drop simulation, interest, ROI scaling, workshop cost tables
+- **Workshop stats** — attack, defense and utility stat tables and their build-up
+- **Bots and guardians** — bot hit multipliers, medal planning and simulation, overlap, cooldowns
+- **Battle conditions** — resistance levels, tournament heat, counter labs
+
+```ts
+import { computeWaveBaseHealth, abilityDamage, goldenComboBonus } from 'thetowersdk/mechanics'
 ```
 
 ---
