@@ -34,6 +34,7 @@ export * from './ultimate-weapons'
 export * from './vault'
 export * from './themes'
 export * from './dissonance'
+export * from './favorite-labs'
 export * from './lifetime'
 export * from './killed-by'
 

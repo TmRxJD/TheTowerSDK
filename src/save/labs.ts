@@ -12,6 +12,7 @@ import {
   resolveLabResearchSlug,
 } from '../data/labs-display-overrides'
 import { coerceSaveNumber, toNumberArray } from './read-values'
+import { extractFavoriteLabSlugsFromSaveRoot, saveHasFavoriteLabs } from './favorite-labs'
 
 export const LABS_SAVE_UNLOCKED_KEY = 'labsUnlocked'
 export const LABS_SAVE_RESEARCH_LEVEL_KEY = 'researchLevel'
@@ -57,6 +58,10 @@ export interface LabsSaveExtract {
   maxedCount: number
   namedResearchCount: number
   hiddenUnnamedCount: number
+  /** Slugs the player starred in game, from the save's `favoriteLabs` indices. */
+  favoriteLabs: string[]
+  /** False when the save predates the field, so favourites must not be overwritten. */
+  hasFavoriteLabs: boolean
   warnings: string[]
 }
 
@@ -164,6 +169,8 @@ export function extractLabsFromSaveRoot(root: Record<string, unknown> | null): L
     maxedCount,
     namedResearchCount,
     hiddenUnnamedCount,
+    favoriteLabs: extractFavoriteLabSlugsFromSaveRoot(root),
+    hasFavoriteLabs: saveHasFavoriteLabs(root),
     warnings,
   }
 }
@@ -240,6 +247,13 @@ export interface LabsTrackerSaveImportPayload {
     startedAt: number | null
   }>
   labSpeedUps: Record<string, number>
+  /**
+   * Starred labs, or null when the save has no favourites field at all.
+   *
+   * Null and [] mean different things: [] is "the player has no favourites and
+   * you should clear yours", null is "this save cannot say, keep what you have".
+   */
+  favoriteLabs: string[] | null
 }
 
 export function buildLabsTrackerImportPayload(extract: LabsSaveExtract): LabsTrackerSaveImportPayload {
@@ -287,5 +301,8 @@ export function buildLabsTrackerImportPayload(extract: LabsSaveExtract): LabsTra
     currentLabLevels,
     activeSlots,
     labSpeedUps,
+    favoriteLabs: extract.hasFavoriteLabs
+      ? extract.favoriteLabs.filter(slug => isLabsTrackerResearchLabName(slug))
+      : null,
   }
 }
