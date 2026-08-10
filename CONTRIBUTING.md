@@ -5,13 +5,17 @@ Contributions are welcome — this is meant to be the community's SDK, not one p
 ## Getting set up
 
 ```bash
-pnpm install
-pnpm test        # unit tests
-pnpm type-check
-pnpm build
+npm install
+npm run verify   # lint, conventions, types, build, tests — what CI runs
 ```
 
-Node 18+.
+Or individually: `npm run lint`, `npm run lint:conventions`, `npm run type-check`,
+`npm test`, `npm run build`. Any package manager works; the scripts do not assume one.
+
+Node 20+. The only runtime dependency is `zod`.
+
+There's also an MCP server (`npm run mcp`) if you work with an AI agent — see
+[mcp/README.md](mcp/README.md) and [AGENTS.md](AGENTS.md).
 
 ## What's most useful
 
@@ -59,6 +63,10 @@ depend on it from a published tool.
 - **No side effects on import.** Importing a module must not do I/O or mutate global state.
 - **Comments explain behaviour**, not history. Say what a value does and what breaks if it changes,
   not where it came from or what it used to be.
+- **Use the game's names.** Look a term up with `lookupGlossary()` before writing it down; several
+  acronyms mean more than one thing, and a confident wrong name is worse than no name. If you add
+  data that introduces names, run `npm run glossary` so the glossary covers them.
+- **Nothing outside the package.** Fixtures and test data live in the package, so a fork works.
 
 ## Tests
 
@@ -66,10 +74,14 @@ Tests live next to the code as `*.test.ts` and run under Vitest. Anything that d
 data should have one — index-mapping bugs are silent and misreport a player's data rather than
 failing.
 
+Use a synthetic fixture rather than a real save. `src/save/fixtures/` has an example. Tests that
+genuinely need a real save read `TOWER_TEST_SAVE` and skip when it is unset, so they never block
+a contributor who does not have one — and no one's save data ends up in the repository.
+
 ## Pull requests
 
-Keep them focused; one concern per PR is much easier to review. Make sure `pnpm test`,
-`pnpm type-check` and `pnpm build` pass before opening.
+Keep them focused; one concern per PR is much easier to review. Run `npm run verify` before
+opening — it is exactly what CI runs.
 
 ## Third-party work
 
