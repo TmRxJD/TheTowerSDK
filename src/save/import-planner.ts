@@ -28,7 +28,6 @@ import {
 import { buildVaultTrackerImportPayload, extractVaultFromSaveRoot } from './vault'
 import {
   buildWorkshopTrackerImportPayloadFromSave,
-  extractWorkshopFromSaveRoot,
 } from './workshop'
 
 export type SaveImportTrackerPayload =

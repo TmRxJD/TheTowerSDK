@@ -37,7 +37,12 @@
     "clean": "node -e \"const fs=require('fs');fs.rmSync('dist',{recursive:true,force:true})\"",
     "test": "vitest run",
     "type-check": "tsc -p tsconfig.build.json --noEmit",
-    "prepublishOnly": "pnpm run clean && pnpm run build"
+    "prepublishOnly": "pnpm run clean && pnpm run build",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "lint:conventions": "node scripts/check-conventions.mjs",
+    "test:schema": "vitest run src/data/schemas.test.ts",
+    "verify": "pnpm lint && pnpm lint:conventions && pnpm type-check && pnpm test && pnpm build"
   },
   "exports": {
     ".": {
@@ -106,6 +111,7 @@
     "dist",
     "README.md",
     "CONTRIBUTING.md",
+    "AGENTS.md",
     "LICENSE",
     "NOTICE"
   ],
@@ -113,7 +119,10 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@eslint/js": "^9.18.0",
+    "eslint": "^9.18.0",
     "typescript": "~5.8.3",
+    "typescript-eslint": "^8.20.0",
     "vitest": "^3.0.0"
   }
 }

@@ -13,7 +13,6 @@ import {
 } from './shared-tool-inputs'
 import {
   enhancementLabLevelToSectionDiscountPercent,
-  enhancementLabLevelToVaultDiscountPercent,
   maxDefinedEnhancementSectionDiscountPercent,
   maxDefinedEnhancementVaultDiscountPercent,
   maxDefinedWorkshopSectionDiscountPercent,

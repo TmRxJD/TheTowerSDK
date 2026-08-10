@@ -287,6 +287,9 @@ tools you've built.
 
 ## Credits
 
+**Matthew** — the "Effective Paths" spreadsheets for The Tower. A large amount of the reference
+data here, especially the cost, mastery and substat tables, was compiled with the help of that work.
+
 The wave scaling code builds on
 [**tower-idle-toolkit**](https://github.com/tower-idle-toolkit/tower-idle-toolkit) by **skye**,
 used under ISC. That project worked out the structure this scaler still uses, and several of its

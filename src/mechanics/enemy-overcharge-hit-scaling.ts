@@ -1,5 +1,5 @@
 /**
- * Overcharge tower hit scaling — `Enemy.OverchargeAttack` @ 0x27D90C4 (il2cpp dump).
+ * Overcharge tower hit scaling.
  *
  * Each attack fires two closures (`b__0` outbound, `b__1` return) that share the same
  * multiplier before `overchargeNumAttacksInARow` increments at the end of the attack:
@@ -34,7 +34,7 @@ export interface OverchargeRawHitDamageInput {
   hitNumber: number
   /** OC adjusted damage after wave/type/perk scaling (enemyDamage field). */
   baseAdjustedDmg: number
-  /** Optional FAQ heat model (not used by OverchargeAttack il2cpp path). */
+  /** Optional FAQ heat model; not part of the overcharge attack path. */
   includeHeatUp?: boolean
 }
 

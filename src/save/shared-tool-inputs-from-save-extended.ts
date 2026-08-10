@@ -31,7 +31,6 @@ import { resolveResearchLabLevel } from '../internal/shared-tool-inputs-from-res
 import {
   createDefaultShardSplitterSnapshot,
   type ModuleType,
-  type SplitterByType,
 } from '../internal/shard-splitter-schema'
 import {
   coerceSaveNumber,

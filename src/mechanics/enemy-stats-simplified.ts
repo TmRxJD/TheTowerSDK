@@ -17,11 +17,9 @@ import {
   getBattleConditionLevel,
   mergeEnemyStatsBattleConditions,
   resolveWaveInfoBattleConditions,
-  waveInfoDisplayBcLabLevels,
 } from './battle-condition-config'
 import {
   bcCounterLabBenefitIncreaseAtLevel,
-  computeEffectiveEnemySkipPctWithBcLabs,
   mergeWorkshopBcLabLevels,
   resolveEnemyStatLevelWithBcLabs,
 } from './bc-counter-labs'

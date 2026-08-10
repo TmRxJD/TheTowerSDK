@@ -20,7 +20,6 @@ import {
   applyTierBattleConditionsToSkipChance,
   deterministicSkipLevelsFromChance,
   LEVEL_SKIP_WORKSHOP_PER_LEVEL,
-  levelSkipWorkshopBase,
   simulateEnemyLevelSkips,
   type TierSkipChanceAdjustments,
 } from './enemy-level-skip'

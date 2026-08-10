@@ -6,7 +6,6 @@ import { GAME_DATA_REGISTRY, type GameDataKey, resolveRegistryGameDataKey } from
 import {
   BOT_GAME_INPUT_SPEC_BY_KEY,
   type BotGameDataKey,
-  normalizeGameDataKey,
 } from './bot-game-input-keys'
 import {
   GUARDIAN_GAME_INPUT_SPEC_BY_KEY,

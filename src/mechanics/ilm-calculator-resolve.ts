@@ -10,7 +10,6 @@ import {
   ILM_MODULE_SUBSTAT_NONE,
   ILM_UNIQUE_MODULE_IDS,
   ilmModuleSubstatBonusFromRarity,
-  type IlmModuleSubstatRarityChoice,
   type IlmUniqueModuleRarityChoice,
   resolveAmplifyBotBonusMultiplierFromLevel,
   resolveIlmUniqueModuleRarityBonus,
@@ -20,7 +19,6 @@ import type {
   IlmCalcsSettings,
   IlmCalcsStaticSettings,
   IlmCalculatorInput,
-  IlmCoreModuleLevelRarity,
   IlmModuleLevelRarity,
 } from './ilm-charge'
 import {

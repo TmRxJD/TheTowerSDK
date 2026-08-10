@@ -1,5 +1,5 @@
 import { CARD_TEMPLATES, type CardTemplate } from '../data/index'
-import { clampCampaignTier, MAX_CAMPAIGN_TIER } from '../data/index'
+import { MAX_CAMPAIGN_TIER } from '../data/index'
 import { findLabResearchBySlug } from '../data/index'
 import {
   getSharedToolLabs,

@@ -2215,4 +2215,3 @@ export function getWorkshopCostsByKey(key: string): number[] | null {
   return sortedLevelKeys.map(level => Number(levels[level] || 0))
 }
 
-export default WSP_WORKSHOP_COST_LEVELS

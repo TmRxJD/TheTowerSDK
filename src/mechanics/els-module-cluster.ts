@@ -9,7 +9,7 @@ export function parseModuleElsBonusPercent(value: string | null | undefined): nu
   if (!value) return 0
   const trimmed = value.trim()
   if (!trimmed) return 0
-  const match = /([+\-]?\d+(?:\.\d+)?)\s*%/.exec(trimmed)
+  const match = /([+-]?\d+(?:\.\d+)?)\s*%/.exec(trimmed)
   if (!match) return 0
   return Math.max(0, Number(match[1]) / 100)
 }

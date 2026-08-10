@@ -8,10 +8,8 @@ import { ENEMY_BALANCE_MASTERY_ROWS } from '../data/chart-tables'
 import { type FetchUpgrade, guardianUpgrades } from '../data/index'
 import {
   FETCH_LOOT_OUTCOME_WEIGHTS,
-  getCommonModuleDropChance,
   getExpectedBossRerollShardsPerKill,
   getFetchRerollShardCount,
-  getRareModuleDropChance,
   getShatterShards,
   resolveEnemyDropsLabBenefits,
 } from './enemy-drops-game-data'
@@ -28,7 +26,7 @@ import {
 import { getWorkshopCostsByKey } from '../data/index'
 import { bossWaveIntervalForTier, DEFAULT_BOSS_WAVE_INTERVAL } from '../data/enemies'
 import { clamp } from './math'
-import { clampCardGameLevel, clampCardMasteryLevel, resolveTierNumber } from './enemy-drops-context'
+import { clampCardGameLevel, clampCardMasteryLevel } from './enemy-drops-context'
 import { formatCompact } from '../internal/tool-formatting'
 import { computeEconomyScaledRoiPct, resolveRoiReferenceCost } from '../internal/roi-scaling'
 

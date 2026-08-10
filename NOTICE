@@ -42,3 +42,17 @@ ISC License:
   WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
   OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
   CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+-------------------------------------------------------------------------------
+The Tower: Effective Paths (community spreadsheets)
+-------------------------------------------------------------------------------
+
+Author: Matthew
+
+Portions of the game data in `src/data/` -- particularly the reference tables
+and chart data (upgrade costs, mastery bonuses, substat ranges and related
+values) -- were compiled with the help of Matthew's "Effective Paths"
+spreadsheets for The Tower. That work saved an enormous amount of collation and
+is a large part of why these tables are as complete as they are.
+
+Shared with the community as a reference; included here with thanks.

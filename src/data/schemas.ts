@@ -1,0 +1,93 @@
+/**
+ * Runtime schemas for the public data tables.
+ *
+ * Types vanish at runtime, so a table can drift from its declared shape without
+ * anything noticing until a consumer reads a field that isn't there. These
+ * schemas are checked by `pnpm test:schema`, and they double as machine-readable
+ * documentation: an agent can read the schema to learn a table's exact shape
+ * instead of inferring it from a sample row.
+ *
+ * Adding a table? Declare it here too — the schema test fails on tables it does
+ * not know about, so the two cannot drift apart.
+ */
+import { z } from 'zod'
+
+/** A value a save file or data table can hold once decoded. */
+export const primitiveSchema = z.union([z.string(), z.number(), z.boolean(), z.null()])
+
+// --- shared building blocks -------------------------------------------------
+
+/** One level of an upgrade: what it grants and what it costs. */
+export const levelRowSchema = z.object({
+  level: z.number(),
+  duration: z.union([z.string(), z.number()]).optional(),
+  cost: z.number().optional(),
+})
+
+/** An entity the save addresses by position. */
+export const indexedEntrySchema = z.object({
+  index: z.number(),
+  name: z.string(),
+})
+
+// --- tables -----------------------------------------------------------------
+
+export const generatedLabSchema = z.object({
+  name: z.string(),
+  type: z.string().optional(),
+  base: z.number().optional(),
+  value: z.unknown().optional(),
+  levels: z.array(levelRowSchema).optional(),
+})
+
+export const workshopDataRowSchema = z.object({
+  value: z.number(),
+  cash: z.number(),
+  coins: z.number(),
+})
+
+export const referenceTableSchema = z.object({
+  title: z.string(),
+  header: z.array(primitiveSchema),
+  rows: z.array(z.array(primitiveSchema)),
+})
+
+export const relicCatalogEntrySchema = indexedEntrySchema.extend({
+  label: z.string().optional(),
+  description: z.string().nullable().optional(),
+  benefit: z.number().optional(),
+  benefitType: z.number().optional(),
+  slug: z.string().optional(),
+})
+
+export const enumEntrySchema = z.object({
+  name: z.string(),
+  value: z.number(),
+})
+
+export const fieldCatalogEntrySchema = z.object({
+  name: z.string(),
+  type: z.string(),
+})
+
+/**
+ * Every public data export, mapped to the schema its contents must satisfy.
+ *
+ * `kind` says how to apply the schema: `array` validates each element,
+ * `record` validates each value, `object` validates the export itself.
+ */
+export const DATA_TABLE_SCHEMAS = {
+  generatedLabs: { kind: 'array', schema: generatedLabSchema },
+  WORKSHOP_DATA: { kind: 'recordOfRecords', schema: workshopDataRowSchema },
+  REFERENCE_TABLES: { kind: 'record', schema: referenceTableSchema },
+  RELIC_IMPORT_CATALOG: { kind: 'array', schema: relicCatalogEntrySchema },
+  RELIC_ENUM: { kind: 'array', schema: z.object({ relic: z.string(), value: z.number(), label: z.string() }) },
+  TOWER_MODULE_RARITY_ENUM: { kind: 'array', schema: enumEntrySchema },
+  RESEARCH_CATEGORY_ENUM: { kind: 'array', schema: enumEntrySchema },
+  WAVE_ACCELERATOR_SPAWN_RATE_ROWS: { kind: 'array', schema: z.record(z.string(), z.number()) },
+  ENEMY_BALANCE_MASTERY_ROWS: { kind: 'array', schema: z.record(z.string(), primitiveSchema) },
+  ELITE_SPAWN_CHANCE_ROWS: { kind: 'array', schema: z.array(z.string()) },
+  PLAYER_DATA_FIELD_CATALOG: { kind: 'recordOfArrays', schema: fieldCatalogEntrySchema },
+} as const
+
+export type DataTableSchemaKey = keyof typeof DATA_TABLE_SCHEMAS

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { getBasicEnemyWaveStats } from '../internal/enemy-wave-stats'
 import { getWaveInfoEnemyStatsUnfloored } from './wave-info-enemy-stats'
-import { aggregateWorkshopTableFloat, buildStandardTierBattleConditions, workshopMultFromTableFloat } from './battle-condition-config'
+import { buildStandardTierBattleConditions } from './battle-condition-config'
 import {
   computeWaveInfoDisplayStats,
   WAVE_INFO_PIPELINE_STAGE_NAMES,

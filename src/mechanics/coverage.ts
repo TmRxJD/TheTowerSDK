@@ -46,7 +46,7 @@ export const MECHANICS_COVERAGE: readonly MechanicCoverage[] = [
   { id: 'land-mines', name: 'Land mine damage', status: 'confirmed', module: 'land-mines.ts' },
   { id: 'rend-armor', name: 'Rend armor multiplier', status: 'confirmed', module: 'rend-armor.ts' },
   { id: 'lab-research', name: 'Lab research mult helper', status: 'confirmed', module: 'lab-research.ts' },
-  { id: 'enemy-stat-display', name: 'Run-header enemy stat perks', status: 'partial', module: 'enemy-stat-display.ts', gaps: ['Perk benefit arrays not live-extracted from dump'] },
+  { id: 'enemy-stat-display', name: 'Run-header enemy stat perks', status: 'partial', module: 'enemy-stat-display.ts', gaps: ['Perk benefit arrays are static, not derived per build'] },
 ]
 
 export function mechanicsByStatus(status: FormulaStatus): MechanicCoverage[] {

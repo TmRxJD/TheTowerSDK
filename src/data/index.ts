@@ -52,6 +52,8 @@ export * from './vault-tree-traversal'
 
 // Tabular data backing charts and calculators
 export * from './chart-tables'
+export * from './schemas'
+export * from './reference-tables'
 
 // Progression, economy and enemy reference data
 export * from './milestones'

@@ -61,11 +61,11 @@ export const PLAYER_DATA_FIELD_CATALOG = {
     },
     {
       'name': 'completedLabs',
-      'type': 'List<CompletedLab>',
+      'type': 'list',
     },
     {
       'name': 'favoriteLabs',
-      'type': 'List<int>',
+      'type': 'list',
     },
     {
       'name': 'labQueueToggle',
@@ -115,11 +115,11 @@ export const PLAYER_DATA_FIELD_CATALOG = {
     },
     {
       'name': 'slotPresetCardAssignedBool',
-      'type': 'bool[,]',
+      'type': 'bool[][]',
     },
     {
       'name': 'slotPresetCardInt',
-      'type': 'int[,]',
+      'type': 'int[][]',
     },
     {
       'name': 'cardsBoughtTotal',
@@ -203,15 +203,15 @@ export const PLAYER_DATA_FIELD_CATALOG = {
     },
     {
       'name': 'moduleEquipped',
-      'type': 'ModuleItem[]',
+      'type': 'object[]',
     },
     {
       'name': 'assistModuleSlots',
-      'type': 'AssistModuleSlot[]',
+      'type': 'object[]',
     },
     {
       'name': 'moduleRecords',
-      'type': 'List<ModuleRegistry>',
+      'type': 'list',
     },
     {
       'name': 'modulePity',
@@ -249,27 +249,27 @@ export const PLAYER_DATA_FIELD_CATALOG = {
     },
     {
       'name': 'presetUpgradeWorkshopLevel',
-      'type': 'int[,]',
+      'type': 'int[][]',
     },
     {
       'name': 'presetUpgradeWorkshopDefenseLevel',
-      'type': 'int[,]',
+      'type': 'int[][]',
     },
     {
       'name': 'presetUpgradeWorkshopUtilityLevel',
-      'type': 'int[,]',
+      'type': 'int[][]',
     },
     {
       'name': 'presetEnhancementLevel',
-      'type': 'int[,]',
+      'type': 'int[][]',
     },
     {
       'name': 'presetEnhancementDefenseLevel',
-      'type': 'int[,]',
+      'type': 'int[][]',
     },
     {
       'name': 'presetEnhancementUtilityLevel',
-      'type': 'int[,]',
+      'type': 'int[][]',
     },
     {
       'name': 'currentWorkshopPreset',
@@ -353,11 +353,11 @@ export const PLAYER_DATA_FIELD_CATALOG = {
     },
     {
       'name': 'botsActivePresets',
-      'type': 'bool[,]',
+      'type': 'bool[][]',
     },
     {
       'name': 'botsLevelPresets',
-      'type': 'int[,]',
+      'type': 'int[][]',
     },
     {
       'name': 'botsCooldownTimers',
@@ -387,7 +387,7 @@ export const PLAYER_DATA_FIELD_CATALOG = {
     },
     {
       'name': 'guardianChipSlot',
-      'type': 'ChipType[]',
+      'type': 'object[]',
     },
     {
       'name': 'guardianChipUnlocked',
@@ -425,7 +425,7 @@ export const PLAYER_DATA_FIELD_CATALOG = {
   'relics': [
     {
       'name': 'relicsUnlocked',
-      'type': 'Relics.RelicState[]',
+      'type': 'object[]',
     },
     {
       'name': 'profileRelics',
@@ -435,14 +435,658 @@ export const PLAYER_DATA_FIELD_CATALOG = {
   'battle': [
     {
       'name': 'battleHistory',
-      'type': 'List<BattleHistoryEntry>',
+      'type': 'list',
     },
     {
       'name': 'wrappedStats',
-      'type': 'List<TowerWrappedStats>',
+      'type': 'list',
     },
   ],
   'other': [
+    {
+      'name': '_autoSaveCoroutine',
+      'type': 'object',
+    },
+    {
+      'name': '_isLastSave',
+      'type': 'bool',
+    },
+    {
+      'name': '_scheduleSaveCoroutine',
+      'type': 'object',
+    },
+    {
+      'name': 'adGemsClaimedToday',
+      'type': 'int',
+    },
+    {
+      'name': 'amplifyBotPresets',
+      'type': 'list',
+    },
+    {
+      'name': 'appsflyerCustomPostbacks',
+      'type': 'object',
+    },
+    {
+      'name': 'autoSavePause',
+      'type': 'bool',
+    },
+    {
+      'name': 'banned',
+      'type': 'bool',
+    },
+    {
+      'name': 'blackHoleVFX',
+      'type': 'bool',
+    },
+    {
+      'name': 'botBotLevelCooldownSelected',
+      'type': 'int',
+    },
+    {
+      'name': 'botBotPresets',
+      'type': 'list',
+    },
+    {
+      'name': 'bots',
+      'type': 'object',
+    },
+    {
+      'name': 'cardRegistries',
+      'type': 'list',
+    },
+    {
+      'name': 'cards',
+      'type': 'object',
+    },
+    {
+      'name': 'chainThunderBlockedThisRound',
+      'type': 'double',
+    },
+    {
+      'name': 'chronoFieldBlockedThisRound',
+      'type': 'double',
+    },
+    {
+      'name': 'chronoFieldVFX',
+      'type': 'bool',
+    },
+    {
+      'name': 'cloudTimer',
+      'type': 'double',
+    },
+    {
+      'name': 'coinsEarnedCPWThisRound',
+      'type': 'double',
+    },
+    {
+      'name': 'coinsEarnedWaveSkipThisRound',
+      'type': 'double',
+    },
+    {
+      'name': 'critCoinCoinsThisRound',
+      'type': 'double',
+    },
+    {
+      'name': 'currencyLogs',
+      'type': 'list',
+    },
+    {
+      'name': 'currentLoadedRevision',
+      'type': 'int',
+    },
+    {
+      'name': 'currentSessionID',
+      'type': 'string',
+    },
+    {
+      'name': 'dailyMission',
+      'type': 'object',
+    },
+    {
+      'name': 'damageDecayPenalty',
+      'type': 'int',
+    },
+    {
+      'name': 'damageDecayWavesUntilDecay',
+      'type': 'int',
+    },
+    {
+      'name': 'daysLogged',
+      'type': 'object',
+    },
+    {
+      'name': 'deathwaveDamageRemaining',
+      'type': 'double',
+    },
+    {
+      'name': 'deathWaveHealthGainThisWave',
+      'type': 'float',
+    },
+    {
+      'name': 'deathWaveVFX',
+      'type': 'bool',
+    },
+    {
+      'name': 'defenseAbsoluteBlockedThisRound',
+      'type': 'double',
+    },
+    {
+      'name': 'defensePercentBlockedThisRound',
+      'type': 'double',
+    },
+    {
+      'name': 'demonModesUsedThisRound',
+      'type': 'int',
+    },
+    {
+      'name': 'dissonanceActive',
+      'type': 'bool',
+    },
+    {
+      'name': 'dissonanceCoinBoost',
+      'type': 'list',
+    },
+    {
+      'name': 'dissonanceDamageBoost',
+      'type': 'list',
+    },
+    {
+      'name': 'dissonanceHealthBoost',
+      'type': 'list',
+    },
+    {
+      'name': 'dissonanceInfoShownOnce',
+      'type': 'bool',
+    },
+    {
+      'name': 'dissonanceSelected',
+      'type': 'object',
+    },
+    {
+      'name': 'dissonanceUltDamageBoost',
+      'type': 'list',
+    },
+    {
+      'name': 'dissonantBoostDisplay',
+      'type': 'object',
+    },
+    {
+      'name': 'eLSDecayWasActiveLastWave',
+      'type': 'bool',
+    },
+    {
+      'name': 'enemiesDestroyedByBlackHoleThisRound',
+      'type': 'double',
+    },
+    {
+      'name': 'enemiesDestroyedByChainLightningThisRound',
+      'type': 'double',
+    },
+    {
+      'name': 'enemiesDestroyedByDeathPenaltyThisRound',
+      'type': 'double',
+    },
+    {
+      'name': 'enemiesDestroyedByFlameBotThisRound',
+      'type': 'double',
+    },
+    {
+      'name': 'enemiesDestroyedByInnerLandMinesThisRound',
+      'type': 'double',
+    },
+    {
+      'name': 'enemiesDestroyedByOtherThisRound',
+      'type': 'double',
+    },
+    {
+      'name': 'enemiesDestroyedByPoisonSwampThisRound',
+      'type': 'double',
+    },
+    {
+      'name': 'enemiesDestroyedByProjectilesThisRound',
+      'type': 'double',
+    },
+    {
+      'name': 'enemiesDestroyedBySmartMissilesThisRound',
+      'type': 'double',
+    },
+    {
+      'name': 'enemiesDestroyedInAmplifyBotThisRound',
+      'type': 'double',
+    },
+    {
+      'name': 'enemiesDestroyedInBlackholeThisRound',
+      'type': 'double',
+    },
+    {
+      'name': 'enemiesDestroyedInGoldenBotThisRound',
+      'type': 'double',
+    },
+    {
+      'name': 'enemiesDestroyedInGoldenTowerThisRound',
+      'type': 'double',
+    },
+    {
+      'name': 'enemiesDestroyedInOrbsThisRound',
+      'type': 'double',
+    },
+    {
+      'name': 'enemiesHitByAttackChipThisRound',
+      'type': 'float',
+    },
+    {
+      'name': 'enemiesHitByBlackHoleThisRound',
+      'type': 'float',
+    },
+    {
+      'name': 'enemiesHitByChainLightningThisRound',
+      'type': 'float',
+    },
+    {
+      'name': 'enemiesHitByChronoFieldThisRound',
+      'type': 'float',
+    },
+    {
+      'name': 'enemiesHitByDeathRayThisRound',
+      'type': 'float',
+    },
+    {
+      'name': 'enemiesHitByFlameBotThisRound',
+      'type': 'float',
+    },
+    {
+      'name': 'enemiesHitByInnerLandMinesThisRound',
+      'type': 'float',
+    },
+    {
+      'name': 'enemiesHitByLandMineThisRound',
+      'type': 'float',
+    },
+    {
+      'name': 'enemiesHitByOrbitalAugmentThisRound',
+      'type': 'float',
+    },
+    {
+      'name': 'enemiesHitByPoisonSwampThisRound',
+      'type': 'float',
+    },
+    {
+      'name': 'enemiesHitByProjectilesThisRound',
+      'type': 'float',
+    },
+    {
+      'name': 'enemiesHitBySmartMissilesThisRound',
+      'type': 'float',
+    },
+    {
+      'name': 'enemiesHitByThornsThisRound',
+      'type': 'float',
+    },
+    {
+      'name': 'enemiesHitByThunderBotThisRound',
+      'type': 'float',
+    },
+    {
+      'name': 'energyShieldHitsAbsorbedThisRound',
+      'type': 'double',
+    },
+    {
+      'name': 'event80Compensation',
+      'type': 'bool',
+    },
+    {
+      'name': 'eventBoostAdvertisedCount',
+      'type': 'int',
+    },
+    {
+      'name': 'eventBoostLastAdvertisedDate',
+      'type': 'DateTime',
+    },
+    {
+      'name': 'flameBotBlockedThisRound',
+      'type': 'double',
+    },
+    {
+      'name': 'flameBotPresets',
+      'type': 'list',
+    },
+    {
+      'name': 'gameInitialized',
+      'type': 'bool',
+    },
+    {
+      'name': 'goldenBotPresets',
+      'type': 'list',
+    },
+    {
+      'name': 'goldenTowerPlusCoinsThisRound',
+      'type': 'double',
+    },
+    {
+      'name': 'guildManager',
+      'type': 'object',
+    },
+    {
+      'name': 'hasCompletedFirstUWRun',
+      'type': 'bool',
+    },
+    {
+      'name': 'hasSeenBookmarkWebstorePopup',
+      'type': 'bool',
+    },
+    {
+      'name': 'healthDecayPenalty',
+      'type': 'int',
+    },
+    {
+      'name': 'healthDecayWavesUntilDecay',
+      'type': 'int',
+    },
+    {
+      'name': 'healthFromDeathWaveThisRound',
+      'type': 'double',
+    },
+    {
+      'name': 'highestCellsEarnedThisTier',
+      'type': 'double[]',
+    },
+    {
+      'name': 'highestCPMThisRound',
+      'type': 'double',
+    },
+    {
+      'name': 'hitTextPlasmaCannon',
+      'type': 'bool',
+    },
+    {
+      'name': 'hitTextSettings',
+      'type': 'object',
+    },
+    {
+      'name': 'innerLandMinesVFX',
+      'type': 'bool',
+    },
+    {
+      'name': 'lab',
+      'type': 'object',
+    },
+    {
+      'name': 'labTimeManager',
+      'type': 'object',
+    },
+    {
+      'name': 'largestGoldenComboThisRound',
+      'type': 'int',
+    },
+    {
+      'name': 'largestILMChargeThisRound',
+      'type': 'int',
+    },
+    {
+      'name': 'largestSmartMissileStackThisRound',
+      'type': 'int',
+    },
+    {
+      'name': 'largestWaveSkipThisRound',
+      'type': 'int',
+    },
+    {
+      'name': 'lastGemAdSmallResetDate',
+      'type': 'DateTime',
+    },
+    {
+      'name': 'lastGuildID',
+      'type': 'string',
+    },
+    {
+      'name': 'magicOrbBlockedThisRound',
+      'type': 'double',
+    },
+    {
+      'name': 'magneticHookFleetsCounter',
+      'type': 'float',
+    },
+    {
+      'name': 'main',
+      'type': 'object',
+    },
+    {
+      'name': 'medalsSpentOnBetaBotPreset',
+      'type': 'int',
+    },
+    {
+      'name': 'migratedBotDataToV28',
+      'type': 'bool',
+    },
+    {
+      'name': 'milestones',
+      'type': 'object',
+    },
+    {
+      'name': 'missionEvent',
+      'type': 'object',
+    },
+    {
+      'name': 'modules',
+      'type': 'object',
+    },
+    {
+      'name': 'moreEliteWavesUntilActive',
+      'type': 'int',
+    },
+    {
+      'name': 'moreFleetWavesUntilActive',
+      'type': 'int',
+    },
+    {
+      'name': 'mostCellsFromWaveSkipThisRound',
+      'type': 'double',
+    },
+    {
+      'name': 'mostCoinsFromGoldenComboThisRound',
+      'type': 'double',
+    },
+    {
+      'name': 'mostCoinsFromWaveSkipThisRound',
+      'type': 'double',
+    },
+    {
+      'name': 'nukesUsedThisRound',
+      'type': 'int',
+    },
+    {
+      'name': 'overheatFirstTimeBool',
+      'type': 'bool',
+    },
+    {
+      'name': 'pauseDuringAutosave',
+      'type': 'bool',
+    },
+    {
+      'name': 'perks',
+      'type': 'object',
+    },
+    {
+      'name': 'perksPicked',
+      'type': 'list',
+    },
+    {
+      'name': 'playfabMisc',
+      'type': 'object',
+    },
+    {
+      'name': 'poisonSwampVFX',
+      'type': 'bool',
+    },
+    {
+      'name': 'primordialCollapseBlockedThisRound',
+      'type': 'double',
+    },
+    {
+      'name': 'processDeepLinkManager',
+      'type': 'object',
+    },
+    {
+      'name': 'profile',
+      'type': 'object',
+    },
+    {
+      'name': 'rateGameAdvancedBool',
+      'type': 'bool',
+    },
+    {
+      'name': 'rateGameOptedOutBool',
+      'type': 'bool',
+    },
+    {
+      'name': 'recoveryPackagesRegenThisRound',
+      'type': 'double',
+    },
+    {
+      'name': 'relics',
+      'type': 'object',
+    },
+    {
+      'name': 'relicsUnlockedThisEvent',
+      'type': 'list',
+    },
+    {
+      'name': 'savedWorkshopOrbDistance',
+      'type': 'float',
+    },
+    {
+      'name': 'saveRevision',
+      'type': 'int',
+    },
+    {
+      'name': 'secondWindsUsedThisRound',
+      'type': 'int',
+    },
+    {
+      'name': 'seenGoldBoxInfoPopup',
+      'type': 'bool',
+    },
+    {
+      'name': 'showOfflinePopup',
+      'type': 'bool',
+    },
+    {
+      'name': 'sounds',
+      'type': 'object',
+    },
+    {
+      'name': 'stonesSpentOnBetaSynchronicity',
+      'type': 'int',
+    },
+    {
+      'name': 'synchronicityBots',
+      'type': 'object[]',
+    },
+    {
+      'name': 'synchronicityLevel',
+      'type': 'int',
+    },
+    {
+      'name': 'synchronicityPresets',
+      'type': 'list',
+    },
+    {
+      'name': 'synchronicityUnlocked',
+      'type': 'bool',
+    },
+    {
+      'name': 'techTreeManager',
+      'type': 'object',
+    },
+    {
+      'name': 'themes',
+      'type': 'object',
+    },
+    {
+      'name': 'thunderBotPresets',
+      'type': 'list',
+    },
+    {
+      'name': 'totalCellsEarned_v2',
+      'type': 'double',
+    },
+    {
+      'name': 'totalCellsSpent_v2',
+      'type': 'double',
+    },
+    {
+      'name': 'totalEnemiesDestroyedByBlackHole',
+      'type': 'double',
+    },
+    {
+      'name': 'totalEnemiesDestroyedByChainLightning',
+      'type': 'double',
+    },
+    {
+      'name': 'totalEnemiesDestroyedByDeathPenalty',
+      'type': 'double',
+    },
+    {
+      'name': 'totalEnemiesDestroyedByFlameBot',
+      'type': 'double',
+    },
+    {
+      'name': 'totalEnemiesDestroyedByInnerLandMines',
+      'type': 'double',
+    },
+    {
+      'name': 'totalEnemiesDestroyedByOther',
+      'type': 'double',
+    },
+    {
+      'name': 'totalEnemiesDestroyedByPoisonSwamp',
+      'type': 'double',
+    },
+    {
+      'name': 'totalEnemiesDestroyedByProjectiles',
+      'type': 'double',
+    },
+    {
+      'name': 'totalEnemiesDestroyedBySmartMissiles',
+      'type': 'double',
+    },
+    {
+      'name': 'totalMedalsSpentCurrentEvent',
+      'type': 'int',
+    },
+    {
+      'name': 'totalStonesEarnedPreMigration',
+      'type': 'int',
+    },
+    {
+      'name': 'tournament',
+      'type': 'object',
+    },
+    {
+      'name': 'tourneyConditionsSeed',
+      'type': 'int',
+    },
+    {
+      'name': 'towerHealthRegenThisRound',
+      'type': 'double',
+    },
+    {
+      'name': 'uiManager',
+      'type': 'object',
+    },
+    {
+      'name': 'ultimateWeaponVFXEnabled',
+      'type': 'bool[]',
+    },
+    {
+      'name': 'wallHealthRegenThisRound',
+      'type': 'double',
+    },
+    {
+      'name': 'waveMilestonePostedEvents',
+      'type': 'list',
+    },
     {
       'name': 'cells',
       'type': 'int',
@@ -673,7 +1317,7 @@ export const PLAYER_DATA_FIELD_CATALOG = {
     },
     {
       'name': 'claimedWebstoreGifts',
-      'type': 'List<int>',
+      'type': 'list',
     },
     {
       'name': 'isTestingHeat',
@@ -1229,27 +1873,27 @@ export const PLAYER_DATA_FIELD_CATALOG = {
     },
     {
       'name': 'presetUpgradeTierUnlocked',
-      'type': 'bool[,]',
+      'type': 'bool[][]',
     },
     {
       'name': 'presetUpgradeDefenseTierUnlocked',
-      'type': 'bool[,]',
+      'type': 'bool[][]',
     },
     {
       'name': 'presetUpgradeUtilityTierUnlocked',
-      'type': 'bool[,]',
+      'type': 'bool[][]',
     },
     {
       'name': 'presetEnhancementTierUnlocked',
-      'type': 'bool[,]',
+      'type': 'bool[][]',
     },
     {
       'name': 'presetEnhancementDefenseTierUnlocked',
-      'type': 'bool[,]',
+      'type': 'bool[][]',
     },
     {
       'name': 'presetEnhancementUtilityTierUnlocked',
-      'type': 'bool[,]',
+      'type': 'bool[][]',
     },
     {
       'name': 'cardFirstOpenBool',
@@ -1273,11 +1917,11 @@ export const PLAYER_DATA_FIELD_CATALOG = {
     },
     {
       'name': 'milestonesRewardClaimed',
-      'type': 'bool[,]',
+      'type': 'bool[][]',
     },
     {
       'name': 'milestonesRewardPremiumClaimed',
-      'type': 'bool[,]',
+      'type': 'bool[][]',
     },
     {
       'name': 'adsWatchedTotal',
@@ -1317,11 +1961,11 @@ export const PLAYER_DATA_FIELD_CATALOG = {
     },
     {
       'name': 'favoriteLabsPrevious',
-      'type': 'List<ResearchCategory>',
+      'type': 'list',
     },
     {
       'name': 'favoriteLabsPositionPrevious',
-      'type': 'List<int>',
+      'type': 'list',
     },
     {
       'name': 'tierBeforeTournament',
@@ -1389,15 +2033,15 @@ export const PLAYER_DATA_FIELD_CATALOG = {
     },
     {
       'name': 'lastAttempt',
-      'type': 'TournamentAttempt',
+      'type': 'object',
     },
     {
       'name': 'tournamentRecords',
-      'type': 'List<TournamentRegistry>',
+      'type': 'list',
     },
     {
       'name': 'claimedTournaments',
-      'type': 'List<int>',
+      'type': 'list',
     },
     {
       'name': 'highestLeague',
@@ -1485,7 +2129,7 @@ export const PLAYER_DATA_FIELD_CATALOG = {
     },
     {
       'name': 'autoPickOrder',
-      'type': 'List<int>',
+      'type': 'list',
     },
     {
       'name': 'targetPriority',
@@ -1537,15 +2181,15 @@ export const PLAYER_DATA_FIELD_CATALOG = {
     },
     {
       'name': 'mails',
-      'type': 'List<MailManager.Mail>',
+      'type': 'list',
     },
     {
       'name': 'mailsDownloadedId',
-      'type': 'List<string>',
+      'type': 'list',
     },
     {
       'name': 'newsReadId',
-      'type': 'List<string>',
+      'type': 'list',
     },
     {
       'name': 'selectedTower',
@@ -1613,31 +2257,31 @@ export const PLAYER_DATA_FIELD_CATALOG = {
     },
     {
       'name': 'randomOption',
-      'type': 'ThemeManager.RandomOption',
+      'type': 'object',
     },
     {
       'name': 'fetchGemRewards',
-      'type': 'List<DateTime>',
+      'type': 'list',
     },
     {
       'name': 'fetchMedalRewards',
-      'type': 'List<DateTime>',
+      'type': 'list',
     },
     {
       'name': 'fetchRareModuleRewards',
-      'type': 'List<DateTime>',
+      'type': 'list',
     },
     {
       'name': 'fetchCommonModuleRewards',
-      'type': 'List<DateTime>',
+      'type': 'list',
     },
     {
       'name': 'botsUnlockedPresets',
-      'type': 'bool[,]',
+      'type': 'bool[][]',
     },
     {
       'name': 'botsLevelSelectionPresets',
-      'type': 'int[,]',
+      'type': 'int[][]',
     },
     {
       'name': 'freeBotRespecs',
@@ -1677,7 +2321,7 @@ export const PLAYER_DATA_FIELD_CATALOG = {
     },
     {
       'name': 'missions',
-      'type': 'MissionData[]',
+      'type': 'object[]',
     },
     {
       'name': 'selectedMissions',
@@ -1713,11 +2357,11 @@ export const PLAYER_DATA_FIELD_CATALOG = {
     },
     {
       'name': 'eventBoostEventNumbers',
-      'type': 'List<int>',
+      'type': 'list',
     },
     {
       'name': 'eventRecords',
-      'type': 'List<EventRegistry>',
+      'type': 'list',
     },
     {
       'name': 'trackAvailable',
@@ -1765,7 +2409,7 @@ export const PLAYER_DATA_FIELD_CATALOG = {
     },
     {
       'name': 'wave100PostedTiers',
-      'type': 'List<int>',
+      'type': 'list',
     },
     {
       'name': 'roundTime',
@@ -2049,7 +2693,7 @@ export const PLAYER_DATA_FIELD_CATALOG = {
     },
     {
       'name': 'battleConditions',
-      'type': 'List<int>',
+      'type': 'list',
     },
     {
       'name': 'gemBlocksThisRound',
@@ -2269,7 +2913,7 @@ export const PLAYER_DATA_FIELD_CATALOG = {
     },
     {
       'name': 'currentMissions',
-      'type': 'List<DailyMissionActive>',
+      'type': 'list',
     },
     {
       'name': 'boxClaimed',
@@ -2305,7 +2949,7 @@ export const PLAYER_DATA_FIELD_CATALOG = {
     },
     {
       'name': 'purchasedStoneSales',
-      'type': 'List<string>',
+      'type': 'list',
     },
     {
       'name': 'lastStonePackOfferOpened',
@@ -2317,19 +2961,19 @@ export const PLAYER_DATA_FIELD_CATALOG = {
     },
     {
       'name': 'purchasesThisCycle',
-      'type': 'Dictionary<string, int>',
+      'type': 'map',
     },
     {
       'name': 'currencyEarnedThisCycle',
-      'type': 'CurrencyTracker',
+      'type': 'object',
     },
     {
       'name': 'currencySpentThisCycle',
-      'type': 'CurrencyTracker',
+      'type': 'object',
     },
     {
       'name': 'inventory',
-      'type': 'List<ModuleItem>',
+      'type': 'list',
     },
     {
       'name': 'moduleInfoPanelShowedOnce',
@@ -2341,7 +2985,7 @@ export const PLAYER_DATA_FIELD_CATALOG = {
     },
     {
       'name': 'moduleRandom',
-      'type': 'Random.State',
+      'type': 'object',
     },
     {
       'name': 'moduleUpgradeBuyMultiplier',
@@ -2393,31 +3037,31 @@ export const PLAYER_DATA_FIELD_CATALOG = {
     },
     {
       'name': 'cannonSubstatBans',
-      'type': 'List<SubstatsCluster>',
+      'type': 'list',
     },
     {
       'name': 'armorSubstatBans',
-      'type': 'List<SubstatsCluster>',
+      'type': 'list',
     },
     {
       'name': 'generatorSubstatBans',
-      'type': 'List<SubstatsCluster>',
+      'type': 'list',
     },
     {
       'name': 'coreSubstatBans',
-      'type': 'List<SubstatsCluster>',
+      'type': 'list',
     },
     {
       'name': 'rarityAutoRerollAllowed',
-      'type': 'List<EffectRarity>',
+      'type': 'list',
     },
     {
       'name': 'cannonAutoRerollSubstats',
-      'type': 'List<SubstatsCluster>',
+      'type': 'list',
     },
     {
       'name': 'armorAutoRerollSubstats',
-      'type': 'List<SubstatsCluster>',
+      'type': 'list',
     },
     {
       'name': 'assistModulesAvailable',
@@ -2437,11 +3081,11 @@ export const PLAYER_DATA_FIELD_CATALOG = {
     },
     {
       'name': 'claimedPurchases',
-      'type': 'List<string>',
+      'type': 'list',
     },
     {
       'name': 'unverifiedTransactions',
-      'type': 'List<Transaction>',
+      'type': 'list',
     },
     {
       'name': 'hasSeenWebshopPopup',
@@ -2461,11 +3105,11 @@ export const PLAYER_DATA_FIELD_CATALOG = {
     },
     {
       'name': 'generatorAutoRerollSubstats',
-      'type': 'List<SubstatsCluster>',
+      'type': 'list',
     },
     {
       'name': 'coreAutoRerollSubstats',
-      'type': 'List<SubstatsCluster>',
+      'type': 'list',
     },
     {
       'name': 'usingCloudSaveV2',

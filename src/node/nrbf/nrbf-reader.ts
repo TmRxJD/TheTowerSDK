@@ -251,7 +251,11 @@ export class NRBFReader {
           const o = Object.assign(new BinaryObject(), { typeName: ref.value!.typeName })
           if (oid !== 0) this.objectTracker.set(oid, o)
           currentObject = o
-          ref.memberTypeInfo ? this.readMembers(o, ref.classInfo!.memberNames, ref.memberTypeInfo) : this.readUntypedMembers(o, o.typeName, ref.classInfo!.memberNames)
+          if (ref.memberTypeInfo) {
+            this.readMembers(o, ref.classInfo!.memberNames, ref.memberTypeInfo)
+          } else {
+            this.readUntypedMembers(o, o.typeName, ref.classInfo!.memberNames)
+          }
         }
         break
 

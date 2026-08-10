@@ -10,7 +10,7 @@ import { MAX_CAMPAIGN_TIER } from '../data/index'
 /**
  * Resistance battle conditions must not affect enemy HP.
  *
- * Verified against libil2cpp.so (v28.3 arm64) rather than against captured
+ * Locks the workshop battle-condition behaviour rather than the values captured
  * display values: every gameplay call site of CustomizeGame$$GetResistanceLevel
  * is a damage or knockback path — Enemy$$ThornDamage,
  * Enemy$$TotalLightshotDamage, Enemy$$ProjectileDamage, Enemy$$AddKnockback,

@@ -1,5 +1,5 @@
 /**
- * Frozen wave-base reference implementation (IL2CPP-shaped parity baseline).
+ * Frozen wave-base reference implementation, kept as a comparison baseline.
  *
  * Test-only: `wave-base-empirical-parity.test.ts` and related parity suites.
  * Production uses `wave-base-scaling.ts` → `wave-base-empirical-scaling.ts`.

@@ -321,7 +321,6 @@ const RELIC_TEMPLATES: RelicTemplate[] = [
 ]
 
 export { RELIC_TEMPLATES }
-export default RELIC_TEMPLATES
 
 /**
  * Total Lab Speed bonus, as a percent, from the relics a player owns.

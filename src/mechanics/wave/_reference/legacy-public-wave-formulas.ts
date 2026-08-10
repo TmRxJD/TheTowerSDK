@@ -10,7 +10,7 @@
  * This is the historically shared JavaScript skeleton (TierDiff, ENEMYHP, ENEMYDMG,
  * NewDMG) that documented how The Tower scaled HP/damage before modern tier 15+ content.
  * It is **not** used for live calculator output — modern coefficients live in
- * `wave-scaling-regression-profile.ts` after black-box re-fit against current outputs.
+ * `wave-scaling-regression-profile.ts`, whose coefficients are fitted to observed outputs.
  *
  * Structural DNA preserved in the modern engine:
  *   • base polynomial  (a·wave^exp + b·wave + c)

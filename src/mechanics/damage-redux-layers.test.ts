@@ -7,7 +7,6 @@ import {
   resolveChainLightningPlusHitDamage,
   resolveChainThunderMaxReductionPct,
   resolveChainThunderReductionFraction,
-  resolveChainThunderReductionFractionFromAccumulated,
   resolveChainThunderReductionPct,
   resolveChronoFieldReductionPctFromLab,
   resolveFlameBotDamageTakenMultiplier,

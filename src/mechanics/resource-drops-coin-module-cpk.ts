@@ -10,7 +10,7 @@ export function parseModuleSubstatMultiplierAdd(value: string | null | undefined
   if (!value) return 0
   const trimmed = value.trim()
   if (!trimmed) return 0
-  const match = /([+\-]?\d+(?:\.\d+)?)\s*x/i.exec(trimmed)
+  const match = /([+-]?\d+(?:\.\d+)?)\s*x/i.exec(trimmed)
   if (!match) return 0
   return Math.max(0, Number(match[1]))
 }

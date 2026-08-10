@@ -21,7 +21,6 @@ import {
 import {
   defaultSharedUptimeInputs,
   extractSharedUptimeInputs,
-  mergeSharedUptimeInputs,
   migrateLegacyUptimeLabLevels,
   type SharedUptimeInputs,
   sharedUptimeInputsSchema,
