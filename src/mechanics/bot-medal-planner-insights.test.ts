@@ -46,7 +46,7 @@ describe('describeBotMedalUpgradeInsight', () => {
     expect(label).toContain('overlap')
   })
 
-  it('describes wildfire plus with SH', () => {
+  it('describes wildfire plus with Singularity Harness', () => {
     const label = describeBotMedalUpgradeInsight({
       botLabel: 'Flame Bot',
       statName: 'Wildfire+',
@@ -57,6 +57,6 @@ describe('describeBotMedalUpgradeInsight', () => {
       singularityHarnessActive: true,
     })
     expect(label).toContain('Wildfire+')
-    expect(label).toContain('SH')
+    expect(label).toContain('Singularity Harness')
   })
 })

@@ -40,7 +40,7 @@ function pickDominantSignal(input: BotMedalUpgradeInsightInput): string | null {
 
   if (upgradeKind === 'plus') {
     if (botLabel === 'Flame Bot' && input.singularityHarnessActive) {
-      return `Wildfire+ raises SH-tagged burn support (effective ${effectiveGain >= 0 ? '+' : ''}${effectiveGain.toFixed(2)})`
+      return `Wildfire+ raises Singularity Harness burn support (effective ${effectiveGain >= 0 ? '+' : ''}${effectiveGain.toFixed(2)})`
     }
     if (botLabel === 'Golden Bot') {
       return `Bonus Cell+ scales coin multiplier (${formatPercent(before.uptimeFraction)} uptime window)`

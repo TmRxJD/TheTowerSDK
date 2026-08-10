@@ -12,9 +12,6 @@ const TOWER_TERM_TEXT_MAP = Object.freeze<Record<string, LocaleTextMap>>({
   'Chrono Field': {
     en: 'Chrono Field', pt: 'Campo Crono', es: 'Cronocampo', ja: 'クロノフィールド', fr: 'Champ temporel', ko: '크로노 필드', it: 'Campo temporale', ru: 'хронографическое поле', de: 'Chronofeld', pl: 'Pole Chrono', 'zh-hant': '計時區', ar: 'كرونو فيلد', 'zh-hans': '时间场',
   },
-  Chronofield: {
-    en: 'Chronofield', pt: 'Campo Crono', es: 'Cronocampo', ja: 'クロノフィールド', fr: 'Champ temporel', ko: '크로노 필드', it: 'Campo temporale', ru: 'хронографическое поле', de: 'Chronofeld', pl: 'Pole Chrono', 'zh-hant': '計時區', ar: 'كرونو فيلد', 'zh-hans': '时间场',
-  },
   'Damage / Meter': {
     en: 'Damage / Meter', pt: 'Dano / Metro', es: 'Daño/metro', ja: 'ダメージ/メートル', fr: 'Dégâts par mètre', ko: '대미지/미터', it: 'Danni al metro', ru: 'Урон / Шкала', de: 'Schaden/Meter', pl: 'Damage / Meter', 'zh-hant': '傷害／公尺', ar: 'الضرر / العداد', 'zh-hans': '伤害/米',
   },
@@ -29,9 +26,6 @@ const TOWER_TERM_TEXT_MAP = Object.freeze<Record<string, LocaleTextMap>>({
   },
   'Final Wave': {
     en: 'Final Wave', pt: 'Onda final', es: 'Ola final', ja: '最終ウェーブ', fr: 'Vague finale', ko: '최종 파동', it: 'Ondata finale', ru: 'Финальная волна', de: 'Letzte Welle', pl: 'Fala końcowa', 'zh-hant': '最終波次', ar: 'الموجة الأخيرة', 'zh-hans': '最终波次',
-  },
-  'Gold Bot': {
-    en: 'Gold Bot', pt: 'Bot Dourado', es: 'Bot dorado', ja: 'ゴールデンボット', fr: 'Bot doré', ko: '황금 봇', it: 'Bot dorato', ru: 'Золотой бот', de: 'Goldener Bot', pl: 'Złoty Bot', 'zh-hant': '黃金機器人', ar: 'البوت الذهبي', 'zh-hans': '黄金机器人',
   },
   'Golden Bot': {
     en: 'Golden Bot', pt: 'Bot Dourado', es: 'Bot dorado', ja: 'ゴールデンボット', fr: 'Bot doré', ko: '황금 봇', it: 'Bot dorato', ru: 'Золотой бот', de: 'Goldener Bot', pl: 'Złoty Bot', 'zh-hant': '黃金機器人', ar: 'البوت الذهبي', 'zh-hans': '黄金机器人',
@@ -76,7 +70,6 @@ const TOWER_ACRONYM_MAP = Object.freeze<Record<string, string>>({
   CF: 'Chrono Field',
   CL: 'Chain Lightning',
   DW: 'Death Wave',
-  GNL: 'Linger',
   GB: 'Golden Bot',
   GT: 'Golden Tower',
   Lng: 'Linger',
@@ -107,7 +100,7 @@ export function normalizeLocalizedGameTerms(language: GameTermLocale, value: str
     output = output.replace(new RegExp(`\\b${escapeRegExp(acronym)}\\b`, 'gu'), localizedValue)
   }
 
-  if (output === 'Lng' || output === 'LNG' || output === 'GNL') {
+  if (output === 'Lng' || output === 'LNG') {
     return TOWER_TERM_TEXT_MAP.Linger[language]
   }
 

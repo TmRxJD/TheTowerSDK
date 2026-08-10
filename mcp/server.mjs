@@ -72,6 +72,7 @@ const TOOLS = {
     },
     run: ({ entry, filter }) => {
       const mod = sdk[entry]
+      if (!mod) return { error: `no entry point "${entry}"`, entries: ENTRIES }
       let names = Object.keys(mod).sort()
       if (filter) names = names.filter((n) => n.toLowerCase().includes(String(filter).toLowerCase()))
       return {
@@ -152,6 +153,36 @@ const TOOLS = {
       const result = fn(parsedRoot)
       if (result === null) return { extractor, result: null, note: 'this save has no data for that feature' }
       return { extractor, warnings: result?.warnings ?? [], ...preview(result) }
+    },
+  },
+
+  define_term: {
+    description:
+      'Look up a game term, acronym or set of module initials in the SDK glossary. Use this before '
+      + 'writing a name into docs or UI copy — several acronyms mean more than one thing, and the '
+      + 'glossary is generated from the shipped catalogs so the names in it are real.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        term: { type: 'string', description: 'e.g. ILM, SR, Chrono Field, save root' },
+        domain: {
+          type: 'string',
+          description: 'Narrow an ambiguous term, e.g. ultimate-weapon, module, card, workshop',
+        },
+      },
+      required: ['term'],
+    },
+    run: ({ term, domain }) => {
+      const matches = sdk.data.lookupGlossary?.(term) ?? []
+      const filtered = domain ? matches.filter((entry) => entry.domain === domain) : matches
+      if (!filtered.length) {
+        return {
+          term,
+          found: false,
+          note: 'not in the glossary — do not invent an expansion; check the catalogs with list_exports',
+        }
+      }
+      return { term, found: true, ambiguous: filtered.length > 1, meanings: filtered }
     },
   },
 

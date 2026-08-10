@@ -25,8 +25,9 @@ export function generatorCpkSubstatAddForRarity(rarity: string | null | undefine
 }
 
 /**
- * CPK module substat term — matches effective-paths SAC pattern:
- *   prim_sub + ass_sub × (1 + slotEff% + labLevel) × 0.01
+ * Coins-per-kill contribution from module substats. The assist module's substat
+ * counts only in part, scaled by its substat efficiency:
+ *   primary + assist × (1 + assistSlotEfficiency% + substatEfficiencyLabLevel) × 0.01
  */
 export function moduleCoinsKillBonusFromSubstats(
   primaryAdd: number,
@@ -34,10 +35,10 @@ export function moduleCoinsKillBonusFromSubstats(
   assistSlotEfficiencyPct: number,
   generatorSubstatEfficiencyLabLevel: number,
 ): number {
-  const stoneSac = clampAssistModuleSlotEfficiencyPct(assistSlotEfficiencyPct)
-  const labSac = Math.max(0, Math.floor(Number(generatorSubstatEfficiencyLabLevel) || 0))
-  const sac = (1 + stoneSac + labSac) * 0.01
-  return Math.max(0, primaryAdd) + Math.max(0, assistAdd) * sac
+  const slotEfficiency = clampAssistModuleSlotEfficiencyPct(assistSlotEfficiencyPct)
+  const labEfficiency = Math.max(0, Math.floor(Number(generatorSubstatEfficiencyLabLevel) || 0))
+  const substatEfficiency = (1 + slotEfficiency + labEfficiency) * 0.01
+  return Math.max(0, primaryAdd) + Math.max(0, assistAdd) * substatEfficiency
 }
 
 function readGeneratorSubstatEfficiencyLab(labs: SharedModuleEfficiencyLabs): number {

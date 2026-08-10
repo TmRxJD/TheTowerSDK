@@ -69,3 +69,15 @@ export * from './tiers'
 export * from './tournaments'
 export * from './campaign-tier'
 export * from './tools-catalog'
+export {
+  expandAcronym,
+  GLOSSARY,
+  GLOSSARY_CONCEPTS,
+  GLOSSARY_NAMES,
+  listAmbiguousGlossaryTerms,
+  listGlossaryByDomain,
+  lookupGlossary,
+  type GlossaryDomain,
+  type GlossaryEntry,
+  type GlossaryKind,
+} from './glossary'

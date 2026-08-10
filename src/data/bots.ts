@@ -354,7 +354,7 @@ export function getBotPlusStatNames(bot: BotData): string[] {
 
 export function getBotTierStatNames(bot: BotData, tier: BotUpgradeTier): string[] {
   const tierData = getTierData(bot, tier)
-  return tierData ? [...tierData.statOrder] : []
+  return Array.isArray(tierData?.statOrder) ? [...tierData.statOrder] : []
 }
 
 export function getBotBaseValues(bot: BotData): string[] {

@@ -137,7 +137,7 @@ describe('resource-drops-coin-simulation', () => {
     )
   })
 
-  it('module CPK substat uses assist efficiency SAC term', () => {
+  it('module coins-per-kill substat uses assist substat efficiency', () => {
     expect(moduleCoinsKillBonusFromSubstats(0.4, 0.4, 25, 30)).toBeCloseTo(0.4 + 0.4 * 0.56, 6)
   })
 

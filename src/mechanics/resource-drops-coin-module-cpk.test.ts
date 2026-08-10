@@ -7,7 +7,7 @@ describe('resource-drops-coin-module-cpk', () => {
     expect(parseModuleSubstatMultiplierAdd('+0.4x')).toBe(0.4)
   })
 
-  it('combines primary and assist substats with SAC efficiency', () => {
+  it('combines primary and assist substats with substat efficiency', () => {
     expect(moduleCoinsKillBonusFromSubstats(0.3, 0.5, 100, 0)).toBeCloseTo(0.3 + 0.5 * 1.01, 6)
   })
 })

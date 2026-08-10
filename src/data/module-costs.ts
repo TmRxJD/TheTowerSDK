@@ -1,16 +1,17 @@
 /** Cost to reach `targetLevel` from `targetLevel − 1` (matches game index: level 2 → index 0). */
 export const MODULE_COST_TABLE_LENGTH = 300
 
-/** Reroll currency cost by number of locked substats (0–7). Index 7 is unused (0). */
+/** Reroll Dice cost to reroll a module's substats, by how many are locked (0–7). Index 7 is unused. */
 export const MODULE_REROLL_COSTS_BY_LOCKED_SUBSTATS: readonly number[] = [
   40, 160, 500, 1000, 1600, 2250, 3000, 0,
 ]
 
 /**
- * Stone cost to take a module's main substat from level `i` to `i + 1`, indexed from 0.
- * Linear: 15 stones for the first level, +3 per level after.
+ * Stone cost per level for an assist module's Multiplier Stone and Substat Stone
+ * tracks — both use this same curve. Index 0 is the unlock (15 stones, 1%), and
+ * each level after costs 3 more than the last, up to 70%.
  */
-export const MAIN_SUB_COSTS: readonly number[] = Array.from({ length: 69 }, (_, i) => 15 + i * 3)
+export const ASSIST_MODULE_STONE_COSTS: readonly number[] = Array.from({ length: 69 }, (_, i) => 15 + i * 3)
 
 const COIN_COST_TIER_PAIRS: ReadonlyArray<readonly [number, number]> = [
   [10_000, 25_000], // levels 2–5 vs 6–10

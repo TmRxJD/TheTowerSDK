@@ -1,7 +1,7 @@
 /**
- * Ultimate weapon hit damage.
+ * Ultimate weapon hit damage — the part every ultimate weapon shares.
  *
- * Black Hole, Chain Lightning, Death Ray, Land Mines and similar all share:
+ * Whatever deals the hit, the same two steps run first:
  *
  *   moduleMult = module bonus for the slot + 1.0
  *   effective  = max(0, incomingDamage − enemyAbsorbPool)

@@ -189,12 +189,11 @@ Worked out a field that isn't covered? A PR adding an extractor is very welcome.
 
 There's no desktop build of the game, so on a PC the save always comes from an emulator.
 
-[**Tracker Bridge**](https://github.com/TmRxJD/tracker-bridge) is a small local helper that finds
-and copies the save off a connected device or emulator, which is usually easier than doing it by
-hand:
+[**adb-bridge**](https://github.com/TmRxJD/adb-bridge) is a small local helper that finds and copies
+the save off a connected device or emulator, which is usually easier than doing it by hand:
 
 ```bash
-npx tracker-bridge
+npx adb-bridge
 ```
 
 > Save files are personal data. If your tool uploads them anywhere, tell your users plainly.
@@ -232,18 +231,50 @@ npx tsx examples/02-read-a-save-file.ts ~/playerInfo.dat
 
 ---
 
+## Names and acronyms
+
+The game and the community use a lot of shorthand, and some of it is ambiguous — `SR` is both Shrink
+Ray and Solar Reflector. The SDK ships a glossary so you do not have to guess:
+
+```ts
+import { lookupGlossary, expandAcronym } from 'thetowersdk/data'
+
+expandAcronym('ILM')     // 'Inner Land Mines'
+lookupGlossary('SR')     // two entries; check `domain` to pick one
+```
+
+Names in it are generated from the same catalogs the SDK ships, and every acronym is checked against
+those names, so a term cannot appear unless it is real.
+
+## Using it with an AI agent
+
+There's an MCP server in [`mcp/`](mcp/README.md). Point your agent at it and it can list exports,
+read a table, look up a term, decode a save and run an extractor directly — which beats having it
+guess at an API and hand you code that does not compile.
+
+```bash
+claude mcp add thetowersdk -- node ./node_modules/thetowersdk/mcp/server.mjs
+```
+
+Agent instructions live in [AGENTS.md](AGENTS.md); `CLAUDE.md` and
+`.github/copilot-instructions.md` point at the same file.
+
+---
+
 ## Formulas
 
 `thetowersdk/mechanics` is the calculation layer — the same one the Run Tracker's calculators use:
 
 - **Enemy scaling** — wave/tier base health and damage, enemy type multipliers, level skip,
   elite spawn chance, wave-info panel values
-- **Damage** — thorns, knockback, multishot and bounce, rend armor, projectile damage, crowd
-  control, damage reduction, tower fire and range
-- **Ultimates** — chronofield, poison swamp, land mines and charge, wildfire, black hole, shockwave
+- **Damage** — thorns, knockback, multishot and bounce shot, rend armor, projectile damage, crowd
+  control, damage reduction, shockwave, land mines, tower fire and range
+- **Ultimate weapons** — the shared hit and absorb pipeline, plus Chrono Field slow, Poison Swamp
+  ticks and stun, and Inner Land Mines including Charge Mines
 - **Economy** — coin and enemy drop simulation, interest, ROI scaling, workshop cost tables
 - **Workshop stats** — attack, defense and utility stat tables and their build-up
-- **Bots and guardians** — bot hit multipliers, medal planning and simulation, overlap, cooldowns
+- **Bots and guardians** — bot hit multipliers, effective range and coverage, Wildfire duration,
+  medal planning and simulation, Bot Bot overlap, cooldowns
 - **Battle conditions** — resistance levels, tournament heat, counter labs
 
 ```ts
@@ -271,26 +302,6 @@ Wave scaling in particular builds on earlier community work — see [Credits](#c
 Pin the version if you need reproducible numbers.
 
 Anything under `thetowersdk/internal/*` is not part of the public API and can change in any release.
-
-## Roadmap
-
-**Not included yet, deliberately.** These exist in older community work but depend on constants that
-could not be checked against a current game build, so shipping them would mean handing you numbers
-that look authoritative and may be years stale:
-
-- Wave duration and cooldowns (game speed table, wave accelerator)
-- Spawn counts per wave
-- Gem cost to rush a lab
-- Next perk wave requirement
-
-If you need one of these, open an issue — with a way to verify the values against the current game
-they can be added quickly. Everything already in the package is checked against the current build.
-
-Also planned:
-
-- Localized game text (currently English only)
-
-Open an issue for what you're trying to build; that's what drives the order.
 
 ## Contributing
 

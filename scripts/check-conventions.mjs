@@ -94,8 +94,21 @@ for (const area of PUBLIC_AREAS) {
     .filter((e) => e.isFile() && e.name.endsWith('.ts') && !e.name.endsWith('.test.ts') && e.name !== 'index.ts')
     .map((e) => e.name.replace(/\.ts$/, ''))
 
+  /**
+   * A module also counts as reachable when a module the barrel *does* export
+   * re-exports it. That is the real invariant — "nobody can import it" is false
+   * when a public sibling passes it through.
+   */
+  const reachable = new Set()
   for (const mod of modules) {
-    if (!barrel.includes(`'./${mod}'`)) {
+    if (!barrel.includes(`'./${mod}'`)) continue
+    reachable.add(mod)
+    const source = fs.readFileSync(path.join(SRC, area, `${mod}.ts`), 'utf8')
+    for (const match of source.matchAll(/from '\.\/([\w.-]+)'/g)) reachable.add(match[1])
+  }
+
+  for (const mod of modules) {
+    if (!reachable.has(mod)) {
       problems.push(`${area}/${mod}.ts is not exported from ${area}/index.ts; nobody can import it`)
     }
   }

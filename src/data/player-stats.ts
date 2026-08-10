@@ -5673,7 +5673,7 @@ export const CARD_IMPORT_CATALOG = [
     'index': 13,
     'gameField': 'cardInnerOrb',
     'slug': 'x-orb',
-    'name': 'Inner Orb',
+    'name': 'Extra Orb',
   },
   {
     'index': 14,

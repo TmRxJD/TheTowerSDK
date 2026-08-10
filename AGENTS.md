@@ -46,6 +46,11 @@ the rest are *absent*, not locked. Do not present them as things the player is m
 
 **Never mutate `parsedRoot`.** Callers run many extractors over the same object.
 
+**Do not invent a name.** The game's names, and the community shorthand for them, are in the
+glossary: `lookupGlossary('SR')`, `expandAcronym('ILM')`. Several acronyms are ambiguous, and a
+confident wrong expansion is worse than none. If a term is not in the glossary, look it up in the
+catalogs rather than guessing — the MCP server's `define_term` does both.
+
 **Formulas under `mechanics/` are approximations.** They are fitted to observed behaviour and drift
 at very high waves and tiers. Do not use them where an exact match to the game matters.
 
@@ -70,8 +75,8 @@ at very high waves and tiers. Do not use them where an exact match to the game m
 ## Checking things without writing a script
 
 There is an MCP server in [`mcp/`](mcp/README.md). Point your agent at it and you can list exports,
-read a table, decode a save and run an extractor directly — useful for confirming a value instead of
-assuming one.
+read a table, define a term, decode a save and run an extractor directly — useful for confirming a
+value instead of assuming one.
 
 ```bash
 pnpm build && pnpm mcp
@@ -94,7 +99,8 @@ the data is absent, and add a test. Index-mapping bugs are silent: they misrepor
 rather than failing, so a test with a real shape is worth more than it looks.
 
 **A new data table** — put it in `src/data/`, export it from `src/data/index.ts`, and declare its
-schema in `src/data/schemas.ts` so `pnpm test:schema` validates it.
+schema in `src/data/schemas.ts` so `pnpm test:schema` validates it. If it introduces names, rerun
+`node scripts/generate-glossary.mjs` so the glossary covers them.
 
 **A new formula** — put it in `src/mechanics/`, export it from `src/mechanics/index.ts`, and say in
 the doc comment whether it is exact or fitted.
