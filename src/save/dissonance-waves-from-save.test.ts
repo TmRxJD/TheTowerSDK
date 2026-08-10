@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { MAX_CAMPAIGN_TIER } from '../data/campaign-tier'
 import { deriveDissonanceCalculatorStateFromSaveRoot } from './shared-tool-inputs-from-save-extended'
 
 /**
@@ -50,5 +51,27 @@ describe('dissonance waves from a save', () => {
   it('reports no wave data for a save with none, instead of inventing zeros', () => {
     const state = deriveDissonanceCalculatorStateFromSaveRoot({})
     expect(state.wavesByTier).toBeUndefined()
+  })
+
+  /**
+   * The tier count was hardcoded to 21 and went stale when the game added
+   * 22-24, so the last three tiers were unreachable: extraction stopped short
+   * and the store clamped them away. The preview built its rows from
+   * MAX_CAMPAIGN_TIER, so the tab showed tiers the calculator could not hold.
+   */
+  it('reads every campaign tier, including the ones added after 21', () => {
+    const perTier = Array.from({ length: MAX_CAMPAIGN_TIER }, (_, index) => (index + 1) * 10)
+    const state = deriveDissonanceCalculatorStateFromSaveRoot({
+      dissonanceDamageBoost: trackWaves(perTier),
+    })
+
+    expect(state.wavesByTier?.[String(MAX_CAMPAIGN_TIER)]?.attack).toBe(MAX_CAMPAIGN_TIER * 10)
+    expect(state.wavesByTier?.['22']?.attack).toBe(220)
+    expect(state.wavesByTier?.['24']?.attack).toBe(240)
+  })
+
+  it('tracks the generated tier count rather than a copy of it', () => {
+    // If the game adds tier 25, this file should need no edit at all.
+    expect(MAX_CAMPAIGN_TIER).toBeGreaterThanOrEqual(24)
   })
 })

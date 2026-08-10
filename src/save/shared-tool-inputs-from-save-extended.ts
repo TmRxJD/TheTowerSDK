@@ -1,4 +1,5 @@
 import { CARD_TEMPLATES } from '../data/cards'
+import { MAX_CAMPAIGN_TIER } from '../data/campaign-tier'
 import {
   WORKSHOP_ENHANCEMENT_IMPORT_CATALOG,
   WORKSHOP_IMPORT_CATALOG,
@@ -90,7 +91,17 @@ const BOTRANGE_VAULT_NODE_IDS = ['botrange1', 'botrange2', 'botrange3', 'botrang
 const UW_STATS_PER_SLOT = 3
 const ECHO_LABS_UNLOCK_TIER = 4
 const ECHO_LABS_UNLOCK_WAVE = 90
-const DISSONANCE_TIER_COUNT = 21
+/**
+ * Dissonance covers every campaign tier, so it is read from the generated tier
+ * count rather than restated.
+ *
+ * This was hardcoded to 21 and went stale when the game added tiers 22-24, so
+ * the extraction loop stopped at 21 while the preview built its rows from
+ * MAX_CAMPAIGN_TIER. The Dissonance tab showed 24 tiers and the calculator
+ * could never hold the last three -- the numbers disagreed because only one of
+ * them was derived from the game data.
+ */
+const DISSONANCE_TIER_COUNT = MAX_CAMPAIGN_TIER
 /** In-game dissonance wave columns are stored per track in Unity `List<int>` arrays indexed by tier. */
 export const DISSONANCE_BOOST_SAVE_FIELD_BY_TYPE: Record<DissonanceTypeKey, string> = {
   attack: 'dissonanceDamageBoost',
