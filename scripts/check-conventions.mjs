@@ -74,14 +74,19 @@ for (const file of files) {
     problems.push(`${rel}: imports ${m[1]}; inside src/ use a relative path`)
   }
 
-  // 5. Keep hand-written files readable.
+  // 5. Nothing reaches outside the package. A fork has only what is committed here.
+  for (const m of source.matchAll(/['"`](\.\.\/){3,}[^'"`]*['"`]/g)) {
+    problems.push(`${rel}: reads ${m[0]}; a fork has no monorepo around it — keep fixtures in the package`)
+  }
+
+  // 6. Keep hand-written files readable.
   const lines = source.split('\n').length
   if (lines > MAX_LINES && !GENERATED.test(rel)) {
     problems.push(`${rel}: ${lines} lines; split it or name it so it reads as generated data`)
   }
 }
 
-// 6. Every public module is exported from its barrel.
+// 7. Every public module is exported from its barrel.
 for (const area of PUBLIC_AREAS) {
   const barrelPath = path.join(SRC, area, 'index.ts')
   if (!fs.existsSync(barrelPath)) {

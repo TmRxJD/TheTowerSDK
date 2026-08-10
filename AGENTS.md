@@ -86,7 +86,7 @@ pnpm build && pnpm mcp
 
 ```bash
 pnpm install
-pnpm verify      # lint + conventions + types + schema + tests + build
+pnpm verify      # lint + conventions + types + build + tests
 ```
 
 Individually: `pnpm lint`, `pnpm lint:conventions`, `pnpm type-check`, `pnpm test`,

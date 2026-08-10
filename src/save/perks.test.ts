@@ -9,8 +9,11 @@ import {
   resolveOverviewAutopickPerkIndices,
 } from './perks'
 
-const fixtureDir = join(dirname(fileURLToPath(import.meta.url)), '../../../../test')
-const playerInfo = JSON.parse(readFileSync(join(fixtureDir, 'playerInfo.json'), 'utf8')) as Record<string, unknown>
+/** Synthetic, and inside the package, so a fork can run this without a save of its own. */
+const fixtureDir = join(dirname(fileURLToPath(import.meta.url)), 'fixtures')
+const playerInfo = JSON.parse(
+  readFileSync(join(fixtureDir, 'perk-preferences.sample.json'), 'utf8'),
+) as Record<string, unknown>
 
 describe('deriveUnbannedPerkIndices', () => {
   it('returns active catalog indices minus banned set', () => {

@@ -33,17 +33,18 @@
     "node": ">=18"
   },
   "scripts": {
-    "build": "pnpm run clean && tsc -p tsconfig.build.json && node scripts/copy-assets.mjs",
+    "build": "npm run clean && tsc -p tsconfig.build.json && node scripts/copy-assets.mjs",
     "clean": "node -e \"const fs=require('fs');fs.rmSync('dist',{recursive:true,force:true})\"",
     "test": "vitest run",
     "type-check": "tsc -p tsconfig.build.json --noEmit",
-    "prepublishOnly": "pnpm run clean && pnpm run build",
+    "prepublishOnly": "npm run clean && npm run build",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "lint:conventions": "node scripts/check-conventions.mjs",
     "test:schema": "vitest run src/data/schemas.test.ts",
-    "verify": "pnpm lint && pnpm lint:conventions && pnpm type-check && pnpm test && pnpm build",
-    "mcp": "node mcp/server.mjs"
+    "verify": "npm run lint && npm run lint:conventions && npm run type-check && npm run build && npm test",
+    "mcp": "node mcp/server.mjs",
+    "glossary": "npm run build && node scripts/generate-glossary.mjs"
   },
   "exports": {
     ".": {
@@ -122,6 +123,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.18.0",
+    "@types/node": "^22.10.0",
     "eslint": "^9.18.0",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.20.0",

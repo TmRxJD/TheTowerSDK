@@ -11,8 +11,11 @@ import {
 } from './shared-tool-inputs-from-save'
 import { defaultSharedToolInputs } from '../internal/shared-tool-inputs'
 
-const fixtureDir = join(dirname(fileURLToPath(import.meta.url)), '../../../../test')
-const playerInfo = JSON.parse(readFileSync(join(fixtureDir, 'playerInfo.json'), 'utf8')) as Record<string, unknown>
+/** Synthetic, and inside the package, so a fork can run this without a save of its own. */
+const fixtureDir = join(dirname(fileURLToPath(import.meta.url)), 'fixtures')
+const playerInfo = JSON.parse(
+  readFileSync(join(fixtureDir, 'perk-preferences.sample.json'), 'utf8'),
+) as Record<string, unknown>
 
 describe('deriveTradeOffPerksFromSaveRoot', () => {
   it('maps perkLevel indices to shared trade-off toggles', () => {
