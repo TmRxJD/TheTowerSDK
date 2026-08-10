@@ -36,7 +36,7 @@ export default tseslint.config(
   },
   {
     // Build and check scripts run in Node, not the browser.
-    files: ['scripts/**/*.mjs', 'examples/**/*.ts', '*.config.mjs'],
+    files: ['scripts/**/*.mjs', 'mcp/**/*.mjs', 'examples/**/*.ts', '*.config.mjs'],
     languageOptions: {
       globals: { console: 'readonly', process: 'readonly', fetch: 'readonly' },
     },

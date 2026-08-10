@@ -67,6 +67,16 @@ at very high waves and tiers. Do not use them where an exact match to the game m
 - **The package never imports itself by name.** Inside `src/`, use relative paths — `thetowersdk/...`
   only resolves when a build happens to exist and breaks as soon as `clean` runs.
 
+## Checking things without writing a script
+
+There is an MCP server in [`mcp/`](mcp/README.md). Point your agent at it and you can list exports,
+read a table, decode a save and run an extractor directly — useful for confirming a value instead of
+assuming one.
+
+```bash
+pnpm build && pnpm mcp
+```
+
 ## Before you open a PR
 
 ```bash

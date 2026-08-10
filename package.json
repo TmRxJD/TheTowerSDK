@@ -42,7 +42,8 @@
     "lint:fix": "eslint . --fix",
     "lint:conventions": "node scripts/check-conventions.mjs",
     "test:schema": "vitest run src/data/schemas.test.ts",
-    "verify": "pnpm lint && pnpm lint:conventions && pnpm type-check && pnpm test && pnpm build"
+    "verify": "pnpm lint && pnpm lint:conventions && pnpm type-check && pnpm test && pnpm build",
+    "mcp": "node mcp/server.mjs"
   },
   "exports": {
     ".": {
@@ -109,6 +110,7 @@
   },
   "files": [
     "dist",
+    "mcp",
     "README.md",
     "CONTRIBUTING.md",
     "AGENTS.md",
