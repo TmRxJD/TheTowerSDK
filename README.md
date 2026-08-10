@@ -274,7 +274,20 @@ Anything under `thetowersdk/internal/*` is not part of the public API and can ch
 
 ## Roadmap
 
-- A documented calculation engine — wave scaling, enemy stats, damage and coin modelling
+**Not included yet, deliberately.** These exist in older community work but depend on constants that
+could not be checked against a current game build, so shipping them would mean handing you numbers
+that look authoritative and may be years stale:
+
+- Wave duration and cooldowns (game speed table, wave accelerator)
+- Spawn counts per wave
+- Gem cost to rush a lab
+- Next perk wave requirement
+
+If you need one of these, open an issue — with a way to verify the values against the current game
+they can be added quickly. Everything already in the package is checked against the current build.
+
+Also planned:
+
 - Localized game text (currently English only)
 
 Open an issue for what you're trying to build; that's what drives the order.
@@ -287,8 +300,10 @@ tools you've built.
 
 ## Credits
 
-**Matthew** — the "Effective Paths" spreadsheets for The Tower. A large amount of the reference
-data here, especially the cost, mastery and substat tables, was compiled with the help of that work.
+**Matthew** (`matteweon` on Discord) — the
+[Effective Paths](https://docs.google.com/spreadsheets/d/1YwZtKP6B4WYhRba5T6APJ1YxKNdfnIGQnprgnxmO7zc)
+spreadsheets for The Tower. A large amount of the reference data here, especially the cost, mastery
+and substat tables, was compiled with the help of that work.
 
 The wave scaling code builds on
 [**tower-idle-toolkit**](https://github.com/tower-idle-toolkit/tower-idle-toolkit) by **skye**,
