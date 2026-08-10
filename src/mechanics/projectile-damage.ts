@@ -1,0 +1,57 @@
+/** Tower projectile hit damage and wave-level pool scaling. */
+
+import { bonusDamageFromImpetus } from './impetus'
+
+export interface ProjectileHitDamageInput {
+  baseDamage: number
+  hitMultiplier: number
+  impetusMult: number
+  enemyDamageFloor?: number
+  critMultiplier?: number
+}
+
+export function projectileHitDamage(input: ProjectileHitDamageInput): number {
+  const floor = Math.max(input.enemyDamageFloor ?? 1, 1)
+  const crit = input.critMultiplier ?? 1
+  return input.hitMultiplier * input.baseDamage * input.impetusMult * floor * crit
+}
+
+export interface ProjectileImpetusHitInput {
+  baseDamage: number
+  hitMultiplier: number
+  impetus: number
+  distanceMeters: number
+  extraImpetusMultiplier?: number
+  distanceMultiplier?: number
+  enemyDamageFloor?: number
+  critMultiplier?: number
+}
+
+export function projectileDamageWithImpetus(input: ProjectileImpetusHitInput): number {
+  const impetusMult = bonusDamageFromImpetus({
+    impetus: input.impetus,
+    distanceMeters: input.distanceMeters,
+    extraMultiplier: input.extraImpetusMultiplier ?? 1,
+    distanceMultiplier: input.distanceMultiplier ?? 1,
+  })
+  return projectileHitDamage({
+    baseDamage: input.baseDamage,
+    hitMultiplier: input.hitMultiplier,
+    impetusMult,
+    enemyDamageFloor: input.enemyDamageFloor,
+    critMultiplier: input.critMultiplier,
+  })
+}
+
+export function waveBaseStatRatio(currentLevelStat: number, previousLevelStat: number): number {
+  if (previousLevelStat <= 0) return 1
+  return currentLevelStat / previousLevelStat
+}
+
+export function applyHpPoolRatioStep(remaining: number, ratio: number): number {
+  return remaining - remaining * ratio
+}
+
+export function applyDamageStatRatioStep(stat: number, ratio: number): number {
+  return stat * ratio
+}

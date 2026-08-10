@@ -50,6 +50,16 @@ export * from './ultimate-weapon-stones'
 export * from './vault-tree'
 export * from './vault-tree-traversal'
 
+// Tabular data backing charts and calculators
+export * from './chart-tables'
+
+// Progression, economy and enemy reference data
+export * from './milestones'
+export * from './enemies'
+export * from './currency'
+export * from './module-costs'
+export * from './module-bonus'
+
 // Player, assets, progression
 export * from './player-stats'
 export * from './assets'

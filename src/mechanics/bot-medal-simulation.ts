@@ -1,0 +1,268 @@
+import { botEffectiveRadius } from './bots'
+import { pickBotActivationDestination } from './bot-movement'
+import { UnityRandom } from '../internal/unity-random'
+
+export const BOT_MEDAL_SIM_STEP_SECONDS = 0.5
+export const BOT_MEDAL_SIM_DURATION_SECONDS = 1800
+export const BOT_MEDAL_DEFAULT_TOWER_RANGE_METERS = 60
+
+export interface BotMedalActivationTimingResult {
+  overlapOfTotalTimeFraction: number
+  overlapOfBotUptimeFraction: number
+  overlapOfBotBotUptimeFraction: number
+}
+
+export interface BotMedalInteractionResult extends BotMedalActivationTimingResult {
+  conditionedSpatialOverlapFraction: number
+}
+
+export interface BotMedalInteractionInput {
+  otherBotLabel: string
+  otherDurationSeconds: number
+  otherCooldownSeconds: number
+  otherRangeMeters: number
+  botBotDurationSeconds: number
+  botBotCooldownSeconds: number
+  botBotRangeMeters: number
+  sharedPath: boolean
+  arenaRadiusMeters?: number
+  pathSampleSeed?: number
+  stepSeconds?: number
+  durationSeconds?: number
+}
+
+/** Catalog display meters match `benefit / 10` in `Bot.UpdateSize`. */
+export function botDisplayRangeToEffectiveRadiusMeters(
+  displayRangeMeters: number,
+  towerRangeDisplayMeters: number,
+): number {
+  if (!Number.isFinite(displayRangeMeters) || displayRangeMeters <= 0) return 0
+  const internalMaxDistance = Math.max(0, towerRangeDisplayMeters) / 10
+  return botEffectiveRadius(displayRangeMeters * 10, internalMaxDistance)
+}
+
+/** Coverage fraction: effective bot radius vs tower arena (display meters). */
+export function botMedalCoverageFraction(
+  displayRangeMeters: number,
+  towerRangeDisplayMeters: number,
+  globalRangeBonusMeters = 0,
+): number {
+  const totalDisplay = Math.max(0, displayRangeMeters + globalRangeBonusMeters)
+  const effective = botDisplayRangeToEffectiveRadiusMeters(totalDisplay, towerRangeDisplayMeters)
+  const arena = Math.max(1, towerRangeDisplayMeters)
+  return Math.min(1, (effective / arena) ** 2)
+}
+
+export function isBotActiveAtTime(
+  timeSeconds: number,
+  durationSeconds: number,
+  cooldownSeconds: number,
+): boolean {
+  if (durationSeconds <= 0 || cooldownSeconds <= 0) return false
+  const cyclePosition = timeSeconds % cooldownSeconds
+  return cyclePosition < Math.min(durationSeconds, cooldownSeconds)
+}
+
+export function circleOverlapArea(radiusA: number, radiusB: number, distance: number): number {
+  if (distance >= radiusA + radiusB) return 0
+  if (distance <= Math.abs(radiusA - radiusB)) return Math.PI * Math.min(radiusA, radiusB) ** 2
+
+  const angleA = Math.acos((distance * distance + radiusA * radiusA - radiusB * radiusB) / (2 * distance * radiusA))
+  const angleB = Math.acos((distance * distance + radiusB * radiusB - radiusA * radiusA) / (2 * distance * radiusB))
+  const chordArea = 0.5 * Math.sqrt(Math.max(0,
+    (-distance + radiusA + radiusB)
+    * (distance + radiusA - radiusB)
+    * (distance - radiusA + radiusB)
+    * (distance + radiusA + radiusB),
+  ))
+
+  return (radiusA * radiusA * angleA) + (radiusB * radiusB * angleB) - chordArea
+}
+
+export function circleOverlapFractionOfTarget(
+  targetRadiusMeters: number,
+  sourceRadiusMeters: number,
+  centerDistanceMeters: number,
+): number {
+  if (targetRadiusMeters <= 0 || sourceRadiusMeters <= 0) return 0
+  const targetArea = Math.PI * targetRadiusMeters * targetRadiusMeters
+  if (targetArea <= 0) return 0
+  return Math.max(0, Math.min(1, circleOverlapArea(sourceRadiusMeters, targetRadiusMeters, centerDistanceMeters) / targetArea))
+}
+
+/** Shared enemy path — Bot Bot centered on the same target as the amplified bot. */
+export function sharedPathBotBotOverlapFraction(
+  otherRadiusMeters: number,
+  botBotRadiusMeters: number,
+): number {
+  if (otherRadiusMeters <= 0 || botBotRadiusMeters <= 0) return 0
+  const ratio = botBotRadiusMeters / otherRadiusMeters
+  return Math.max(0, Math.min(1, ratio * ratio))
+}
+
+function hashLabelToSeed(label: string): number {
+  let hash = 2_166_136_261
+  for (let index = 0; index < label.length; index += 1) {
+    hash ^= label.charCodeAt(index)
+    hash = Math.imul(hash, 16_777_619)
+  }
+  return hash >>> 0
+}
+
+function activationCycleIndex(timeSeconds: number, cooldownSeconds: number): number {
+  if (cooldownSeconds <= 0) return 0
+  return Math.floor(timeSeconds / cooldownSeconds)
+}
+
+function positionForActivationCycle(
+  baseSeed: number,
+  botSalt: number,
+  cycleIndex: number,
+  arenaRadiusMeters: number,
+  radiusPercentage = 1,
+): [number, number] {
+  const rng = UnityRandom.fromSeed((baseSeed ^ botSalt ^ Math.imul(cycleIndex + 1, 2_654_435_761)) >>> 0)
+  const dest = pickBotActivationDestination(rng, arenaRadiusMeters, radiusPercentage)
+  return [dest.x, dest.y]
+}
+
+const activationTimingCache = new Map<string, BotMedalActivationTimingResult>()
+const interactionSimulationCache = new Map<string, BotMedalInteractionResult>()
+
+export function simulateBotMedalActivationTiming(
+  otherDurationSeconds: number,
+  otherCooldownSeconds: number,
+  botBotDurationSeconds: number,
+  botBotCooldownSeconds: number,
+  options?: { stepSeconds?: number, durationSeconds?: number },
+): BotMedalActivationTimingResult {
+  if (otherDurationSeconds <= 0 || otherCooldownSeconds <= 0 || botBotDurationSeconds <= 0 || botBotCooldownSeconds <= 0) {
+    return {
+      overlapOfTotalTimeFraction: 0,
+      overlapOfBotUptimeFraction: 0,
+      overlapOfBotBotUptimeFraction: 0,
+    }
+  }
+
+  const stepSeconds = options?.stepSeconds ?? BOT_MEDAL_SIM_STEP_SECONDS
+  const durationSeconds = options?.durationSeconds ?? BOT_MEDAL_SIM_DURATION_SECONDS
+
+  const cacheKey = [
+    otherDurationSeconds.toFixed(3),
+    otherCooldownSeconds.toFixed(3),
+    botBotDurationSeconds.toFixed(3),
+    botBotCooldownSeconds.toFixed(3),
+    stepSeconds.toFixed(3),
+    durationSeconds.toFixed(0),
+  ].join('|')
+  const cached = activationTimingCache.get(cacheKey)
+  if (cached) return cached
+
+  const totalSteps = Math.max(1, Math.round(durationSeconds / stepSeconds))
+  let otherActiveSteps = 0
+  let botBotActiveSteps = 0
+  let bothActiveSteps = 0
+
+  for (let step = 0; step < totalSteps; step += 1) {
+    const timeSeconds = (step + 0.5) * stepSeconds
+    const otherActive = isBotActiveAtTime(timeSeconds, otherDurationSeconds, otherCooldownSeconds)
+    const botBotActive = isBotActiveAtTime(timeSeconds, botBotDurationSeconds, botBotCooldownSeconds)
+    if (otherActive) otherActiveSteps += 1
+    if (botBotActive) botBotActiveSteps += 1
+    if (otherActive && botBotActive) bothActiveSteps += 1
+  }
+
+  const result = {
+    overlapOfTotalTimeFraction: bothActiveSteps / totalSteps,
+    overlapOfBotUptimeFraction: otherActiveSteps > 0 ? bothActiveSteps / otherActiveSteps : 0,
+    overlapOfBotBotUptimeFraction: botBotActiveSteps > 0 ? bothActiveSteps / botBotActiveSteps : 0,
+  }
+  activationTimingCache.set(cacheKey, result)
+  return result
+}
+
+export function simulateBotMedalInteraction(input: BotMedalInteractionInput): BotMedalInteractionResult {
+  const {
+    otherBotLabel,
+    otherDurationSeconds,
+    otherCooldownSeconds,
+    otherRangeMeters,
+    botBotDurationSeconds,
+    botBotCooldownSeconds,
+    botBotRangeMeters,
+    sharedPath,
+  } = input
+
+  if (otherRangeMeters <= 0 || botBotRangeMeters <= 0 || otherDurationSeconds <= 0 || otherCooldownSeconds <= 0 || botBotDurationSeconds <= 0 || botBotCooldownSeconds <= 0) {
+    return {
+      overlapOfTotalTimeFraction: 0,
+      overlapOfBotUptimeFraction: 0,
+      overlapOfBotBotUptimeFraction: 0,
+      conditionedSpatialOverlapFraction: 0,
+    }
+  }
+
+  const stepSeconds = input.stepSeconds ?? BOT_MEDAL_SIM_STEP_SECONDS
+  const durationSeconds = input.durationSeconds ?? BOT_MEDAL_SIM_DURATION_SECONDS
+  const arenaRadiusMeters = Math.max(1, input.arenaRadiusMeters ?? BOT_MEDAL_DEFAULT_TOWER_RANGE_METERS)
+  const pathSampleSeed = input.pathSampleSeed ?? hashLabelToSeed(otherBotLabel)
+  const otherRadiusPct = Math.max(0.05, Math.min(1, otherRangeMeters / arenaRadiusMeters))
+  const botBotRadiusPct = Math.max(0.05, Math.min(1, botBotRangeMeters / arenaRadiusMeters))
+
+  const cacheKey = [
+    otherBotLabel,
+    sharedPath ? '1' : '0',
+    otherDurationSeconds.toFixed(3),
+    otherCooldownSeconds.toFixed(3),
+    otherRangeMeters.toFixed(3),
+    botBotDurationSeconds.toFixed(3),
+    botBotCooldownSeconds.toFixed(3),
+    botBotRangeMeters.toFixed(3),
+    arenaRadiusMeters.toFixed(3),
+    pathSampleSeed.toString(16),
+    stepSeconds.toFixed(3),
+    durationSeconds.toFixed(0),
+  ].join('|')
+  const cached = interactionSimulationCache.get(cacheKey)
+  if (cached) return cached
+
+  const totalSteps = Math.max(1, Math.round(durationSeconds / stepSeconds))
+  let overlapSum = 0
+  let otherActiveSteps = 0
+  let botBotActiveSteps = 0
+  let bothActiveSteps = 0
+
+  for (let step = 0; step < totalSteps; step += 1) {
+    const timeSeconds = (step + 0.5) * stepSeconds
+    const otherActive = isBotActiveAtTime(timeSeconds, otherDurationSeconds, otherCooldownSeconds)
+    const botBotActive = isBotActiveAtTime(timeSeconds, botBotDurationSeconds, botBotCooldownSeconds)
+
+    if (otherActive) otherActiveSteps += 1
+    if (botBotActive) botBotActiveSteps += 1
+    if (!(otherActive && botBotActive)) continue
+
+    bothActiveSteps += 1
+    const spatialOverlapFraction = sharedPath
+      ? sharedPathBotBotOverlapFraction(otherRangeMeters, botBotRangeMeters)
+      : (() => {
+        const otherCycle = activationCycleIndex(timeSeconds, otherCooldownSeconds)
+        const botBotCycle = activationCycleIndex(timeSeconds, botBotCooldownSeconds)
+        const [otherX, otherY] = positionForActivationCycle(pathSampleSeed, 0x1111, otherCycle, arenaRadiusMeters, otherRadiusPct)
+        const [botBotX, botBotY] = positionForActivationCycle(pathSampleSeed, 0x2222, botBotCycle, arenaRadiusMeters, botBotRadiusPct)
+        const centerDistance = Math.hypot(otherX - botBotX, otherY - botBotY)
+        return circleOverlapFractionOfTarget(otherRangeMeters, botBotRangeMeters, centerDistance)
+      })()
+
+    overlapSum += spatialOverlapFraction
+  }
+
+  const result = {
+    overlapOfTotalTimeFraction: overlapSum / totalSteps,
+    overlapOfBotUptimeFraction: otherActiveSteps > 0 ? overlapSum / otherActiveSteps : 0,
+    overlapOfBotBotUptimeFraction: botBotActiveSteps > 0 ? overlapSum / botBotActiveSteps : 0,
+    conditionedSpatialOverlapFraction: bothActiveSteps > 0 ? overlapSum / bothActiveSteps : 0,
+  } satisfies BotMedalInteractionResult
+
+  interactionSimulationCache.set(cacheKey, result)
+  return result
+}

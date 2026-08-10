@@ -1,0 +1,53 @@
+import { guardianUpgrades } from '../../data/index'
+import { UPTIME_GUARDIAN_FIELD_MAP } from '../shared-uptime-inputs'
+import { buildGuardianLevelOptionLabel } from './guardian-dropdown-math'
+import type { GameDropdownOptionEntry } from './types'
+
+export interface GuardianStatSpec {
+  guardianKey: string
+  statField: string
+}
+
+const GUARDIAN_DISPLAY_TO_STAT_FIELD: Readonly<Record<string, Readonly<Record<string, string>>>> = {
+  attack: { Percentage: 'percentage', Targets: 'targets' },
+  ally: { 'Recovery Amount': 'recoveryAmount', 'Max Recovery': 'maxRecovery' },
+  bounty: { Multiplier: 'multiplier', Targets: 'targets' },
+  summon: { 'Cash Bonus': 'cashBonus' },
+}
+
+export function resolveGuardianParametricStatSpec(
+  guardianLabel: string,
+  statDisplayName: string,
+): GuardianStatSpec | null {
+  const mapping = UPTIME_GUARDIAN_FIELD_MAP.find(entry => entry.guardianLabel === guardianLabel)
+  if (!mapping) return null
+
+  const statField = GUARDIAN_DISPLAY_TO_STAT_FIELD[mapping.guardianKey]?.[statDisplayName]
+  if (!statField) return null
+
+  return { guardianKey: mapping.guardianKey, statField }
+}
+
+export function buildGuardianStatLevelEntries(
+  spec: GuardianStatSpec,
+): readonly GameDropdownOptionEntry[] {
+  const upgrades = guardianUpgrades[spec.guardianKey as keyof typeof guardianUpgrades] as unknown as Array<Record<string, unknown>>
+  if (!upgrades?.length) return []
+
+  return upgrades
+    .filter(row => {
+      const value = row[spec.statField]
+      return value != null && String(value).trim().length > 0
+    })
+    .map(row => {
+      const sourceLevel = Number(row.level)
+      return { value: sourceLevel, baseValue: sourceLevel }
+    })
+}
+
+export function buildGuardianStatOptionLabel(spec: GuardianStatSpec, sourceLevel: number): string {
+  const upgrades = guardianUpgrades[spec.guardianKey as keyof typeof guardianUpgrades] as unknown as Array<Record<string, unknown>>
+  const row = upgrades.find(entry => Number(entry.level) === sourceLevel)
+  const display = row?.[spec.statField]
+  return buildGuardianLevelOptionLabel(display as string | number | null | undefined)
+}

@@ -1,0 +1,427 @@
+/**
+ * Battle-condition counter-lab mitigation — shared by Enemy Stats and Damage Reduction.
+ *
+ * Counter labs reduce effective BC benefit (global `battle_condition_reduction` + per-BC labs).
+ * ELS skip lab (`enemy_level_skip_reduction`) scales tier skip-chance adjustments.
+ */
+import { SITE_LAB_SLUG_ALIASES } from '../data/index'
+import { findLabResearchBySlug } from '../data/index'
+import { getSharedToolLabs, resolveLabValueAtLevel, type ToolLabRecord } from '../data/index'
+import type { TournamentLeague } from '../data/index'
+import {
+  type BattleConditionSelection,
+  BC_TIER_MIN,
+  getBattleConditionLevel,
+  resolveWaveInfoBattleConditions,
+  WAVE_INFO_RESISTANCE_BC_COUNTER_LAB_SLUGS,
+} from './battle-condition-config'
+import {
+  applyTierBattleConditionsToSkipChance,
+  estimatedEnemyStatLevelFromSkip,
+  simulateEnemyLevelSkips,
+  type TierSkipChanceAdjustments,
+} from './enemy-level-skip'
+import { getTotalBcModifierFraction } from './battle-conditions'
+import { clamp } from './math'
+import { getTierBattleConditionLevel } from '../data/index'
+import { deriveCampaignElsReductionHeatLevel } from './tournament-heat-bc'
+
+/** In-game tooltip: each ELS / Skip-Reduction-Subtract BC level removes 0.5% skip per level (before labs). */
+export const ELS_BC_SKIP_REDUCTION_PCT_PER_LEVEL = 0.5
+
+export const MAX_BC_GLOBAL_REDUCTION_LAB_LEVEL = 10
+export const MAX_BC_SPECIFIC_LAB_LEVEL = 20
+
+/** Merge UI BC counter-lab levels with resistance research labs for Wave Info workshop. */
+export function mergeWorkshopBcLabLevels(
+  bcCounterLabLevels: Readonly<Record<string, number>> | undefined,
+  researchLabLevels?: Readonly<Record<string, number>>,
+): Record<string, number> {
+  const merged = { ...(bcCounterLabLevels ?? {}) }
+  if (!researchLabLevels) return merged
+  for (const slug of Object.values(WAVE_INFO_RESISTANCE_BC_COUNTER_LAB_SLUGS)) {
+    const level = researchLabLevels[slug]
+    if (Number.isFinite(level) && level > 0) {
+      merged[slug] = Math.max(merged[slug] ?? 0, Math.floor(level))
+    }
+  }
+  return merged
+}
+
+function findToolLabBySlug(slug: string): ToolLabRecord | undefined {
+  const labs = getSharedToolLabs()
+  const canonical = SITE_LAB_SLUG_ALIASES[slug] ?? slug
+  const research = findLabResearchBySlug(canonical) ?? findLabResearchBySlug(slug)
+  const displayName = research?.displayName
+  return labs.find(lab =>
+    lab.name === slug
+    || lab.name === canonical
+    || (displayName != null && (lab.displayName === displayName || lab.name === displayName))
+    || (research?.index != null && lab.saveIndex === research.index),
+  )
+}
+
+function resolveLabMitigationPct(slug: string, level: number, maxLevel: number): number {
+  const lab = findToolLabBySlug(slug)
+  if (!lab) return 0
+  return resolveLabValueAtLevel(lab, clamp(Math.floor(level), 0, maxLevel))
+}
+
+export function bcCounterLabBenefitIncreaseAtLevel(slug: string, level: number): number {
+  const clamped = clamp(Math.floor(level), 0, slug === 'battle_condition_reduction'
+    ? MAX_BC_GLOBAL_REDUCTION_LAB_LEVEL
+    : MAX_BC_SPECIFIC_LAB_LEVEL)
+  if (slug === 'battle_condition_reduction') {
+    return clamped * 2
+  }
+  return resolveLabMitigationPct(slug, clamped, MAX_BC_SPECIFIC_LAB_LEVEL)
+}
+
+/** `researchBenefitIncrease[199]` — 2% per level, 20% max @ L10. */
+export function globalBcReductionBenefitFraction(
+  bcCounterLabLevels: Readonly<Record<string, number>>,
+): number {
+  const level = clamp(
+    Math.floor(bcCounterLabLevels['battle_condition_reduction'] ?? 0),
+    0,
+    MAX_BC_GLOBAL_REDUCTION_LAB_LEVEL,
+  )
+  return level * 0.02
+}
+
+/** `researchBenefitIncrease[209]` for ELS skip subtract — 0.01% per level (0.001 @ L10). */
+export function elsSkipSubtractBenefitFraction(
+  bcCounterLabLevels: Readonly<Record<string, number>>,
+): number {
+  const level = clamp(
+    Math.floor(bcCounterLabLevels['enemy_level_skip_reduction'] ?? 0),
+    0,
+    MAX_BC_GLOBAL_REDUCTION_LAB_LEVEL,
+  )
+  return level * 0.0001
+}
+
+function labBenefitIncreaseFraction(raw: number): number {
+  if (!Number.isFinite(raw) || raw <= 0) return 0
+  return raw >= 1 ? raw * 0.01 : raw
+}
+
+/** Enemy Level Skip Reduction lab fraction for BC tooltip display (`GetTotalBCModifier` [209] table). */
+export function elsBcReductionLabBenefitFraction(
+  bcCounterLabLevels: Readonly<Record<string, number>>,
+): number {
+  const level = clamp(
+    Math.floor(bcCounterLabLevels['enemy_level_skip_reduction'] ?? 0),
+    0,
+    MAX_BC_GLOBAL_REDUCTION_LAB_LEVEL,
+  )
+  const raw = resolveLabMitigationPct('enemy_level_skip_reduction', level, MAX_BC_GLOBAL_REDUCTION_LAB_LEVEL)
+  return labBenefitIncreaseFraction(raw)
+}
+
+/**
+ * Skip Reduction − Subtract tooltip % (game BC panel).
+ * `bcLevel × 0.5% × GetTotalBCModifier([199] global + [209] ELS-specific)`.
+ * This is how much the BC shaves off skip — not total ELS and not the raw BC level.
+ */
+export function computeElsBcSkipReductionDisplayPct(
+  bcLevel: number,
+  bcCounterLabLevels: Readonly<Record<string, number>>,
+): number {
+  if (bcLevel <= 0) return 0
+  const modifier = getTotalBcModifierFraction(
+    globalBcReductionBenefitFraction(bcCounterLabLevels),
+    elsBcReductionLabBenefitFraction(bcCounterLabLevels),
+  )
+  return bcLevel * ELS_BC_SKIP_REDUCTION_PCT_PER_LEVEL * modifier
+}
+
+/** @deprecated Use {@link computeElsBcSkipReductionDisplayPct} with wave-resolved `elsReductionLevel`. */
+export function effectiveElsReductionBcLevel(
+  tier: number,
+  bcCounterLabLevels: Readonly<Record<string, number>>,
+): number {
+  const tierLevel = getTierBattleConditionLevel(tier, 'ELS Reduction')
+  return computeElsBcSkipReductionDisplayPct(tierLevel, bcCounterLabLevels)
+}
+
+export function resolveBcCounterLabBenefitIncreaseFraction(
+  counterLabSlug: string,
+  specificLevel: number,
+  bcCounterLabLevels: Readonly<Record<string, number>>,
+): { global: number, specific: number } {
+  const globalRaw = resolveLabMitigationPct(
+    'battle_condition_reduction',
+    bcCounterLabLevels['battle_condition_reduction'] ?? 0,
+    MAX_BC_GLOBAL_REDUCTION_LAB_LEVEL,
+  )
+  const specificRaw = resolveLabMitigationPct(
+    counterLabSlug,
+    specificLevel,
+    MAX_BC_SPECIFIC_LAB_LEVEL,
+  )
+  return {
+    global: globalRaw * 0.01,
+    specific: specificRaw * 0.01,
+  }
+}
+
+/** Global + specific BC counter-lab mitigation % (multiplicative). */
+export function resolveBcCounterLabMitigationPct(
+  counterLabSlug: string,
+  specificLevel: number,
+  bcCounterLabLevels: Readonly<Record<string, number>>,
+): number {
+  const globalPct = resolveLabMitigationPct(
+    'battle_condition_reduction',
+    bcCounterLabLevels['battle_condition_reduction'] ?? 0,
+    MAX_BC_GLOBAL_REDUCTION_LAB_LEVEL,
+  )
+  const specificPct = resolveLabMitigationPct(
+    counterLabSlug,
+    specificLevel,
+    MAX_BC_SPECIFIC_LAB_LEVEL,
+  )
+  return 100 * (1 - (1 - globalPct / 100) * (1 - specificPct / 100))
+}
+
+function elsInRunBcBenefitIncreases(bcCounterLabLevels: Readonly<Record<string, number>>) {
+  return {
+    global: globalBcReductionBenefitFraction(bcCounterLabLevels),
+    specific: elsSkipSubtractBenefitFraction(bcCounterLabLevels),
+  }
+}
+
+function elsWorkshopBcBenefitIncreases(bcCounterLabLevels: Readonly<Record<string, number>>) {
+  return {
+    global: globalBcReductionBenefitFraction(bcCounterLabLevels),
+    specific: elsBcReductionLabBenefitFraction(bcCounterLabLevels),
+  }
+}
+
+function getTierElsReductionPct(tier: number): number {
+  return getTierBattleConditionLevel(tier, 'ELS Reduction')
+}
+
+function resolveElsSkipAdjustments(
+  tier: number,
+  bcCounterLabLevels: Readonly<Record<string, number>>,
+  tournament: boolean,
+  tournamentLeague: TournamentLeague | null,
+  wave: number,
+  battleConditions: readonly BattleConditionSelection[] = [],
+  workshopSkipLookup: boolean,
+): TierSkipChanceAdjustments {
+  const bcBenefit = workshopSkipLookup
+    ? elsWorkshopBcBenefitIncreases(bcCounterLabLevels)
+    : elsInRunBcBenefitIncreases(bcCounterLabLevels)
+  const resolved = resolveWaveInfoBattleConditions(
+    tier,
+    tournament,
+    tournamentLeague,
+    wave,
+    [...battleConditions],
+  )
+  const elsFromConditions = getBattleConditionLevel(resolved, 'ELS Reduction')
+  const elsFromTier = tier >= BC_TIER_MIN ? getTierElsReductionPct(tier) : 0
+  const multiplyLevel = getBattleConditionLevel(resolved, 'Skip Reduction - Multiply')
+    || (tier >= BC_TIER_MIN ? getTierBattleConditionLevel(tier, 'Skip Reduction - Multiply') : 0)
+
+  let elsReductionLevel = elsFromConditions > 0 ? elsFromConditions : elsFromTier
+  if (workshopSkipLookup && !tournament && tier >= BC_TIER_MIN) {
+    elsReductionLevel = deriveCampaignElsReductionHeatLevel(tier, wave)
+  }
+
+  return {
+    elsReductionLevel,
+    elsReductionUseCampaignHeatScale: workshopSkipLookup ? false : !tournament,
+    elsReductionUseWorkshopSubtract: workshopSkipLookup,
+    globalBcReductionBenefitIncrease: bcBenefit.global,
+    elsSkipBcReductionBenefitIncrease: bcBenefit.specific,
+    skipReductionMultiplyLevel: multiplyLevel >= 1 ? multiplyLevel : undefined,
+  }
+}
+
+/** In-run skip after tier BC (small [209] + campaign ÷315) — ELS path / game run UI. */
+export function buildTierSkipChanceAdjustments(
+  tier: number,
+  bcCounterLabLevels: Readonly<Record<string, number>>,
+  tournament: boolean,
+  tournamentLeague: TournamentLeague | null,
+  wave: number,
+  battleConditions: readonly BattleConditionSelection[] = [],
+): TierSkipChanceAdjustments {
+  return resolveElsSkipAdjustments(
+    tier,
+    bcCounterLabLevels,
+    tournament,
+    tournamentLeague,
+    wave,
+    battleConditions,
+    false,
+  )
+}
+
+/** Workshop / Wave Info skip lookup — matches BC tooltip subtract (level × 0.5% × labs). */
+export function buildWorkshopTierSkipChanceAdjustments(
+  tier: number,
+  bcCounterLabLevels: Readonly<Record<string, number>>,
+  tournament: boolean,
+  tournamentLeague: TournamentLeague | null,
+  wave: number,
+  battleConditions: readonly BattleConditionSelection[] = [],
+): TierSkipChanceAdjustments {
+  return resolveElsSkipAdjustments(
+    tier,
+    bcCounterLabLevels,
+    tournament,
+    tournamentLeague,
+    wave,
+    battleConditions,
+    true,
+  )
+}
+
+/** Stored skip % (workshop UI) → tier-adjusted chance % for this wave. */
+export function computeEffectiveEnemySkipPctWithBcLabs(
+  skipPct: number,
+  bcCounterLabLevels: Readonly<Record<string, number>>,
+  tier: number,
+  wave: number,
+  tournament = false,
+  tournamentLeague: TournamentLeague | null = null,
+  battleConditions: readonly BattleConditionSelection[] = [],
+): number {
+  const stored = clamp(skipPct, 0, 100) / 100
+  if (!tournament && tier < BC_TIER_MIN) {
+    return clamp(stored * 100, 0, 100)
+  }
+  const adjustments = buildWorkshopTierSkipChanceAdjustments(
+    tier,
+    bcCounterLabLevels,
+    tournament,
+    tournamentLeague,
+    wave,
+    battleConditions,
+  )
+  return clamp(applyTierBattleConditionsToSkipChance(stored, adjustments) * 100, 0, 100)
+}
+
+const workshopSkipPctInferenceCache = new Map<string, number>()
+
+/** Clear cached workshop skip % inferred from tracker skip counts (wave/count inputs changed). */
+export function clearWorkshopSkipPctInferenceCache(): void {
+  workshopSkipPctInferenceCache.clear()
+}
+
+function skipCountInferenceCacheKey(wave: number, skipCount: number): string {
+  return `${Math.max(1, Math.floor(wave))}:${Math.max(0, Math.floor(skipCount))}`
+}
+
+function totalSkipsAtWorkshopPct(
+  wave: number,
+  workshopSkipPct: number,
+): number {
+  const w = Math.max(1, Math.floor(wave))
+  return simulateEnemyLevelSkips(w, clamp(workshopSkipPct, 0, 100) / 100).totalSkips
+}
+
+/**
+ * Infer workshop skip % (Main+0x4C8/0x4CC) from a tracked skip counter at the current BC lab snapshot.
+ * Counter simulation uses stored skip only — BC subtract applies when displaying effective skip %.
+ * Cached per wave+count so BC lab dropdown changes recompute effective skip without re-inferring.
+ */
+export function inferWorkshopSkipPctFromSkipCount(
+  wave: number,
+  skipCount: number,
+  bcCounterLabLevels: Readonly<Record<string, number>>,
+  tier: number,
+  tournament = false,
+  tournamentLeague: TournamentLeague | null = null,
+  battleConditions: readonly BattleConditionSelection[] = [],
+): number {
+  const w = Math.max(1, Math.floor(wave))
+  const target = Math.max(0, Math.floor(skipCount))
+  if (target <= 0) return 0
+
+  const cacheKey = skipCountInferenceCacheKey(w, target)
+  const cached = workshopSkipPctInferenceCache.get(cacheKey)
+  if (cached != null) return cached
+
+  const skipsAtPct = (pct: number) => totalSkipsAtWorkshopPct(w, pct)
+
+  let lo = 0
+  let hi = 100
+  for (let i = 0; i < 48; i++) {
+    const mid = (lo + hi) / 2
+    const skips = skipsAtPct(mid)
+    if (skips < target) lo = mid
+    else hi = mid
+  }
+  const storedPct = (lo + hi) / 2
+  workshopSkipPctInferenceCache.set(cacheKey, storedPct)
+  return storedPct
+}
+
+/** Workshop skip % from UI skip % or inferred from a tracked skip counter. */
+export function resolveWorkshopSkipPctFromSkipInput(
+  wave: number,
+  skipPct: number,
+  skipCount: number | null | undefined,
+  bcCounterLabLevels: Readonly<Record<string, number>>,
+  tier: number,
+  tournament = false,
+  tournamentLeague: TournamentLeague | null = null,
+  battleConditions: readonly BattleConditionSelection[] = [],
+): number {
+  if (skipCount != null && Number.isFinite(skipCount)) {
+    return inferWorkshopSkipPctFromSkipCount(
+      wave,
+      skipCount,
+      bcCounterLabLevels,
+      tier,
+      tournament,
+      tournamentLeague,
+      battleConditions,
+    )
+  }
+  return clamp(skipPct, 0, 100)
+}
+
+/** Enemy stat level for wave-base lookup with BC counter labs applied. */
+export function resolveEnemyStatLevelWithBcLabs(
+  wave: number,
+  skipPct: number,
+  skipCount: number | null | undefined,
+  bcCounterLabLevels: Readonly<Record<string, number>>,
+  tier: number,
+  tournament = false,
+  tournamentLeague: TournamentLeague | null = null,
+  battleConditions: readonly BattleConditionSelection[] = [],
+): number {
+  const w = Math.max(1, Math.floor(wave))
+  if (skipCount != null && Number.isFinite(skipCount)) {
+    // Wave Info: GetWaveBase*(currentWave − enemy*LevelSkips) @ Main.NewWave 0x15B931C.
+    return Math.max(1, w - Math.max(0, Math.floor(skipCount)))
+  }
+  const workshopPct = resolveWorkshopSkipPctFromSkipInput(
+    w,
+    skipPct,
+    skipCount,
+    bcCounterLabLevels,
+    tier,
+    tournament,
+    tournamentLeague,
+    battleConditions,
+  )
+  const effectivePct = computeEffectiveEnemySkipPctWithBcLabs(
+    workshopPct,
+    bcCounterLabLevels,
+    tier,
+    w,
+    tournament,
+    tournamentLeague,
+    battleConditions,
+  )
+  return estimatedEnemyStatLevelFromSkip(w, effectivePct / 100)
+}

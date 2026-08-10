@@ -1,0 +1,154 @@
+/**
+ * Bot medal planner objective — weights tuned for game-faithful overlap simulation.
+ *
+ * Primary signal: `effectiveNumber` from tick sim + Bot Bot amplification model.
+ * Overlap terms use a single consolidated metric instead of triple-counting
+ * temporal / applied / conditioned averages with unrelated magic coefficients.
+ */
+
+export interface BotMedalMetricSnapshot {
+  baseNumber: number
+  effectiveNumber: number
+  uptimeFraction: number
+  overlapFraction: number
+  avgOverlapFraction: number
+  avgOverlapDisplayFraction: number
+  coverageFraction: number
+  coverageScale: number
+}
+
+export interface BotMedalPlannerRowContext {
+  synced: boolean
+  isBotBot: boolean
+}
+
+export interface BotMedalPlanObjectiveInput {
+  totalScore: number
+  coordinationScore: number
+  potentialScore: number
+  timingHarmonyScore: number
+  averageCadence: number
+  pairwiseCycleAlignmentScore: number
+  timingPairValue: number
+  averageUptime: number
+  uptimeFloor: number
+  averageSimulatedOverlap: number
+  averageCoverage: number
+  averageCoverageScale: number
+  averageRangeReach: number
+  sustainedCoverageScore: number
+  sharedPathContinuityScore: number
+  priorityCoverageScore: number
+  subsequentRangePressure: number
+  priorityAnchorScore: number
+  naturalSyncAlignmentScore: number
+  unsyncedRangeShortfall: number
+  secondarySyncedDurationPenalty: number
+  dutyCycleOvershootPenalty: number
+}
+
+function clamp01(value: number): number {
+  return Math.max(0, Math.min(1, value))
+}
+
+/** Overlap quality from simulation: temporal × spatial while co-active. */
+export function consolidatedSimulatedOverlap(snapshot: BotMedalMetricSnapshot): number {
+  const temporal = clamp01(snapshot.avgOverlapFraction)
+  const spatial = clamp01(Math.max(snapshot.overlapFraction, snapshot.avgOverlapDisplayFraction * snapshot.overlapFraction))
+  return temporal * (spatial > 0 ? spatial : temporal)
+}
+
+/** Scores how much simulated overlap + uptime can move the needle for this row. */
+export function calculateOverlapPotentialScore(
+  row: BotMedalPlannerRowContext,
+  snapshot: BotMedalMetricSnapshot,
+): number {
+  const effectiveSignal = Math.log1p(Math.max(0, snapshot.effectiveNumber))
+  const overlapQuality = consolidatedSimulatedOverlap(snapshot)
+  const uptime = clamp01(snapshot.uptimeFraction)
+  const coverage = clamp01(snapshot.coverageFraction)
+  const rangeReach = Math.max(0, snapshot.coverageScale - 1)
+  const syncedBias = row.synced ? 1.12 : 1
+  const rangeWeight = row.synced ? 1.6 : 0.85
+  return (
+    effectiveSignal * (1 + overlapQuality * 1.4)
+    + uptime * 1.2
+    + overlapQuality * 2.4
+    + coverage * 0.9
+    + rangeReach * rangeWeight
+  ) * syncedBias
+}
+
+export function getSustainedApplicationFactor(snapshot: BotMedalMetricSnapshot): number {
+  const overlapQuality = consolidatedSimulatedOverlap(snapshot)
+  const coverage = clamp01(snapshot.coverageFraction)
+  const uptime = clamp01(snapshot.uptimeFraction)
+  const baseUptimeAverage = Math.max(0, snapshot.baseNumber) * uptime
+  const amplificationRatio = baseUptimeAverage > 0
+    ? clamp01((snapshot.effectiveNumber - baseUptimeAverage) / Math.max(baseUptimeAverage, 1e-6))
+    : overlapQuality
+  return Math.max(0.25, 0.35 + overlapQuality + amplificationRatio * 0.85 + coverage * 0.35)
+}
+
+export function aggregateBotMedalPlanObjective(input: BotMedalPlanObjectiveInput): number {
+  // Strategy output — player-weight-scaled via totalScore and coordinationScore
+  const strategySignal = (input.totalScore * 10) + (input.coordinationScore * 5) + (input.potentialScore * 6)
+
+  // Timing quality — structural signals at moderate, comparable weight
+  const timingSignal = (input.timingHarmonyScore * 3) + (input.averageCadence * 2)
+    + (input.pairwiseCycleAlignmentScore * 2) + (input.timingPairValue * 1.5)
+
+  // Uptime — already scaled by player focus weight via getFocusTermMultiplier('uptime')
+  const uptimeSignal = (input.averageUptime * 12) + (input.uptimeFloor * 6)
+
+  // Overlap — consolidated from formerly triple-counted terms;
+  // averageSimulatedOverlap and sustainedCoverageScore both pre-scaled by getFocusTermMultiplier('overlap')
+  const overlapSignal = (input.averageSimulatedOverlap * 14) + (input.sustainedCoverageScore * 10)
+    + (input.sharedPathContinuityScore * 5)
+
+  // Priority-weighted combined coverage — honours bot priority order at a balanced scale
+  const prioritySignal = (input.priorityCoverageScore * 14)
+
+  // Range / coverage — averageRangeReach pre-scaled by getFocusTermMultiplier('range')
+  const rangeSignal = (input.averageCoverage * 8) + (input.averageRangeReach * 10)
+    + (input.subsequentRangePressure * 4) + (input.priorityAnchorScore * 2)
+    + (input.naturalSyncAlignmentScore * 5)
+
+  // Soft coherence penalties — no longer dominate the objective
+  const penaltySignal = (input.unsyncedRangeShortfall * 2)
+    + input.secondarySyncedDurationPenalty
+    + input.dutyCycleOvershootPenalty
+
+  return strategySignal + timingSignal + uptimeSignal + overlapSignal + prioritySignal + rangeSignal - penaltySignal
+}
+
+/** Shared-path coordination score from per-row timing simulation aggregates. */
+export function scoreSharedPathCoordination(
+  rowScores: number[],
+): number {
+  if (!rowScores.length) return 0
+  return rowScores.reduce((sum, value) => sum + value, 0) / rowScores.length
+}
+
+export function scoreSharedPathCoordinationRow(input: {
+  synced: boolean
+  timingOverlapOfTotal: number
+  timingOverlapOfBotUptime: number
+  snapshotOverlapDisplay: number
+  snapshotOverlapFraction: number
+  snapshotOverlapConditioned: number
+  snapshotUptime: number
+  snapshotBotBotOverlap: number
+}): number {
+  const syncWeight = input.synced ? 1.12 : 1
+  const temporal = clamp01(input.timingOverlapOfTotal)
+  const spatial = clamp01(Math.max(input.snapshotOverlapConditioned, input.snapshotOverlapFraction * temporal))
+  return syncWeight * (
+    temporal * 2.8
+    + clamp01(input.timingOverlapOfBotUptime) * 3.6
+    + clamp01(input.snapshotOverlapDisplay) * 2.2
+    + spatial * 2.6
+    + clamp01(input.snapshotUptime) * 1.8
+    + clamp01(input.snapshotBotBotOverlap) * 1.2
+  )
+}

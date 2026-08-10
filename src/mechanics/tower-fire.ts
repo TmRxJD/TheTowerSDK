@@ -1,0 +1,26 @@
+import { isEnemyInNormalFireRange } from './distances'
+
+export const TOWER_FIRE_RAPID_FIRE_LAB_SLOT = 0x26
+
+export interface TowerFireRangeCheck {
+  distanceFromTower: number
+  towerRangeDistance: number
+}
+
+export function towerFireInRange(input: TowerFireRangeCheck): boolean {
+  return isEnemyInNormalFireRange(input.distanceFromTower, input.towerRangeDistance)
+}
+
+export interface TowerFireRapidFireGate {
+  labRapidFireMult: number
+  rapidFireFlagA: boolean
+  rapidFireFlagB: boolean
+}
+
+export function towerFireRapidFireEligible(gate: TowerFireRapidFireGate): boolean {
+  return gate.labRapidFireMult >= 1 && gate.rapidFireFlagA && gate.rapidFireFlagB
+}
+
+export const TOWER_FIRE_GAPS = [
+  'Enemy in-range bool store — no direct strb #0xC8 in TowerFireFunction body',
+] as const

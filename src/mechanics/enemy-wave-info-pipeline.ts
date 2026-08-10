@@ -1,0 +1,128 @@
+/**
+ * Wave Info enemy stat pipeline — single orchestrator for `/calculators/enemy-stats`.
+ *
+ * `WaveInfoPanel.CalculateEnemyValues` orchestration.
+ *
+ * Order (page perks last only):
+ *
+ *   1. waveBase     — skip-adjusted `GetWaveBaseHealth` / `GetWaveBaseDamage`
+ *   2. battleConditions + typeRules + enemyLabs — in `wave-info-enemy-stats.ts`
+ *   3. pagePerks    — global perks on wave base first; rows add boss/ranged-only deltas
+ */
+import type { EnemyWaveEnemyType } from '../internal/enemy-wave-stats'
+import type { BattleConditionSelection } from './battle-condition-config'
+import {
+  type EnemyHeaderPerkToggles,
+  waveBaseDamageForHeader,
+  waveInfoPagePerkMultipliers,
+} from './enemy-stat-display'
+import { waveInfoBossHpWorkshopMult } from './enemy-wave-info-labs'
+import { getWaveInfoEnemyStatsUnfloored } from './wave-info-enemy-stats'
+
+export const WAVE_INFO_PIPELINE_STAGE_NAMES = [
+  'waveBase',
+  'workshop',
+  'typeRules',
+  'pagePerks',
+] as const
+
+export type WaveInfoPipelineStageName = typeof WAVE_INFO_PIPELINE_STAGE_NAMES[number]
+
+export interface WaveInfoPipelineInput {
+  waveBaseHp: number
+  waveBaseDamage: number
+  /** Wave-1 base damage; Overcharge's attack damage is pinned to it. */
+  waveOneBaseDamage?: number
+  wave: number
+  tier: number
+  enemyType: EnemyWaveEnemyType
+  battleConditions: readonly BattleConditionSelection[]
+  bcLabLevels: Readonly<Record<string, number>>
+  labBenefitIncreaseAtLevel: (slug: string, level: number) => number
+  enemyLabLevels?: Readonly<Record<string, number>>
+  enemyLabBenefitAtLevel?: (slug: string, level: number) => number
+  bossHealthLabValuePerLevel?: number
+  bossUltimateHeatFactor?: number
+  towerMaxHealth?: number | null
+  perks?: EnemyHeaderPerkToggles
+  improveTradeOffLabPct?: number
+}
+
+export interface WaveInfoPipelineStageValues {
+  waveBaseHp: number
+  waveBaseDamage: number
+  afterTypeRulesHp: number
+  afterTypeRulesDamage: number
+  afterEnemyLabsHp: number
+  afterEnemyLabsDamage: number
+  hpPagePerkMult: number
+  damagePagePerkMult: number
+}
+
+export interface WaveInfoPipelineResult {
+  hp: number
+  damage: number
+  stages: WaveInfoPipelineStageValues
+}
+
+/** Full Wave Info display pipeline — single `Math.floor` at the end. */
+export function computeWaveInfoDisplayStats(input: WaveInfoPipelineInput): WaveInfoPipelineResult {
+  const perks = input.perks ?? {
+    perkEnemyHpMinus50: false,
+    perkBossHpX8: false,
+    perkBossHpMinus70: false,
+    perkEnemyDmgMinus50: false,
+    perkEnemyDmgX25: false,
+    perkRangedDmgX3: false,
+  }
+
+  const bossWorkshopMult = input.enemyType === 'Boss'
+    ? waveInfoBossHpWorkshopMult(
+      input.enemyLabLevels ?? {},
+      input.enemyLabBenefitAtLevel ?? (() => 0),
+      input.bossHealthLabValuePerLevel ?? 0.3,
+    )
+    : undefined
+
+  const rowPerkMult = waveInfoPagePerkMultipliers({
+    enemyType: input.enemyType,
+    toggles: perks,
+    improveTradeOffLabPct: input.improveTradeOffLabPct,
+    bossWorkshopMult,
+  })
+
+  const typeRulesInput = {
+    waveBaseHp: input.waveBaseHp,
+    waveBaseDamage: input.waveBaseDamage,
+    waveOneBaseDamage: input.waveOneBaseDamage,
+    wave: input.wave,
+    tier: input.tier,
+    enemyType: input.enemyType,
+    battleConditions: input.battleConditions,
+    bcLabLevels: input.bcLabLevels,
+    labBenefitIncreaseAtLevel: input.labBenefitIncreaseAtLevel,
+    enemyLabLevels: input.enemyLabLevels,
+    enemyLabBenefitAtLevel: input.enemyLabBenefitAtLevel,
+    bossHealthLabValuePerLevel: input.bossHealthLabValuePerLevel,
+    bossUltimateHeatFactor: input.bossUltimateHeatFactor,
+    towerMaxHealth: input.towerMaxHealth,
+  }
+
+  const afterTypeRules = getWaveInfoEnemyStatsUnfloored(typeRulesInput)
+  const prePerkDamage = waveBaseDamageForHeader(afterTypeRules.damage)
+
+  return {
+    hp: Math.floor(afterTypeRules.hp * rowPerkMult.hp),
+    damage: Math.floor(prePerkDamage * rowPerkMult.damage),
+    stages: {
+      waveBaseHp: input.waveBaseHp,
+      waveBaseDamage: input.waveBaseDamage,
+      afterTypeRulesHp: afterTypeRules.hp,
+      afterTypeRulesDamage: afterTypeRules.damage,
+      afterEnemyLabsHp: afterTypeRules.hp,
+      afterEnemyLabsDamage: prePerkDamage,
+      hpPagePerkMult: rowPerkMult.hp,
+      damagePagePerkMult: rowPerkMult.damage,
+    },
+  }
+}

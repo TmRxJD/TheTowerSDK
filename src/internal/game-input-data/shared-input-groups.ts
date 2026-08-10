@@ -1,0 +1,42 @@
+/**
+ * Names of the logical input groups shared across tools.
+ *
+ * The taxonomy lives here because it describes game inputs. Which routes read
+ * or write each group is site wiring and stays with the site.
+ */
+export type SharedInputGroupId =
+  | 'labsEconomy'
+  | 'researchLabLevels'
+  | 'enemyStatLabLevels'
+  | 'bcCounterLabLevels'
+  | 'botLevels'
+  | 'botTargets'
+  | 'botPlusLevels'
+  | 'botPlusTargets'
+  | 'botLabLevels'
+  | 'towerRange'
+  | 'tradeOffPerks'
+  | 'workshopDiscounts'
+  | 'moduleDiscounts'
+  | 'moduleEfficiencyLabs'
+  | 'guardianLevels'
+  | 'guardianTargets'
+  | 'namedCalculatorLabs'
+  | 'uptimeInputs'
+  | 'uwProgressLevels'
+  | 'perkPreferences'
+  | 'workshopStatLevels'
+  | 'enemyStatsCore'
+  | 'enemyDropsInputs'
+  | 'cardsProgressInputs'
+  | 'elsPlannerInputs'
+  | 'vaultLevels'
+  | 'moduleProgressInputs'
+  | 'shardSplitterInputs'
+  | 'uwCalcProgress'
+  | 'labsCalcByLab'
+  | 'thornsCalculatorSettings'
+  | 'damageReduxCalculatorSettings'
+  | 'dissonanceCalculatorState'
+  | 'botMedalSplitterPlanner'
+  | 'botsSynchronicity'

@@ -1,0 +1,92 @@
+import { clampCampaignTier } from '../data/index'
+import {
+  type BattleConditionSelection,
+  ENEMY_STATS_BATTLE_CONDITION_NAMES,
+  type EnemyStatsBattleConditionName,
+} from './battle-condition-config'
+import {
+  defaultEnemyStatsPerkState,
+  type EnemyStatsModifierInput,
+  type EnemyStatsPerkState,
+  getEnemyStatsAtWave,
+} from './enemy-stats-simplified'
+import { clamp } from './math'
+import type { TournamentLeague } from '../data/index'
+
+export function parseEnemySkipInputText(raw: string): { skipCount: number | null, skipPct: number } {
+  const trimmed = String(raw ?? '').trim()
+  if (!trimmed) return { skipCount: null, skipPct: 0 }
+  if (trimmed.includes('%')) {
+    const pct = Number.parseFloat(trimmed.replace(/%/g, '').trim())
+    if (!Number.isFinite(pct)) return { skipCount: null, skipPct: 0 }
+    return { skipCount: null, skipPct: clamp(pct, 0, 100) }
+  }
+  const n = Number.parseFloat(trimmed.replace(/,/g, ''))
+  if (!Number.isFinite(n) || n < 0) return { skipCount: null, skipPct: 0 }
+  return { skipCount: Math.floor(n), skipPct: 0 }
+}
+export interface DamageReduxWaveStatsInput {
+  tier: number | string
+  wave: number
+  healthSkipPct?: number
+  attackSkipPct?: number
+  healthSkipCount?: number | null
+  attackSkipCount?: number | null
+  perks: EnemyStatsPerkState
+  battleConditions?: readonly BattleConditionSelection[]
+  bcCounterLabLevels?: Readonly<Record<string, number>>
+  researchLabLevels?: Readonly<Record<string, number>>
+  tournament?: boolean
+  tournamentLeague?: TournamentLeague | null
+}
+
+function clampTier(tier: number | string): number {
+  if (typeof tier === 'number' && Number.isFinite(tier)) {
+    return clampCampaignTier(tier)
+  }
+  const parsed = Number.parseInt(String(tier).replace(/\D/g, ''), 10)
+  return Number.isFinite(parsed) ? clampCampaignTier(parsed) : 1
+}
+
+function enabledBattleConditionNames(
+  conditions: readonly BattleConditionSelection[] | undefined,
+): EnemyStatsBattleConditionName[] {
+  if (!conditions?.length) return []
+  const allowed = new Set<string>(ENEMY_STATS_BATTLE_CONDITION_NAMES)
+  return conditions
+    .filter(row => row.enabled && allowed.has(row.name))
+    .map(row => row.name as EnemyStatsBattleConditionName)
+}
+
+/** Basic-enemy wave HP/damage for Damage Reduction (raw wave base — perks applied separately). */
+export function resolveDamageReduxBasicWaveStats(input: DamageReduxWaveStatsInput): {
+  tier: number
+  wave: number
+  hp: number
+  damage: number
+} {
+  const tier = clampTier(input.tier)
+  const wave = Math.max(1, Math.floor(input.wave))
+  const modifiers: EnemyStatsModifierInput = {
+    tier,
+    healthSkipPct: input.healthSkipPct ?? 0,
+    attackSkipPct: input.attackSkipPct ?? 0,
+    healthSkipCount: input.healthSkipCount,
+    attackSkipCount: input.attackSkipCount,
+    perks: defaultEnemyStatsPerkState,
+    enabledBattleConditions: enabledBattleConditionNames(input.battleConditions),
+    battleConditions: input.battleConditions,
+    bcCounterLabLevels: input.bcCounterLabLevels,
+    researchLabLevels: input.researchLabLevels,
+    tournament: input.tournament,
+    tournamentLeague: input.tournamentLeague ?? null,
+    skipPagePerkMults: true,
+  }
+  const stats = getEnemyStatsAtWave(tier, wave, 'Basic', modifiers)
+  return {
+    tier,
+    wave,
+    hp: stats.hp,
+    damage: stats.damage,
+  }
+}

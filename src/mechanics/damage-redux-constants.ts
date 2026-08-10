@@ -1,0 +1,24 @@
+/** Tower damage-reduction constants. */
+
+export const SMITE_DAMAGE_BY_CL_PLUS_LEVEL: readonly number[] = [
+  0.0005,
+  0.001,
+  0.0015,
+  0.002,
+  0.0025,
+  0.003,
+  0.0035,
+  0.004,
+  0.0045,
+  0.005,
+  0.0055,
+  0.006,
+]
+
+export const CHAIN_THUNDER_ACCUMULATED_HP_SCALE = 5 / 3
+
+/** Max reduction fraction per chain_thunder lab level (lab value 3 → 0.03 per level). */
+export const CHAIN_THUNDER_LAB_MAX_PER_LEVEL = 0.03
+
+/** @deprecated Alias for {@link CHAIN_THUNDER_LAB_MAX_PER_LEVEL}. */
+export const CHAIN_THUNDER_LAB_MAX_FRACTION_PER_LEVEL = CHAIN_THUNDER_LAB_MAX_PER_LEVEL

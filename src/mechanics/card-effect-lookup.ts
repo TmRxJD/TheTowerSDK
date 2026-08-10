@@ -1,0 +1,43 @@
+/**
+ * Card level / mastery effect lookup — values from `card-data.ts` (Cards tracker source).
+ */
+import { CARD_TEMPLATE_MAP } from '../data/index'
+import { clampCardGameLevel, clampCardMasteryLevel } from './enemy-drops-context'
+
+function cardLevelIndex(gameLevel: number): number {
+  return clampCardGameLevel(gameLevel) - 1
+}
+
+/** Multiplier cards (e.g. Enemy Balance level → enemies spawned per wave). */
+export function cardLevelMultiplier(cardId: string, gameLevel: number): number {
+  const card = CARD_TEMPLATE_MAP[cardId]
+  if (!card || card.levelType !== 'multi') return 1
+  const raw = card.levelValues[cardLevelIndex(gameLevel)]
+  return typeof raw === 'number' ? raw : 1
+}
+
+/** Percent cards (e.g. Wave Accelerator cooldown reduction) as 0–1 fraction. */
+export function cardLevelPercentFraction(cardId: string, gameLevel: number): number {
+  const card = CARD_TEMPLATE_MAP[cardId]
+  if (!card || card.levelType !== 'percent') return 0
+  const raw = card.levelValues[cardLevelIndex(gameLevel)]
+  return typeof raw === 'number' ? raw / 100 : 0
+}
+
+/** Mastery percent values from card template (0–1 fraction). */
+export function cardMasteryPercentFraction(cardId: string, masteryLevel: number): number {
+  const card = CARD_TEMPLATE_MAP[cardId]
+  if (!card?.masteryValues?.length) return 0
+  const idx = clampCardMasteryLevel(masteryLevel)
+  return card.masteryValues[idx] / 100
+}
+
+/** Enemy Balance card level — increases enemies spawned each wave. */
+export function enemyBalanceSpawnMultiplier(gameLevel: number): number {
+  return cardLevelMultiplier('eb', gameLevel)
+}
+
+/** Enemy Balance mastery — chance for double elite spawn (0–100). */
+export function enemyBalanceMasteryDoubleSpawnChancePct(masteryLevel: number): number {
+  return cardMasteryPercentFraction('eb', masteryLevel) * 100
+}

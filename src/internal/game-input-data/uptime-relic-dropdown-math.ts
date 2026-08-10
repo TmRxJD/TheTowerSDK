@@ -1,0 +1,100 @@
+import type { Compressor, MVNMode } from '../uptime-core'
+import { MAX_ASSIST_MULTIPLIER_EFFICIENCY_PCT } from '../assist-module-efficiency'
+import type { GameDropdownOptionEntry } from './types'
+
+export const UPTIME_MVN_MODES: readonly MVNMode[] = [
+  'Disabled',
+  'Epic',
+  'Legendary',
+  'Mythic',
+  'Ancestral',
+]
+
+export const UPTIME_COMPRESSOR_MODES: readonly Compressor[] = [
+  'Disabled',
+  'Epic',
+  'Legendary',
+  'Mythic',
+  'Ancestral',
+]
+
+const MVN_MODE_LABELS: Record<MVNMode, string> = {
+  Disabled: 'Disabled',
+  Epic: 'Epic (+20s CDs)',
+  Legendary: 'Legendary (+10s CDs)',
+  Mythic: 'Mythic (+1s CDs)',
+  Ancestral: 'Ancestral (−10s CDs)',
+}
+
+const COMPRESSOR_MODE_LABELS: Record<Compressor, string> = {
+  Disabled: 'Disabled (0s/pkg)',
+  Epic: 'Epic (10s/pkg)',
+  Legendary: 'Legendary (13s/pkg)',
+  Mythic: 'Mythic (17s/pkg)',
+  Ancestral: 'Ancestral (20s/pkg)',
+}
+
+export function buildUptimeMvnModeEntries(): readonly GameDropdownOptionEntry[] {
+  return UPTIME_MVN_MODES.map((mode, index) => ({ value: index, baseValue: index, meta: { mode } }))
+}
+
+export function buildUptimeMvnModeOptionLabel(index: number): string {
+  const mode = UPTIME_MVN_MODES[Math.max(0, Math.min(UPTIME_MVN_MODES.length - 1, Math.floor(Number(index) || 0)))] ?? 'Disabled'
+  return MVN_MODE_LABELS[mode]
+}
+
+export function resolveUptimeMvnModeIndex(mode: MVNMode | null | undefined): number {
+  const idx = UPTIME_MVN_MODES.indexOf(mode ?? 'Disabled')
+  return idx >= 0 ? idx : 0
+}
+
+export function resolveUptimeMvnModeByIndex(index: number): MVNMode {
+  const clamped = Math.max(0, Math.min(UPTIME_MVN_MODES.length - 1, Math.floor(Number(index) || 0)))
+  return UPTIME_MVN_MODES[clamped] ?? 'Disabled'
+}
+
+export function buildUptimeCompressorEntries(): readonly GameDropdownOptionEntry[] {
+  return UPTIME_COMPRESSOR_MODES.map((mode, index) => ({ value: index, baseValue: index, meta: { mode } }))
+}
+
+export function buildUptimeCompressorOptionLabel(index: number): string {
+  const mode = UPTIME_COMPRESSOR_MODES[Math.max(0, Math.min(UPTIME_COMPRESSOR_MODES.length - 1, Math.floor(Number(index) || 0)))] ?? 'Disabled'
+  return COMPRESSOR_MODE_LABELS[mode]
+}
+
+export function resolveUptimeCompressorIndex(mode: Compressor | null | undefined): number {
+  const idx = UPTIME_COMPRESSOR_MODES.indexOf(mode ?? 'Disabled')
+  return idx >= 0 ? idx : 0
+}
+
+export function resolveUptimeCompressorByIndex(index: number): Compressor {
+  const clamped = Math.max(0, Math.min(UPTIME_COMPRESSOR_MODES.length - 1, Math.floor(Number(index) || 0)))
+  return UPTIME_COMPRESSOR_MODES[clamped] ?? 'Disabled'
+}
+
+export function buildUptimeWavesPerBossEntries(): readonly GameDropdownOptionEntry[] {
+  return Array.from({ length: 10 }, (_, index) => {
+    const value = index + 1
+    return { value, baseValue: value }
+  })
+}
+
+export function buildUptimeWavesPerBossOptionLabel(waves: number): string {
+  return String(waves)
+}
+
+export function buildModuleAssistEfficiencyEntries(minPct = 0): readonly GameDropdownOptionEntry[] {
+  // Multiplier efficiency = module slot % + Assist Module Bonus labs, combined cap 130 (v28.3).
+  // The selectable value is the total including labs, so the dropdown runs 0..130.
+  const start = Math.max(0, Math.min(MAX_ASSIST_MULTIPLIER_EFFICIENCY_PCT, Math.floor(Number(minPct) || 0)))
+  return Array.from({ length: MAX_ASSIST_MULTIPLIER_EFFICIENCY_PCT + 1 - start }, (_, offset) => {
+    const value = start + offset
+    return { value, baseValue: value }
+  })
+}
+
+export function buildModuleAssistEfficiencyOptionLabel(pct: number, minPct = 0): string {
+  const value = Math.max(0, Math.min(MAX_ASSIST_MULTIPLIER_EFFICIENCY_PCT, Math.floor(Number(pct) || 0)))
+  if (value === 0 && minPct === 0) return '0 - Disabled'
+  return `${value}%`
+}
