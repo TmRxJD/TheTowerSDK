@@ -1,4 +1,5 @@
 import { CARDS_ASSET_TABLE } from '../data/assets'
+import { LAB_RESEARCH_BY_INDEX } from '../data/labs-research'
 import { CARD_TEMPLATES } from '../data/cards'
 import { MAX_CAMPAIGN_TIER } from '../data/campaign-tier'
 import {
@@ -185,42 +186,21 @@ function readSaveModuleItem(raw: unknown): {
 }
 
 /**
- * Where a card actually sits in the save arrays.
+ * A card's slot in the save arrays.
  *
- * `CARD_IMPORT_CATALOG` is a compacted list: 31 cards numbered 0..30 with no
- * holes. The save's `cardLevel` / `cardUnlocked` arrays are the game's own 40
- * slots, which have gaps at 8, 9, 14, 17, 24 and 36-39. The two agree up to
- * slot 7 and diverge after, so indexing the save with a catalog index reads the
- * wrong card, or an unused slot.
- *
- * Plasma Cannon is catalog index 14 and save slot 18. Slot 14 is empty, and
- * `cardLevel` pads with 1, so the thorns calculator imported "Plasma Cannon
- * level 1" for a player who has it maxed at 7.
- *
- * The asset table is the authority for save layout -- `extractCardsFromSaveRoot`
- * already reads it that way, which is why the cards tracker had the right level
- * all along.
+ * `CARD_IMPORT_CATALOG.index` is the save slot now, so this is a lookup rather
+ * than a translation. It was not always: the catalog numbered cards
+ * consecutively while the save leaves nine placeholder slots in place, so a
+ * catalog index read the wrong card once past the first gap.
  */
-/** How many slots the save's card arrays actually have. */
-function cardSaveSlotCount(): number {
-  const assetNames = CARDS_ASSET_TABLE?.cardNames
-  return Array.isArray(assetNames) ? assetNames.length : CARD_IMPORT_CATALOG.length
-}
-
 function resolveCardSaveIndex(slug: string): number | null {
   const row = CARD_IMPORT_CATALOG.find(entry => entry.slug === slug)
-  if (!row) return null
+  return row ? row.index : null
+}
 
-  const assetNames = CARDS_ASSET_TABLE?.cardNames
-  if (!Array.isArray(assetNames)) {
-    // No asset table: the catalog index is the only thing left, and is right
-    // for the cards before the first gap.
-    return row.index
-  }
-
-  const wanted = String(row.name ?? '').trim().toLowerCase()
-  const assetIndex = assetNames.findIndex(name => String(name ?? '').trim().toLowerCase() === wanted)
-  return assetIndex >= 0 ? assetIndex : null
+/** How many slots the save's card arrays have, placeholders included. */
+function cardSaveSlotCount(): number {
+  return CARD_IMPORT_CATALOG.length
 }
 
 /**
@@ -662,6 +642,34 @@ export function deriveShardSplitterInputsFromSaveRoot(
   return { splitterByType, costsAssistEffPctByType }
 }
 
+/**
+ * A card's mastery level, which is a lab, not a flag.
+ *
+ * `cardMasteryUnlocked` only says the player has unlocked mastery for that
+ * card. The level then comes from that card's mastery research -- there is one
+ * per card, named "<Card> Mastery" in the catalog, so the pairing is derived
+ * from the card's own name rather than written down.
+ *
+ * This used to report 1 for "unlocked" and 0 otherwise, so a player with
+ * Plasma Cannon Mastery at 9 of 9 fed the thorns calculator a 1.
+ */
+function readCardMasteryLevelBySlug(root: Record<string, unknown>, slug: string): number {
+  if (!readCardMasteryUnlockedBySlug(root, slug)) return 0
+
+  const cardName = CARD_IMPORT_CATALOG.find(entry => entry.slug === slug)?.name
+  if (!cardName) return 0
+
+  const wanted = `${cardName} Mastery`.trim().toLowerCase()
+  const record = LAB_RESEARCH_BY_INDEX.find(
+    entry => String(entry.displayName ?? '').trim().toLowerCase() === wanted,
+  )
+  if (!record) return 0
+
+  const levels = readIndexedNumberArray(root.researchLevel, LAB_RESEARCH_BY_INDEX.length)
+  const level = levels[record.index] ?? 0
+  return Math.max(0, Math.floor(level))
+}
+
 export function deriveThornsCalculatorSettingsFromSaveRoot(
   root: Record<string, unknown>,
 ): Partial<SharedThornsCalculatorSettings> {
@@ -677,7 +685,7 @@ export function deriveThornsCalculatorSettingsFromSaveRoot(
   if (thornLevel != null && thornLevel > 0) partial.baseThorns = thornLevel
   if (currentTier != null) partial.tier = Math.max(1, Math.floor(currentTier))
   if (pcLevel > 0) partial.pcLevel = clampInt(pcLevel, 0, 7)
-  if (pcMasteryUnlocked) partial.pcMasteryLevel = 1
+  if (pcMasteryUnlocked) partial.pcMasteryLevel = readCardMasteryLevelBySlug(root, 'pc')
 
   if (tournamentJoined && tierBeforeTournament != null) {
     const tier = Math.floor(tierBeforeTournament)

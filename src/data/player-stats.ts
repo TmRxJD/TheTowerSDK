@@ -5590,247 +5590,65 @@ export const TECH_TREE_STAT_ENUM = [
 ] as const
 
 /** Save cardLevel[i] / cardCount[i] index → tracker card slug and display name. */
+/**
+ * Cards, indexed by their slot in the save file.
+ *
+ * `index` IS the position in `cardLevel`, `cardUnlocked`, `cardMasteryUnlocked`
+ * and `cardCount`. The game allocates 40 slots and names 31 of them; the rest
+ * are placeholders for cards that do not exist yet, and are null here.
+ *
+ * This used to number the 29 cards it knew about consecutively, which is not
+ * how the save is laid out. The two agree up to slot 7 and diverge after every
+ * placeholder, so anything indexing a save array with a catalog index read the
+ * wrong card. Plasma Cannon was catalog 14 and save slot 18 -- and slot 14 is a
+ * placeholder, which `cardLevel` fills with 1, so a maxed card imported as
+ * level 1. Nuke and Area of Effect were missing from the list entirely.
+ *
+ * Placeholder slots must be skipped, not read: their level is 1 and their
+ * unlocked flag is false. Regenerated from CARDS_ASSET_TABLE.cardNames, which
+ * is the game's own slot order.
+ */
 export const CARD_IMPORT_CATALOG = [
-  {
-    'index': 0,
-    'gameField': 'cardDamage',
-    'slug': 'dmg',
-    'name': 'Damage',
-  },
-  {
-    'index': 1,
-    'gameField': 'cardAttackSpeed',
-    'slug': 'as',
-    'name': 'Attack Speed',
-  },
-  {
-    'index': 2,
-    'gameField': 'cardHealth',
-    'slug': 'hp',
-    'name': 'Health',
-  },
-  {
-    'index': 3,
-    'gameField': 'cardRegen',
-    'slug': 'regen',
-    'name': 'Regen',
-  },
-  {
-    'index': 4,
-    'gameField': 'cardRange',
-    'slug': 'range',
-    'name': 'Range',
-  },
-  {
-    'index': 5,
-    'gameField': 'cardCash',
-    'slug': 'cash',
-    'name': 'Cash',
-  },
-  {
-    'index': 6,
-    'gameField': 'cardCoins',
-    'slug': 'coins',
-    'name': 'Coins',
-  },
-  {
-    'index': 7,
-    'gameField': 'cardSlowAura',
-    'slug': 'sa',
-    'name': 'Slow Aura',
-  },
-  {
-    'index': 8,
-    'gameField': 'cardCriticalChance',
-    'slug': 'crit-chance',
-    'name': 'Critical Chance',
-  },
-  {
-    'index': 9,
-    'gameField': 'cardEnemyBalance',
-    'slug': 'eb',
-    'name': 'Enemy Balance',
-  },
-  {
-    'index': 10,
-    'gameField': 'cardDefensePercent',
-    'slug': 'def',
-    'name': 'Defense Percent',
-  },
-  {
-    'index': 11,
-    'gameField': 'cardDefenseAbsolute',
-    'slug': 'fort',
-    'name': 'Defense Absolute',
-  },
-  {
-    'index': 12,
-    'gameField': 'cardFreeUpgrades',
-    'slug': 'freeups',
-    'name': 'Free Upgrades',
-  },
-  {
-    'index': 13,
-    'gameField': 'cardInnerOrb',
-    'slug': 'x-orb',
-    'name': 'Extra Orb',
-  },
-  {
-    'index': 14,
-    'gameField': 'cardPlasmaCannon',
-    'slug': 'pc',
-    'name': 'Plasma Cannon',
-  },
-  {
-    'index': 15,
-    'gameField': 'cardCriticalCoin',
-    'slug': 'crit-coin',
-    'name': 'Critical Coin',
-  },
-  {
-    'index': 16,
-    'gameField': 'cardWaveSkip',
-    'slug': 'ws',
-    'name': 'Wave Skip',
-  },
-  {
-    'index': 17,
-    'gameField': 'cardIntroSprint',
-    'slug': 'is',
-    'name': 'Intro Sprint',
-  },
-  {
-    'index': 18,
-    'gameField': 'cardLandMineStun',
-    'slug': 'lms',
-    'name': 'Land Mine Stun',
-  },
-  {
-    'index': 19,
-    'gameField': 'cardRecoveryPackageChance',
-    'slug': 'rpc',
-    'name': 'Recovery Package Chance',
-  },
-  {
-    'index': 20,
-    'gameField': 'cardDeathRay',
-    'slug': 'dr',
-    'name': 'Death Ray',
-  },
-  {
-    'index': 21,
-    'gameField': 'cardEnergyNet',
-    'slug': 'en',
-    'name': 'Energy Net',
-  },
-  {
-    'index': 22,
-    'gameField': 'cardSuperTower',
-    'slug': 'st',
-    'name': 'Super Tower',
-  },
-  {
-    'index': 23,
-    'gameField': 'cardSecondWind',
-    'slug': 'sw',
-    'name': 'Second Wind',
-  },
-  {
-    'index': 24,
-    'gameField': 'cardDemonMode',
-    'slug': 'dm',
-    'name': 'Demon Mode',
-  },
-  {
-    'index': 25,
-    'gameField': 'cardEnergyShield',
-    'slug': 'es',
-    'name': 'Energy Shield',
-  },
-  {
-    'index': 26,
-    'gameField': 'cardWaveAccelerator',
-    'slug': 'wa',
-    'name': 'Wave Accelerator',
-  },
-  {
-    'index': 27,
-    'gameField': 'cardBerserker',
-    'slug': 'zerk',
-    'name': 'Berserker',
-  },
-  {
-    'index': 28,
-    'gameField': 'cardUltimateCrit',
-    'slug': 'uwc',
-    'name': 'Ultimate Crit',
-  },
-  {
-    'index': 29,
-    'gameField': null,
-    'slug': null,
-    'name': null,
-  },
-  {
-    'index': 30,
-    'gameField': null,
-    'slug': null,
-    'name': null,
-  },
-  {
-    'index': 31,
-    'gameField': null,
-    'slug': null,
-    'name': null,
-  },
-  {
-    'index': 32,
-    'gameField': null,
-    'slug': null,
-    'name': null,
-  },
-  {
-    'index': 33,
-    'gameField': null,
-    'slug': null,
-    'name': null,
-  },
-  {
-    'index': 34,
-    'gameField': null,
-    'slug': null,
-    'name': null,
-  },
-  {
-    'index': 35,
-    'gameField': null,
-    'slug': null,
-    'name': null,
-  },
-  {
-    'index': 36,
-    'gameField': null,
-    'slug': null,
-    'name': null,
-  },
-  {
-    'index': 37,
-    'gameField': null,
-    'slug': null,
-    'name': null,
-  },
-  {
-    'index': 38,
-    'gameField': null,
-    'slug': null,
-    'name': null,
-  },
-  {
-    'index': 39,
-    'gameField': null,
-    'slug': null,
-    'name': null,
-  },
+  { index: 0, gameField: "cardDamage", slug: "dmg", name: "Damage" },
+  { index: 1, gameField: "cardAttackSpeed", slug: "as", name: "Attack Speed" },
+  { index: 2, gameField: "cardHealth", slug: "hp", name: "Health" },
+  { index: 3, gameField: "cardHealthRegen", slug: "regen", name: "Health Regen" },
+  { index: 4, gameField: "cardRange", slug: "range", name: "Range" },
+  { index: 5, gameField: "cardCash", slug: "cash", name: "Cash" },
+  { index: 6, gameField: "cardCoins", slug: "coins", name: "Coins" },
+  { index: 7, gameField: "cardSlowAura", slug: "sa", name: "Slow Aura" },
+  { index: 8, gameField: null, slug: null, name: null },
+  { index: 9, gameField: null, slug: null, name: null },
+  { index: 10, gameField: "cardCriticalChance", slug: "crit-chance", name: "Critical Chance" },
+  { index: 11, gameField: "cardEnemyBalance", slug: "eb", name: "Enemy Balance" },
+  { index: 12, gameField: "cardExtraDefense", slug: "def", name: "Extra Defense" },
+  { index: 13, gameField: "cardFortress", slug: "fort", name: "Fortress" },
+  { index: 14, gameField: null, slug: null, name: null },
+  { index: 15, gameField: "cardFreeUpgrades", slug: "freeups", name: "Free Upgrades" },
+  { index: 16, gameField: "cardInnerOrb", slug: "x-orb", name: "Extra Orb" },
+  { index: 17, gameField: null, slug: null, name: null },
+  { index: 18, gameField: "cardPlasmaCannon", slug: "pc", name: "Plasma Cannon" },
+  { index: 19, gameField: "cardCriticalCoin", slug: "crit-coin", name: "Critical Coin" },
+  { index: 20, gameField: "cardWaveSkip", slug: "ws", name: "Wave Skip" },
+  { index: 21, gameField: "cardIntroSprint", slug: "is", name: "Intro Sprint" },
+  { index: 22, gameField: "cardLandMineStun", slug: "lms", name: "Land Mine Stun" },
+  { index: 23, gameField: "cardRecoveryPackageChance", slug: "rpc", name: "Recovery Package Chance" },
+  { index: 24, gameField: null, slug: null, name: null },
+  { index: 25, gameField: "cardDeathRay", slug: "dr", name: "Death Ray" },
+  { index: 26, gameField: "cardEnergyNet", slug: "en", name: "Energy Net" },
+  { index: 27, gameField: "cardSuperTower", slug: "st", name: "Super Tower" },
+  { index: 28, gameField: "cardSecondWind", slug: "sw", name: "Second Wind" },
+  { index: 29, gameField: "cardDemonMode", slug: "dm", name: "Demon Mode" },
+  { index: 30, gameField: "cardEnergyShield", slug: "es", name: "Energy Shield" },
+  { index: 31, gameField: "cardWaveAccelerator", slug: "wa", name: "Wave Accelerator" },
+  { index: 32, gameField: "cardBerserker", slug: "zerk", name: "Berserker" },
+  { index: 33, gameField: "cardUltimateCrit", slug: "uwc", name: "Ultimate Crit" },
+  { index: 34, gameField: "cardNuke", slug: "nuke", name: "Nuke" },
+  { index: 35, gameField: "cardAreaofEffect", slug: "aoe", name: "Area of Effect" },
+  { index: 36, gameField: null, slug: null, name: null },
+  { index: 37, gameField: null, slug: null, name: null },
+  { index: 38, gameField: null, slug: null, name: null },
+  { index: 39, gameField: null, slug: null, name: null },
 ] as const
 
 /**
