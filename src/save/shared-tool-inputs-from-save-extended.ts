@@ -1,3 +1,4 @@
+import { CARDS_ASSET_TABLE } from '../data/assets'
 import { CARD_TEMPLATES } from '../data/cards'
 import { MAX_CAMPAIGN_TIER } from '../data/campaign-tier'
 import {
@@ -184,19 +185,53 @@ function readSaveModuleItem(raw: unknown): {
 }
 
 /**
+ * Where a card actually sits in the save arrays.
+ *
+ * `CARD_IMPORT_CATALOG` is a compacted list: 31 cards numbered 0..30 with no
+ * holes. The save's `cardLevel` / `cardUnlocked` arrays are the game's own 40
+ * slots, which have gaps at 8, 9, 14, 17, 24 and 36-39. The two agree up to
+ * slot 7 and diverge after, so indexing the save with a catalog index reads the
+ * wrong card, or an unused slot.
+ *
+ * Plasma Cannon is catalog index 14 and save slot 18. Slot 14 is empty, and
+ * `cardLevel` pads with 1, so the thorns calculator imported "Plasma Cannon
+ * level 1" for a player who has it maxed at 7.
+ *
+ * The asset table is the authority for save layout -- `extractCardsFromSaveRoot`
+ * already reads it that way, which is why the cards tracker had the right level
+ * all along.
+ */
+/** How many slots the save's card arrays actually have. */
+function cardSaveSlotCount(): number {
+  const assetNames = CARDS_ASSET_TABLE?.cardNames
+  return Array.isArray(assetNames) ? assetNames.length : CARD_IMPORT_CATALOG.length
+}
+
+function resolveCardSaveIndex(slug: string): number | null {
+  const row = CARD_IMPORT_CATALOG.find(entry => entry.slug === slug)
+  if (!row) return null
+
+  const assetNames = CARDS_ASSET_TABLE?.cardNames
+  if (!Array.isArray(assetNames)) {
+    // No asset table: the catalog index is the only thing left, and is right
+    // for the cards before the first gap.
+    return row.index
+  }
+
+  const wanted = String(row.name ?? '').trim().toLowerCase()
+  const assetIndex = assetNames.findIndex(name => String(name ?? '').trim().toLowerCase() === wanted)
+  return assetIndex >= 0 ? assetIndex : null
+}
+
+/**
  * A card's level, or 0 when the player does not have the card.
  *
  * `cardLevel` is over-allocated and pads with **1**, not 0, so reading it
- * directly reports level 1 for every card the player has never owned. This is
- * the exact case the package guide warns about: use the unlock flag when one
- * exists, not the level.
- *
- * It surfaced as the thorns calculator importing a Plasma Cannon level of 1
- * from a save whose owner had no Plasma Cannon -- a wrong input that looks
- * entirely plausible, which is the worst kind.
+ * without checking the unlock flag reports level 1 for every card never owned.
+ * The package guide calls this out: use the unlock flag when one exists.
  */
 function readCardLevelBySlug(root: Record<string, unknown>, slug: string): number {
-  const cardIndex = CARD_IMPORT_CATALOG.find(row => row.slug === slug)?.index
+  const cardIndex = resolveCardSaveIndex(slug)
   if (cardIndex == null) return 0
 
   const unlockedFlags = Array.isArray(root[CARDS_SAVE_UNLOCKED_KEY])
@@ -206,12 +241,14 @@ function readCardLevelBySlug(root: Record<string, unknown>, slug: string): numbe
   // the array must not have every card zeroed out.
   if (unlockedFlags && unlockedFlags[cardIndex] !== true) return 0
 
-  const levels = readIndexedNumberArray(root.cardLevel, CARD_IMPORT_CATALOG.length)
+  // Sized to the save's own slot count, not the compacted catalog's 31, or
+  // every card past the last gap would be truncated away.
+  const levels = readIndexedNumberArray(root.cardLevel, cardSaveSlotCount())
   return Math.max(0, Math.floor(levels[cardIndex] ?? 0))
 }
 
 function readCardMasteryUnlockedBySlug(root: Record<string, unknown>, slug: string): boolean {
-  const cardIndex = CARD_IMPORT_CATALOG.find(row => row.slug === slug)?.index
+  const cardIndex = resolveCardSaveIndex(slug)
   if (cardIndex == null) return false
   const masteries = Array.isArray(root.cardMasteryUnlocked)
     ? root.cardMasteryUnlocked.map(readSaveBoolean)
