@@ -30,4 +30,16 @@ export interface GlossaryEntry {
   definition: string
   /** Set when the same term means more than one thing; check `domain` before using it. */
   ambiguous?: true
+  /**
+   * Where the term comes from, and how far to trust its expansion.
+   *
+   * - `catalog` — the expansion names something in the shipped data, and
+   *   `glossary.test.ts` fails the build if it stops resolving.
+   * - `community` — shorthand players actually type that the catalogs have no
+   *   entry for: enhancement suffixes like `dmg+`, spelling variants like
+   *   `zerk`, and concepts the game never named. Curated by hand, so it is
+   *   authored rather than invented, but it is not a fact about the data and is
+   *   marked so it cannot be mistaken for one.
+   */
+  source?: 'catalog' | 'community'
 }

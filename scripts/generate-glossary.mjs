@@ -119,12 +119,100 @@ for (const type of catalog.TOWER_MODULE_TYPE_ENUM ?? []) {
  * hand readers one arbitrary answer, so every meaning is kept and the term is
  * flagged as ambiguous instead.
  */
+// ---------------------------------------------------------------------------
+// The community's own vocabulary.
+//
+// packages/platform/src/ai/acronyms.ts is a hand-curated list of what players
+// actually type -- `dmg+`, `zerk`, `aspd+` -- built up over a long time and used
+// by the assistant to understand questions. It lived only there, so the SDK
+// glossary and the assistant disagreed about 257 terms and neither knew.
+//
+// They are merged here rather than duplicated. An expansion that names
+// something in the catalogs is marked `catalog` and stays under the
+// invented-expansion guard; one that does not is marked `community`, because
+// plenty of real shorthand ("Damage Enhancements") is not a catalog row and
+// dropping it would lose the half of the vocabulary players use most.
+const acronymSource = await fs.readFile(
+  path.join(ROOT, '..', 'platform', 'src', 'ai', 'acronyms.ts'),
+  'utf8',
+)
+
+// glossary-concepts.ts already defines some of these by hand, with better
+// definitions than a generator can write. Adding a second entry for the same
+// term does not enrich the glossary, it makes the term ambiguous -- which is
+// how a first cut of this merge made expandAcronym('ILM') return null, because
+// ILM suddenly had two identical meanings and the lookup refuses to guess
+// between them. The hand-written entry wins.
+const conceptsSource = await fs.readFile(
+  path.join(ROOT, 'src', 'data', 'glossary-concepts.ts'),
+  'utf8',
+)
+const conceptTerms = new Set(
+  [...conceptsSource.matchAll(/term:\s*'([^']+)'/g)].map(match => match[1].trim().toLowerCase()),
+)
+
+const catalogNameByLower = new Map()
+for (const entry of entries) {
+  if (entry.kind === 'name') catalogNameByLower.set(entry.term.trim().toLowerCase(), entry)
+}
+
+let curatedCount = 0
+let communityCount = 0
+let skippedCount = 0
+for (const match of acronymSource.matchAll(/^\s*'?([A-Za-z0-9#+_-]+)'?\s*:\s*'([^']+)'/gm)) {
+  const term = match[1]
+  const expansion = match[2]
+  curatedCount += 1
+
+  if (conceptTerms.has(term.trim().toLowerCase())) {
+    skippedCount += 1
+    continue
+  }
+
+  // The catalog pass derives initials of its own, so a term like GT can already
+  // be here with the same meaning. Same meaning twice is not ambiguity, it is a
+  // duplicate, and it would be counted as ambiguity by the pass below.
+  const alreadyKnown = entries.some(existing =>
+    existing.kind === 'acronym'
+    && existing.term.trim().toLowerCase() === term.trim().toLowerCase()
+    && String(existing.expansion ?? '').trim().toLowerCase() === expansion.trim().toLowerCase())
+  if (alreadyKnown) {
+    skippedCount += 1
+    continue
+  }
+
+  const catalogEntry = catalogNameByLower.get(expansion.trim().toLowerCase())
+  if (catalogEntry) {
+    add({
+      term,
+      kind: 'acronym',
+      domain: catalogEntry.domain,
+      expansion: catalogEntry.term,
+      definition: `Community shorthand for ${catalogEntry.term}.`,
+      source: 'catalog',
+    })
+    continue
+  }
+
+  communityCount += 1
+  add({
+    term,
+    kind: 'acronym',
+    domain: 'run',
+    expansion,
+    definition: `Community shorthand for ${expansion}. Curated from player usage; the catalogs have no entry under this name.`,
+    source: 'community',
+  })
+}
+
+console.log(`  merged ${curatedCount - skippedCount} curated acronyms (${curatedCount - communityCount - skippedCount} catalog-backed, ${communityCount} community-only, ${skippedCount} already hand-written in glossary-concepts)`)
+
 const byTerm = new Map()
 for (const entry of entries) {
   const key = `${entry.kind}:${entry.term.toLowerCase()}`
   const bucket = byTerm.get(key) ?? []
   const duplicate = bucket.some(other =>
-    other.domain === entry.domain && other.expansion === entry.expansion)
+    other.domain === entry.domain && other.expansion === entry.expansion && other.source === entry.source)
   if (!duplicate) bucket.push(entry)
   byTerm.set(key, bucket)
 }
