@@ -114,11 +114,11 @@ export type EnemyStatsCalcsLocalState = {
   elsPathCurrentPage: number
 }
 
-function createDefaultEnemyLabLevels(): EnemyStatsCalcsLabLevels {
+function buildDefaultEnemyLabLevels(): EnemyStatsCalcsLabLevels {
   return Object.fromEntries(ENEMY_STATS_CALCS_RESEARCH_LAB_SLUGS.map(slug => [slug, 0]))
 }
 
-function createDefaultBcCounterLabLevels(): Record<string, number> {
+function buildDefaultBcCounterLabLevels(): Record<string, number> {
   return Object.fromEntries(ENEMY_STATS_BC_COUNTER_LAB_SLUGS.map(slug => [slug, 0]))
 }
 
@@ -137,9 +137,9 @@ export const defaultEnemyStatsCalcsLocalState = (): EnemyStatsCalcsLocalState =>
   perkRangedDmgX3: false,
   healthSkipInput: '',
   attackSkipInput: '',
-  enemyLabLevels: createDefaultEnemyLabLevels(),
+  enemyLabLevels: buildDefaultEnemyLabLevels(),
   improveTradeOffLabLevel: 0,
-  bcCounterLabLevels: createDefaultBcCounterLabLevels(),
+  bcCounterLabLevels: buildDefaultBcCounterLabLevels(),
   battleConditions: buildDefaultTournamentBattleConditions(),
   elsAttackLevel: 0,
   elsHealthLevel: 0,
@@ -223,7 +223,7 @@ function normalizeSkipInput(value: unknown, legacyCount: unknown, legacyPct: unk
 }
 
 function normalizeEnemyLabLevels(value: unknown): EnemyStatsCalcsLabLevels {
-  const defaults = createDefaultEnemyLabLevels()
+  const defaults = buildDefaultEnemyLabLevels()
   if (!value || typeof value !== 'object') return defaults
 
   const source = value as Record<string, unknown>
@@ -278,7 +278,7 @@ export function normalizeEnemyStatsCalcsLocalState(
 ): EnemyStatsCalcsLocalState {
   const data = input && typeof input === 'object' ? input as Record<string, unknown> : {}
   const bcCounterLabLevels = {
-    ...createDefaultBcCounterLabLevels(),
+    ...buildDefaultBcCounterLabLevels(),
     ...normalizeBcCounterLabLevels(data.bcCounterLabLevels),
   }
   const legacyBcLab = clampNumber(data.bcLabLevel, 0, 0, 10)

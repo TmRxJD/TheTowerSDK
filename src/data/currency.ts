@@ -37,7 +37,7 @@ export interface EliteCellTierRow {
   averageIncreaseFromPriorPercent: number | null
 }
 
-function createCurrencyFlowRow(
+function buildCurrencyFlowRow(
   name: CurrencyName,
   acquisitionSources: readonly string[],
   spendUses: readonly string[] = [],
@@ -69,13 +69,13 @@ export const CURRENCY_DEFINITIONS = [
 ] as const satisfies readonly CurrencyDefinition[]
 
 export const CURRENCY_FLOW_ROWS = [
-  createCurrencyFlowRow('Cash', [
+  buildCurrencyFlowRow('Cash', [
     'Defeating enemies',
     'Completing waves',
     'Cash / Wave upgrades',
     'Interest on unspent cash',
   ]),
-  createCurrencyFlowRow('Coins', [
+  buildCurrencyFlowRow('Coins', [
     'Killing enemies',
     'Coins / Wave upgrade',
     'Daily Missions',
@@ -85,7 +85,7 @@ export const CURRENCY_FLOW_ROWS = [
     'Lab upgrades',
     'Workshop Enhancements',
   ]),
-  createCurrencyFlowRow('Gems', [
+  buildCurrencyFlowRow('Gems', [
     'Floating gems (Bob)',
     'Ad gems',
     'Offer walls / TapJoy',
@@ -102,7 +102,7 @@ export const CURRENCY_FLOW_ROWS = [
     'Modules',
     'Tournament tickets',
   ]),
-  createCurrencyFlowRow('Power Stones', [
+  buildCurrencyFlowRow('Power Stones', [
     'Tournaments',
     'Event medal exchange',
     'Daily Mission weekly rewards',
@@ -112,7 +112,7 @@ export const CURRENCY_FLOW_ROWS = [
     'Ultimate Weapon purchases',
     'Ultimate Weapon upgrades',
   ]),
-  createCurrencyFlowRow('Medals', [
+  buildCurrencyFlowRow('Medals', [
     'Event Missions',
     'Weekly Rewards from Daily Missions',
     'Guardian Fetch module',
@@ -123,29 +123,29 @@ export const CURRENCY_FLOW_ROWS = [
     'Bots',
     'Event-rerun Relics',
   ]),
-  createCurrencyFlowRow('Elite Cells', [
+  buildCurrencyFlowRow('Elite Cells', [
     'Elite enemy drops from Vampire, Ray, and Scatter',
   ], [
     'Lab boosts',
   ]),
-  createCurrencyFlowRow('Keys', [
+  buildCurrencyFlowRow('Keys', [
     'Legend Tournament placement from rank 1 through 15',
   ], [
     'Vault tech trees',
   ]),
-  createCurrencyFlowRow('Bits', [
+  buildCurrencyFlowRow('Bits', [
     'Guild Reward Chests',
     'Guild Shop seasonal currency purchases',
   ], [
     'Guardian chip upgrades',
   ]),
-  createCurrencyFlowRow('Tokens', [
+  buildCurrencyFlowRow('Tokens', [
     'Weekly Challenge boxes',
     'Guild Reward Chests',
   ], [
     'Guild Shop purchases',
   ]),
-  createCurrencyFlowRow('Module Currency', [
+  buildCurrencyFlowRow('Module Currency', [
     'Enemy drops',
     'Daily rewards',
     'Drop-rate labs',

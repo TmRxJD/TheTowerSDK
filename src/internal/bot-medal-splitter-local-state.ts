@@ -103,13 +103,13 @@ export function buildDefaultBotMedalSplitterPlusLevels(): Record<string, number[
   ) as Record<string, number[]>
 }
 
-function createDefaultLabLevels(): Record<string, Record<string, number>> {
+function buildDefaultLabLevels(): Record<string, Record<string, number>> {
   return Object.fromEntries(
     bots.map(bot => [bot.label, Object.fromEntries(bot.labInfo.map(lab => [lab.name, 0]))]),
   ) as Record<string, Record<string, number>>
 }
 
-function createDefaultTargetConfigs(enabledLabel?: string): Record<string, BotMedalSplitterTargetConfig> {
+function buildDefaultTargetConfigs(enabledLabel?: string): Record<string, BotMedalSplitterTargetConfig> {
   const defaultEnabledLabel = enabledLabel
     ?? bots.find(bot => bot.label === 'Golden Bot')?.label
     ?? targetBotMedalSplitterBotLabels()[0]
@@ -125,7 +125,7 @@ function createDefaultTargetConfigs(enabledLabel?: string): Record<string, BotMe
   ) as Record<string, BotMedalSplitterTargetConfig>
 }
 
-function createDefaultTargetOrder(): string[] {
+function buildDefaultTargetOrder(): string[] {
   return [...targetBotMedalSplitterBotLabels()]
 }
 
@@ -141,9 +141,9 @@ export function buildDefaultBotMedalSplitterPreset(index: number): BotMedalSplit
     botBotSynced: false,
     levels: buildDefaultBotMedalSplitterLevels(),
     plusLevels: buildDefaultBotMedalSplitterPlusLevels(),
-    labLevels: createDefaultLabLevels(),
-    targetConfigs: createDefaultTargetConfigs(),
-    targetOrder: createDefaultTargetOrder(),
+    labLevels: buildDefaultLabLevels(),
+    targetConfigs: buildDefaultTargetConfigs(),
+    targetOrder: buildDefaultTargetOrder(),
     plannerFocusOrder: normalizeBotMedalPlannerFocusOrder(undefined),
     botBotBaseLocks: buildBotMedalSplitterBaseLocks('Bot Bot'),
     botBotPlusLocks: buildBotMedalSplitterPlusLocks('Bot Bot'),
@@ -215,7 +215,7 @@ function normalizeTargetConfigs(
   legacyEnabledLabel?: string,
   legacySync = false,
 ): Record<string, BotMedalSplitterTargetConfig> {
-  const normalized = createDefaultTargetConfigs(legacyEnabledLabel)
+  const normalized = buildDefaultTargetConfigs(legacyEnabledLabel)
   for (const label of Object.keys(normalized)) {
     normalized[label] = {
       ...fallback[label],
@@ -330,7 +330,7 @@ function normalizePreset(value: unknown, fallback: BotMedalSplitterPreset): BotM
   const legacySync = typeof source.syncWithBotBot === 'boolean' ? source.syncWithBotBot : false
   const targetConfigs = normalizeTargetConfigs(source.targetConfigs, fallback.targetConfigs, legacyEnabledLabel, legacySync)
 
-  const legacyOrder = Array.isArray(source.targetOrder) ? source.targetOrder : createDefaultTargetOrder()
+  const legacyOrder = Array.isArray(source.targetOrder) ? source.targetOrder : buildDefaultTargetOrder()
 
   return {
     name: typeof source.name === 'string' && source.name.trim().length > 0 ? source.name.trim() : fallback.name,

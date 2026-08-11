@@ -65,7 +65,7 @@ const COMMON_DURATION_COOLDOWN_LABS: BotLabInfoRow[] = [
   { name: 'Cooldown', maxLevel: 25, maxValue: '-25s' },
 ]
 
-function createPlusData(label: string, statName: string, levels: Record<number, string>): BotPlusData {
+function buildPlusData(label: string, statName: string, levels: Record<number, string>): BotPlusData {
   return {
     label,
     unlockStoneCost: BOT_PLUS_UNLOCK_COST,
@@ -109,7 +109,7 @@ export const BOT_UPGRADES_DATA: BotData[] = [
       { name: 'Cooldown', maxLevel: 25, maxValue: '-25s' },
       { name: 'Burn Stack', maxLevel: 5, maxValue: '+5' },
     ],
-    plus: createPlusData('FB+', 'Wildfire', {
+    plus: buildPlusData('FB+', 'Wildfire', {
       0: '1.5x', 1: '1.6x', 2: '1.7x', 3: '1.8x', 4: '1.9x', 5: '2.0x', 6: '2.1x', 7: '2.2x', 8: '2.3x', 9: '2.4x', 10: '2.5x',
       11: '2.6x', 12: '2.7x', 13: '2.8x', 14: '2.9x', 15: '3.0x', 16: '3.1x', 17: '3.2x', 18: '3.3x', 19: '3.4x', 20: '3.5x',
     }),
@@ -144,7 +144,7 @@ export const BOT_UPGRADES_DATA: BotData[] = [
       // has ("Thunder Bot - Linger Time") is imported and shown like the rest.
       { name: 'Linger Time', maxLevel: 20, maxValue: '+20' },
     ],
-    plus: createPlusData('TB+', 'Titan Shock', {
+    plus: buildPlusData('TB+', 'Titan Shock', {
       0: '5%', 1: '6%', 2: '7%', 3: '8%', 4: '9%', 5: '10%', 6: '11%', 7: '12%', 8: '13%', 9: '14%', 10: '15%',
       11: '16%', 12: '17%', 13: '18%', 14: '19%', 15: '20%', 16: '21%', 17: '22%', 18: '23%', 19: '24%', 20: '25%',
     }),
@@ -174,7 +174,7 @@ export const BOT_UPGRADES_DATA: BotData[] = [
       },
     },
     labInfo: [...COMMON_DURATION_COOLDOWN_LABS],
-    plus: createPlusData('GB+', 'Bonus Cell', {
+    plus: buildPlusData('GB+', 'Bonus Cell', {
       0: '1.25x', 1: '1.30x', 2: '1.35x', 3: '1.40x', 4: '1.45x', 5: '1.50x', 6: '1.55x', 7: '1.60x', 8: '1.65x', 9: '1.70x', 10: '1.75x',
       11: '1.80x', 12: '1.85x', 13: '1.90x', 14: '1.95x', 15: '2.00x', 16: '2.05x', 17: '2.10x', 18: '2.15x', 19: '2.20x', 20: '2.25x',
       21: '2.30x', 22: '2.35x', 23: '2.40x', 24: '2.45x', 25: '2.50x',
@@ -254,7 +254,7 @@ export const BOT_UPGRADES_DATA: BotData[] = [
       },
     },
     labInfo: [...COMMON_DURATION_COOLDOWN_LABS],
-    plus: createPlusData('BB+', 'Maximum Power', {
+    plus: buildPlusData('BB+', 'Maximum Power', {
       0: '1.25x', 1: '1.30x', 2: '1.35x', 3: '1.40x', 4: '1.45x', 5: '1.50x', 6: '1.55x', 7: '1.60x', 8: '1.65x', 9: '1.70x', 10: '1.75x',
       11: '1.80x', 12: '1.85x', 13: '1.90x', 14: '1.95x', 15: '2.00x', 16: '2.05x', 17: '2.10x', 18: '2.15x', 19: '2.20x', 20: '2.25x',
     }),

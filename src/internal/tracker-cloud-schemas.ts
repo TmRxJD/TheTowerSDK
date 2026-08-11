@@ -558,7 +558,7 @@ const TRACKER_RUN_CLOUD_ALLOWED_FIELDS = new Set<string>([
   'destroyedByOther',
 ])
 
-function createTrackerRunOptionalFieldShape(): Record<string, z.ZodTypeAny> {
+function buildTrackerRunOptionalFieldShape(): Record<string, z.ZodTypeAny> {
   return Object.fromEntries(
     Array.from(TRACKER_RUN_CLOUD_ALLOWED_FIELDS).map(key => {
       if (trackerRunNullableStringFields.has(key)) {
@@ -582,7 +582,7 @@ function createTrackerRunOptionalFieldShape(): Record<string, z.ZodTypeAny> {
   )
 }
 
-const trackerRunOptionalFieldShape = createTrackerRunOptionalFieldShape()
+const trackerRunOptionalFieldShape = buildTrackerRunOptionalFieldShape()
 
 export const trackerRunCloudDocumentSchema = z.object({
   ...trackerAppwriteDocumentSystemShape,
