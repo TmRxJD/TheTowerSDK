@@ -96,16 +96,21 @@ export function isModuleCoinPathCandidate(level: number): boolean {
  * with the sheet's `MODSTAT_ARMOR` exactly for Common through plain Ancestral,
  * checked at levels 1, 50, 160, 200 and 299.
  *
- * It does **not** agree for the ancestral steps. This package multiplies by
- * `1 + 0.04 × steps`, so Ancestral 5 armor at level 200 is 19.288; the sheet
- * treats "Ancestral 5" exactly like plain "Ancestral" and answers 16.24 — an
- * 18% difference for a player who has one. Wiring module levels into the coin
- * path means choosing which of those is right, and that is a question for the
- * sheet's maintainers rather than something to settle here, so the path leaves
- * module levels out for now and says so.
+ * The two part company on the ancestral stars, and the sheet is the one at
+ * odds with itself rather than with us: its `MODSTAT_ARMOR` answers the same
+ * value for "Ancestral", "Ancestral 1" and "Ancestral 5", while its own Module
+ * Base Stat tab carries them separately at 0.302, 0.314 and 0.362 — about 4% a
+ * star, which is what this package applies. The game agrees they are distinct:
+ * its `ModuleRarity` enum lists `Ancestral1` through `Ancestral5` and
+ * `GetArmorMainBenefit` takes that rarity.
+ *
+ * So the star bonus is real and ours is right. Module levels stay out of the
+ * coin path for a duller reason: the path also needs a module's rarity and
+ * equipped state, which the trackers do not supply in the shape the model
+ * wants yet.
  */
-export const MODULE_STAT_ANCESTRAL_DISAGREEMENT = {
-  agreesFor: ['Common', 'Rare', 'Epic', 'Legendary', 'Mythic', 'Ancestral'],
-  disagreesFor: ['Ancestral 1', 'Ancestral 2', 'Ancestral 3', 'Ancestral 4', 'Ancestral 5'],
-  note: 'This package applies a 1 + 0.04 x steps ancestral bonus; the sheet does not.',
+export const MODULE_STAT_ANCESTRAL_STARS = {
+  agreesWithSheetFormulaFor: ['Common', 'Rare', 'Epic', 'Legendary', 'Mythic', 'Ancestral'],
+  sheetFormulaMissesStarsFor: ['Ancestral 1', 'Ancestral 2', 'Ancestral 3', 'Ancestral 4', 'Ancestral 5'],
+  note: 'MODSTAT_ARMOR drops the ~4%-a-star bonus that the sheet Module Base Stat tab lists.',
 } as const
