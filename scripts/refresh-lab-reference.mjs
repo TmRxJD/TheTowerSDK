@@ -33,6 +33,20 @@ const SHEET_ID = '1YwZtKP6B4WYhRba5T6APJ1YxKNdfnIGQnprgnxmO7zc'
 const sheetUrl = gid => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${gid}`
 const editUrl = gid => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit?gid=${gid}`
 
+/**
+ * Sheet numbers, stripped of separators and the currency glyphs the tab uses.
+ *
+ * Blank returns NaN rather than 0. `Number('')` is 0, so a blank level cell
+ * would otherwise read as level 0, and every empty row past a bot's or
+ * guardian's cap would pile onto that one level -- which is exactly what
+ * happened: the first cut of these fixtures gave Guardian ATTACK 101 rows for
+ * 90 levels.
+ */
+const sheetNumber = value => {
+  const text = String(value ?? '').replace(/[, ⧌⧈⧓]/g, '').trim()
+  return text === '' ? Number.NaN : Number(text)
+}
+
 /** The sheet's cumulative "cost to max" row, numbered as if it were a level. */
 const TOTALS_ROW_LEVEL = 999
 
@@ -185,7 +199,6 @@ async function buildBotUpgrades() {
     { name: 'Amplify Bot', levelColumn: 58 },
     { name: 'Bot Bot', levelColumn: 75 },
   ]
-  const num = value => Number(String(value ?? '').replace(/[, ⧓]/g, '').trim())
 
   const bots = []
   for (const block of BLOCKS) {
@@ -200,9 +213,9 @@ async function buildBotUpgrades() {
     const upgrades = stats.map(stat => {
       const levels = []
       for (const row of body) {
-        const level = num(row[block.levelColumn])
+        const level = sheetNumber(row[block.levelColumn])
         const display = String(row[stat.column] ?? '').trim()
-        const cost = num(row[stat.column + 1])
+        const cost = sheetNumber(row[stat.column + 1])
         if (!Number.isFinite(level) || !display) continue
         levels.push({ level, display, cost: Number.isFinite(cost) ? cost : null })
       }
@@ -228,7 +241,6 @@ async function buildGuardianUpgrades() {
   const header = rows[0]
   const body = rows.slice(2)
 
-  const num = value => Number(String(value ?? '').replace(/[, ⧈⧓]/g, '').trim())
   const groups = []
   for (let column = 0; column < header.length; column += 1) {
     const cell = String(header[column] ?? '').trim()
@@ -240,7 +252,7 @@ async function buildGuardianUpgrades() {
     const stats = statColumns.map(c => String(header[c] ?? '').trim()).filter(Boolean)
     const levels = []
     for (const row of body) {
-      const level = num(row[levelColumn])
+      const level = sheetNumber(row[levelColumn])
       if (!Number.isFinite(level)) continue
       const entry = { level, values: {} }
       let any = false
@@ -248,7 +260,7 @@ async function buildGuardianUpgrades() {
         const label = stats[index]
         if (!label) continue
         const display = String(row[statColumns[index]] ?? '').trim()
-        const cost = num(row[statColumns[index] + 1])
+        const cost = sheetNumber(row[statColumns[index] + 1])
         if (!display && !Number.isFinite(cost)) continue
         entry.values[label] = { display, cost: Number.isFinite(cost) ? cost : null }
         any = true
@@ -265,8 +277,51 @@ async function buildGuardianUpgrades() {
   }
 }
 
+/**
+ * DVT_UWs: 14-column blocks, one per ultimate weapon -- a name, four id
+ * columns, a level column, then four (value, Cost) pairs. The fourth upgrade is
+ * the weapon's synergy ("Chain Lightning + Smite").
+ */
+async function buildUltimateWeapons() {
+  const rows = await fetchTab('1162053972', 'ULTIMATE WEAPONS')
+  const header = rows[0]
+  const body = rows.slice(2)
+
+  const BLOCK_WIDTH = 14
+  const weapons = []
+  for (let block = 0; block < 9; block += 1) {
+    const start = 1 + block * BLOCK_WIDTH
+    const name = String(header[start] ?? '').trim()
+    if (!name) continue
+    const levelColumn = start + 5
+    const statColumns = [start + 6, start + 8, start + 10, start + 12]
+    const statNames = statColumns.map(column => String(header[column] ?? '').trim())
+
+    const stats = []
+    for (let index = 0; index < statColumns.length; index += 1) {
+      if (!statNames[index]) continue
+      const levels = []
+      for (const row of body) {
+        const level = sheetNumber(row[levelColumn])
+        const display = String(row[statColumns[index]] ?? '').trim()
+        const cost = sheetNumber(row[statColumns[index] + 1])
+        if (!Number.isFinite(level) || (!display && !Number.isFinite(cost))) continue
+        levels.push({ level, display, cost: Number.isFinite(cost) ? cost : null })
+      }
+      stats.push({ stat: statNames[index], levels })
+    }
+    weapons.push({ name, stats })
+  }
+
+  return {
+    file: 'effective-paths-ultimate-weapons.json',
+    payload: { source: 'Effective Paths spreadsheet, DVT_UWs tab', url: editUrl('1162053972'), note: 'The tab misspells Chain Lightning as "Chain Ligtning".', weaponCount: weapons.length, weapons },
+    summary: `${weapons.length} weapons, ${weapons.reduce((n, w) => n + w.stats.length, 0)} stats`,
+  }
+}
+
 await fs.mkdir(FIXTURES, { recursive: true })
-for (const build of [buildLabLevels, buildLabUnlocks, buildModuleBaseStats, buildBotUpgrades, buildGuardianUpgrades]) {
+for (const build of [buildLabLevels, buildLabUnlocks, buildModuleBaseStats, buildBotUpgrades, buildGuardianUpgrades, buildUltimateWeapons]) {
   try {
     const { file, payload, summary } = await build()
     await fs.writeFile(path.join(FIXTURES, file), `${JSON.stringify(payload, null, 1)}\n`, 'utf8')

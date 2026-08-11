@@ -192,10 +192,6 @@
       "Cooldown": {
        "display": "110s",
        "cost": 10
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -209,10 +205,6 @@
       "Cooldown": {
        "display": "109s",
        "cost": 11
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -226,10 +218,6 @@
       "Cooldown": {
        "display": "108s",
        "cost": 12
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -243,10 +231,6 @@
       "Cooldown": {
        "display": "107s",
        "cost": 13
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -260,10 +244,6 @@
       "Cooldown": {
        "display": "106s",
        "cost": 14
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -277,10 +257,6 @@
       "Cooldown": {
        "display": "105s",
        "cost": 15
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -294,10 +270,6 @@
       "Cooldown": {
        "display": "104s",
        "cost": 16
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -311,10 +283,6 @@
       "Cooldown": {
        "display": "103s",
        "cost": 17
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -328,10 +296,6 @@
       "Cooldown": {
        "display": "102s",
        "cost": 18
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -345,1387 +309,645 @@
       "Cooldown": {
        "display": "101s",
        "cost": 19
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 20,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "100s",
        "cost": 20
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 21,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "99s",
        "cost": 21
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 22,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "98s",
        "cost": 22
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 23,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "97s",
        "cost": 23
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 24,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "96s",
        "cost": 24
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 25,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "95s",
        "cost": 25
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 26,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "94s",
        "cost": 26
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 27,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "93s",
        "cost": 27
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 28,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "92s",
        "cost": 28
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 29,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "91s",
        "cost": 29
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 30,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "90s",
        "cost": 30
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 31,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "89s",
        "cost": 31
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 32,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "88s",
        "cost": 32
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 33,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "87s",
        "cost": 33
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 34,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "86s",
        "cost": 34
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 35,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "85s",
        "cost": 35
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 36,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "84s",
        "cost": 36
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 37,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "83s",
        "cost": 37
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 38,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "82s",
        "cost": 38
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 39,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "81s",
        "cost": 39
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 40,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "80s",
        "cost": 40
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 41,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "79s",
        "cost": 41
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 42,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "78s",
        "cost": 42
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 43,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "77s",
        "cost": 43
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 44,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "76s",
        "cost": 44
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 45,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "75s",
        "cost": 45
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 46,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "74s",
        "cost": 46
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 47,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "73s",
        "cost": 47
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 48,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "72s",
        "cost": 48
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 49,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "71s",
        "cost": 49
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 50,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "70s",
        "cost": 50
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 51,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "69s",
        "cost": 51
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 52,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "68s",
        "cost": 52
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 53,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "67s",
        "cost": 53
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 54,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "66s",
        "cost": 54
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 55,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "65s",
        "cost": 55
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 56,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "64s",
        "cost": 56
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 57,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "63s",
        "cost": 57
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 58,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "62s",
        "cost": 58
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 59,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "61s",
        "cost": 59
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 60,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "60s",
        "cost": 60
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 61,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "59s",
        "cost": 61
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 62,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "58s",
        "cost": 62
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 63,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "57s",
        "cost": 63
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 64,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "56s",
        "cost": 64
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 65,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "55s",
        "cost": 65
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 66,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "54s",
        "cost": 66
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 67,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "53s",
        "cost": 67
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 68,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "52s",
        "cost": 68
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 69,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "51s",
        "cost": 69
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 70,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "50s",
        "cost": 70
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 71,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "49s",
        "cost": 71
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 72,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "48s",
        "cost": 72
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 73,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "47s",
        "cost": 73
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 74,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "46s",
        "cost": 74
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 75,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "45s",
        "cost": 75
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 76,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "44s",
        "cost": 76
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 77,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "43s",
        "cost": 77
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 78,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "42s",
        "cost": 78
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 79,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "41s",
        "cost": 79
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 80,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "40s",
        "cost": 80
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 81,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "39s",
        "cost": 81
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 82,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "38s",
        "cost": 82
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 83,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "37s",
        "cost": 83
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 84,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "36s",
        "cost": 84
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 85,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "35s",
        "cost": 85
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 86,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "34s",
        "cost": 86
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 87,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "33s",
        "cost": 87
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 88,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "32s",
        "cost": 88
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 89,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "31s",
        "cost": 89
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
     {
      "level": 90,
      "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "30s",
        "cost": 90
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 91,
-     "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Attack Percentage": {
-       "display": "",
-       "cost": 0
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     }
@@ -2167,10 +1389,6 @@
     {
      "level": 25,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
       "Max Recovery": {
        "display": "3.6x",
        "cost": 25
@@ -2184,10 +1402,6 @@
     {
      "level": 26,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
       "Max Recovery": {
        "display": "3.7x",
        "cost": 26
@@ -2201,10 +1415,6 @@
     {
      "level": 27,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
       "Max Recovery": {
        "display": "3.8x",
        "cost": 27
@@ -2218,10 +1428,6 @@
     {
      "level": 28,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
       "Max Recovery": {
        "display": "3.9x",
        "cost": 28
@@ -2235,10 +1441,6 @@
     {
      "level": 29,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
       "Max Recovery": {
        "display": "4.0x",
        "cost": 29
@@ -2252,10 +1454,6 @@
     {
      "level": 30,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
       "Max Recovery": {
        "display": "4.1x",
        "cost": 30
@@ -2269,10 +1467,6 @@
     {
      "level": 31,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
       "Max Recovery": {
        "display": "4.2x",
        "cost": 31
@@ -2286,10 +1480,6 @@
     {
      "level": 32,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
       "Max Recovery": {
        "display": "4.3x",
        "cost": 32
@@ -2303,10 +1493,6 @@
     {
      "level": 33,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
       "Max Recovery": {
        "display": "4.4x",
        "cost": 33
@@ -2320,10 +1506,6 @@
     {
      "level": 34,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
       "Max Recovery": {
        "display": "4.5x",
        "cost": 34
@@ -2337,10 +1519,6 @@
     {
      "level": 35,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
       "Max Recovery": {
        "display": "4.6x",
        "cost": 35
@@ -2354,10 +1532,6 @@
     {
      "level": 36,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
       "Max Recovery": {
        "display": "4.7x",
        "cost": 36
@@ -2371,10 +1545,6 @@
     {
      "level": 37,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
       "Max Recovery": {
        "display": "4.8x",
        "cost": 37
@@ -2388,10 +1558,6 @@
     {
      "level": 38,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
       "Max Recovery": {
        "display": "4.9x",
        "cost": 38
@@ -2405,10 +1571,6 @@
     {
      "level": 39,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
       "Max Recovery": {
        "display": "5.0x",
        "cost": 39
@@ -2422,10 +1584,6 @@
     {
      "level": 40,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
       "Max Recovery": {
        "display": "5.1x",
        "cost": 40
@@ -2439,10 +1597,6 @@
     {
      "level": 41,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
       "Max Recovery": {
        "display": "5.2x",
        "cost": 41
@@ -2456,10 +1610,6 @@
     {
      "level": 42,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
       "Max Recovery": {
        "display": "5.3x",
        "cost": 42
@@ -2473,10 +1623,6 @@
     {
      "level": 43,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
       "Max Recovery": {
        "display": "5.4x",
        "cost": 43
@@ -2490,10 +1636,6 @@
     {
      "level": 44,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
       "Max Recovery": {
        "display": "5.5x",
        "cost": 44
@@ -2507,10 +1649,6 @@
     {
      "level": 45,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
       "Max Recovery": {
        "display": "5.6x",
        "cost": 45
@@ -2524,10 +1662,6 @@
     {
      "level": 46,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
       "Max Recovery": {
        "display": "5.7x",
        "cost": 46
@@ -2541,10 +1675,6 @@
     {
      "level": 47,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
       "Max Recovery": {
        "display": "5.8x",
        "cost": 47
@@ -2558,10 +1688,6 @@
     {
      "level": 48,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
       "Max Recovery": {
        "display": "5.9x",
        "cost": 48
@@ -2575,10 +1701,6 @@
     {
      "level": 49,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
       "Max Recovery": {
        "display": "6.0x",
        "cost": 49
@@ -2592,14 +1714,6 @@
     {
      "level": 50,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "70s",
        "cost": 50
@@ -2609,14 +1723,6 @@
     {
      "level": 51,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "69s",
        "cost": 51
@@ -2626,14 +1732,6 @@
     {
      "level": 52,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "68s",
        "cost": 52
@@ -2643,14 +1741,6 @@
     {
      "level": 53,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "67s",
        "cost": 53
@@ -2660,14 +1750,6 @@
     {
      "level": 54,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "66s",
        "cost": 54
@@ -2677,14 +1759,6 @@
     {
      "level": 55,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "65s",
        "cost": 55
@@ -2694,14 +1768,6 @@
     {
      "level": 56,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "64s",
        "cost": 56
@@ -2711,14 +1777,6 @@
     {
      "level": 57,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "63s",
        "cost": 57
@@ -2728,14 +1786,6 @@
     {
      "level": 58,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "62s",
        "cost": 58
@@ -2745,14 +1795,6 @@
     {
      "level": 59,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "61s",
        "cost": 59
@@ -2762,14 +1804,6 @@
     {
      "level": 60,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "60s",
        "cost": 60
@@ -2779,14 +1813,6 @@
     {
      "level": 61,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "59s",
        "cost": 61
@@ -2796,14 +1822,6 @@
     {
      "level": 62,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "58s",
        "cost": 62
@@ -2813,14 +1831,6 @@
     {
      "level": 63,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "57s",
        "cost": 63
@@ -2830,14 +1840,6 @@
     {
      "level": 64,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "56s",
        "cost": 64
@@ -2847,14 +1849,6 @@
     {
      "level": 65,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "55s",
        "cost": 65
@@ -2864,14 +1858,6 @@
     {
      "level": 66,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "54s",
        "cost": 66
@@ -2881,14 +1867,6 @@
     {
      "level": 67,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "53s",
        "cost": 67
@@ -2898,14 +1876,6 @@
     {
      "level": 68,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "52s",
        "cost": 68
@@ -2915,14 +1885,6 @@
     {
      "level": 69,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "51s",
        "cost": 69
@@ -2932,14 +1894,6 @@
     {
      "level": 70,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "50s",
        "cost": 70
@@ -2949,14 +1903,6 @@
     {
      "level": 71,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "49s",
        "cost": 71
@@ -2966,14 +1912,6 @@
     {
      "level": 72,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "48s",
        "cost": 72
@@ -2983,14 +1921,6 @@
     {
      "level": 73,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "47s",
        "cost": 73
@@ -3000,14 +1930,6 @@
     {
      "level": 74,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "46s",
        "cost": 74
@@ -3017,14 +1939,6 @@
     {
      "level": 75,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "45s",
        "cost": 75
@@ -3034,14 +1948,6 @@
     {
      "level": 76,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "44s",
        "cost": 76
@@ -3051,14 +1957,6 @@
     {
      "level": 77,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "43s",
        "cost": 77
@@ -3068,14 +1966,6 @@
     {
      "level": 78,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "42s",
        "cost": 78
@@ -3085,14 +1975,6 @@
     {
      "level": 79,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "41s",
        "cost": 79
@@ -3102,14 +1984,6 @@
     {
      "level": 80,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "40s",
        "cost": 80
@@ -3119,14 +1993,6 @@
     {
      "level": 81,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "39s",
        "cost": 81
@@ -3136,14 +2002,6 @@
     {
      "level": 82,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "38s",
        "cost": 82
@@ -3153,14 +2011,6 @@
     {
      "level": 83,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "37s",
        "cost": 83
@@ -3170,14 +2020,6 @@
     {
      "level": 84,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "36s",
        "cost": 84
@@ -3187,14 +2029,6 @@
     {
      "level": 85,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "35s",
        "cost": 85
@@ -3204,14 +2038,6 @@
     {
      "level": 86,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "34s",
        "cost": 86
@@ -3221,14 +2047,6 @@
     {
      "level": 87,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "33s",
        "cost": 87
@@ -3238,14 +2056,6 @@
     {
      "level": 88,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "32s",
        "cost": 88
@@ -3255,14 +2065,6 @@
     {
      "level": 89,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "31s",
        "cost": 89
@@ -3272,187 +2074,9 @@
     {
      "level": 90,
      "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
       "Cooldown": {
        "display": "30s",
        "cost": 90
-      }
-     }
-    },
-    {
-     "level": 91,
-     "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Ally Recovery Amount": {
-       "display": "",
-       "cost": 0
-      },
-      "Max Recovery": {
-       "display": "",
-       "cost": 0
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
       }
      }
     }
@@ -3646,10 +2270,6 @@
       "Cooldown": {
        "display": "110s",
        "cost": 20
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -3663,10 +2283,6 @@
       "Cooldown": {
        "display": "109s",
        "cost": 22
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -3680,10 +2296,6 @@
       "Cooldown": {
        "display": "108s",
        "cost": 24
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -3697,10 +2309,6 @@
       "Cooldown": {
        "display": "107s",
        "cost": 26
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -3714,10 +2322,6 @@
       "Cooldown": {
        "display": "106s",
        "cost": 28
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -3731,10 +2335,6 @@
       "Cooldown": {
        "display": "105s",
        "cost": 30
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -3748,10 +2348,6 @@
       "Cooldown": {
        "display": "104s",
        "cost": 32
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -3765,10 +2361,6 @@
       "Cooldown": {
        "display": "103s",
        "cost": 34
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -3782,10 +2374,6 @@
       "Cooldown": {
        "display": "102s",
        "cost": 36
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -3799,10 +2387,6 @@
       "Cooldown": {
        "display": "101s",
        "cost": 38
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -3816,10 +2400,6 @@
       "Cooldown": {
        "display": "100s",
        "cost": 40
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -3833,10 +2413,6 @@
       "Cooldown": {
        "display": "99s",
        "cost": 42
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -3850,10 +2426,6 @@
       "Cooldown": {
        "display": "98s",
        "cost": 44
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -3867,10 +2439,6 @@
       "Cooldown": {
        "display": "97s",
        "cost": 46
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -3884,10 +2452,6 @@
       "Cooldown": {
        "display": "96s",
        "cost": 48
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -3901,10 +2465,6 @@
       "Cooldown": {
        "display": "95s",
        "cost": 50
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -3918,10 +2478,6 @@
       "Cooldown": {
        "display": "94s",
        "cost": 52
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -3935,10 +2491,6 @@
       "Cooldown": {
        "display": "93s",
        "cost": 54
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -3952,10 +2504,6 @@
       "Cooldown": {
        "display": "92s",
        "cost": 56
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -3969,10 +2517,6 @@
       "Cooldown": {
        "display": "91s",
        "cost": 58
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -3986,10 +2530,6 @@
       "Cooldown": {
        "display": "90s",
        "cost": 60
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4003,10 +2543,6 @@
       "Cooldown": {
        "display": "89s",
        "cost": 62
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4020,10 +2556,6 @@
       "Cooldown": {
        "display": "88s",
        "cost": 64
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4037,10 +2569,6 @@
       "Cooldown": {
        "display": "87s",
        "cost": 66
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4054,10 +2582,6 @@
       "Cooldown": {
        "display": "86s",
        "cost": 68
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4071,10 +2595,6 @@
       "Cooldown": {
        "display": "85s",
        "cost": 70
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4088,10 +2608,6 @@
       "Cooldown": {
        "display": "84s",
        "cost": 72
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4105,10 +2621,6 @@
       "Cooldown": {
        "display": "83s",
        "cost": 74
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4122,10 +2634,6 @@
       "Cooldown": {
        "display": "82s",
        "cost": 76
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4139,10 +2647,6 @@
       "Cooldown": {
        "display": "81s",
        "cost": 78
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4156,10 +2660,6 @@
       "Cooldown": {
        "display": "80s",
        "cost": 80
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4173,10 +2673,6 @@
       "Cooldown": {
        "display": "79s",
        "cost": 82
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4190,10 +2686,6 @@
       "Cooldown": {
        "display": "78s",
        "cost": 84
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4207,10 +2699,6 @@
       "Cooldown": {
        "display": "77s",
        "cost": 86
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4224,10 +2712,6 @@
       "Cooldown": {
        "display": "76s",
        "cost": 88
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4241,10 +2725,6 @@
       "Cooldown": {
        "display": "75s",
        "cost": 90
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4258,10 +2738,6 @@
       "Cooldown": {
        "display": "74s",
        "cost": 92
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4275,10 +2751,6 @@
       "Cooldown": {
        "display": "73s",
        "cost": 94
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4292,10 +2764,6 @@
       "Cooldown": {
        "display": "72s",
        "cost": 96
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4309,10 +2777,6 @@
       "Cooldown": {
        "display": "71s",
        "cost": 98
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4326,10 +2790,6 @@
       "Cooldown": {
        "display": "70s",
        "cost": 100
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4343,10 +2803,6 @@
       "Cooldown": {
        "display": "69s",
        "cost": 102
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4360,10 +2816,6 @@
       "Cooldown": {
        "display": "68s",
        "cost": 104
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4377,10 +2829,6 @@
       "Cooldown": {
        "display": "67s",
        "cost": 106
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4394,10 +2842,6 @@
       "Cooldown": {
        "display": "66s",
        "cost": 108
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4411,10 +2855,6 @@
       "Cooldown": {
        "display": "65s",
        "cost": 110
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4428,10 +2868,6 @@
       "Cooldown": {
        "display": "64s",
        "cost": 112
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4445,10 +2881,6 @@
       "Cooldown": {
        "display": "63s",
        "cost": 114
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4462,10 +2894,6 @@
       "Cooldown": {
        "display": "62s",
        "cost": 116
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4479,10 +2907,6 @@
       "Cooldown": {
        "display": "61s",
        "cost": 118
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4496,10 +2920,6 @@
       "Cooldown": {
        "display": "60s",
        "cost": 120
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4509,14 +2929,6 @@
       "Bounty Multiplier": {
        "display": "0.62x",
        "cost": 61
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4526,14 +2938,6 @@
       "Bounty Multiplier": {
        "display": "0.63x",
        "cost": 62
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4543,14 +2947,6 @@
       "Bounty Multiplier": {
        "display": "0.64x",
        "cost": 63
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4560,14 +2956,6 @@
       "Bounty Multiplier": {
        "display": "0.65x",
        "cost": 64
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4577,14 +2965,6 @@
       "Bounty Multiplier": {
        "display": "0.66x",
        "cost": 65
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4594,14 +2974,6 @@
       "Bounty Multiplier": {
        "display": "0.67x",
        "cost": 66
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4611,14 +2983,6 @@
       "Bounty Multiplier": {
        "display": "0.68x",
        "cost": 67
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4628,14 +2992,6 @@
       "Bounty Multiplier": {
        "display": "0.69x",
        "cost": 68
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4645,14 +3001,6 @@
       "Bounty Multiplier": {
        "display": "0.70x",
        "cost": 69
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4662,14 +3010,6 @@
       "Bounty Multiplier": {
        "display": "0.71x",
        "cost": 70
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4679,14 +3019,6 @@
       "Bounty Multiplier": {
        "display": "0.72x",
        "cost": 71
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4696,14 +3028,6 @@
       "Bounty Multiplier": {
        "display": "0.73x",
        "cost": 72
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4713,14 +3037,6 @@
       "Bounty Multiplier": {
        "display": "0.74x",
        "cost": 73
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4730,14 +3046,6 @@
       "Bounty Multiplier": {
        "display": "0.75x",
        "cost": 74
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4747,14 +3055,6 @@
       "Bounty Multiplier": {
        "display": "0.76x",
        "cost": 75
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4764,14 +3064,6 @@
       "Bounty Multiplier": {
        "display": "0.77x",
        "cost": 76
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4781,14 +3073,6 @@
       "Bounty Multiplier": {
        "display": "0.78x",
        "cost": 77
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4798,14 +3082,6 @@
       "Bounty Multiplier": {
        "display": "0.79x",
        "cost": 78
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4815,14 +3091,6 @@
       "Bounty Multiplier": {
        "display": "0.80x",
        "cost": 79
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4832,14 +3100,6 @@
       "Bounty Multiplier": {
        "display": "0.81x",
        "cost": 80
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4849,14 +3109,6 @@
       "Bounty Multiplier": {
        "display": "0.82x",
        "cost": 81
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4866,14 +3118,6 @@
       "Bounty Multiplier": {
        "display": "0.83x",
        "cost": 82
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4883,14 +3127,6 @@
       "Bounty Multiplier": {
        "display": "0.84x",
        "cost": 83
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4900,14 +3136,6 @@
       "Bounty Multiplier": {
        "display": "0.85x",
        "cost": 84
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4917,14 +3145,6 @@
       "Bounty Multiplier": {
        "display": "0.86x",
        "cost": 85
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4934,14 +3154,6 @@
       "Bounty Multiplier": {
        "display": "0.87x",
        "cost": 86
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4951,14 +3163,6 @@
       "Bounty Multiplier": {
        "display": "0.88x",
        "cost": 87
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4968,14 +3172,6 @@
       "Bounty Multiplier": {
        "display": "0.89x",
        "cost": 88
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -4985,14 +3181,6 @@
       "Bounty Multiplier": {
        "display": "0.90x",
        "cost": 89
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -5002,14 +3190,6 @@
       "Bounty Multiplier": {
        "display": "0.91x",
        "cost": 90
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -5019,14 +3199,6 @@
       "Bounty Multiplier": {
        "display": "0.92x",
        "cost": 91
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -5036,14 +3208,6 @@
       "Bounty Multiplier": {
        "display": "0.93x",
        "cost": 92
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -5053,14 +3217,6 @@
       "Bounty Multiplier": {
        "display": "0.94x",
        "cost": 93
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -5070,14 +3226,6 @@
       "Bounty Multiplier": {
        "display": "0.95x",
        "cost": 94
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -5087,14 +3235,6 @@
       "Bounty Multiplier": {
        "display": "0.96x",
        "cost": 95
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -5104,14 +3244,6 @@
       "Bounty Multiplier": {
        "display": "0.97x",
        "cost": 96
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -5121,14 +3253,6 @@
       "Bounty Multiplier": {
        "display": "0.98x",
        "cost": 97
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -5138,14 +3262,6 @@
       "Bounty Multiplier": {
        "display": "0.99x",
        "cost": 98
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -5155,31 +3271,6 @@
       "Bounty Multiplier": {
        "display": "1.00x",
        "cost": 99
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 100,
-     "values": {
-      "Bounty Multiplier": {
-       "display": "",
-       "cost": 0
-      },
-      "Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Targets": {
-       "display": "",
-       "cost": 0
       }
      }
     }
@@ -5897,10 +3988,6 @@
        "display": "79.0s",
        "cost": 82
       },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
       "Double Find Chance": {
        "display": "43%",
        "cost": 210
@@ -5913,10 +4000,6 @@
       "Fetch Cooldown": {
        "display": "78.0s",
        "cost": 84
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
       },
       "Double Find Chance": {
        "display": "44%",
@@ -5931,10 +4014,6 @@
        "display": "77.0s",
        "cost": 86
       },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
       "Double Find Chance": {
        "display": "45%",
        "cost": 220
@@ -5947,10 +4026,6 @@
       "Fetch Cooldown": {
        "display": "76.0s",
        "cost": 88
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
       },
       "Double Find Chance": {
        "display": "46%",
@@ -5965,10 +4040,6 @@
        "display": "75.0s",
        "cost": 90
       },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
       "Double Find Chance": {
        "display": "47%",
        "cost": 230
@@ -5981,10 +4052,6 @@
       "Fetch Cooldown": {
        "display": "74.0s",
        "cost": 92
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
       },
       "Double Find Chance": {
        "display": "48%",
@@ -5999,10 +4066,6 @@
        "display": "73.0s",
        "cost": 94
       },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
       "Double Find Chance": {
        "display": "49%",
        "cost": 240
@@ -6016,10 +4079,6 @@
        "display": "72.0s",
        "cost": 96
       },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
       "Double Find Chance": {
        "display": "50%",
        "cost": 245
@@ -6032,14 +4091,6 @@
       "Fetch Cooldown": {
        "display": "71.0s",
        "cost": 98
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -6049,14 +4100,6 @@
       "Fetch Cooldown": {
        "display": "70.0s",
        "cost": 100
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -6066,14 +4109,6 @@
       "Fetch Cooldown": {
        "display": "69.0s",
        "cost": 102
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -6083,14 +4118,6 @@
       "Fetch Cooldown": {
        "display": "68.0s",
        "cost": 104
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -6100,14 +4127,6 @@
       "Fetch Cooldown": {
        "display": "67.0s",
        "cost": 106
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -6117,14 +4136,6 @@
       "Fetch Cooldown": {
        "display": "66.0s",
        "cost": 108
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -6134,14 +4145,6 @@
       "Fetch Cooldown": {
        "display": "65.0s",
        "cost": 110
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -6151,14 +4154,6 @@
       "Fetch Cooldown": {
        "display": "64.0s",
        "cost": 112
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -6168,14 +4163,6 @@
       "Fetch Cooldown": {
        "display": "63.0s",
        "cost": 114
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -6185,14 +4172,6 @@
       "Fetch Cooldown": {
        "display": "62.0s",
        "cost": 116
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -6202,14 +4181,6 @@
       "Fetch Cooldown": {
        "display": "61.0s",
        "cost": 118
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -6219,694 +4190,6 @@
       "Fetch Cooldown": {
        "display": "60.0s",
        "cost": 120
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 61,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Fetch Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Find Chance": {
-       "display": "",
-       "cost": 0
-      },
-      "Double Find Chance": {
-       "display": "",
-       "cost": 0
       }
      }
     }
@@ -7100,10 +4383,6 @@
       "Duration": {
        "display": "15s",
        "cost": 105
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7117,10 +4396,6 @@
       "Duration": {
        "display": "16s",
        "cost": 115
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7134,10 +4409,6 @@
       "Duration": {
        "display": "17s",
        "cost": 125
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7151,10 +4422,6 @@
       "Duration": {
        "display": "18s",
        "cost": 135
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7168,10 +4435,6 @@
       "Duration": {
        "display": "19s",
        "cost": 145
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7185,10 +4448,6 @@
       "Duration": {
        "display": "20s",
        "cost": 155
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7202,10 +4461,6 @@
       "Duration": {
        "display": "21s",
        "cost": 165
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7219,10 +4474,6 @@
       "Duration": {
        "display": "22s",
        "cost": 175
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7236,10 +4487,6 @@
       "Duration": {
        "display": "23s",
        "cost": 185
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7253,10 +4500,6 @@
       "Duration": {
        "display": "24s",
        "cost": 195
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7270,10 +4513,6 @@
       "Duration": {
        "display": "25s",
        "cost": 205
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7287,10 +4526,6 @@
       "Duration": {
        "display": "26s",
        "cost": 215
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7304,10 +4539,6 @@
       "Duration": {
        "display": "27s",
        "cost": 225
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7321,10 +4552,6 @@
       "Duration": {
        "display": "28s",
        "cost": 235
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7338,10 +4565,6 @@
       "Duration": {
        "display": "29s",
        "cost": 245
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7355,10 +4578,6 @@
       "Duration": {
        "display": "30s",
        "cost": 255
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7372,10 +4591,6 @@
       "Duration": {
        "display": "31s",
        "cost": 265
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7389,10 +4604,6 @@
       "Duration": {
        "display": "32s",
        "cost": 275
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7406,10 +4617,6 @@
       "Duration": {
        "display": "33s",
        "cost": 285
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7423,10 +4630,6 @@
       "Duration": {
        "display": "34s",
        "cost": 295
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7440,10 +4643,6 @@
       "Duration": {
        "display": "35s",
        "cost": 305
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7453,14 +4652,6 @@
       "Summon Cooldown": {
        "display": "109s",
        "cost": 61
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7470,14 +4661,6 @@
       "Summon Cooldown": {
        "display": "108s",
        "cost": 63
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7487,14 +4670,6 @@
       "Summon Cooldown": {
        "display": "107s",
        "cost": 65
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7504,14 +4679,6 @@
       "Summon Cooldown": {
        "display": "106s",
        "cost": 67
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7521,14 +4688,6 @@
       "Summon Cooldown": {
        "display": "105s",
        "cost": 69
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7538,14 +4697,6 @@
       "Summon Cooldown": {
        "display": "104s",
        "cost": 71
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7555,14 +4706,6 @@
       "Summon Cooldown": {
        "display": "103s",
        "cost": 73
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7572,14 +4715,6 @@
       "Summon Cooldown": {
        "display": "102s",
        "cost": 75
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7589,14 +4724,6 @@
       "Summon Cooldown": {
        "display": "101s",
        "cost": 77
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7606,14 +4733,6 @@
       "Summon Cooldown": {
        "display": "100s",
        "cost": 79
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7623,14 +4742,6 @@
       "Summon Cooldown": {
        "display": "99s",
        "cost": 81
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7640,14 +4751,6 @@
       "Summon Cooldown": {
        "display": "98s",
        "cost": 83
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7657,14 +4760,6 @@
       "Summon Cooldown": {
        "display": "97s",
        "cost": 85
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7674,14 +4769,6 @@
       "Summon Cooldown": {
        "display": "96s",
        "cost": 87
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7691,14 +4778,6 @@
       "Summon Cooldown": {
        "display": "95s",
        "cost": 89
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7708,14 +4787,6 @@
       "Summon Cooldown": {
        "display": "94s",
        "cost": 91
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7725,14 +4796,6 @@
       "Summon Cooldown": {
        "display": "93s",
        "cost": 93
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7742,14 +4805,6 @@
       "Summon Cooldown": {
        "display": "92s",
        "cost": 95
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7759,14 +4814,6 @@
       "Summon Cooldown": {
        "display": "91s",
        "cost": 97
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7776,14 +4823,6 @@
       "Summon Cooldown": {
        "display": "90s",
        "cost": 99
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7793,14 +4832,6 @@
       "Summon Cooldown": {
        "display": "89s",
        "cost": 101
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7810,14 +4841,6 @@
       "Summon Cooldown": {
        "display": "88s",
        "cost": 103
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7827,14 +4850,6 @@
       "Summon Cooldown": {
        "display": "87s",
        "cost": 105
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7844,14 +4859,6 @@
       "Summon Cooldown": {
        "display": "86s",
        "cost": 107
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7861,14 +4868,6 @@
       "Summon Cooldown": {
        "display": "85s",
        "cost": 109
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7878,14 +4877,6 @@
       "Summon Cooldown": {
        "display": "84s",
        "cost": 111
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7895,14 +4886,6 @@
       "Summon Cooldown": {
        "display": "83s",
        "cost": 113
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7912,14 +4895,6 @@
       "Summon Cooldown": {
        "display": "82s",
        "cost": 115
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7929,14 +4904,6 @@
       "Summon Cooldown": {
        "display": "81s",
        "cost": 117
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7946,14 +4913,6 @@
       "Summon Cooldown": {
        "display": "80s",
        "cost": 119
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7963,14 +4922,6 @@
       "Summon Cooldown": {
        "display": "79s",
        "cost": 121
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7980,14 +4931,6 @@
       "Summon Cooldown": {
        "display": "78s",
        "cost": 123
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -7997,14 +4940,6 @@
       "Summon Cooldown": {
        "display": "77s",
        "cost": 125
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -8014,14 +4949,6 @@
       "Summon Cooldown": {
        "display": "76s",
        "cost": 127
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -8031,14 +4958,6 @@
       "Summon Cooldown": {
        "display": "75s",
        "cost": 129
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -8048,14 +4967,6 @@
       "Summon Cooldown": {
        "display": "74s",
        "cost": 131
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -8065,14 +4976,6 @@
       "Summon Cooldown": {
        "display": "73s",
        "cost": 133
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -8082,14 +4985,6 @@
       "Summon Cooldown": {
        "display": "72s",
        "cost": 135
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -8099,14 +4994,6 @@
       "Summon Cooldown": {
        "display": "71s",
        "cost": 137
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     },
@@ -8116,524 +5003,6 @@
       "Summon Cooldown": {
        "display": "70s",
        "cost": 139
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 71,
-     "values": {
-      "Summon Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Summon Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Summon Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Summon Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Summon Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Summon Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Summon Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Summon Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Summon Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Summon Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Summon Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Summon Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Summon Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Summon Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Summon Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Summon Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Summon Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Summon Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Summon Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Summon Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Summon Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Summon Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Summon Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Summon Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Summon Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Summon Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Summon Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Summon Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Summon Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
-      }
-     }
-    },
-    {
-     "level": 0,
-     "values": {
-      "Summon Cooldown": {
-       "display": "",
-       "cost": 0
-      },
-      "Duration": {
-       "display": "",
-       "cost": 0
-      },
-      "Cash Bonus": {
-       "display": "",
-       "cost": 0
       }
      }
     }

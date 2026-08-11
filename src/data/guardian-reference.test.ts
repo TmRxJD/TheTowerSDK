@@ -6,7 +6,7 @@ import { guardianUpgrades } from './guardian-upgrades'
 /**
  * Checks our guardian upgrade tables against the Effective Paths reference.
  *
- * 2205 values agreed on the first run and four did not, all the same fault:
+ * Every one of the 1436 shared values agreed but four, all the same fault:
  * Attack and Ally both claimed a level 90 cooldown of 30s costing 90, where
  * every other row in those same columns follows cooldown = 121 - level and
  * cost = level - 1, which gives 31s costing 89. Our own arithmetic and the
@@ -83,7 +83,7 @@ describe('guardian upgrades against the Effective Paths reference', () => {
     }
 
     expect(mismatches).toEqual([])
-    expect(compared).toBeGreaterThanOrEqual(2200)
+    expect(compared).toBeGreaterThanOrEqual(1430)
   })
 
   it('keeps the cooldown tracks on their own arithmetic', () => {

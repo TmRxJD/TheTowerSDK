@@ -149,7 +149,7 @@
       {
        "level": 26,
        "display": "95%",
-       "cost": 0
+       "cost": null
       }
      ]
     },
@@ -239,7 +239,7 @@
       {
        "level": 16,
        "display": "30s",
-       "cost": 0
+       "cost": null
       }
      ]
     },
@@ -400,11 +400,6 @@
        "level": 30,
        "display": "x290",
        "cost": 1260
-      },
-      {
-       "level": 0,
-       "display": "x290",
-       "cost": 0
       }
      ]
     },
@@ -494,7 +489,7 @@
       {
        "level": 16,
        "display": "90m",
-       "cost": 0
+       "cost": null
       }
      ]
     },
@@ -609,7 +604,7 @@
       {
        "level": 21,
        "display": "x3.5",
-       "cost": 0
+       "cost": null
       }
      ]
     }
@@ -736,7 +731,7 @@
       {
        "level": 21,
        "display": "15.0s",
-       "cost": 0
+       "cost": null
       }
      ]
     },
@@ -826,7 +821,7 @@
       {
        "level": 16,
        "display": "75s",
-       "cost": 0
+       "cost": null
       }
      ]
     },
@@ -941,7 +936,7 @@
       {
        "level": 21,
        "display": "80%",
-       "cost": 0
+       "cost": null
       }
      ]
     },
@@ -1031,7 +1026,7 @@
       {
        "level": 16,
        "display": "70m",
-       "cost": 0
+       "cost": null
       }
      ]
     },
@@ -1146,7 +1141,7 @@
       {
        "level": 21,
        "display": "25%",
-       "cost": 0
+       "cost": null
       }
      ]
     }
@@ -1323,7 +1318,7 @@
       {
        "level": 31,
        "display": "35.0s",
-       "cost": 0
+       "cost": null
       }
      ]
     },
@@ -1413,7 +1408,7 @@
       {
        "level": 16,
        "display": "75s",
-       "cost": 0
+       "cost": null
       }
      ]
     },
@@ -1578,7 +1573,7 @@
       {
        "level": 31,
        "display": "x8.0",
-       "cost": 0
+       "cost": null
       }
      ]
     },
@@ -1693,7 +1688,7 @@
       {
        "level": 21,
        "display": "60m",
-       "cost": 0
+       "cost": null
       }
      ]
     },
@@ -1833,7 +1828,7 @@
       {
        "level": 26,
        "display": "x2.50",
-       "cost": 0
+       "cost": null
       }
      ]
     }
@@ -2010,7 +2005,7 @@
       {
        "level": 31,
        "display": "35.0s",
-       "cost": 0
+       "cost": null
       }
      ]
     },
@@ -2100,7 +2095,7 @@
       {
        "level": 16,
        "display": "75s",
-       "cost": 0
+       "cost": null
       }
      ]
     },
@@ -2265,7 +2260,7 @@
       {
        "level": 31,
        "display": "x15.5",
-       "cost": 0
+       "cost": null
       }
      ]
     },
@@ -2370,7 +2365,7 @@
       {
        "level": 19,
        "display": "61m",
-       "cost": 0
+       "cost": null
       }
      ]
     },
@@ -2425,7 +2420,7 @@
       {
        "level": 10,
        "display": "13",
-       "cost": 0
+       "cost": null
       }
      ]
     }
@@ -2602,7 +2597,7 @@
       {
        "level": 31,
        "display": "35.0s",
-       "cost": 0
+       "cost": null
       }
      ]
     },
@@ -2692,7 +2687,7 @@
       {
        "level": 16,
        "display": "75s",
-       "cost": 0
+       "cost": null
       }
      ]
     },
@@ -2802,7 +2797,7 @@
       {
        "level": 20,
        "display": "x2.00",
-       "cost": 0
+       "cost": null
       }
      ]
     },
@@ -2917,7 +2912,7 @@
       {
        "level": 21,
        "display": "60m",
-       "cost": 0
+       "cost": null
       }
      ]
     },
@@ -3032,7 +3027,7 @@
       {
        "level": 21,
        "display": "x2.25",
-       "cost": 0
+       "cost": null
       }
      ]
     }
