@@ -18,21 +18,24 @@
  * **Names.** Six stats are spelled differently in the two — `Defense Percent`
  * against `Defense %`, `Thorns` against `Thorn Damage`, and so on.
  *
- * ## Where the sheet and the game disagree
+ * ## Seven stats this will not convert
  *
- * Seven stats have no consistent scale, because the sheet's closed form and the
- * game are different functions. Six of those have since been settled by reading
- * the game's own getters out of `libil2cpp.so`, and the sheet is wrong in all
- * six: Cash Bonus and Coin / Kill Bonus grow 1% a level rather than 0.01%,
- * Land Mine Chance is `0.6 x lvl` with no base, Rend Armor Chance is
- * `0.1 x (lvl + 1)`, Shockwave Frequency starts at 20 rather than 17, and
- * Knockback Force bands above about level 11 where the sheet stays linear. The
- * seventh, Wall Rebuild, is still open.
+ * Seven have no consistent scale against `DVT_WS_VALUE`, because that
+ * function's fallback formulas for them are stale — the game's own getters give
+ * different curves, which `scripts/read-il2cpp-method-constants.py` reads
+ * straight out of `libil2cpp.so`.
  *
- * Our values are therefore the right ones, but they are still refused here
- * rather than served: this module's job is to answer in *the sheet's* units for
- * a port that reproduces the sheet, and quietly returning a different number
- * under that contract would be worse than returning none. See
+ * That is a smaller problem than it sounds, and worth stating so nobody
+ * repeats the mistake this comment used to make: **no path calls those
+ * branches.** `DVT_WS_VALUE` has six call sites in the entire workbook, all on
+ * the eHP tab and all for defensive stats that agree. The damage and economy
+ * paths take the workshop level and apply the curve inline, and match the game
+ * where they do.
+ *
+ * These stay unconvertible here because this module answers in the *sheet's*
+ * units for a port that reproduces the sheet, and there is no scale that maps a
+ * stale formula onto a live one. Read the level and apply the game's curve
+ * instead, as the sheet's own paths do. See
  * `docs/EFFECTIVE_PATHS_SHEET_FINDINGS.md`.
  */
 
