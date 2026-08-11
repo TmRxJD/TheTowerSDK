@@ -210,7 +210,7 @@ function formatBattleReportStatValue(
   return compactBattleReportStat(value)
 }
 
-function derivePerHourStat(
+function computePerHourStat(
   run: Record<string, unknown>,
   amountKey: string,
 ): string | null {
@@ -220,7 +220,7 @@ function derivePerHourStat(
   return compactBattleReportStat(amount / (seconds / 3600))
 }
 
-function deriveCoinsPerKill(run: Record<string, unknown>): string | null {
+function computeCoinsPerKill(run: Record<string, unknown>): string | null {
   const coins = readNumber(run.coinsEarned)
   const kills = readNumber(run.totalEnemies)
   if (coins == null || kills == null || kills <= 0 || coins <= 0) return null
@@ -261,13 +261,13 @@ function readDerivedBattleReportStat(
 ): string | null {
   switch (trackerField) {
     case 'coinsPerHour':
-      return derivePerHourStat(run, 'coinsEarned')
+      return computePerHourStat(run, 'coinsEarned')
     case 'cellsPerHour':
-      return derivePerHourStat(run, 'cellsEarned')
+      return computePerHourStat(run, 'cellsEarned')
     case 'rerollShardsPerHour':
-      return derivePerHourStat(run, 'rerollShardsEarned')
+      return computePerHourStat(run, 'rerollShardsEarned')
     case 'coinsPerKill':
-      return deriveCoinsPerKill(run)
+      return computeCoinsPerKill(run)
     default:
       return null
   }
