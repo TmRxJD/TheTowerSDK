@@ -249,7 +249,7 @@ function lookupInfoIndexMapping(infoIndex: number | null): { initials: string; c
   return resolveModuleInfoIdentity(infoIndex)
 }
 
-export function extractModulesFromSaveRoot(parsedRoot: unknown): ModulesSaveExtract | null {
+export function readModulesFromSaveRoot(parsedRoot: unknown): ModulesSaveExtract | null {
   if (!parsedRoot || typeof parsedRoot !== 'object') return null
 
   const root = parsedRoot as Record<string, unknown>

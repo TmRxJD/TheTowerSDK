@@ -1,4 +1,4 @@
-import { extractDurationSecondsFromSave, formatBattleDurationFromSaveSeconds } from './battle-duration'
+import { readDurationSecondsFromSave, formatBattleDurationFromSaveSeconds } from './battle-duration'
 import { buildBattleReportStatFieldsFromSaveEntry } from './battle-report-fields'
 import { normalizeBattleHistorySaveEntry } from './battle-history-normalize'
 import { parseDurationToHours, parseSaveDateTimeToMs } from '../formatting/index'
@@ -147,7 +147,7 @@ export function normalizeBattleRunDateForDedup(value: unknown): string {
 
 /** Normalize duration text or raw save values to the canonical battle-import format. */
 export function normalizeBattleRunDurationForDedup(value: unknown): string {
-  const secondsFromRaw = extractDurationSecondsFromSave(value)
+  const secondsFromRaw = readDurationSecondsFromSave(value)
   if (secondsFromRaw != null) {
     return formatBattleDurationFromSaveSeconds(secondsFromRaw)
   }
@@ -189,7 +189,7 @@ export function buildTrackerRunDataFromBattleHistoryEntry(
   const battleTimestampMs = parseSaveDateTimeToMs(normalizedEntry.battleDate ?? normalizedEntry.runDate)
   const { runDate, runTime } = normalizeBattleRunDateTimeForDedup(battleTimestampMs)
   const uploadDate = new Date()
-  const durationSeconds = extractDurationSecondsFromSave(normalizedEntry.realTime) ?? 0
+  const durationSeconds = readDurationSecondsFromSave(normalizedEntry.realTime) ?? 0
   const duration = formatBattleDurationFromSaveSeconds(durationSeconds)
   const isTournament = normalizedEntry.isTournament === true
   const notePrefix = context?.notePrefix ?? 'Imported from battle history'

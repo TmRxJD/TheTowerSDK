@@ -1,4 +1,4 @@
-import { extractDurationSecondsFromSave } from './battle-duration'
+import { readDurationSecondsFromSave } from './battle-duration'
 import { TRACKER_RUN_EXTENDED_FIELDS, TRACKER_RUN_OPTIONAL_STRING_FIELDS } from '../internal/tracker-cloud-schemas'
 import { formatCompact } from '../internal/tool-formatting'
 
@@ -214,7 +214,7 @@ function derivePerHourStat(
   run: Record<string, unknown>,
   amountKey: string,
 ): string | null {
-  const seconds = extractDurationSecondsFromSave(run.realTime)
+  const seconds = readDurationSecondsFromSave(run.realTime)
   const amount = readNumber(run[amountKey])
   if (seconds == null || seconds <= 0 || amount == null || amount <= 0) return null
   return compactBattleReportStat(amount / (seconds / 3600))

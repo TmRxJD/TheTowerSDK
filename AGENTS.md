@@ -30,7 +30,7 @@ If you find yourself reaching into it, that is a gap worth reporting rather than
 for it. Always check:
 
 ```ts
-const labs = extractLabsFromSaveRoot(parsedRoot)
+const labs = readLabsFromSaveRoot(parsedRoot)
 if (!labs) return
 ```
 

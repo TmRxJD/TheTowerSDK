@@ -183,7 +183,7 @@ export function resolveCardSaveRowCopies(card: Pick<CardSaveRow, 'level' | 'coun
   }
 }
 
-export function extractCardsFromSaveRoot(root: Record<string, unknown> | null): CardsSaveExtract | null {
+export function readCardsFromSaveRoot(root: Record<string, unknown> | null): CardsSaveExtract | null {
   if (!root) return null
 
   const warnings: string[] = []

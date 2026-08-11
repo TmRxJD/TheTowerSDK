@@ -2,7 +2,7 @@ import { formatNumberForDisplay } from '../formatting/index'
 import { DISSONANCE_TYPE_KEYS, type DissonanceTypeKey } from '../internal/dissonance-calcs-local-state'
 import { type SharedDissonanceCalculatorState } from '../internal/shared-tool-inputs-extended'
 import {
-  deriveDissonanceCalculatorStateFromSaveRoot,
+  readDissonanceCalculatorStateFromSaveRoot,
   DISSONANCE_BOOST_SAVE_FIELD_BY_TYPE,
   readDissonanceBoostWavesByTypeFromSaveRoot,
 } from './shared-tool-inputs-from-save-extended'
@@ -60,7 +60,7 @@ function buildTierPreviewRowFromDerived(
   }
 }
 
-export function extractDissonanceFromSaveRoot(root: unknown): DissonanceSaveExtract | null {
+export function readDissonanceFromSaveRoot(root: unknown): DissonanceSaveExtract | null {
   if (!isRecord(root)) return null
 
   const warnings: string[] = []
@@ -71,7 +71,7 @@ export function extractDissonanceFromSaveRoot(root: unknown): DissonanceSaveExtr
   }
 
   readDissonanceBoostWavesByTypeFromSaveRoot(root)
-  const derived = deriveDissonanceCalculatorStateFromSaveRoot(root)
+  const derived = readDissonanceCalculatorStateFromSaveRoot(root)
 
   const tierRows = Array.from({ length: MAX_CAMPAIGN_TIER }, (_, index) =>
     buildTierPreviewRowFromDerived(index + 1, derived),

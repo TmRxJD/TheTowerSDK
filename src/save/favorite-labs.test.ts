@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { LAB_RESEARCH_BY_INDEX } from '../data/labs-research'
-import { extractFavoriteLabSlugsFromSaveRoot, saveHasFavoriteLabs } from './favorite-labs'
+import { readFavoriteLabSlugsFromSaveRoot, saveHasFavoriteLabs } from './favorite-labs'
 
 /** The save stores favourites the way Unity serializes a List<int>. */
 const unityList = (values: number[]) => ({ _items: values, _size: values.length })
@@ -11,31 +11,31 @@ describe('favorite labs from a save', () => {
     const first = LAB_RESEARCH_BY_INDEX[0]
     const third = LAB_RESEARCH_BY_INDEX[2]
 
-    const slugs = extractFavoriteLabSlugsFromSaveRoot({ favoriteLabs: unityList([0, 2]) })
+    const slugs = readFavoriteLabSlugsFromSaveRoot({ favoriteLabs: unityList([0, 2]) })
 
     expect(slugs).toEqual([first?.slug, third?.slug])
   })
 
   it('reads a plain array too', () => {
-    const slugs = extractFavoriteLabSlugsFromSaveRoot({ favoriteLabs: [0] })
+    const slugs = readFavoriteLabSlugsFromSaveRoot({ favoriteLabs: [0] })
     expect(slugs).toEqual([LAB_RESEARCH_BY_INDEX[0]?.slug])
   })
 
   it('skips an index this catalog does not know instead of inventing a name', () => {
-    const slugs = extractFavoriteLabSlugsFromSaveRoot({
+    const slugs = readFavoriteLabSlugsFromSaveRoot({
       favoriteLabs: unityList([0, 99_999]),
     })
     expect(slugs).toEqual([LAB_RESEARCH_BY_INDEX[0]?.slug])
   })
 
   it('de-duplicates', () => {
-    const slugs = extractFavoriteLabSlugsFromSaveRoot({ favoriteLabs: unityList([0, 0]) })
+    const slugs = readFavoriteLabSlugsFromSaveRoot({ favoriteLabs: unityList([0, 0]) })
     expect(slugs).toHaveLength(1)
   })
 
   it('returns nothing for a save with no favourites', () => {
-    expect(extractFavoriteLabSlugsFromSaveRoot({})).toEqual([])
-    expect(extractFavoriteLabSlugsFromSaveRoot(null)).toEqual([])
+    expect(readFavoriteLabSlugsFromSaveRoot({})).toEqual([])
+    expect(readFavoriteLabSlugsFromSaveRoot(null)).toEqual([])
   })
 
   it('distinguishes an empty list from an absent one', () => {

@@ -27,7 +27,7 @@ function readWorkshopLevel(levels: Record<string, number>, key: string): number 
   return Number.isFinite(value) ? Math.floor(value) : 0
 }
 
-export function deriveElsPlannerLevelsFromWorkshopStats(
+export function readElsPlannerLevelsFromWorkshopStats(
   workshop: SharedWorkshopStatLevels,
 ): Pick<SharedElsPlannerInputs, 'elsAttackLevel' | 'elsHealthLevel' | 'elsEnhancementLevel'> {
   return {
@@ -58,7 +58,7 @@ export function syncWorkshopStatsFromElsPlanner(
   }
 }
 
-export function deriveElsVaultStarsFromVaultLevels(
+export function readElsVaultStarsFromVaultLevels(
   vault: SharedVaultLevels,
 ): Pick<SharedElsPlannerInputs, 'elsVaultAttackStars' | 'elsVaultHealthStars'> {
   return {
@@ -92,8 +92,8 @@ export function enrichElsPlannerFromLinkedSources(
   workshop: SharedWorkshopStatLevels,
   vault: SharedVaultLevels,
 ): SharedElsPlannerInputs {
-  const fromWorkshop = deriveElsPlannerLevelsFromWorkshopStats(workshop)
-  const fromVault = deriveElsVaultStarsFromVaultLevels(vault)
+  const fromWorkshop = readElsPlannerLevelsFromWorkshopStats(workshop)
+  const fromVault = readElsVaultStarsFromVaultLevels(vault)
   return {
     ...els,
     elsAttackLevel: maxDefinedInt(els.elsAttackLevel, fromWorkshop.elsAttackLevel),

@@ -35,7 +35,7 @@ function maxDefinedInt(...values: Array<number | undefined>): number {
   return max
 }
 
-export function deriveLabsEconomyFromResearchLevels(
+export function readLabsEconomyFromResearchLevels(
   researchLabLevels: Record<string, number>,
   existing: Partial<SharedLabsSettings> = {},
 ): SharedLabsSettings {
@@ -59,7 +59,7 @@ export function deriveLabsEconomyFromResearchLevels(
   }
 }
 
-export function deriveWorkshopDiscountsFromResearchLevels(
+export function readWorkshopDiscountsFromResearchLevels(
   researchLabLevels: Record<string, number>,
   existing: Partial<SharedWorkshopDiscounts> = {},
 ): SharedWorkshopDiscounts {
@@ -95,7 +95,7 @@ export function deriveWorkshopDiscountsFromResearchLevels(
   }
 }
 
-export function deriveModuleEconomyFromResearchLevels(
+export function readModuleEconomyFromResearchLevels(
   researchLabLevels: Record<string, number>,
   existing: {
     moduleDiscounts?: Partial<SharedModuleDiscounts>
@@ -184,7 +184,7 @@ export function deriveModuleEconomyFromResearchLevels(
   }
 }
 
-export function deriveEchoLabLevelsFromResearchLevels(
+export function readEchoLabLevelsFromResearchLevels(
   researchLabLevels: Record<string, number>,
   existing: Partial<SharedEchoLabLevels> = {},
 ): SharedEchoLabLevels {
@@ -208,11 +208,11 @@ export function deriveEchoLabLevelsFromResearchLevels(
   }
 }
 
-export function deriveNamedCalculatorLabsFromResearchLevels(
+export function readNamedCalculatorLabsFromResearchLevels(
   researchLabLevels: Record<string, number>,
   existing: Partial<SharedNamedCalculatorLabs> = {},
 ): SharedNamedCalculatorLabs {
-  const echoLabLevels = deriveEchoLabLevelsFromResearchLevels(
+  const echoLabLevels = readEchoLabLevelsFromResearchLevels(
     researchLabLevels,
     existing.echoLabLevels,
   )
@@ -288,22 +288,22 @@ export function enrichSharedToolInputsFromResearchLevels<
   },
 >(payload: T, options?: EnrichSharedToolInputsFromResearchOptions): T {
   const { researchLabLevels } = payload
-  const moduleEconomy = deriveModuleEconomyFromResearchLevels(researchLabLevels, {
+  const moduleEconomy = readModuleEconomyFromResearchLevels(researchLabLevels, {
     moduleDiscounts: payload.moduleDiscounts,
     moduleEfficiencyLabs: payload.moduleEfficiencyLabs,
   })
 
   const workshopDiscounts = options?.preserveExplicitWorkshopDiscounts
     ? normalizeSharedWorkshopDiscounts(payload.workshopDiscounts, defaultSharedWorkshopDiscounts)
-    : deriveWorkshopDiscountsFromResearchLevels(researchLabLevels, payload.workshopDiscounts)
+    : readWorkshopDiscountsFromResearchLevels(researchLabLevels, payload.workshopDiscounts)
 
   return {
     ...payload,
-    labsEconomy: deriveLabsEconomyFromResearchLevels(researchLabLevels, payload.labsEconomy),
+    labsEconomy: readLabsEconomyFromResearchLevels(researchLabLevels, payload.labsEconomy),
     workshopDiscounts,
     moduleDiscounts: moduleEconomy.moduleDiscounts,
     moduleEfficiencyLabs: moduleEconomy.moduleEfficiencyLabs,
-    namedCalculatorLabs: deriveNamedCalculatorLabsFromResearchLevels(researchLabLevels, payload.namedCalculatorLabs),
+    namedCalculatorLabs: readNamedCalculatorLabsFromResearchLevels(researchLabLevels, payload.namedCalculatorLabs),
     uptimeInputs: syncUptimeResearchLabsFromTracker(researchLabLevels, payload.uptimeInputs),
   }
 }

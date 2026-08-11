@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { listThemeCatalogRows } from './catalogs/themes'
-import { extractCollectedThemeNamesFromSaveRoot } from './themes'
+import { readCollectedThemeNamesFromSaveRoot } from './themes'
 
 describe('themes-from-save', () => {
   it('collects unlocked theme names from save unlock arrays', () => {
@@ -16,12 +16,12 @@ describe('themes-from-save', () => {
       trackAvailable: [],
     }
 
-    const names = extractCollectedThemeNamesFromSaveRoot(root)
+    const names = readCollectedThemeNamesFromSaveRoot(root)
     expect(names).toContain('Star')
   })
 
   it('returns empty list when save has no unlock arrays', () => {
-    expect(extractCollectedThemeNamesFromSaveRoot({})).toEqual([])
-    expect(extractCollectedThemeNamesFromSaveRoot(null)).toEqual([])
+    expect(readCollectedThemeNamesFromSaveRoot({})).toEqual([])
+    expect(readCollectedThemeNamesFromSaveRoot(null)).toEqual([])
   })
 })

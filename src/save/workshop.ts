@@ -280,7 +280,7 @@ function buildPresetSnapshots(root: Record<string, unknown>, warnings: string[])
   return snapshots
 }
 
-export function extractWorkshopFromSaveRoot(parsedRoot: unknown): WorkshopSaveExtract | null {
+export function readWorkshopFromSaveRoot(parsedRoot: unknown): WorkshopSaveExtract | null {
   if (!parsedRoot || typeof parsedRoot !== 'object') return null
 
   const root = parsedRoot as Record<string, unknown>
@@ -403,7 +403,7 @@ export interface WorkshopTrackerSaveImportPayload {
 }
 
 export function buildWorkshopTrackerImportPayloadFromSave(parsedRoot: unknown): WorkshopTrackerSaveImportPayload | null {
-  const extract = extractWorkshopFromSaveRoot(parsedRoot)
+  const extract = readWorkshopFromSaveRoot(parsedRoot)
   if (!extract) return null
   const activeSnapshot = resolvePresetSnapshot(extract, extract.meta.currentPreset)
   return {

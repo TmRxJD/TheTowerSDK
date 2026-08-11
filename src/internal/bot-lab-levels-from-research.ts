@@ -67,7 +67,7 @@ export function botLabResearchSlugIndex(): BotLabSlugIndex {
  * values behave: a level the player already recorded is never lowered by an
  * import that does not know about it.
  */
-export function deriveBotLabLevelsFromResearchLevels(
+export function readBotLabLevelsFromResearchLevels(
   researchLabLevels: Record<string, number>,
   existing: BotLabLevelsByBot = {},
 ): BotLabLevelsByBot {

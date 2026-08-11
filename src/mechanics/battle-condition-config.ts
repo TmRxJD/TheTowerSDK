@@ -13,16 +13,16 @@ import type { TournamentLeague } from '../data/tournaments'
 import { WAVE_INFO_WORKSHOP_OFFSETS, WAVE_INFO_WORKSHOP_SCALE } from './wave-info-enemy-constants'
 import { getTotalBcModifierFraction } from './battle-conditions'
 import {
-  deriveElsReductionHeatLevel,
-  deriveRandomHeatBcLevel,
+  computeElsReductionHeatLevel,
+  computeRandomHeatBcLevel,
   tournamentLeagueHasHeat,
 } from './tournament-heat-bc'
 export {
-  deriveBossUltimateHeatFactor,
-  deriveCampaignElsReductionHeatLevel,
-  deriveElsReductionHeatLevel,
-  deriveMoreBossesHeatLevel,
-  deriveRandomHeatBcLevel,
+  computeBossUltimateHeatFactor,
+  computeCampaignElsReductionHeatLevel,
+  computeElsReductionHeatLevel,
+  computeMoreBossesHeatLevel,
+  computeRandomHeatBcLevel,
   getHeatEffectivenessPercent,
   getTournamentHeatProfile,
   GUARANTEED_ELS_REDUCTION_MAX,
@@ -197,8 +197,8 @@ function applyHeatDerivedBattleConditions(
     return conditions.map(row => ({ ...row }))
   }
 
-  const elsLevel = deriveElsReductionHeatLevel(league, wave)
-  const randomLevel = deriveRandomHeatBcLevel(league, wave)
+  const elsLevel = computeElsReductionHeatLevel(league, wave)
+  const randomLevel = computeRandomHeatBcLevel(league, wave)
 
   return conditions.map(row => {
     if (row.name === 'ELS Reduction') {

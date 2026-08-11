@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
-  deriveLabsEconomyFromResearchLevels,
-  deriveModuleEconomyFromResearchLevels,
-  deriveNamedCalculatorLabsFromResearchLevels,
-  deriveWorkshopDiscountsFromResearchLevels,
+  readLabsEconomyFromResearchLevels,
+  readModuleEconomyFromResearchLevels,
+  readNamedCalculatorLabsFromResearchLevels,
+  readWorkshopDiscountsFromResearchLevels,
   enrichSharedToolInputsFromResearchLevels,
   resolveResearchLabLevel,
   syncUptimeResearchLabsFromTracker,
@@ -29,7 +29,7 @@ describe('resolveResearchLabLevel', () => {
       'Dissonant Echo - Utility': 2,
       'Dissonant Echo - Ultimate Weapons': 1,
     }
-    const named = deriveNamedCalculatorLabsFromResearchLevels(levels)
+    const named = readNamedCalculatorLabsFromResearchLevels(levels)
     expect(named.echoLabLevels.attack).toBe(3)
     expect(named.echoLabLevels.defense).toBe(4)
     expect(named.echoLabLevels.utility).toBe(2)
@@ -37,9 +37,9 @@ describe('resolveResearchLabLevel', () => {
   })
 })
 
-describe('deriveLabsEconomyFromResearchLevels', () => {
+describe('readLabsEconomyFromResearchLevels', () => {
   it('maps lab speed and coin discount without clobbering relic settings', () => {
-    const result = deriveLabsEconomyFromResearchLevels(
+    const result = readLabsEconomyFromResearchLevels(
       { 'Labs Speed': 15, 'Labs Coin Discount': 6 },
       { labRelic: 4, speedUp: 2, gemDiscount: 1.5 },
     )
@@ -51,9 +51,9 @@ describe('deriveLabsEconomyFromResearchLevels', () => {
   })
 })
 
-describe('deriveModuleEconomyFromResearchLevels', () => {
+describe('readModuleEconomyFromResearchLevels', () => {
   it('maps module coin/shard discounts and assist efficiency labs', () => {
-    const result = deriveModuleEconomyFromResearchLevels({
+    const result = readModuleEconomyFromResearchLevels({
       'Module Coin Cost': 12,
       'Module Shard Cost': 8,
       'Assist Module Bonus - Cannon': 5,
@@ -68,9 +68,9 @@ describe('deriveModuleEconomyFromResearchLevels', () => {
   })
 })
 
-describe('deriveWorkshopDiscountsFromResearchLevels', () => {
+describe('readWorkshopDiscountsFromResearchLevels', () => {
   it('maps workshop and enhancement discount researches', () => {
-    const result = deriveWorkshopDiscountsFromResearchLevels({
+    const result = readWorkshopDiscountsFromResearchLevels({
       'Workshop Attack Discount': 10,
       'Workshop Defense Discount': 11,
       'Workshop Utility Discount': 12,

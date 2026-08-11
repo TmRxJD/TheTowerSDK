@@ -4,7 +4,7 @@ import {
 } from './shared-tool-inputs-extended'
 import {
   defaultSharedUptimeInputs,
-  extractSharedUptimeInputs,
+  readSharedUptimeInputs,
   type SharedUptimeInputs,
 } from './shared-uptime-inputs'
 
@@ -60,9 +60,9 @@ export function mergeEnemyStatsCoreHub(
   }
 }
 
-/** Resolved uptime defaults (extractSharedUptimeInputs fills per-field site defaults). */
+/** Resolved uptime defaults (readSharedUptimeInputs fills per-field site defaults). */
 export function resolveSharedUptimeHubDefaults(): SharedUptimeInputs {
-  return extractSharedUptimeInputs({})
+  return readSharedUptimeInputs({})
 }
 
 export function mergeSharedUptimeInputsHub(
@@ -89,7 +89,7 @@ export function mergeSharedUptimeInputsHub(
     }
   }
 
-  return extractSharedUptimeInputs(merged)
+  return readSharedUptimeInputs(merged)
 }
 
 export function diffChangedHubKeys(

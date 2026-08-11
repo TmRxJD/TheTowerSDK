@@ -183,7 +183,7 @@ function chunkBaseStatLevels(levels: number[], slotCount: number): number[][] {
   return chunks
 }
 
-export function extractUltimateWeaponsFromSaveRoot(parsedRoot: unknown): UltimateWeaponsSaveExtract | null {
+export function readUltimateWeaponsFromSaveRoot(parsedRoot: unknown): UltimateWeaponsSaveExtract | null {
   if (!parsedRoot || typeof parsedRoot !== 'object') return null
 
   const root = parsedRoot as Record<string, unknown>

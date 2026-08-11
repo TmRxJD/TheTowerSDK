@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { CARDS_ASSET_TABLE } from '../data/assets'
 import { CARD_IMPORT_CATALOG } from '../data/player-stats'
-import { deriveThornsCalculatorSettingsFromSaveRoot } from './shared-tool-inputs-from-save-extended'
+import { readThornsCalculatorSettingsFromSaveRoot } from './shared-tool-inputs-from-save-extended'
 
 /**
  * `CARD_IMPORT_CATALOG.index` is the card's slot in the save arrays.
@@ -55,7 +55,7 @@ describe('card save index mapping', () => {
     levels[slot] = 7
     unlocked[slot] = true
 
-    const settings = deriveThornsCalculatorSettingsFromSaveRoot({
+    const settings = readThornsCalculatorSettingsFromSaveRoot({
       cardLevel: levels,
       cardUnlocked: unlocked,
     })
@@ -69,7 +69,7 @@ describe('card save index mapping', () => {
     levels[14] = 5
     unlocked[14] = true
 
-    const settings = deriveThornsCalculatorSettingsFromSaveRoot({
+    const settings = readThornsCalculatorSettingsFromSaveRoot({
       cardLevel: levels,
       cardUnlocked: unlocked,
     })

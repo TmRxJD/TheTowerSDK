@@ -7,7 +7,7 @@ import { applyTierBattleConditionsToSkipChance } from './enemy-level-skip'
 import {
   type BattleConditionSelection,
   BC_TIER_MIN,
-  deriveBossUltimateHeatFactor,
+  computeBossUltimateHeatFactor,
   ENEMY_STATS_BATTLE_CONDITION_NAMES,
   type EnemyStatsBattleConditionName,
   filterEnemyStatsBattleConditions,
@@ -235,7 +235,7 @@ export function getEnemyStatsAtWave(
     bcLabLevels,
     labBenefitIncreaseAtLevel: bcCounterLabBenefitIncreaseAtLevel,
     bossUltimateHeatFactor: modifiers.tournament && modifiers.tournamentLeague
-      ? deriveBossUltimateHeatFactor(modifiers.tournamentLeague, w)
+      ? computeBossUltimateHeatFactor(modifiers.tournamentLeague, w)
       : 1,
   })
 

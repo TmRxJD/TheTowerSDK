@@ -14,7 +14,7 @@ import { readSaveIntList } from './read-values'
  */
 export const FAVORITE_LABS_SAVE_FIELD = 'favoriteLabs'
 
-export function extractFavoriteLabSlugsFromSaveRoot(
+export function readFavoriteLabSlugsFromSaveRoot(
   root: Record<string, unknown> | null | undefined,
 ): string[] {
   if (!root) return []

@@ -440,7 +440,7 @@ export function resolveBotsExtractForPreset(
   }
 }
 
-export function extractBotsFromSaveRoot(root: Record<string, unknown> | null): BotsSaveExtract | null {
+export function readBotsFromSaveRoot(root: Record<string, unknown> | null): BotsSaveExtract | null {
   if (!root) return null
 
   const warnings: string[] = []
@@ -564,7 +564,7 @@ export function computeBotsTrackerStonesSpentFromStore(
   return total
 }
 
-export function deriveBotsPlusAndSyncStonesSpentFromSave(
+export function readBotsPlusAndSyncStonesSpentFromSave(
   extract: BotsSaveExtract,
   root?: Record<string, unknown> | null,
 ): number {
@@ -574,7 +574,7 @@ export function deriveBotsPlusAndSyncStonesSpentFromSave(
 }
 
 /** Medals spent on bot unlocks and stat upgrades (matches Bots tracker summary). */
-export function deriveBotsMedalsSpentFromSave(extract: BotsSaveExtract): number {
+export function readBotsMedalsSpentFromSave(extract: BotsSaveExtract): number {
   let total = 0
   const unlockedBotLabels = bots
     .filter((bot, index) => extract.bots[index]?.unlocked === true)

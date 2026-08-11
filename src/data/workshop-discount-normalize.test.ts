@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { deriveWorkshopDiscountsFromResearchLevels } from '../internal/shared-tool-inputs-from-research'
+import { readWorkshopDiscountsFromResearchLevels } from '../internal/shared-tool-inputs-from-research'
 import {
   normalizeEnhancementSectionDiscountPercent,
   normalizeEnhancementVaultDiscountPercent,
@@ -27,7 +27,7 @@ describe('workshop discount normalization', () => {
   })
 
   it('derives research lab levels as discount percents', () => {
-    const result = deriveWorkshopDiscountsFromResearchLevels({
+    const result = readWorkshopDiscountsFromResearchLevels({
       'Workshop Attack Discount': 10,
       'Workshop Defense Discount': 11,
       'Workshop Utility Discount': 12,

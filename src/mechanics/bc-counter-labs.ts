@@ -24,7 +24,7 @@ import {
 import { getTotalBcModifierFraction } from './battle-conditions'
 import { clamp } from './math'
 import { getTierBattleConditionLevel } from '../data/index'
-import { deriveCampaignElsReductionHeatLevel } from './tournament-heat-bc'
+import { computeCampaignElsReductionHeatLevel } from './tournament-heat-bc'
 
 /** In-game tooltip: each ELS / Skip-Reduction-Subtract BC level removes 0.5% skip per level (before labs). */
 export const ELS_BC_SKIP_REDUCTION_PCT_PER_LEVEL = 0.5
@@ -229,7 +229,7 @@ function resolveElsSkipAdjustments(
 
   let elsReductionLevel = elsFromConditions > 0 ? elsFromConditions : elsFromTier
   if (workshopSkipLookup && !tournament && tier >= BC_TIER_MIN) {
-    elsReductionLevel = deriveCampaignElsReductionHeatLevel(tier, wave)
+    elsReductionLevel = computeCampaignElsReductionHeatLevel(tier, wave)
   }
 
   return {

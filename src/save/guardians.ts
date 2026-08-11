@@ -128,7 +128,7 @@ function buildSkinRows(skinUnlocked: boolean[], skinIndex: number | null): Guard
   }))
 }
 
-export function extractGuardiansFromSaveRoot(root: Record<string, unknown> | null): GuardiansSaveExtract | null {
+export function readGuardiansFromSaveRoot(root: Record<string, unknown> | null): GuardiansSaveExtract | null {
   if (!root) return null
 
   const warnings: string[] = []

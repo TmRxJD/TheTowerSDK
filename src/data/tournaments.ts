@@ -299,7 +299,7 @@ export function getTournamentRewardsForLeague(league: TournamentLeague): readonl
 
 /**
  * @deprecated Misnamed legacy map — values are league ELS max levels ÷ 100, not flat skip subtracts.
- * Use `GUARANTEED_ELS_REDUCTION_MAX` from `tournament-heat-bc` and `deriveElsReductionHeatLevel`.
+ * Use `GUARANTEED_ELS_REDUCTION_MAX` from `tournament-heat-bc` and `computeElsReductionHeatLevel`.
  */
 export const TOURNAMENT_ENEMY_LEVEL_SKIP_HEAT_SUBTRACT: Readonly<Record<TournamentLeague, number>> = {
   Copper: 0,

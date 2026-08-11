@@ -140,7 +140,7 @@ const TOOLS = {
     inputSchema: {
       type: 'object',
       properties: {
-        extractor: { type: 'string', description: 'e.g. extractLabsFromSaveRoot' },
+        extractor: { type: 'string', description: 'e.g. readLabsFromSaveRoot' },
         path: { type: 'string', description: 'Absolute path to playerInfo.dat' },
       },
       required: ['extractor', 'path'],

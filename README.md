@@ -41,11 +41,11 @@ without checking where either came from.
 ```ts
 import { readFile } from 'node:fs/promises'
 import { decodePlayerInfoSaveBytes } from 'thetowersdk/node'
-import { extractLabsFromSaveRoot } from 'thetowersdk/save'
+import { readLabsFromSaveRoot } from 'thetowersdk/save'
 
 const { parsedRoot } = decodePlayerInfoSaveBytes(await readFile('playerInfo.dat'))
 
-const labs = extractLabsFromSaveRoot(parsedRoot)
+const labs = readLabsFromSaveRoot(parsedRoot)
 console.log(`${labs.researchedCount} researched, ${labs.maxedCount} maxed`)
 ```
 
@@ -60,7 +60,7 @@ playerInfo.dat ──decodePlayerInfoSaveBytes()──► save root (plain objec
                                                      │
                      ┌───────────────────────────────┼──────────────────────────────┐
                      ▼                               ▼                              ▼
-           extractLabsFromSaveRoot()   extractModulesFromSaveRoot()   discoverSaveImportTrackers()
+           readLabsFromSaveRoot()   readModulesFromSaveRoot()   discoverSaveImportTrackers()
                      │                               │                              │
                      ▼                               ▼                              ▼
                typed lab data                 typed module data          "what's in this save?"
@@ -95,18 +95,18 @@ import { formatDuration } from 'thetowersdk/formatting'
 
 | Function | Returns |
 |---|---|
-| `extractLabsFromSaveRoot` | Research levels, what's maxed, the active queue |
-| `extractWorkshopFromSaveRoot` | Upgrade levels, enhancements, saved presets |
-| `extractModulesFromSaveRoot` | Owned modules, rarities, substats, equipped |
-| `extractCardsFromSaveRoot` | Card levels, copies, mastery, equipped slots |
-| `extractGuardiansFromSaveRoot` | Guardian levels and upgrades |
-| `extractBotsFromSaveRoot` | Bot levels, plus/sync unlocks, medals spent |
-| `extractUltimateWeaponsFromSaveRoot` | UW levels, unlocks, plus-levels, stones |
-| `extractVaultFromSaveRoot` | Vault power tree progress |
-| `extractRelicsFromSaveRoot` | Owned relics |
-| `extractCollectedThemeNamesFromSaveRoot` | Unlocked themes |
-| `extractLifetimeFromSaveRoot` | Lifetime totals |
-| `extractDissonanceFromSaveRoot` | Dissonance echo progress |
+| `readLabsFromSaveRoot` | Research levels, what's maxed, the active queue |
+| `readWorkshopFromSaveRoot` | Upgrade levels, enhancements, saved presets |
+| `readModulesFromSaveRoot` | Owned modules, rarities, substats, equipped |
+| `readCardsFromSaveRoot` | Card levels, copies, mastery, equipped slots |
+| `readGuardiansFromSaveRoot` | Guardian levels and upgrades |
+| `readBotsFromSaveRoot` | Bot levels, plus/sync unlocks, medals spent |
+| `readUltimateWeaponsFromSaveRoot` | UW levels, unlocks, plus-levels, stones |
+| `readVaultFromSaveRoot` | Vault power tree progress |
+| `readRelicsFromSaveRoot` | Owned relics |
+| `readCollectedThemeNamesFromSaveRoot` | Unlocked themes |
+| `readLifetimeFromSaveRoot` | Lifetime totals |
+| `readDissonanceFromSaveRoot` | Dissonance echo progress |
 | `listImportableBattleRuns` | Run history |
 
 Plus perks, "killed by" and per-run battle report fields — see [`src/save/index.ts`](src/save/index.ts).
@@ -117,7 +117,7 @@ Extractors return `null` when a save has no data for that feature, rather than t
 saves degrade instead of failing:
 
 ```ts
-const labs = extractLabsFromSaveRoot(parsedRoot)
+const labs = readLabsFromSaveRoot(parsedRoot)
 if (!labs) return
 
 if (labs.warnings.length) {

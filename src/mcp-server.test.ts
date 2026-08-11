@@ -145,7 +145,7 @@ describeServer('mcp server', () => {
     expect(decoded.rootKeys).toBeGreaterThan(100)
     expect(decoded.trackers.length).toBeGreaterThan(0)
 
-    const labs = await call('run_extractor', { extractor: 'extractLabsFromSaveRoot', path: savePath })
+    const labs = await call('run_extractor', { extractor: 'readLabsFromSaveRoot', path: savePath })
     expect(Array.isArray(labs.warnings)).toBe(true)
     expect(labs.keyCount).toBeGreaterThan(0)
 

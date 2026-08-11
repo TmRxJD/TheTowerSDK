@@ -179,7 +179,7 @@ function tryParseEnumMemberFromTypeName(typeName: string): string | null {
  * Reads the integer enum index from a battle-history `killedBy` field.
  * Returns null when the value is missing or not a recognized shape.
  */
-export function extractKilledByEnumIndex(raw: unknown): number | null {
+export function readKilledByEnumIndex(raw: unknown): number | null {
   if (raw === null || raw === undefined) {
     return null
   }
@@ -246,7 +246,7 @@ export function resolveKilledByFromSave(raw: unknown, fallback = 'Apathy'): stri
     }
   }
 
-  const index = extractKilledByEnumIndex(raw)
+  const index = readKilledByEnumIndex(raw)
   if (index === null) {
     return fallback
   }

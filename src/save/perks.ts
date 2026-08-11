@@ -57,7 +57,7 @@ function resolvePerkNames(indices: readonly number[]): string[] {
     .filter((name): name is string => Boolean(name))
 }
 
-export function deriveUnbannedPerkIndices(
+export function computeUnbannedPerkIndices(
   bannedIndices: readonly number[],
   activeIndices: readonly number[] = listActivePerkIndices(),
 ): number[] {
@@ -78,7 +78,7 @@ export function normalizeSharedPerkPreferences(value: unknown): SharedPerkPrefer
   const unbannedIndices = uniqueSortedIndices(
     Array.isArray(source.unbannedIndices) && source.unbannedIndices.length
       ? toNumberArray(source.unbannedIndices).map(index => Math.max(0, Math.floor(index)))
-      : deriveUnbannedPerkIndices(bannedIndices, activeIndices),
+      : computeUnbannedPerkIndices(bannedIndices, activeIndices),
   )
 
   const firstPerkRaw = normalizePerkIndex(source.firstPerkIndex)
@@ -142,13 +142,13 @@ export function resolveOverviewAutopickPerkIndices(
   return indices
 }
 
-export function derivePerkPreferencesFromSaveRoot(
+export function readPerkPreferencesFromSaveRoot(
   root: Record<string, unknown> | null | undefined,
 ): SharedPerkPreferences {
   if (!root) return { ...defaultSharedPerkPreferences }
 
   const bannedIndices = uniqueSortedIndices(toNumberArray(root.bannedPerksIndex))
-  const unbannedIndices = deriveUnbannedPerkIndices(bannedIndices)
+  const unbannedIndices = computeUnbannedPerkIndices(bannedIndices)
 
   const firstPerkRaw = normalizePerkIndex(root.firstPerkIndex)
   const firstTradeOffRaw = normalizePerkIndex(root.firstTradeOffPerkIndex)

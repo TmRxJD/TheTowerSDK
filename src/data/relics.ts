@@ -333,7 +333,7 @@ export { RELIC_TEMPLATES }
  * Accepts the relics tracker's `tracked` map, whose entries are
  * `{ id, collected }`, and tolerates a plain boolean map.
  */
-export function deriveLabSpeedRelicBonusPercent(
+export function computeLabSpeedRelicBonusPercent(
   tracked: Record<string, { collected?: boolean } | boolean> | null | undefined,
 ): number {
   if (!tracked || typeof tracked !== 'object') return 0

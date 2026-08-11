@@ -37,7 +37,7 @@ import {
   waveInfoDisplayMultipliers,
 } from './enemy-stat-display'
 import {
-  deriveElsReductionHeatLevel,
+  computeElsReductionHeatLevel,
   GUARANTEED_ELS_REDUCTION_MAX,
 } from './tournament-heat-bc'
 import {
@@ -214,11 +214,11 @@ describe('mechanics/enemy-level-skip', () => {
   })
 
   it('tournament ELS Reduction ramps with wave (heat complement of resistance retention)', () => {
-    expect(deriveElsReductionHeatLevel('Legend', 0)).toBe(3) // 50 × (100 − 95)%
-    expect(deriveElsReductionHeatLevel('Legend', 350)).toBe(25) // 50 × 50% @ wave 350 t14
-    expect(deriveElsReductionHeatLevel('Legend', 1000)).toBe(48) // 50 × (100 − 5)%
-    expect(deriveElsReductionHeatLevel('Legend', 100)).toBeLessThan(
-      deriveElsReductionHeatLevel('Legend', 500),
+    expect(computeElsReductionHeatLevel('Legend', 0)).toBe(3) // 50 × (100 − 95)%
+    expect(computeElsReductionHeatLevel('Legend', 350)).toBe(25) // 50 × 50% @ wave 350 t14
+    expect(computeElsReductionHeatLevel('Legend', 1000)).toBe(48) // 50 × (100 − 5)%
+    expect(computeElsReductionHeatLevel('Legend', 100)).toBeLessThan(
+      computeElsReductionHeatLevel('Legend', 500),
     )
     const adjusted = applyTierBattleConditionsToSkipChance(0.88, {
       elsReductionLevel: 48,

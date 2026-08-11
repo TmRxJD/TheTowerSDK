@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   buildTrackerRunCloudWritePayload,
   buildTrackerRunFingerprint,
-  extractTrackerRunCoverageData,
+  readTrackerRunCoverageData,
   hydrateTrackerCloudRun,
   hydrateTrackerRunEntryFromDocument,
   normalizeTrackerDateText,
@@ -18,7 +18,7 @@ import {
 describe('tracker cloud schemas', () => {
   it('extracts coverage from canonical labels without conflating orb metrics', () => {
     expect(
-      extractTrackerRunCoverageData({
+      readTrackerRunCoverageData({
         ['Total Enemies']: '5000',
         ['Golden Tower']: '3300',
         ['Destroyed By Orbs']: '1200',

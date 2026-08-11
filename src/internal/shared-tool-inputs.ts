@@ -20,7 +20,7 @@ import {
 } from './shared-tool-inputs-extended'
 import {
   defaultSharedUptimeInputs,
-  extractSharedUptimeInputs,
+  readSharedUptimeInputs,
   migrateLegacyUptimeLabLevels,
   type SharedUptimeInputs,
   sharedUptimeInputsSchema,
@@ -65,20 +65,20 @@ export {
   defaultExtendedSharedToolInputs,
   defaultSharedCardsProgressInputs,
   defaultSharedEnemyDropsInputs,
-  extractSharedBotMedalSplitterPlanner,
-  extractSharedDamageReduxCalculatorSettings,
-  extractSharedDissonanceCalculatorState,
-  extractSharedElsPlannerInputs,
-  extractSharedEnemyStatsCore,
-  extractSharedThornsCalculatorSettings,
+  readSharedBotMedalSplitterPlanner,
+  readSharedDamageReduxCalculatorSettings,
+  readSharedDissonanceCalculatorState,
+  readSharedElsPlannerInputs,
+  readSharedEnemyStatsCore,
+  readSharedThornsCalculatorSettings,
   mergeExtendedSharedToolInputs,
   normalizeExtendedSharedToolInputs,
   normalizeSharedCardsProgressInputs,
   normalizeSharedEnemyDropsInputs,
 } from './shared-tool-inputs-extended'
 export {
-  deriveElsPlannerLevelsFromWorkshopStats,
-  deriveElsVaultStarsFromVaultLevels,
+  readElsPlannerLevelsFromWorkshopStats,
+  readElsVaultStarsFromVaultLevels,
   enrichElsPlannerFromLinkedSources,
   syncVaultLevelsFromElsPlanner,
   syncWorkshopStatsFromElsPlanner,
@@ -87,8 +87,8 @@ export {
 export type { SharedPerkPreferences } from '../save/perks'
 export {
   defaultSharedPerkPreferences,
-  derivePerkPreferencesFromSaveRoot,
-  deriveUnbannedPerkIndices,
+  readPerkPreferencesFromSaveRoot,
+  computeUnbannedPerkIndices,
   normalizeSharedPerkPreferences,
 } from '../save/perks'
 
@@ -446,7 +446,7 @@ export function normalizeSharedToolInputs(value: unknown): SharedToolInputs {
     guardianTargets: normalizeNumberArrayRecord(source['guardianTargets']),
     namedCalculatorLabs: normalizeNamedCalculatorLabs(source['namedCalculatorLabs']),
     uptimeInputs: source['uptimeInputs']
-      ? extractSharedUptimeInputs(source['uptimeInputs'] as Record<string, unknown>)
+      ? readSharedUptimeInputs(source['uptimeInputs'] as Record<string, unknown>)
       : migrateLegacyUptimeLabLevels(normalizeNumberRecord(source['uptimeLabLevels'])),
     uwProgressLevels: normalizeNestedNumberRecord(source['uwProgressLevels']),
     perkPreferences: normalizeSharedPerkPreferences(source['perkPreferences']),

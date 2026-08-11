@@ -1,18 +1,18 @@
-import { buildBotsTrackerImportPayload, extractBotsFromSaveRoot } from './bots'
+import { buildBotsTrackerImportPayload, readBotsFromSaveRoot } from './bots'
 import { planBattleReportImport } from './battle-reports'
-import { buildCardsTrackerImportPayload, extractCardsFromSaveRoot } from './cards'
-import { canImportDissonanceFromSave, extractDissonanceFromSaveRoot } from './dissonance'
-import { buildGuardiansTrackerImportPayload, extractGuardiansFromSaveRoot } from './guardians'
-import { buildLabsTrackerImportPayload, extractLabsFromSaveRoot } from './labs'
+import { buildCardsTrackerImportPayload, readCardsFromSaveRoot } from './cards'
+import { canImportDissonanceFromSave, readDissonanceFromSaveRoot } from './dissonance'
+import { buildGuardiansTrackerImportPayload, readGuardiansFromSaveRoot } from './guardians'
+import { buildLabsTrackerImportPayload, readLabsFromSaveRoot } from './labs'
 import {
   buildLifetimeTrackerImportPayload,
   canImportLifetimeFromSave,
-  extractLifetimeFromSaveRoot,
+  readLifetimeFromSaveRoot,
 } from './lifetime'
 import {
   buildModulesTrackerImportPayload,
   canImportModulesToTracker,
-  extractModulesFromSaveRoot,
+  readModulesFromSaveRoot,
 } from './modules'
 import { buildRelicsTrackerImportPayloadFromSaveRoot } from './relics'
 import {
@@ -22,10 +22,10 @@ import {
 import {
   buildUltimateWeaponsTrackerImportPayload,
   canImportUltimateWeaponsToTracker,
-  extractUltimateWeaponsFromSaveRoot,
+  readUltimateWeaponsFromSaveRoot,
   resolveUltimateWeaponCatalogForHubSync,
 } from './ultimate-weapons'
-import { buildVaultTrackerImportPayload, extractVaultFromSaveRoot } from './vault'
+import { buildVaultTrackerImportPayload, readVaultFromSaveRoot } from './vault'
 import {
   buildWorkshopTrackerImportPayloadFromSave,
 } from './workshop'
@@ -77,7 +77,7 @@ export function planSaveImportTracker(
   }
 
   if (key === 'lifetime') {
-    const extract = extractLifetimeFromSaveRoot(parsedRoot)
+    const extract = readLifetimeFromSaveRoot(parsedRoot)
     const canImport = canImportLifetimeFromSave(extract)
     const payload = extract ? buildLifetimeTrackerImportPayload(extract) : null
     return {
@@ -101,7 +101,7 @@ export function planSaveImportTracker(
   }
 
   if (key === 'labs') {
-    const extract = extractLabsFromSaveRoot(root)
+    const extract = readLabsFromSaveRoot(root)
     const canImport = Boolean(
       extract
       && (
@@ -120,7 +120,7 @@ export function planSaveImportTracker(
   }
 
   if (key === 'ultimateWeapons') {
-    const extract = extractUltimateWeaponsFromSaveRoot(parsedRoot)
+    const extract = readUltimateWeaponsFromSaveRoot(parsedRoot)
     const canImport = canImportUltimateWeaponsToTracker(extract)
     const weapons = resolveUltimateWeaponCatalogForHubSync()
     const payload = extract && canImport
@@ -136,7 +136,7 @@ export function planSaveImportTracker(
   }
 
   if (key === 'modules') {
-    const extract = extractModulesFromSaveRoot(parsedRoot)
+    const extract = readModulesFromSaveRoot(parsedRoot)
     const canImport = canImportModulesToTracker(extract)
     const payload = extract && canImport ? buildModulesTrackerImportPayload(extract) : null
     return {
@@ -149,7 +149,7 @@ export function planSaveImportTracker(
   }
 
   if (key === 'cards') {
-    const extract = extractCardsFromSaveRoot(root)
+    const extract = readCardsFromSaveRoot(root)
     const payload = extract ? buildCardsTrackerImportPayload(extract) : null
     return {
       key,
@@ -161,7 +161,7 @@ export function planSaveImportTracker(
   }
 
   if (key === 'vault') {
-    const extract = extractVaultFromSaveRoot(root)
+    const extract = readVaultFromSaveRoot(root)
     const payload = extract ? buildVaultTrackerImportPayload(extract) : null
     return {
       key,
@@ -173,7 +173,7 @@ export function planSaveImportTracker(
   }
 
   if (key === 'bots') {
-    const extract = extractBotsFromSaveRoot(root)
+    const extract = readBotsFromSaveRoot(root)
     const payload = extract ? buildBotsTrackerImportPayload(extract) : null
     return {
       key,
@@ -185,7 +185,7 @@ export function planSaveImportTracker(
   }
 
   if (key === 'guardians') {
-    const extract = extractGuardiansFromSaveRoot(root)
+    const extract = readGuardiansFromSaveRoot(root)
     const payload = extract ? buildGuardiansTrackerImportPayload(extract) : null
     return {
       key,
@@ -208,7 +208,7 @@ export function planSaveImportTracker(
   }
 
   if (key === 'dissonance') {
-    const extract = extractDissonanceFromSaveRoot(parsedRoot)
+    const extract = readDissonanceFromSaveRoot(parsedRoot)
     const hasWaveData = canImportDissonanceFromSave(extract)
     const canImport = hasWaveData || extract != null
     return {

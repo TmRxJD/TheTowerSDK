@@ -1,18 +1,18 @@
 import { describe, expect, it } from 'vitest'
 import {
   enemyDisplayNameFromSaveEnumIndex,
-  extractKilledByEnumIndex,
+  readKilledByEnumIndex,
   normalizeKilledByDisplayLabel,
   resolveKilledByFromSave,
 } from './killed-by'
 
 describe('killed-by-from-save', () => {
   it('extracts enum indices from NRBF enum objects and plain numbers', () => {
-    expect(extractKilledByEnumIndex({ value__: 3 })).toBe(3)
-    expect(extractKilledByEnumIndex({ value: 4 })).toBe(4)
-    expect(extractKilledByEnumIndex(2)).toBe(2)
-    expect(extractKilledByEnumIndex('5')).toBe(5)
-    expect(extractKilledByEnumIndex(null)).toBeNull()
+    expect(readKilledByEnumIndex({ value__: 3 })).toBe(3)
+    expect(readKilledByEnumIndex({ value: 4 })).toBe(4)
+    expect(readKilledByEnumIndex(2)).toBe(2)
+    expect(readKilledByEnumIndex('5')).toBe(5)
+    expect(readKilledByEnumIndex(null)).toBeNull()
   })
 
   // Locks the save-file index order. Asserting 4 = Boss or 11 = Overcharge

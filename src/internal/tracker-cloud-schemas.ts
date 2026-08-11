@@ -893,7 +893,7 @@ export function collectTrackerRunScalarFields(
   return payload
 }
 
-export function extractTrackerRunCoverageData(source: Record<string, unknown>): Record<string, unknown> {
+export function readTrackerRunCoverageData(source: Record<string, unknown>): Record<string, unknown> {
   return stripUndefinedFields({
     totalEnemies: source.totalEnemies ?? source['Total Enemies'],
     killsWithGoldenTower: source.killsWithGoldenTower ?? source['Golden Tower'],
@@ -1137,7 +1137,7 @@ export function hydrateTrackerCloudRun(
   username: string,
 ): Record<string, unknown> {
   const runType = raw.type ? normalizeTrackerRunType(raw.type) : 'Farming'
-  const coverage = extractTrackerRunCoverageData(raw)
+  const coverage = readTrackerRunCoverageData(raw)
   const runDateValue = raw.runDate ?? raw.date
   const runTimeValue = raw.runTime ?? raw.time
   const importDateValue = raw.date ?? raw.runDate

@@ -144,7 +144,7 @@ function readSaveValue(root: Record<string, unknown>, saveKey: string | readonly
   return parts.reduce((sum, value) => sum + value, 0)
 }
 
-export function extractLifetimeFromSaveRoot(parsedRoot: unknown): LifetimeSaveExtract | null {
+export function readLifetimeFromSaveRoot(parsedRoot: unknown): LifetimeSaveExtract | null {
   if (!parsedRoot || typeof parsedRoot !== 'object') return null
 
   const root = parsedRoot as Record<string, unknown>

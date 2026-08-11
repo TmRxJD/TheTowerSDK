@@ -5,7 +5,7 @@ import {
   buildRelicTemplateIdLookup,
   resolveRelicTemplateIdFromSaveIndex,
 } from './catalogs/relic-template-match'
-import { extractCollectedThemeNamesFromSaveRoot } from './themes'
+import { readCollectedThemeNamesFromSaveRoot } from './themes'
 import { coerceSaveArray, toNumberArrayPreserveLength } from './workshop'
 import { readSaveBoolean, readSaveEnumValue } from './read-values'
 export const RELICS_SAVE_PROFILE_KEY = 'profileRelics'
@@ -80,7 +80,7 @@ function buildUnlockedSet(profileIndices: number[], unlockedFlags: boolean[]): S
   return unlocked
 }
 
-export function extractRelicsFromSaveRoot(root: Record<string, unknown> | null): RelicsSaveExtract | null {
+export function readRelicsFromSaveRoot(root: Record<string, unknown> | null): RelicsSaveExtract | null {
   if (!root) return null
 
   const warnings: string[] = []
@@ -177,9 +177,9 @@ export function buildRelicsTrackerImportPayload(extract: RelicsSaveExtract): Rel
 export function buildRelicsTrackerImportPayloadFromSaveRoot(
   root: Record<string, unknown> | null,
 ): RelicsTrackerSaveImportPayload | null {
-  const extract = extractRelicsFromSaveRoot(root)
+  const extract = readRelicsFromSaveRoot(root)
   const relicPart = extract ? buildRelicsTrackerImportPayload(extract) : null
-  const collectedThemeNames = extractCollectedThemeNamesFromSaveRoot(root)
+  const collectedThemeNames = readCollectedThemeNamesFromSaveRoot(root)
   if (!relicPart && collectedThemeNames.length === 0) return null
   return {
     collectedRelicIds: relicPart?.collectedRelicIds ?? [],
@@ -193,5 +193,5 @@ export function canImportRelicsToTracker(
   root: Record<string, unknown> | null = null,
 ): boolean {
   if (extract && buildRelicsTrackerImportPayload(extract)) return true
-  return extractCollectedThemeNamesFromSaveRoot(root).length > 0
+  return readCollectedThemeNamesFromSaveRoot(root).length > 0
 }

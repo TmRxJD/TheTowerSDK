@@ -3,10 +3,10 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import {
-  deriveGemDiscountMultiplierFromSaveRoot,
-  deriveLabRelicPctFromSaveRoot,
-  deriveTradeOffPerksFromSaveRoot,
-  extractSharedToolInputsFromSaveRoot,
+  readGemDiscountMultiplierFromSaveRoot,
+  readLabRelicPctFromSaveRoot,
+  readTradeOffPerksFromSaveRoot,
+  readSharedToolInputsFromSaveRoot,
   mergeSaveDerivedSharedToolInputs,
 } from './shared-tool-inputs-from-save'
 import { defaultSharedToolInputs } from '../internal/shared-tool-inputs'
@@ -17,14 +17,14 @@ const playerInfo = JSON.parse(
   readFileSync(join(fixtureDir, 'perk-preferences.sample.json'), 'utf8'),
 ) as Record<string, unknown>
 
-describe('deriveTradeOffPerksFromSaveRoot', () => {
+describe('readTradeOffPerksFromSaveRoot', () => {
   it('maps perkLevel indices to shared trade-off toggles', () => {
     const perkLevel = Array.from({ length: 64 }, () => 0)
     perkLevel[42] = 1
     perkLevel[45] = 1
     perkLevel[48] = 1
 
-    expect(deriveTradeOffPerksFromSaveRoot({ perkLevel })).toEqual({
+    expect(readTradeOffPerksFromSaveRoot({ perkLevel })).toEqual({
       perkEnemyHpMinus50: true,
       perkBossHpX8: true,
       perkBossHpMinus70: false,
@@ -35,16 +35,16 @@ describe('deriveTradeOffPerksFromSaveRoot', () => {
   })
 })
 
-describe('deriveGemDiscountMultiplierFromSaveRoot', () => {
+describe('readGemDiscountMultiplierFromSaveRoot', () => {
   it('uses researchesComplete × 1.5% + 1 multiplier formula', () => {
-    expect(deriveGemDiscountMultiplierFromSaveRoot({ researchesComplete: 20 })).toBeCloseTo(1.3, 5)
-    expect(deriveGemDiscountMultiplierFromSaveRoot({ researchesComplete: 0 })).toBe(1)
+    expect(readGemDiscountMultiplierFromSaveRoot({ researchesComplete: 20 })).toBeCloseTo(1.3, 5)
+    expect(readGemDiscountMultiplierFromSaveRoot({ researchesComplete: 0 })).toBe(1)
   })
 })
 
-describe('deriveLabRelicPctFromSaveRoot', () => {
+describe('readLabRelicPctFromSaveRoot', () => {
   it('sums profile relic lab-speed benefits as percent', () => {
-    const result = deriveLabRelicPctFromSaveRoot({
+    const result = readLabRelicPctFromSaveRoot({
       profileRelics: [5],
     })
     expect(result).toBeGreaterThan(0)
@@ -104,13 +104,13 @@ describe('mergeSaveDerivedSharedToolInputs', () => {
   })
 })
 
-describe('extractSharedToolInputsFromSaveRoot', () => {
+describe('readSharedToolInputsFromSaveRoot', () => {
   it('returns empty partial for null root', () => {
-    expect(extractSharedToolInputsFromSaveRoot(null)).toEqual({})
+    expect(readSharedToolInputsFromSaveRoot(null)).toEqual({})
   })
 
   it('includes perk ban preferences from save root', () => {
-    const extracted = extractSharedToolInputsFromSaveRoot(playerInfo)
+    const extracted = readSharedToolInputsFromSaveRoot(playerInfo)
     expect(extracted.perkPreferences?.bannedIndices).toEqual([2, 4, 5, 14, 43, 46, 47, 49])
     expect(extracted.perkPreferences?.unbannedIndices).toHaveLength(26)
     expect(extracted.perkPreferences?.firstPerkIndex).toBe(10)

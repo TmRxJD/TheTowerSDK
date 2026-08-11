@@ -1,24 +1,24 @@
 import { BOT_UPGRADES_DATA, getBotPlusStatNames, getBotStatNames } from '../data/bots'
-import { extractBotsFromSaveRoot } from './bots'
+import { readBotsFromSaveRoot } from './bots'
 import { countImportableBattleRuns } from './battle-history'
-import { extractCardsFromSaveRoot, isTrackedCardSaveRow } from './cards'
-import { canImportDissonanceFromSave, extractDissonanceFromSaveRoot } from './dissonance'
+import { readCardsFromSaveRoot, isTrackedCardSaveRow } from './cards'
+import { canImportDissonanceFromSave, readDissonanceFromSaveRoot } from './dissonance'
 import { DISSONANCE_TYPE_KEYS } from '../internal/dissonance-calcs-local-state'
 import { buildGuardianDefinitions, getGuardianStatNames } from '../data/guardians'
-import { extractGuardiansFromSaveRoot } from './guardians'
-import { extractLabsFromSaveRoot } from './labs'
+import { readGuardiansFromSaveRoot } from './guardians'
+import { readLabsFromSaveRoot } from './labs'
 import { isLabsTrackerResearchLabName } from '../data/labs'
-import { extractLifetimeFromSaveRoot } from './lifetime'
-import { canImportModulesToTracker, extractModulesFromSaveRoot } from './modules'
+import { readLifetimeFromSaveRoot } from './lifetime'
+import { canImportModulesToTracker, readModulesFromSaveRoot } from './modules'
 import { buildRelicsTrackerImportPayloadFromSaveRoot } from './relics'
-import { canImportUltimateWeaponsToTracker, extractUltimateWeaponsFromSaveRoot } from './ultimate-weapons'
-import { buildVaultTrackerImportPayload, extractVaultFromSaveRoot } from './vault'
-import { extractWorkshopFromSaveRoot, WORKSHOP_PRESET_COUNT } from './workshop'
+import { canImportUltimateWeaponsToTracker, readUltimateWeaponsFromSaveRoot } from './ultimate-weapons'
+import { buildVaultTrackerImportPayload, readVaultFromSaveRoot } from './vault'
+import { readWorkshopFromSaveRoot, WORKSHOP_PRESET_COUNT } from './workshop'
 
 export type SaveImportTrackerCounts = Partial<Record<string, number>>
 
 function countWorkshopItems(root: Record<string, unknown>): number | undefined {
-  const workshop = extractWorkshopFromSaveRoot(root)
+  const workshop = readWorkshopFromSaveRoot(root)
   if (!workshop?.presets) return undefined
   let statCount = 0
   const limit = Math.min(WORKSHOP_PRESET_COUNT, workshop.presets.length)
@@ -31,7 +31,7 @@ function countWorkshopItems(root: Record<string, unknown>): number | undefined {
 }
 
 function countLabsItems(root: Record<string, unknown>): number | undefined {
-  const labs = extractLabsFromSaveRoot(root)
+  const labs = readLabsFromSaveRoot(root)
   if (!labs?.researches) return undefined
   return labs.researches.filter(
     row => row.displayName && row.level > 0 && isLabsTrackerResearchLabName(row.displayName),
@@ -39,7 +39,7 @@ function countLabsItems(root: Record<string, unknown>): number | undefined {
 }
 
 function countDissonanceItems(root: Record<string, unknown>): number | undefined {
-  const dissonance = extractDissonanceFromSaveRoot(root)
+  const dissonance = readDissonanceFromSaveRoot(root)
   if (!dissonance || !canImportDissonanceFromSave(dissonance)) return undefined
   let waveCells = 0
   for (const row of dissonance.tierRows ?? []) {
@@ -65,14 +65,14 @@ export function countImportableItemsFromSaveRoot(parsedRoot: unknown): SaveImpor
   const labsCount = countLabsItems(root)
   if (labsCount != null) counts.labs = labsCount
 
-  const uw = extractUltimateWeaponsFromSaveRoot(root)
+  const uw = readUltimateWeaponsFromSaveRoot(root)
   if (uw && canImportUltimateWeaponsToTracker(uw)) {
     counts.ultimateWeapons = (uw.slots ?? []).reduce((total, slot) => {
       return total + slot.baseStatLevels.length + (slot.unlocked ? 1 : 0) + (slot.plusLevel != null ? 1 : 0)
     }, 0)
   }
 
-  const modules = extractModulesFromSaveRoot(root)
+  const modules = readModulesFromSaveRoot(root)
   if (modules && canImportModulesToTracker(modules)) {
     const equippedCount = (modules.equipped ?? []).filter(
       slot => slot.infoIndex != null || Boolean(slot.mappedName),
@@ -80,19 +80,19 @@ export function countImportableItemsFromSaveRoot(parsedRoot: unknown): SaveImpor
     counts.modules = equippedCount + (modules.inventory ?? []).length
   }
 
-  const cards = extractCardsFromSaveRoot(root)
+  const cards = readCardsFromSaveRoot(root)
   if (cards) {
     counts.cards = (cards.cards ?? []).filter(card => isTrackedCardSaveRow(card)).length
       + (cards.presetSlots ?? []).filter(slot => slot.card?.slug).length
   }
 
-  const vault = extractVaultFromSaveRoot(root)
+  const vault = readVaultFromSaveRoot(root)
   if (vault) {
     const payload = buildVaultTrackerImportPayload(vault)
     if (payload) counts.vault = Object.keys(payload.levels).length
   }
 
-  const botsExtract = extractBotsFromSaveRoot(root)
+  const botsExtract = readBotsFromSaveRoot(root)
   if (botsExtract) {
     let statCount = 0
     for (let botIndex = 0; botIndex < BOT_UPGRADES_DATA.length; botIndex += 1) {
@@ -102,7 +102,7 @@ export function countImportableItemsFromSaveRoot(parsedRoot: unknown): SaveImpor
     counts.bots = statCount
   }
 
-  const guardians = extractGuardiansFromSaveRoot(root)
+  const guardians = readGuardiansFromSaveRoot(root)
   if (guardians?.chips) {
     const defs = buildGuardianDefinitions()
     counts.guardians = guardians.chips.reduce((total, chip) => {
@@ -116,7 +116,7 @@ export function countImportableItemsFromSaveRoot(parsedRoot: unknown): SaveImpor
     counts.relics = (relics.collectedRelicIds ?? []).length + (relics.collectedThemeNames ?? []).length
   }
 
-  const lifetime = extractLifetimeFromSaveRoot(root)
+  const lifetime = readLifetimeFromSaveRoot(root)
   if (lifetime) {
     counts.lifetime = Object.keys(lifetime.values).filter(key => key !== 'date').length
   }

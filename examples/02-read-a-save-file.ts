@@ -15,9 +15,9 @@ import { readFile } from 'node:fs/promises'
 import { decodePlayerInfoSaveBytes } from 'thetowersdk/node'
 import {
   discoverSaveImportTrackers,
-  extractLabsFromSaveRoot,
-  extractWorkshopFromSaveRoot,
-  extractCardsFromSaveRoot,
+  readLabsFromSaveRoot,
+  readWorkshopFromSaveRoot,
+  readCardsFromSaveRoot,
 } from 'thetowersdk/save'
 
 async function main(): Promise<void> {
@@ -52,7 +52,7 @@ async function main(): Promise<void> {
   // --- Step 3: extract the parts you care about -----------------------------
   // Every extractor returns `null` instead of throwing when a save predates
   // that feature, so always check before reading.
-  const labs = extractLabsFromSaveRoot(parsedRoot)
+  const labs = readLabsFromSaveRoot(parsedRoot)
   if (labs) {
     console.log('Labs')
     console.log(`  unlocked:          ${labs.labsUnlocked}`)
@@ -69,10 +69,10 @@ async function main(): Promise<void> {
   }
   console.log()
 
-  const workshop = extractWorkshopFromSaveRoot(parsedRoot)
+  const workshop = readWorkshopFromSaveRoot(parsedRoot)
   console.log(workshop ? 'Workshop: present' : 'Workshop: not present in this save')
 
-  const cards = extractCardsFromSaveRoot(parsedRoot)
+  const cards = readCardsFromSaveRoot(parsedRoot)
   console.log(cards ? 'Cards: present' : 'Cards: not present in this save')
 }
 

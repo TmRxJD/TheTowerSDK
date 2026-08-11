@@ -12,7 +12,7 @@ import {
   resolveLabResearchSlug,
 } from '../data/labs-display-overrides'
 import { coerceSaveNumber, toNumberArray } from './read-values'
-import { extractFavoriteLabSlugsFromSaveRoot, saveHasFavoriteLabs } from './favorite-labs'
+import { readFavoriteLabSlugsFromSaveRoot, saveHasFavoriteLabs } from './favorite-labs'
 
 export const LABS_SAVE_UNLOCKED_KEY = 'labsUnlocked'
 export const LABS_SAVE_RESEARCH_LEVEL_KEY = 'researchLevel'
@@ -99,7 +99,7 @@ function readResearchRow(
   }
 }
 
-export function extractLabsFromSaveRoot(root: Record<string, unknown> | null): LabsSaveExtract | null {
+export function readLabsFromSaveRoot(root: Record<string, unknown> | null): LabsSaveExtract | null {
   if (!root) return null
 
   const warnings: string[] = []
@@ -169,7 +169,7 @@ export function extractLabsFromSaveRoot(root: Record<string, unknown> | null): L
     maxedCount,
     namedResearchCount,
     hiddenUnnamedCount,
-    favoriteLabs: extractFavoriteLabSlugsFromSaveRoot(root),
+    favoriteLabs: readFavoriteLabSlugsFromSaveRoot(root),
     hasFavoriteLabs: saveHasFavoriteLabs(root),
     warnings,
   }

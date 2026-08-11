@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { botLabResearchSlugIndex, deriveBotLabLevelsFromResearchLevels } from './bot-lab-levels-from-research'
+import { botLabResearchSlugIndex, readBotLabLevelsFromResearchLevels } from './bot-lab-levels-from-research'
 
 /**
  * The save's bot section carries cooldowns only, so Duration, Burn Stack and
@@ -43,7 +43,7 @@ describe('bot lab levels from research', () => {
   })
 
   it('reads the levels a player actually has', () => {
-    const levels = deriveBotLabLevelsFromResearchLevels({
+    const levels = readBotLabLevelsFromResearchLevels({
       golden_bot_duration: 20,
       golden_bot_cooldown: 25,
       amplify_bot_duration: 18,
@@ -65,7 +65,7 @@ describe('bot lab levels from research', () => {
   })
 
   it('never lowers a level the player already recorded', () => {
-    const levels = deriveBotLabLevelsFromResearchLevels(
+    const levels = readBotLabLevelsFromResearchLevels(
       { golden_bot_duration: 5 },
       { 'Golden Bot': { Duration: 17, Cooldown: 9 } },
     )
@@ -74,7 +74,7 @@ describe('bot lab levels from research', () => {
   })
 
   it('treats a missing research level as zero rather than dropping the lab', () => {
-    const levels = deriveBotLabLevelsFromResearchLevels({})
+    const levels = readBotLabLevelsFromResearchLevels({})
     expect(levels['Golden Bot']).toEqual({ Duration: 0, Cooldown: 0 })
   })
 })
