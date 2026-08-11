@@ -324,3 +324,46 @@ describe('effective paths eHP branches the template does not exercise', () => {
     expect(withModule).toBeCloseTo(2, 9)
   })
 })
+
+describe('perk quantity', () => {
+  const base = {
+    workshopValue: 100,
+    labLevel: 0,
+    hasHealthCard: false,
+    cardValue: 1,
+    hasCardMastery: false,
+    masteryLevel: 0,
+    workshopEnhancementLevel: 0,
+    hasPerk: true,
+    perkBonusLabLevel: 0,
+    hasCoinTradeOffPerk: false,
+    hasRegenTradeOffPerk: false,
+    relicPct: 0,
+    vaultPct: 0,
+    hasDeathWaveHealth: false,
+    deathWaveHealthLevel: 0,
+    dissonance: 1,
+  }
+
+  it('defaults to the five the sheet assumes', () => {
+    // (1 + 0.2 * 5) = 2
+    expect(effectiveHealth(base)).toBeCloseTo(200, 9)
+    expect(effectiveHealth({ ...base, perkQuantity: 5 })).toBeCloseTo(200, 9)
+  })
+
+  it('scales with how many of the perk the run took', () => {
+    expect(effectiveHealth({ ...base, perkQuantity: 1 })).toBeCloseTo(120, 9)
+    expect(effectiveHealth({ ...base, perkQuantity: 0 })).toBeCloseTo(100, 9)
+    expect(effectiveHealth({ ...base, perkQuantity: 10 })).toBeCloseTo(300, 9)
+  })
+
+  it('is inert when the perk is not taken', () => {
+    expect(effectiveHealth({ ...base, hasPerk: false, perkQuantity: 10 })).toBeCloseTo(100, 9)
+  })
+
+  it('still takes the Standard Perks Bonus lab on top', () => {
+    // (1 + 0.2 * 3) * (1 + 0.01 * 20) = 1.6 * 1.2
+    expect(effectiveHealth({ ...base, perkQuantity: 3, perkBonusLabLevel: 20 }))
+      .toBeCloseTo(192, 9)
+  })
+})

@@ -42,6 +42,7 @@ import {
 } from './effective-paths-workshop-values'
 import {
   composeEffectiveHealth,
+  DEFAULT_PERK_QUANTITY,
   effectiveArmor,
   effectiveDefenseAbsolute,
   effectiveDefensePercent,
@@ -175,6 +176,16 @@ export interface EffectiveHealthPerks {
   coinTradeOff: boolean
   /** "Regen x8 / Health -60%" — health drops to 40%. */
   regenTradeOff: boolean
+  /**
+   * How many of each standard perk the run took. The four trade-offs have no
+   * quantity — the sheet leaves their Quantity cells blank.
+   */
+  quantity: {
+    health: number
+    healthRegen: number
+    extraDefense: number
+    absoluteDefense: number
+  }
 }
 
 /** No perks at all — the shape every perk flag defaults to. */
@@ -188,13 +199,23 @@ export const NO_EFFECTIVE_HEALTH_PERKS: EffectiveHealthPerks = {
   enemyHealthTradeOff: false,
   coinTradeOff: false,
   regenTradeOff: false,
+  quantity: {
+    health: DEFAULT_PERK_QUANTITY,
+    healthRegen: DEFAULT_PERK_QUANTITY,
+    extraDefense: DEFAULT_PERK_QUANTITY,
+    absoluteDefense: DEFAULT_PERK_QUANTITY,
+  },
 }
 
 /** Build a perk set from the few flags a caller cares about. */
 export function effectiveHealthPerks(
   overrides: Partial<EffectiveHealthPerks> = {},
 ): EffectiveHealthPerks {
-  return { ...NO_EFFECTIVE_HEALTH_PERKS, ...overrides }
+  return {
+    ...NO_EFFECTIVE_HEALTH_PERKS,
+    ...overrides,
+    quantity: { ...NO_EFFECTIVE_HEALTH_PERKS.quantity, ...overrides.quantity },
+  }
 }
 
 export interface EffectiveHealthConfig {
@@ -390,7 +411,7 @@ export function computeEffectiveHealth(
    * A perk counts only when perks apply at all *and* the preset has it — the
    * sheet writes every one of these as `AND($AY$28, $AY$3x)`.
    */
-  const perk = (key: keyof Omit<EffectiveHealthPerks, 'apply'>): boolean =>
+  const perk = (key: keyof Omit<EffectiveHealthPerks, 'apply' | 'quantity'>): boolean =>
     config.perks.apply && config.perks[key]
 
   const healthSource = source(config.health, EFFECTIVE_HEALTH_WORKSHOP_STATS.health)
@@ -403,6 +424,7 @@ export function computeEffectiveHealth(
     masteryLevel: levels.healthMastery,
     workshopEnhancementLevel: levels.enhancementHealth,
     hasPerk: perk('health'),
+    perkQuantity: config.perks.quantity.health,
     perkBonusLabLevel: levels.standardPerksBonus,
     hasCoinTradeOffPerk: perk('coinTradeOff'),
     hasRegenTradeOffPerk: perk('regenTradeOff'),
@@ -435,6 +457,7 @@ export function computeEffectiveHealth(
     assistSubstat: dabsSource.assistSubstat,
     workshopEnhancementLevel: levels.enhancementDefenseAbsolute,
     hasPerk: perk('absoluteDefense'),
+    perkQuantity: config.perks.quantity.absoluteDefense,
     perkBonusLabLevel: levels.standardPerksBonus,
     relicPct: dabsSource.relicPct,
     vaultPct: dabsSource.vaultPct,
@@ -453,6 +476,7 @@ export function computeEffectiveHealth(
     primarySubstat: defPctSource.primarySubstat,
     assistSubstat: defPctSource.assistSubstat,
     hasPerk: perk('extraDefense'),
+    perkQuantity: config.perks.quantity.extraDefense,
     perkBonusLabLevel: levels.standardPerksBonus,
     relicPct: defPctSource.relicPct,
     vaultPct: defPctSource.vaultPct,

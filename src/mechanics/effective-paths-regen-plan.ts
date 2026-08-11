@@ -90,6 +90,7 @@ export function computeEffectiveRegen(
     assistSubstat: source.assistSubstat ?? 0,
     workshopEnhancementLevel: source.enhancementLevel ?? 0,
     hasPerk: eHealth.perks.apply && eHealth.perks.healthRegen,
+    perkQuantity: eHealth.perks.quantity.healthRegen,
     perkBonusLabLevel: levels.standardPerksBonus,
     hasEnemyHealthTradeOffPerk: eHealth.perks.apply && eHealth.perks.enemyHealthTradeOff,
     hasRegenTradeOffPerk: eHealth.perks.apply && eHealth.perks.regenTradeOff,

@@ -48,6 +48,20 @@ function substatTotal(input: SubstatInput): number {
   return input.primarySubstat + input.assistSubstat * assistSubstatScale(input.labSubstatCap, input.stoneSubstatCap)
 }
 
+/**
+ * How many of a standard perk the run took.
+ *
+ * The sheet displays this as an editable Quantity column and defaults it to 5,
+ * which its `EPH_*` LAMBDAs then hard-code. Taking the column at its word
+ * rather than the hard-coded 5 is the only place this deliberately departs
+ * from the sheet, and it agrees with it whenever the quantity is 5.
+ */
+export const DEFAULT_PERK_QUANTITY = 5
+
+function perkCount(quantity: number | undefined): number {
+  return Number.isFinite(quantity) ? Math.max(0, quantity as number) : DEFAULT_PERK_QUANTITY
+}
+
 /** The substat inputs shared by most `EPH_*` functions. */
 export interface SubstatInput {
   /** Substat bonus from the primary module. */
@@ -88,6 +102,8 @@ export interface EffectiveHealthInput {
   /** Workshop enhancement level; each level adds 1%. */
   workshopEnhancementLevel: number
   hasPerk: boolean
+  /** How many of the perk the run picked up. The sheet's own default is 5. */
+  perkQuantity?: number
   /** "Second perk bonus" lab level; each level adds 1% to the perk's value. */
   perkBonusLabLevel: number
   /** The "x1.8 Coin / Health -70%" perk — health drops to 30%. */
@@ -110,7 +126,9 @@ export function effectiveHealth(input: EffectiveHealthInput): number {
     ? input.cardValue * (input.hasCardMastery ? 1 + 0.2 * (1 + input.masteryLevel) : 1)
     : 1
   const enhancement = 1 + 0.01 * input.workshopEnhancementLevel
-  const perk = input.hasPerk ? (1 + 0.2 * 5) * (1 + 0.01 * input.perkBonusLabLevel) : 1
+  const perk = input.hasPerk
+    ? (1 + 0.2 * perkCount(input.perkQuantity)) * (1 + 0.01 * input.perkBonusLabLevel)
+    : 1
   const coinTradeOff = input.hasCoinTradeOffPerk ? 0.3 : 1
   const regenTradeOff = input.hasRegenTradeOffPerk ? 0.4 : 1
   const relic = 1 + input.relicPct
@@ -138,6 +156,8 @@ export interface EffectiveRegenInput extends SubstatInput {
   masteryLevel: number
   workshopEnhancementLevel: number
   hasPerk: boolean
+  /** How many of the perk the run picked up. The sheet's own default is 5. */
+  perkQuantity?: number
   perkBonusLabLevel: number
   /** The "E. HP -50% / Regen & Lifesteal -90%" perk — regen drops to 10%. */
   hasEnemyHealthTradeOffPerk: boolean
@@ -160,7 +180,9 @@ export function effectiveRegen(input: EffectiveRegenInput): number {
     : 1
   const substat = 1 + substatTotal(input)
   const enhancement = 1 + 0.01 * input.workshopEnhancementLevel
-  const perk = input.hasPerk ? (1 + 0.75 * 5) * (1 + 0.01 * input.perkBonusLabLevel) : 1
+  const perk = input.hasPerk
+    ? (1 + 0.75 * perkCount(input.perkQuantity)) * (1 + 0.01 * input.perkBonusLabLevel)
+    : 1
   const enemyHealthTradeOff = input.hasEnemyHealthTradeOffPerk ? 0.1 : 1
   const regenTradeOff = input.hasRegenTradeOffPerk ? 8 * (1 + 0.01 * input.improveTradeOffPerksLabLevel) : 1
   const relic = 1 + input.relicPct
@@ -186,6 +208,8 @@ export interface EffectiveDefenseAbsoluteInput extends SubstatInput {
   cardValue: number
   workshopEnhancementLevel: number
   hasPerk: boolean
+  /** How many of the perk the run picked up. The sheet's own default is 5. */
+  perkQuantity?: number
   perkBonusLabLevel: number
   relicPct: number
   vaultPct: number
@@ -197,7 +221,9 @@ export function effectiveDefenseAbsolute(input: EffectiveDefenseAbsoluteInput): 
   const card = input.hasDefenseAbsoluteCard ? input.cardValue : 1
   const substat = 1 + substatTotal(input)
   const enhancement = 1 + 0.01 * input.workshopEnhancementLevel
-  const perk = input.hasPerk ? (1 + 0.15 * 5) * (1 + 0.01 * input.perkBonusLabLevel) : 1
+  const perk = input.hasPerk
+    ? (1 + 0.15 * perkCount(input.perkQuantity)) * (1 + 0.01 * input.perkBonusLabLevel)
+    : 1
   const relic = 1 + input.relicPct
   const vault = 1 + input.vaultPct
 
@@ -217,6 +243,8 @@ export interface EffectiveDefensePercentInput extends SubstatInput {
   hasCardMastery: boolean
   masteryLevel: number
   hasPerk: boolean
+  /** How many of the perk the run picked up. The sheet's own default is 5. */
+  perkQuantity?: number
   perkBonusLabLevel: number
   relicPct: number
   vaultPct: number
@@ -235,7 +263,9 @@ export function effectiveDefensePercent(input: EffectiveDefensePercentInput): nu
     ? input.cardValue + (input.hasCardMastery ? 0.007 * (1 + input.masteryLevel) : 0)
     : 0
   const substat = substatTotal(input)
-  const perk = input.hasPerk ? 0.04 * 5 * (1 + 0.01 * input.perkBonusLabLevel) : 0
+  const perk = input.hasPerk
+    ? 0.04 * perkCount(input.perkQuantity) * (1 + 0.01 * input.perkBonusLabLevel)
+    : 0
 
   const total = input.workshopValue + lab + card + substat + perk + input.relicPct + input.vaultPct
   return Math.min(DEFENSE_PERCENT_CAP, total)
