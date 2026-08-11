@@ -149,7 +149,7 @@ export const guardianUpgrades = {
     { level: 87, percentage: null, attackCost: null, cooldown: '34s', cooldownCost: 86, targets: null, targetsCost: null },
     { level: 88, percentage: null, attackCost: null, cooldown: '33s', cooldownCost: 87, targets: null, targetsCost: null },
     { level: 89, percentage: null, attackCost: null, cooldown: '32s', cooldownCost: 88, targets: null, targetsCost: null },
-    { level: 90, percentage: null, attackCost: null, cooldown: '30s', cooldownCost: 90, targets: null, targetsCost: null },
+    { level: 90, percentage: null, attackCost: null, cooldown: '31s', cooldownCost: 89, targets: null, targetsCost: null },
   ] as AttackUpgrade[],
   ally: [
     { level: 1, recoveryAmount: '1%', recoveryCost: 0, maxRecovery: 'x1.1', maxRecoveryCost: 0, cooldown: '120s', cooldownCost: 0 },
@@ -241,7 +241,7 @@ export const guardianUpgrades = {
     { level: 87, recoveryAmount: null, recoveryCost: null, maxRecovery: null, maxRecoveryCost: null, cooldown: '34s', cooldownCost: 86 },
     { level: 88, recoveryAmount: null, recoveryCost: null, maxRecovery: null, maxRecoveryCost: null, cooldown: '33s', cooldownCost: 87 },
     { level: 89, recoveryAmount: null, recoveryCost: null, maxRecovery: null, maxRecoveryCost: null, cooldown: '32s', cooldownCost: 88 },
-    { level: 90, recoveryAmount: null, recoveryCost: null, maxRecovery: null, maxRecoveryCost: null, cooldown: '30s', cooldownCost: 90 },
+    { level: 90, recoveryAmount: null, recoveryCost: null, maxRecovery: null, maxRecoveryCost: null, cooldown: '31s', cooldownCost: 89 },
   ] as AllyUpgrade[],
   bounty: [
     { level: 1, multiplier: 'x0.01', multiplierCost: 0, cooldown: '120s', cooldownCost: 0, targets: 1, targetsCost: 0 },

@@ -218,8 +218,55 @@ async function buildBotUpgrades() {
   }
 }
 
+/**
+ * DVT_Guardians: 11-column blocks, one per upgrade group -- a group name, three
+ * id columns, a level column, then three (value, Cost) pairs. Levels are
+ * numbered from 0 where ours are numbered from 1.
+ */
+async function buildGuardianUpgrades() {
+  const rows = await fetchTab('1834866099', 'GUARDIANS')
+  const header = rows[0]
+  const body = rows.slice(2)
+
+  const num = value => Number(String(value ?? '').replace(/[, ⧈⧓]/g, '').trim())
+  const groups = []
+  for (let column = 0; column < header.length; column += 1) {
+    const cell = String(header[column] ?? '').trim()
+    if (!cell || cell === 'GUARDIANS') continue
+    if (cell !== cell.toUpperCase() || !/^[A-Z ]{3,}$/.test(cell)) continue
+
+    const levelColumn = column + 4
+    const statColumns = [column + 5, column + 7, column + 9]
+    const stats = statColumns.map(c => String(header[c] ?? '').trim()).filter(Boolean)
+    const levels = []
+    for (const row of body) {
+      const level = num(row[levelColumn])
+      if (!Number.isFinite(level)) continue
+      const entry = { level, values: {} }
+      let any = false
+      for (let index = 0; index < statColumns.length; index += 1) {
+        const label = stats[index]
+        if (!label) continue
+        const display = String(row[statColumns[index]] ?? '').trim()
+        const cost = num(row[statColumns[index] + 1])
+        if (!display && !Number.isFinite(cost)) continue
+        entry.values[label] = { display, cost: Number.isFinite(cost) ? cost : null }
+        any = true
+      }
+      if (any) levels.push(entry)
+    }
+    groups.push({ group: cell, stats, levels })
+  }
+
+  return {
+    file: 'effective-paths-guardians.json',
+    payload: { source: 'Effective Paths spreadsheet, DVT_Guardians tab', url: editUrl('1834866099'), note: 'Levels are numbered from 0; ours are numbered from 1.', groupCount: groups.length, groups },
+    summary: `${groups.length} groups, ${groups.reduce((n, g) => n + g.levels.length, 0)} levels`,
+  }
+}
+
 await fs.mkdir(FIXTURES, { recursive: true })
-for (const build of [buildLabLevels, buildLabUnlocks, buildModuleBaseStats, buildBotUpgrades]) {
+for (const build of [buildLabLevels, buildLabUnlocks, buildModuleBaseStats, buildBotUpgrades, buildGuardianUpgrades]) {
   try {
     const { file, payload, summary } = await build()
     await fs.writeFile(path.join(FIXTURES, file), `${JSON.stringify(payload, null, 1)}\n`, 'utf8')
