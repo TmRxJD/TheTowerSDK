@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import fixture from './effective-paths-ehp-path.fixtures.json'
 import { composeEffectiveHealth, effectiveHealth } from './effective-paths-hp'
 import { planPath, type PathUpgrade } from './effective-paths-planner'
+import { labDurationDaysToReachLevel, resolveEffectivePathsLabKey } from './effective-paths-lab-costs'
 
 /**
  * Replay the sheet's own eHP path and check we land on its numbers.
@@ -10,11 +11,17 @@ import { planPath, type PathUpgrade } from './effective-paths-planner'
  * spreadsheet, from an all-zero starting state. Four upgrades interleave in it:
  * Health, Standard Perks Bonus, Defense %, and Improve Trade-Off Perks.
  *
- * Replaying the sheet's *choices* and checking the eHP after each one tests the
- * stat model and how levels compose — independently of the lab cost tables,
- * which decide the ordering and are verified separately. Getting all 40 right,
- * across four upgrades that each enter the formula differently, is a much
- * stronger check than any single-shot comparison.
+ * Two things are checked, and they fail for different reasons:
+ *
+ * - Replaying the sheet's *choices* and checking eHP after each one tests the
+ *   stat model and how levels compose, with the cost tables out of the picture.
+ * - Re-planning from scratch and checking we make the same *choices* tests the
+ *   greedy loop and the lab durations that drive it.
+ *
+ * Four upgrades that each enter the formula differently, interleaved over forty
+ * steps, is a far stronger check than any single-shot comparison: perturbing
+ * the health lab coefficient by 0.0001 fails the first, and mismapping one lab
+ * to the wrong catalog entry fails the second at step 2.
  */
 
 /** The starting state the fixture was captured in. */
@@ -108,12 +115,54 @@ describe('eHP path replay against the live sheet', () => {
     }
   })
 
+  it('reproduces the sheet\'s ordering from lab durations alone', () => {
+    // The time path scores by gain per day of lab research, so the cost is the
+    // lab's duration. With the stat model and the catalog both in place, the
+    // planner should now choose what the sheet chose, in the sheet's order —
+    // including where it breaks off Health to take a perk and comes back.
+    const upgrades: PathUpgrade[] = Object.keys(LEVEL_KEY).map(name => {
+      const candidate = fixture.candidates.find(c => c.name === name)
+      return {
+        id: name,
+        name,
+        level: 0,
+        maxLevel: candidate?.maxLevel ?? 100,
+        targetLevel: candidate?.targetLevel ?? undefined,
+      }
+    })
+
+    const path = planPath({
+      upgrades,
+      steps: fixture.steps.length,
+      evaluate: current => {
+        const snapshot: Levels = {
+          health: 0, standardPerksBonus: 0, defensePercent: 0, improvedTradeOff: 0,
+        }
+        for (const [name, key] of Object.entries(LEVEL_KEY)) snapshot[key] = current.get(name) ?? 0
+        return effectiveHealthFor(snapshot)
+      },
+      cost: (id, nextLevel) => {
+        const key = resolveEffectivePathsLabKey(id)
+        if (key === null) return Number.NaN
+        return labDurationDaysToReachLevel(key, nextLevel) ?? Number.NaN
+      },
+    })
+
+    expect(path.map(s => `${s.name} ${s.level}`))
+      .toEqual(fixture.steps.map(s => `${s.name} ${s.level}`))
+
+    for (const [i, step] of path.entries()) {
+      expect(step.value, `step ${step.step} eHP`).toBeCloseTo(fixture.steps[i].value, 9)
+      // The sheet reports ROI as relative gain over cost; ours is absolute.
+      const relativeRoi = step.gain / (step.value - step.gain) / step.cost
+      expect(relativeRoi, `step ${step.step} ROI`).toBeCloseTo(fixture.steps[i].roi, 6)
+    }
+  })
+
   /**
-   * Not a comparison against the sheet's ordering — the fixture records only
-   * the chosen upgrade's cost per step, so the ROIs the sheet rejected are not
-   * recoverable and a re-plan cannot be checked against it. Reproducing the
-   * sheet's order needs the lab cost and duration tables wired in; until then
-   * this holds the planner to what can be checked without them.
+   * The same model under a cost function the sheet does not use, to pin the
+   * invariants that must hold whatever the costs are: levels never pass a cap,
+   * and no step is ever bought at a loss.
    */
   it('plans over the real eHP model without exceeding a cap or taking a loss', () => {
     const upgrades: PathUpgrade[] = Object.keys(LEVEL_KEY).map(name => {
