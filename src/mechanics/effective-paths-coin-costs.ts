@@ -12,16 +12,14 @@
  * a reader can line them up against the sheet without an off-by-one to hold in
  * their head.
  *
- * ## A quirk worth knowing about
+ * ## On the range this table came from
  *
- * The sheet looks module costs up with `INDEX(Data_Val_Tables!$EV$4:$EV150,
- * level)`. That end row is *relative*, so it drifts as the formula is copied
- * down the path grid: on the first row the range covers 147 entries and a
- * module at level 160 returns an error, while further down the same lookup
- * succeeds. Whether a module upgrade is considered therefore depends on how
- * far into the path you are, which is almost certainly not intended. This uses
- * the whole table at every step; the difference is that a module upgrade is
- * offered consistently rather than only after row 18.
+ * The sheet looks module costs up with `INDEX(Data_Val_Tables!$EV$4:$EV,
+ * level)` — an open-ended column, valid on every row. The `.xlsx` export
+ * writes that as `$EV$4:$EV150`, which looks like a range whose end drifts as
+ * the formula is copied down, and an earlier note here reported it as a bug on
+ * that basis. It is not; the export materialises open-ended ranges and the
+ * sheet is fine.
  */
 
 import coinCosts from '../data/effective-paths-coin-costs.json'
@@ -92,25 +90,14 @@ export function isModuleCoinPathCandidate(level: number): boolean {
 /**
  * Module levels are priced here but not yet bought by any path.
  *
- * What a module level is *worth* comes from `computeModuleStat`, which agrees
- * with the sheet's `MODSTAT_ARMOR` exactly for Common through plain Ancestral,
- * checked at levels 1, 50, 160, 200 and 299.
+ * What a module level is worth comes from `computeModuleStat`, and it agrees
+ * with the sheet's `MODSTAT_ARMOR` throughout, ancestral stars included —
+ * "Ancestral 5*" at level 200 is 19.288 in both. An earlier note here claimed
+ * the sheet dropped the star bonus; it does not. It keys the bonus on a
+ * trailing asterisk, and the claim came from calling it with "Ancestral 5"
+ * instead of the sheet's own "Ancestral 5*".
  *
- * The two part company on the ancestral stars, and the sheet is the one at
- * odds with itself rather than with us: its `MODSTAT_ARMOR` answers the same
- * value for "Ancestral", "Ancestral 1" and "Ancestral 5", while its own Module
- * Base Stat tab carries them separately at 0.302, 0.314 and 0.362 — about 4% a
- * star, which is what this package applies. The game agrees they are distinct:
- * its `ModuleRarity` enum lists `Ancestral1` through `Ancestral5` and
- * `GetArmorMainBenefit` takes that rarity.
- *
- * So the star bonus is real and ours is right. Module levels stay out of the
- * coin path for a duller reason: the path also needs a module's rarity and
- * equipped state, which the trackers do not supply in the shape the model
- * wants yet.
+ * Module levels stay out of the coin path for a duller reason: it needs a
+ * module's rarity and equipped state, which the trackers do not supply in the
+ * shape the model wants yet.
  */
-export const MODULE_STAT_ANCESTRAL_STARS = {
-  agreesWithSheetFormulaFor: ['Common', 'Rare', 'Epic', 'Legendary', 'Mythic', 'Ancestral'],
-  sheetFormulaMissesStarsFor: ['Ancestral 1', 'Ancestral 2', 'Ancestral 3', 'Ancestral 4', 'Ancestral 5'],
-  note: 'MODSTAT_ARMOR drops the ~4%-a-star bonus that the sheet Module Base Stat tab lists.',
-} as const
