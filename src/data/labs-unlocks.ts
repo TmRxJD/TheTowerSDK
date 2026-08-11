@@ -1,0 +1,254 @@
+/**
+ * When each lab becomes available.
+ *
+ * A lab is locked until the player has reached a given wave on a given tier.
+ * The game does not publish this anywhere a dump can reach, so this is ported
+ * from the community Effective Paths spreadsheet's `DVT_Laboratory_Unlock`
+ * tab — the same table its "Hide Non-unlocked Labs" option reads.
+ *
+ * Labs with no entry are available from the start. One entry is not a
+ * tier/wave pair at all: Inner Land Mine - Chrono Jump unlocks with the Inner
+ * Land Mine ultimate weapon, recorded here as {@link UNLOCKED_BY_ULTIMATE}.
+ *
+ * Names are the sheet's, which are the game's own lab names.
+ */
+
+/** A lab gated on owning an ultimate weapon rather than on reaching a wave. */
+export const UNLOCKED_BY_ULTIMATE = 'ultimate-weapon' as const
+
+export interface LabUnlockRequirement {
+  /** Campaign tier the wave has to be reached on. */
+  tier: number
+  /** Wave on that tier. */
+  wave: number
+}
+
+export type LabUnlock = LabUnlockRequirement | typeof UNLOCKED_BY_ULTIMATE
+
+/** Lab name to what unlocks it. Absent means "available from the start". */
+export const LAB_UNLOCKS: Readonly<Record<string, LabUnlock>> = {
+  'Workshop Attack Discount': { tier: 2, wave: 40 },
+  'Workshop Defense Discount': { tier: 2, wave: 50 },
+  'Workshop Utility Discount': { tier: 2, wave: 60 },
+  'Labs Speed': { tier: 1, wave: 150 },
+  'Buy Multiplier': { tier: 2, wave: 20 },
+  'More Round Stats': { tier: 1, wave: 250 },
+  'Target Priority': { tier: 4, wave: 150 },
+  'Card Presets': { tier: 1, wave: 400 },
+  'Workshop Respec': { tier: 4, wave: 30 },
+  'Reroll Daily Mission': { tier: 4, wave: 30 },
+  'Workshop Enhancements': { tier: 12, wave: 60 },
+  'Enhancement Attack - Coin Discount': { tier: 21, wave: 60 },
+  'Enhancement Defense - Coin Discount': { tier: 21, wave: 60 },
+  'Enhancement Utility - Coin Discount': { tier: 21, wave: 60 },
+  'Dissonant Echo - Attack': { tier: 17, wave: 60 },
+  'Dissonant Echo - Defense': { tier: 17, wave: 60 },
+  'Dissonant Echo - Utility': { tier: 17, wave: 60 },
+  'Dissonant Echo - Ultimate Weapons': { tier: 17, wave: 60 },
+  'Range': { tier: 2, wave: 30 },
+  'Damage / Meter': { tier: 3, wave: 30 },
+  'Super Crit Chance': { tier: 5, wave: 200 },
+  'Super Crit Multi': { tier: 5, wave: 200 },
+  'Max Rend Armor Multiplier': { tier: 13, wave: 10 },
+  'Light Speed Shots': { tier: 7, wave: 10 },
+  'Defense %': { tier: 5, wave: 30 },
+  'Orbs Speed': { tier: 3, wave: 80 },
+  'Land Mine Damage': { tier: 6, wave: 30 },
+  'Land Mine Decay': { tier: 6, wave: 30 },
+  'Shockwave Size': { tier: 3, wave: 50 },
+  'Orb Boss Hit': { tier: 6, wave: 750 },
+  'Wall Health': { tier: 8, wave: 10 },
+  'Wall Rebuild': { tier: 8, wave: 10 },
+  'Wall Regen': { tier: 10, wave: 70 },
+  'Wall Thorns': { tier: 10, wave: 70 },
+  'Wall Invincibility': { tier: 12, wave: 10 },
+  'Wall Fortification': { tier: 14, wave: 40 },
+  'Garlic Thorns': { tier: 2, wave: 1000 },
+  'Interest': { tier: 2, wave: 80 },
+  'Max Interest': { tier: 2, wave: 80 },
+  'Package After Boss': { tier: 3, wave: 200 },
+  'Recovery Package Amount': { tier: 6, wave: 150 },
+  'Recovery Package Max': { tier: 6, wave: 150 },
+  'Recovery Package Chance': { tier: 6, wave: 150 },
+  'Enemy Attack Level Skip': { tier: 11, wave: 200 },
+  'Enemy Health Level Skip': { tier: 11, wave: 200 },
+  'Golden Tower Bonus': { tier: 4, wave: 200 },
+  'Golden Tower Duration': { tier: 4, wave: 200 },
+  'Death Wave Health': { tier: 3, wave: 250 },
+  'Death Wave Coin Bonus': { tier: 3, wave: 250 },
+  'Black Hole Damage': { tier: 5, wave: 150 },
+  'Extra Black Hole': { tier: 5, wave: 500 },
+  'Black Hole Coin Bonus': { tier: 5, wave: 150 },
+  'Chrono Field Duration': { tier: 7, wave: 90 },
+  'Chrono Field Damage Reduction': { tier: 7, wave: 90 },
+  'Chrono Field Reduction %': { tier: 7, wave: 90 },
+  'Chrono Field Range': { tier: 7, wave: 90 },
+  'Spotlight Coin Bonus': { tier: 7, wave: 80 },
+  'Spotlight Missiles': { tier: 3, wave: 400 },
+  'Swamp Radius': { tier: 7, wave: 50 },
+  'Swamp Stun': { tier: 7, wave: 50 },
+  'Swamp Stun Chance': { tier: 7, wave: 50 },
+  'Swamp Stun Time': { tier: 7, wave: 50 },
+  'Inner Mine Blast Radius': { tier: 7, wave: 40 },
+  'Inner Mine Rotation Speed': { tier: 7, wave: 40 },
+  'Inner Mine Stun': { tier: 7, wave: 40 },
+  'Chain Lightning Shock': { tier: 7, wave: 60 },
+  'Shock Chance': { tier: 7, wave: 60 },
+  'Shock Multiplier': { tier: 7, wave: 60 },
+  'Missile Despawn Time': { tier: 7, wave: 30 },
+  'Missile Amplifier': { tier: 7, wave: 30 },
+  'Missile Barrage Quantity': { tier: 8, wave: 50 },
+  'Missile Radius': { tier: 7, wave: 30 },
+  'Missiles Explosion': { tier: 7, wave: 30 },
+  'Missile Barrage': { tier: 8, wave: 50 },
+  'Black Hole Disable Ranged Enemies': { tier: 14, wave: 20 },
+  'Recharge Missile Barrage': { tier: 14, wave: 60 },
+  'Swamp Rend': { tier: 16, wave: 60 },
+  'Swamp Rend - Additional Enemies': { tier: 16, wave: 60 },
+  'Chain Thunder': { tier: 16, wave: 60 },
+  'Lightning Amplifier - Scatter': { tier: 16, wave: 60 },
+  'Death Wave Cells Bonus': { tier: 3, wave: 250 },
+  'Death Wave Damage Amplifier': { tier: 3, wave: 250 },
+  'Death Wave Armor Stripping': { tier: 3, wave: 250 },
+  'Inner Land Mine - Chrono Jump': UNLOCKED_BY_ULTIMATE,
+  'Second Wind Blast': { tier: 3, wave: 150 },
+  'Double Death Ray': { tier: 3, wave: 300 },
+  'Extra Orb Adjuster': { tier: 6, wave: 50 },
+  'Extra Extra Orbs': { tier: 6, wave: 80 },
+  'Energy Shield Extra Hit': { tier: 4, wave: 300 },
+  'Super Tower Bonus': { tier: 8, wave: 300 },
+  'Recharge Second Wind': { tier: 14, wave: 60 },
+  'Recharge Demon Mode': { tier: 14, wave: 60 },
+  'Recharge Nuke': { tier: 14, wave: 60 },
+  'Unlock Perks': { tier: 2, wave: 150 },
+  'Waves Required': { tier: 2, wave: 150 },
+  'Auto Pick Perks': { tier: 4, wave: 50 },
+  'Standard Perks Bonus': { tier: 2, wave: 150 },
+  'Perk Option Quantity': { tier: 4, wave: 80 },
+  'First Perk Choice': { tier: 2, wave: 250 },
+  'Ban Perks': { tier: 5, wave: 40 },
+  'Improve Trade-off Perks': { tier: 2, wave: 400 },
+  'Auto Pick Ranking': { tier: 6, wave: 10 },
+  'Flame Bot - Cooldown': { tier: 5, wave: 60 },
+  'Thunder Bot - Cooldown': { tier: 5, wave: 70 },
+  'Gold Bot - Cooldown': { tier: 5, wave: 80 },
+  'Amp Bot - Cooldown': { tier: 5, wave: 90 },
+  'Bot Bot - Cooldown': { tier: 10, wave: 60 },
+  'Flame Bot - Burn Stack': { tier: 10, wave: 60 },
+  'Thunder Bot - Linger Time': { tier: 10, wave: 60 },
+  'Gold Bot - Duration': { tier: 10, wave: 60 },
+  'Amp Bot - Duration': { tier: 10, wave: 60 },
+  'Bot Bot - Duration': { tier: 10, wave: 60 },
+  'Basic Enemy Health': { tier: 9, wave: 10 },
+  'Basic Enemy Attack': { tier: 9, wave: 10 },
+  'Fast Enemy Health': { tier: 9, wave: 20 },
+  'Fast Enemy Attack': { tier: 9, wave: 20 },
+  'Fast Enemy Speed': { tier: 9, wave: 300 },
+  'Tank Enemy Health': { tier: 9, wave: 30 },
+  'Tank Enemy Attack': { tier: 9, wave: 30 },
+  'Ranged Enemy Health': { tier: 9, wave: 40 },
+  'Ranged Enemy Attack': { tier: 9, wave: 40 },
+  'Boss Health': { tier: 9, wave: 50 },
+  'Boss Attack': { tier: 9, wave: 50 },
+  'Protector Health': { tier: 9, wave: 60 },
+  'Protector Radius': { tier: 9, wave: 60 },
+  'Protector Damage Reduction': { tier: 9, wave: 400 },
+  'Ray Enemy Attack': { tier: 19, wave: 60 },
+  'Ray Enemy Health': { tier: 19, wave: 60 },
+  'Vampire Enemy Attack': { tier: 19, wave: 60 },
+  'Vampire Enemy Health': { tier: 19, wave: 60 },
+  'Scatter Enemy Attack': { tier: 19, wave: 60 },
+  'Scatter Enemy Health': { tier: 19, wave: 60 },
+  'Ranged Enemy Range': { tier: 13, wave: 80 },
+  'Common Drop Chance': { tier: 4, wave: 70 },
+  'Reroll Shards': { tier: 4, wave: 70 },
+  'Daily Mission Shards': { tier: 4, wave: 70 },
+  'Module Shards Cost': { tier: 10, wave: 40 },
+  'Module Coin Cost': { tier: 10, wave: 40 },
+  'Rare Drop Chance': { tier: 10, wave: 40 },
+  'Unmerge Module': { tier: 8, wave: 20 },
+  'Shatter Shards': { tier: 16, wave: 40 },
+  'Cannon Effect Bans': { tier: 2, wave: 20 },
+  'Armor Effect Bans': { tier: 2, wave: 20 },
+  'Generator Effect Bans': { tier: 2, wave: 20 },
+  'Core Effect Bans': { tier: 2, wave: 20 },
+  'Assist Module Substats - Cannon': { tier: 19, wave: 50 },
+  'Assist Module Substats - Armor': { tier: 19, wave: 50 },
+  'Assist Module Substats - Generator': { tier: 19, wave: 50 },
+  'Assist Module Substats - Core': { tier: 19, wave: 50 },
+  'Assist Module Bonus - Cannon': { tier: 19, wave: 50 },
+  'Assist Module Bonus - Armor': { tier: 19, wave: 50 },
+  'Assist Module Bonus - Generator': { tier: 19, wave: 50 },
+  'Assist Module Bonus - Core': { tier: 19, wave: 50 },
+  'Damage Mastery': { tier: 16, wave: 100 },
+  'Attack Speed Mastery': { tier: 16, wave: 100 },
+  'Health Mastery': { tier: 16, wave: 100 },
+  'Health Regen Mastery': { tier: 16, wave: 100 },
+  'Range Mastery': { tier: 16, wave: 100 },
+  'Cash Mastery': { tier: 16, wave: 100 },
+  'Coins Mastery': { tier: 16, wave: 100 },
+  'Slow Aura Mastery': { tier: 16, wave: 100 },
+  'Critical Chance Mastery': { tier: 16, wave: 100 },
+  'Enemy Balance Mastery': { tier: 16, wave: 100 },
+  'Extra Defense Mastery': { tier: 16, wave: 100 },
+  'Fortress Mastery': { tier: 16, wave: 100 },
+  'Free Upgrades Mastery': { tier: 16, wave: 100 },
+  'Extra Orb Mastery': { tier: 16, wave: 100 },
+  'Plasma Cannon Mastery': { tier: 16, wave: 100 },
+  'Critical Coin Mastery': { tier: 16, wave: 100 },
+  'Wave Skip Mastery': { tier: 16, wave: 100 },
+  'Intro Sprint Mastery': { tier: 16, wave: 100 },
+  'Land Mine Stun Mastery': { tier: 16, wave: 100 },
+  'Recovery Package Chance Mastery': { tier: 16, wave: 100 },
+  'Death Ray Mastery': { tier: 16, wave: 100 },
+  'Energy Net Mastery': { tier: 16, wave: 100 },
+  'Super Tower Mastery': { tier: 16, wave: 100 },
+  'Second Wind Mastery': { tier: 16, wave: 100 },
+  'Demon Mode Mastery': { tier: 16, wave: 100 },
+  'Energy Shield Mastery': { tier: 16, wave: 100 },
+  'Wave Accelerator Mastery': { tier: 16, wave: 100 },
+  'Berserker Mastery': { tier: 16, wave: 100 },
+  'Ultimate Crit Mastery': { tier: 16, wave: 100 },
+  'Nuke Mastery': { tier: 16, wave: 100 },
+  'Area of Effect Mastery': { tier: 16, wave: 100 },
+  'Battle Condition Reduction': { tier: 18, wave: 1000 },
+  'Knockback Resistance': { tier: 19, wave: 100 },
+  'Thorns Resistance': { tier: 19, wave: 100 },
+  'Orb Resistance': { tier: 19, wave: 100 },
+  'Plasma Cannon Resistance': { tier: 19, wave: 100 },
+  'Death Ray Resistance': { tier: 19, wave: 100 },
+  'Armored Enemies': { tier: 20, wave: 60 },
+  'Enemy Speed': { tier: 20, wave: 60 },
+  'More Enemies': { tier: 20, wave: 60 },
+  'Enemy Attack Speed': { tier: 20, wave: 60 },
+  "Fast's Ultimate": { tier: 19, wave: 500 },
+  'Ranged Ultimate': { tier: 19, wave: 500 },
+  "Boss's Ultimate": { tier: 19, wave: 500 },
+  "Basic's Ultimate": { tier: 19, wave: 500 },
+  "Tank's Ultimate": { tier: 19, wave: 500 },
+  "Protector's Ultimate": { tier: 19, wave: 500 },
+  'Ultimate Weapon Durations': { tier: 21, wave: 1000 },
+  'Death Defy Down': { tier: 21, wave: 1000 },
+  'Energy Shields Down': { tier: 21, wave: 1000 },
+  'Enemy Level Skip Reduction': { tier: 21, wave: 1000 },
+}
+
+/**
+ * Whether a lab is unlocked for a player whose best run is `wave` on `tier`.
+ *
+ * The sheet compares against the player's whole per-tier wave list; this takes
+ * only their furthest point and treats every lower tier as cleared. Reaching a
+ * tier means clearing the wave that unlocked it, so in practice the two agree —
+ * but a player who jumped tiers on an event could see a lab offered slightly
+ * early, which is the safe direction to be wrong in.
+ *
+ * Ultimate-weapon-gated labs cannot be answered from a tier and a wave, so they
+ * count as unlocked rather than hidden: dropping an upgrade the player may well
+ * own would quietly shorten their path.
+ */
+export function isLabUnlockedAt(labName: string, tier: number, wave: number): boolean {
+  const requirement = LAB_UNLOCKS[labName]
+  if (!requirement || requirement === UNLOCKED_BY_ULTIMATE) return true
+  if (tier > requirement.tier) return true
+  return tier === requirement.tier && wave >= requirement.wave
+}

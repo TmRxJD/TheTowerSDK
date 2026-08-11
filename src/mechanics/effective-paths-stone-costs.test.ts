@@ -11,6 +11,7 @@ import {
   computeEffectiveHealth,
   type EffectiveHealthConfig,
   type EffectiveHealthLevels,
+  effectiveHealthPerks,
 } from './effective-paths-ehp-model'
 import { EFFECTIVE_HEALTH_UPGRADES, planEffectiveHealthPath } from './effective-paths-ehp-plan'
 
@@ -48,11 +49,19 @@ function toConfig(c: ModelCase['cfg']): EffectiveHealthConfig {
     labSubstatCap: { armor: c.stoneSubArmor, generator: c.stoneSubGenerator },
     wall: { has: c.hasWall, primaryEffect: c.wallPrimEffect, assistEffect: c.wallAssEffect },
     recovery: { has: c.hasRecovery },
-    perks: { has: c.hasPerks, hasTradeOff: c.hasTradeOff },
+    perks: effectiveHealthPerks({
+      apply: true,
+      health: c.hasPerks,
+      healthRegen: c.hasPerks,
+      extraDefense: c.hasPerks,
+      absoluteDefense: c.hasPerks,
+      enemyDamageTradeOff: c.hasPerks && c.hasTradeOff,
+      coinTradeOff: c.cto,
+      regenTradeOff: c.rto,
+    }),
     chronoField: { unlocked: c.chronoUnlocked },
     chainThunder: { has: c.hasChainThunder, damageShare: c.chainDamageShare },
     deathWave: { hasHealth: c.hasDeathWave },
-    tournament: { commonOverride: c.cto, rareOverride: c.rto },
     enemiesAttackingTogether: c.enemiesAttackingTogether,
     dissonance: { active: false, tierPersonalBest: 0, allTierPersonalBests: [] },
   }

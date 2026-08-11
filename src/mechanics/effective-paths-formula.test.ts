@@ -70,17 +70,17 @@ const HAND_WRITTEN: Record<string, (a: Args) => number> = {
   EPH_HEALTH: a => effectiveHealth({
     workshopValue: a[0], labLevel: a[1], hasHealthCard: !!a[2], cardValue: a[3],
     hasCardMastery: !!a[4], masteryLevel: a[5], workshopEnhancementLevel: a[6],
-    hasPerk: !!a[7], perkBonusLabLevel: a[8], hasCommonTournamentOverride: !!a[9],
-    hasRareTournamentOverride: !!a[10], relicPct: a[11], vaultPct: a[12],
+    hasPerk: !!a[7], perkBonusLabLevel: a[8], hasCoinTradeOffPerk: !!a[9],
+    hasRegenTradeOffPerk: !!a[10], relicPct: a[11], vaultPct: a[12],
     hasDeathWaveHealth: !!a[13], deathWaveHealthLevel: a[14], dissonance: a[15],
   }),
   EPH_REGEN: a => effectiveRegen({
     workshopValue: a[0], labLevel: a[1], hasRegenCard: !!a[2], cardValue: a[3],
     hasCardMastery: !!a[4], masteryLevel: a[5], labSubstatCap: a[6], stoneSubstatCap: a[7],
     primarySubstat: a[8], assistSubstat: a[9], workshopEnhancementLevel: a[10],
-    hasPerk: !!a[11], perkBonusLabLevel: a[12], hasRegenTournamentOverride: !!a[13],
-    hasRareTournamentOverride: !!a[14], introSprintLabLevel: a[15], relicPct: a[16],
-    vaultPct: a[17], hasSwampMastery: !!a[18], swampMasteryLevel: a[19],
+    hasPerk: !!a[11], perkBonusLabLevel: a[12], hasEnemyHealthTradeOffPerk: !!a[13],
+    hasRegenTradeOffPerk: !!a[14], improveTradeOffPerksLabLevel: a[15], relicPct: a[16],
+    vaultPct: a[17], hasSecondWindMastery: !!a[18], secondWindMasteryLevel: a[19],
   }),
   EPH_DABS: a => effectiveDefenseAbsolute({
     workshopValue: a[0], labLevel: a[1], hasDefenseAbsoluteCard: !!a[2], cardValue: a[3],

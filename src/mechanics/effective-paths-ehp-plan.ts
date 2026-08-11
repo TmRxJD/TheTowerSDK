@@ -158,6 +158,11 @@ export interface EffectiveHealthPlanOptions {
   maxLevels?: Partial<Record<keyof EffectiveHealthLevels, number>>
   /** Player-imposed stops below the maximum. */
   targetLevels?: Partial<Record<keyof EffectiveHealthLevels, number>>
+  /**
+   * Upgrades to leave out entirely, by key — the sheet's "Hide Non-unlocked
+   * Labs". They appear in `excluded` with a reason rather than vanishing.
+   */
+  excludeKeys?: readonly (keyof EffectiveHealthLevels)[]
   /** Lab coin discount and lab speed. */
   labModifiers?: LabCostModifiers
   /** Workshop discount labs and the vault discount, for the coin path. */
@@ -209,7 +214,13 @@ export function planEffectiveHealthPath(options: EffectiveHealthPlanOptions): Ef
   const upgrades: PathUpgrade[] = []
   const excluded: EffectiveHealthPlan['excluded'] = []
 
+  const skipped = new Set<string>(options.excludeKeys ?? [])
+
   for (const upgrade of EFFECTIVE_HEALTH_UPGRADES) {
+    if (skipped.has(upgrade.key)) {
+      excluded.push({ sheetName: upgrade.sheetName, reason: 'not unlocked yet' })
+      continue
+    }
     if (!isEligible(upgrade, variant)) {
       excluded.push({ sheetName: upgrade.sheetName, reason: `not bought with ${variant} currency` })
       continue

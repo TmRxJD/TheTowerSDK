@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   type EffectiveHealthConfig,
   ZERO_EFFECTIVE_HEALTH_LEVELS,
+  effectiveHealthPerks,
 } from './effective-paths-ehp-model'
 import { planEffectiveHealthPath } from './effective-paths-ehp-plan'
 import {
@@ -113,11 +114,17 @@ describe('masteries on the coin path', () => {
     labSubstatCap: { armor: 20, generator: 20 },
     wall: { has: true, primaryEffect: 2, assistEffect: 1 },
     recovery: { has: true },
-    perks: { has: true, hasTradeOff: true },
+    perks: effectiveHealthPerks({
+      apply: true,
+      health: true,
+      healthRegen: true,
+      extraDefense: true,
+      absoluteDefense: true,
+      enemyDamageTradeOff: true,
+    }),
     chronoField: { unlocked: false },
     chainThunder: { has: false, damageShare: 0 },
     deathWave: { hasHealth: false },
-    tournament: { commonOverride: false, rareOverride: false },
     enemiesAttackingTogether: 2,
     dissonance: { active: false, tierPersonalBest: 0, allTierPersonalBests: [] },
   }

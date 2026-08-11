@@ -13,6 +13,7 @@
 export * from './labs'
 export * from './labs-catalog'
 export * from './labs-research'
+export * from './labs-unlocks'
 export * from './labs-categories'
 export * from './labs-display-overrides'
 export * from './research-lab-level'

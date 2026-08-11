@@ -10,6 +10,7 @@ import {
   computeEffectiveHealth,
   type EffectiveHealthConfig,
   ZERO_EFFECTIVE_HEALTH_LEVELS,
+  effectiveHealthPerks,
 } from './effective-paths-ehp-model'
 import { EFFECTIVE_HEALTH_UPGRADES, planEffectiveHealthPath } from './effective-paths-ehp-plan'
 
@@ -86,11 +87,17 @@ describe('planning a coin path', () => {
     labSubstatCap: { armor: 20, generator: 20 },
     wall: { has: true, primaryEffect: 2, assistEffect: 1 },
     recovery: { has: true },
-    perks: { has: true, hasTradeOff: true },
+    perks: effectiveHealthPerks({
+      apply: true,
+      health: true,
+      healthRegen: true,
+      extraDefense: true,
+      absoluteDefense: true,
+      enemyDamageTradeOff: true,
+    }),
     chronoField: { unlocked: false },
     chainThunder: { has: false, damageShare: 0 },
     deathWave: { hasHealth: false },
-    tournament: { commonOverride: false, rareOverride: false },
     enemiesAttackingTogether: 2,
     dissonance: { active: false, tierPersonalBest: 0, allTierPersonalBests: [] },
   }
@@ -182,11 +189,10 @@ describe('workshop levels resolve through the table', () => {
       labSubstatCap: { armor: 0, generator: 0 },
       wall: { has: false, primaryEffect: 0, assistEffect: 0 },
       recovery: { has: false },
-      perks: { has: false, hasTradeOff: false },
+      perks: effectiveHealthPerks(),
       chronoField: { unlocked: false },
       chainThunder: { has: false, damageShare: 0 },
       deathWave: { hasHealth: false },
-      tournament: { commonOverride: false, rareOverride: false },
       enemiesAttackingTogether: 1,
       dissonance: { active: false, tierPersonalBest: 0, allTierPersonalBests: [] },
     }
@@ -214,11 +220,10 @@ describe('workshop levels resolve through the table', () => {
       labSubstatCap: { armor: 0, generator: 0 },
       wall: { has: false, primaryEffect: 0, assistEffect: 0 },
       recovery: { has: false },
-      perks: { has: false, hasTradeOff: false },
+      perks: effectiveHealthPerks(),
       chronoField: { unlocked: false },
       chainThunder: { has: false, damageShare: 0 },
       deathWave: { hasHealth: false },
-      tournament: { commonOverride: false, rareOverride: false },
       enemiesAttackingTogether: 1,
       dissonance: { active: false, tierPersonalBest: 0, allTierPersonalBests: [] },
     } as EffectiveHealthConfig
@@ -242,11 +247,10 @@ describe('workshop levels resolve through the table', () => {
       labSubstatCap: { armor: 0, generator: 0 },
       wall: { has: false, primaryEffect: 0, assistEffect: 0 },
       recovery: { has: false },
-      perks: { has: false, hasTradeOff: false },
+      perks: effectiveHealthPerks(),
       chronoField: { unlocked: false },
       chainThunder: { has: false, damageShare: 0 },
       deathWave: { hasHealth: false },
-      tournament: { commonOverride: false, rareOverride: false },
       enemiesAttackingTogether: 1,
       dissonance: { active: false, tierPersonalBest: 0, allTierPersonalBests: [] },
     }

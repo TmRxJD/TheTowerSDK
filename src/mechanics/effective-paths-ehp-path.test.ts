@@ -30,8 +30,8 @@ const BASE = {
   armor: 1.012,
   /** Standard Perks Bonus feeds both the health perk and the defense % perk. */
   hasPerk: true,
-  hasCommonTournamentOverride: true,
-  hasRareTournamentOverride: true,
+  hasCoinTradeOffPerk: true,
+  hasRegenTradeOffPerk: true,
 } as const
 
 interface Levels {
@@ -52,8 +52,8 @@ function effectiveHealthFor(levels: Levels): number {
     workshopEnhancementLevel: 0,
     hasPerk: BASE.hasPerk,
     perkBonusLabLevel: levels.standardPerksBonus,
-    hasCommonTournamentOverride: BASE.hasCommonTournamentOverride,
-    hasRareTournamentOverride: BASE.hasRareTournamentOverride,
+    hasCoinTradeOffPerk: BASE.hasCoinTradeOffPerk,
+    hasRegenTradeOffPerk: BASE.hasRegenTradeOffPerk,
     relicPct: 0,
     vaultPct: 0,
     hasDeathWaveHealth: false,

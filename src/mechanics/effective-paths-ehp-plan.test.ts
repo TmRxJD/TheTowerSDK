@@ -4,6 +4,7 @@ import {
   type EffectiveHealthConfig,
   type EffectiveHealthLevels,
   ZERO_EFFECTIVE_HEALTH_LEVELS,
+  effectiveHealthPerks,
 } from './effective-paths-ehp-model'
 import {
   EFFECTIVE_HEALTH_UPGRADES,
@@ -37,11 +38,20 @@ const EMPTY_ACCOUNT: EffectiveHealthConfig = {
   labSubstatCap: { armor: 0, generator: 0 },
   wall: { has: false, primaryEffect: 0, assistEffect: 0 },
   recovery: { has: false },
-  perks: { has: true, hasTradeOff: true },
+  perks: effectiveHealthPerks({
+      apply: true,
+    health: true,
+    healthRegen: true,
+    extraDefense: true,
+    absoluteDefense: true,
+    enemyDamageTradeOff: true,
+    // A fresh account in the sheet has both health trade-off perks taken.
+    coinTradeOff: true,
+    regenTradeOff: true,
+  }),
   chronoField: { unlocked: false },
   chainThunder: { has: false, damageShare: 0 },
   deathWave: { hasHealth: false },
-  tournament: { commonOverride: true, rareOverride: true },
   enemiesAttackingTogether: 1,
   dissonance: { active: false, tierPersonalBest: 0, allTierPersonalBests: [] },
 }
@@ -136,7 +146,6 @@ describe('planning against a developed account', () => {
     chronoField: { unlocked: true },
     chainThunder: { has: true, damageShare: 0.2 },
     deathWave: { hasHealth: true },
-    tournament: { commonOverride: false, rareOverride: false },
     enemiesAttackingTogether: 3,
   }
 

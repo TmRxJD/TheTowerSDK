@@ -6,7 +6,7 @@
  * decide what to upgrade next. The sheet composes a final defensive stat from a
  * workshop base value and every multiplier that stacks on top of it — labs,
  * cards, card mastery, module substats, workshop enhancements, perks,
- * tournament overrides, relics, the vault, and dissonance.
+ * trade-off perks, relics, the vault, and dissonance.
  *
  * Each function keeps the sheet's own decomposition (one named term per
  * contributing source) so a reader can line the code up against the sheet cell
@@ -90,10 +90,10 @@ export interface EffectiveHealthInput {
   hasPerk: boolean
   /** "Second perk bonus" lab level; each level adds 1% to the perk's value. */
   perkBonusLabLevel: number
-  /** Common Tournament Override — clamps health to 30%. */
-  hasCommonTournamentOverride: boolean
-  /** Rare Tournament Override — clamps health to 40%. */
-  hasRareTournamentOverride: boolean
+  /** The "x1.8 Coin / Health -70%" perk — health drops to 30%. */
+  hasCoinTradeOffPerk: boolean
+  /** The "Regen x8 / Health -60%" perk — health drops to 40%. */
+  hasRegenTradeOffPerk: boolean
   relicPct: number
   vaultPct: number
   /** Death Wave health bonus is unlocked. */
@@ -111,15 +111,15 @@ export function effectiveHealth(input: EffectiveHealthInput): number {
     : 1
   const enhancement = 1 + 0.01 * input.workshopEnhancementLevel
   const perk = input.hasPerk ? (1 + 0.2 * 5) * (1 + 0.01 * input.perkBonusLabLevel) : 1
-  const commonOverride = input.hasCommonTournamentOverride ? 0.3 : 1
-  const rareOverride = input.hasRareTournamentOverride ? 0.4 : 1
+  const coinTradeOff = input.hasCoinTradeOffPerk ? 0.3 : 1
+  const regenTradeOff = input.hasRegenTradeOffPerk ? 0.4 : 1
   const relic = 1 + input.relicPct
   const vault = 1 + input.vaultPct
   const deathWave = input.hasDeathWaveHealth ? 5 + 0.25 * input.deathWaveHealthLevel : 1
 
   return input.workshopValue
     * lab * card * enhancement * perk
-    * commonOverride * rareOverride
+    * coinTradeOff * regenTradeOff
     * relic * vault * deathWave * input.dissonance
 }
 
@@ -139,17 +139,17 @@ export interface EffectiveRegenInput extends SubstatInput {
   workshopEnhancementLevel: number
   hasPerk: boolean
   perkBonusLabLevel: number
-  /** Regen Tournament Override — clamps regen to 10%. */
-  hasRegenTournamentOverride: boolean
-  /** Rare Tournament Override — multiplies regen by 8, raised by Intro Sprint. */
-  hasRareTournamentOverride: boolean
-  /** Intro Sprint lab level; each level adds 1% to the rare override. */
-  introSprintLabLevel: number
+  /** The "E. HP -50% / Regen & Lifesteal -90%" perk — regen drops to 10%. */
+  hasEnemyHealthTradeOffPerk: boolean
+  /** The "Regen x8 / Health -60%" perk — regen ×8, raised by the lab below. */
+  hasRegenTradeOffPerk: boolean
+  /** Improve Trade-off Perks lab level; each level adds 1% to that ×8. */
+  improveTradeOffPerksLabLevel: number
   relicPct: number
   vaultPct: number
-  /** Swamp/Wave Mastery regen bonus is unlocked. */
-  hasSwampMastery: boolean
-  swampMasteryLevel: number
+  /** The Second Wind card mastery is owned; it adds 90% a level. */
+  hasSecondWindMastery: boolean
+  secondWindMasteryLevel: number
 }
 
 /** `EPH_REGEN` — effective health regen per second. */
@@ -161,16 +161,16 @@ export function effectiveRegen(input: EffectiveRegenInput): number {
   const substat = 1 + substatTotal(input)
   const enhancement = 1 + 0.01 * input.workshopEnhancementLevel
   const perk = input.hasPerk ? (1 + 0.75 * 5) * (1 + 0.01 * input.perkBonusLabLevel) : 1
-  const regenOverride = input.hasRegenTournamentOverride ? 0.1 : 1
-  const rareOverride = input.hasRareTournamentOverride ? 8 * (1 + 0.01 * input.introSprintLabLevel) : 1
+  const enemyHealthTradeOff = input.hasEnemyHealthTradeOffPerk ? 0.1 : 1
+  const regenTradeOff = input.hasRegenTradeOffPerk ? 8 * (1 + 0.01 * input.improveTradeOffPerksLabLevel) : 1
   const relic = 1 + input.relicPct
   const vault = 1 + input.vaultPct
-  const swamp = input.hasSwampMastery ? 1 + 0.9 * (1 + input.swampMasteryLevel) : 1
+  const secondWind = input.hasSecondWindMastery ? 1 + 0.9 * (1 + input.secondWindMasteryLevel) : 1
 
   return input.workshopValue
     * lab * card * substat * enhancement * perk
-    * regenOverride * rareOverride
-    * relic * vault * swamp
+    * enemyHealthTradeOff * regenTradeOff
+    * relic * vault * secondWind
 }
 
 // ---------------------------------------------------------------------------

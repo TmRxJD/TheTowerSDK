@@ -138,6 +138,57 @@ export interface EffectiveHealthCardSource {
   hasMastery?: boolean
 }
 
+/**
+ * The perks the sheet's perk block lists, and whether the chosen preset has
+ * each one.
+ *
+ * Every eHP term that mentions a perk reads exactly one of these — the sheet
+ * writes `AND($AY$28, $AY$30)` and friends, so a perk counts only when perks
+ * apply *and* that specific perk is in the preset. The trade-off perks are the
+ * easiest to misread: `has_cto`/`has_rto` in `EPH_HEALTH` are the two
+ * health-for-something trades, not tournament overrides.
+ */
+export interface EffectiveHealthPerks {
+  /** Whether perks apply at all. The sheet turns them off for a tourney run. */
+  apply: boolean
+  /** Tower Health, worth `(1 + 0.2 × 5)` before the perk-bonus lab. */
+  health: boolean
+  /** Health Regen, worth `(1 + 0.75 × 5)`. */
+  healthRegen: boolean
+  /** Extra Defense, worth `4% × 5`. */
+  extraDefense: boolean
+  /** Absolute Defense, worth `(1 + 0.15 × 5)`. */
+  absoluteDefense: boolean
+  /** "E. Dmg -50% / Dmg -50%" — halves incoming damage. */
+  enemyDamageTradeOff: boolean
+  /** "E. HP -50% / Regen & Lifesteal -90%" — cuts regen to a tenth. */
+  enemyHealthTradeOff: boolean
+  /** "x1.8 Coin / Health -70%" — health drops to 30%. */
+  coinTradeOff: boolean
+  /** "Regen x8 / Health -60%" — health drops to 40%. */
+  regenTradeOff: boolean
+}
+
+/** No perks at all — the shape every perk flag defaults to. */
+export const NO_EFFECTIVE_HEALTH_PERKS: EffectiveHealthPerks = {
+  apply: false,
+  health: false,
+  healthRegen: false,
+  extraDefense: false,
+  absoluteDefense: false,
+  enemyDamageTradeOff: false,
+  enemyHealthTradeOff: false,
+  coinTradeOff: false,
+  regenTradeOff: false,
+}
+
+/** Build a perk set from the few flags a caller cares about. */
+export function effectiveHealthPerks(
+  overrides: Partial<EffectiveHealthPerks> = {},
+): EffectiveHealthPerks {
+  return { ...NO_EFFECTIVE_HEALTH_PERKS, ...overrides }
+}
+
 export interface EffectiveHealthConfig {
   health: EffectiveHealthStatSource
   defenseAbsolute: EffectiveHealthStatSource
@@ -187,12 +238,7 @@ export interface EffectiveHealthConfig {
     has: boolean
   }
 
-  perks: {
-    /** Whether perks apply at all. */
-    has: boolean
-    /** Whether the Improved Trade-off perk is taken. */
-    hasTradeOff: boolean
-  }
+  perks: EffectiveHealthPerks
 
   chronoField: {
     /** The damage-reduction unlock lab. Without it the term is inert. */
@@ -211,13 +257,6 @@ export interface EffectiveHealthConfig {
   deathWave: {
     /** Whether the Death Wave health bonus is unlocked. */
     hasHealth: boolean
-  }
-
-  tournament: {
-    /** Common Tournament Override — clamps health to 30%. */
-    commonOverride: boolean
-    /** Rare Tournament Override — clamps health to 40%. */
-    rareOverride: boolean
   }
 
   /**
@@ -278,9 +317,16 @@ export function chainThunderReduction(has: boolean, level: number, damageShare: 
   return has ? Math.min((damageShare / 6) * 10, 0.03 * level) : 0
 }
 
-/** The Improved Trade-off perk's damage reduction. */
-export function tradeOffReduction(hasPerks: boolean, hasTradeOff: boolean, level: number): number {
-  return hasPerks && hasTradeOff ? 0.5 * (1 + 0.01 * level) : 0
+/**
+ * The "E. Dmg -50%" trade-off perk's damage reduction, raised by the Improve
+ * Trade-off Perks lab. The sheet writes it inline as `eHP!CP5`.
+ */
+export function tradeOffReduction(
+  hasPerks: boolean,
+  hasEnemyDamageTradeOff: boolean,
+  level: number,
+): number {
+  return hasPerks && hasEnemyDamageTradeOff ? 0.5 * (1 + 0.01 * level) : 0
 }
 
 // ---------------------------------------------------------------------------
@@ -346,6 +392,13 @@ export function computeEffectiveHealth(
     )
     : 1
 
+  /**
+   * A perk counts only when perks apply at all *and* the preset has it — the
+   * sheet writes every one of these as `AND($AY$28, $AY$3x)`.
+   */
+  const perk = (key: keyof Omit<EffectiveHealthPerks, 'apply'>): boolean =>
+    config.perks.apply && config.perks[key]
+
   const healthSource = source(config.health, EFFECTIVE_HEALTH_WORKSHOP_STATS.health)
   const health = effectiveHealth({
     workshopValue: healthSource.workshopValue,
@@ -355,10 +408,10 @@ export function computeEffectiveHealth(
     hasCardMastery: config.cards.health.hasMastery ?? false,
     masteryLevel: levels.healthMastery,
     workshopEnhancementLevel: levels.enhancementHealth,
-    hasPerk: config.perks.has,
+    hasPerk: perk('health'),
     perkBonusLabLevel: levels.standardPerksBonus,
-    hasCommonTournamentOverride: config.tournament.commonOverride,
-    hasRareTournamentOverride: config.tournament.rareOverride,
+    hasCoinTradeOffPerk: perk('coinTradeOff'),
+    hasRegenTradeOffPerk: perk('regenTradeOff'),
     relicPct: healthSource.relicPct,
     vaultPct: healthSource.vaultPct,
     hasDeathWaveHealth: config.deathWave.hasHealth,
@@ -387,7 +440,7 @@ export function computeEffectiveHealth(
     primarySubstat: dabsSource.primarySubstat,
     assistSubstat: dabsSource.assistSubstat,
     workshopEnhancementLevel: levels.enhancementDefenseAbsolute,
-    hasPerk: config.perks.has,
+    hasPerk: perk('absoluteDefense'),
     perkBonusLabLevel: levels.standardPerksBonus,
     relicPct: dabsSource.relicPct,
     vaultPct: dabsSource.vaultPct,
@@ -405,7 +458,7 @@ export function computeEffectiveHealth(
     stoneSubstatCap: levels.assistSubstatArmor,
     primarySubstat: defPctSource.primarySubstat,
     assistSubstat: defPctSource.assistSubstat,
-    hasPerk: config.perks.has,
+    hasPerk: perk('extraDefense'),
     perkBonusLabLevel: levels.standardPerksBonus,
     relicPct: defPctSource.relicPct,
     vaultPct: defPctSource.vaultPct,
@@ -446,7 +499,7 @@ export function computeEffectiveHealth(
     config.chainThunder.has, levels.chainThunder, config.chainThunder.damageShare,
   )
   const tradeOff = tradeOffReduction(
-    config.perks.has, config.perks.hasTradeOff, levels.improveTradeOffPerks,
+    config.perks.apply, config.perks.enemyDamageTradeOff, levels.improveTradeOffPerks,
   )
 
   const effective = composeEffectiveHealth({
