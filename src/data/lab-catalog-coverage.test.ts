@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { SITE_LAB_SLUG_ALIASES } from './labs-categories'
+import { labLevelTableLookupNames } from './labs-categories'
 import { LAB_CATALOG } from './labs-catalog'
 import { LAB_RESEARCH_BY_INDEX } from './labs-research'
 
@@ -25,14 +25,13 @@ const tableKeys = new Set(
   LAB_CATALOG.filter(lab => lab.levels?.length).map(lab => matchKey(lab.name)),
 )
 
-const aliasByCanonical = new Map(
-  Object.entries(SITE_LAB_SLUG_ALIASES).map(([site, canonical]) => [canonical, site]),
-)
-
+/**
+ * Asks the same way the tracker does, via labLevelTableLookupNames, rather than
+ * re-deriving the alias list. A test that builds its own lookup can pass while
+ * the real one misses.
+ */
 function hasLevelTable(slug: string): boolean {
-  if (tableKeys.has(matchKey(slug))) return true
-  const alias = aliasByCanonical.get(slug)
-  return alias ? tableKeys.has(matchKey(alias)) : false
+  return labLevelTableLookupNames(slug).some(name => tableKeys.has(matchKey(name)))
 }
 
 /**

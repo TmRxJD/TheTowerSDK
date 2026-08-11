@@ -30,14 +30,27 @@ export const SITE_LAB_SLUG_ALIASES: Readonly<Record<string, string>> = {
   // Cooldown" as distinct records. Aliasing them made Bot Bot read Amplify Bot's
   // research levels, so do not add that back.
   //
-  // Two card masteries whose level tables are filed under a different name than
-  // the research catalog uses. Both looked like missing cost data and were only
-  // ever mispointed. Aliased rather than renamed because the table names are
-  // load-bearing elsewhere -- the AI acronym map, the chart registry and the
-  // towerai knowledge base all key off them -- and "Berzerker" is the spelling
-  // the card carries even where the research catalog says "Berserker".
-  berzerker_mastery: 'berserker_mastery',
-  recovery_package_chance_mastery: 'recovery_package_mastery',
+  // Nor does a lab belong here just because its level table is filed under
+  // another name -- see LAB_TABLE_NAME_ALIASES below. This map also decides
+  // which slug a save index resolves to, and putting a table name in it made
+  // two card masteries resolve to a slug the research catalog does not have,
+  // which failed the import preview audit.
+}
+
+/**
+ * Canonical slug -> the name its level table is filed under in the catalog.
+ *
+ * Distinct from SITE_LAB_SLUG_ALIASES, which is about which slug a *save index*
+ * means. These two card masteries are only ever mispointed: the data has always
+ * been there, under a different spelling. Aliased rather than renamed because
+ * the table names are load-bearing elsewhere -- the AI acronym map, the chart
+ * registry and the towerai knowledge base all key off them -- and "Berzerker"
+ * is the spelling the card carries even where the research catalog says
+ * "Berserker".
+ */
+const LAB_TABLE_NAME_ALIASES: Readonly<Record<string, string>> = {
+  berserker_mastery: 'Berzerker Mastery',
+  recovery_package_mastery: 'Recovery Package Chance Mastery',
 }
 
 /**
@@ -49,11 +62,15 @@ export const SITE_LAB_SLUG_ALIASES: Readonly<Record<string, string>> = {
  * the row with a real level and max but 0 for every time, gem and coin column --
  * which reads as "this lab is free" rather than "we could not find its costs".
  *
- * Derived by inverting SITE_LAB_SLUG_ALIASES so there is one list, not two.
+ * Derived by inverting SITE_LAB_SLUG_ALIASES, plus the handful of tables filed
+ * under a display name rather than a slug, so there is one list and not three.
  */
-export const LAB_LEVEL_TABLE_NAME_BY_SLUG: Readonly<Record<string, string>> = Object.fromEntries(
-  Object.entries(SITE_LAB_SLUG_ALIASES).map(([siteSlug, canonicalSlug]) => [canonicalSlug, siteSlug]),
-)
+export const LAB_LEVEL_TABLE_NAME_BY_SLUG: Readonly<Record<string, string>> = {
+  ...Object.fromEntries(
+    Object.entries(SITE_LAB_SLUG_ALIASES).map(([siteSlug, canonicalSlug]) => [canonicalSlug, siteSlug]),
+  ),
+  ...LAB_TABLE_NAME_ALIASES,
+}
 
 /** Names to try, in order, when looking a lab's level table up by slug. */
 export function labLevelTableLookupNames(slug: string): string[] {
