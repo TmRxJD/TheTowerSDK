@@ -56,7 +56,7 @@ export const EFFECTIVE_PATHS_CONTRIBUTORS: readonly EffectivePathsCredit[] = [
 
 /** The sheet version these formulas were ported from. */
 export const EFFECTIVE_PATHS_SOURCE = {
-  version: 'v5.09.02.01',
+  version: 'v5.09.03.01',
   spreadsheetUrl: 'https://docs.google.com/spreadsheets/d/1YwZtKP6B4WYhRba5T6APJ1YxKNdfnIGQnprgnxmO7zc',
 } as const
 

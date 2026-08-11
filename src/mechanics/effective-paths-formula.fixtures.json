@@ -1,6 +1,6 @@
 {
-  "source": "EffectivePaths-v5.09.02.xlsx",
-  "sheetVersion": "v5.09.02.01",
+  "source": "EffectivePaths-v5.09.03.xlsx",
+  "sheetVersion": "v5.09.03.01",
   "note": "Verbatim LAMBDA definitions for the eHP stat layer, as exported from the sheet. Regenerate with scripts/extract-effective-paths.mjs and this fixture builder.",
   "functions": {
     "EPH_ARMOR": "LAMBDA(prim_bonus, has_ass, ass_bonus, stone_bac, lab_bac, prim_bonus*IF(has_ass, ((ass_bonus-1)*(1+stone_bac+lab_bac)*0.01)+1, 1))",

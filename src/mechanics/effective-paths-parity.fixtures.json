@@ -1,5 +1,5 @@
 {
-  "source": "EffectivePaths-v5.09.02.xlsx",
+  "source": "EffectivePaths-v5.09.03.xlsx",
   "generatedBy": "scripts/extract-effective-paths-parity.mjs",
   "note": "Cached call sites from the workbook. Regenerate when the sheet is re-exported.",
   "cases": [
@@ -50,12 +50,12 @@
         0,
         0,
         0,
-        true,
+        false,
         0,
         0,
         0
       ],
-      "expected": 0.2
+      "expected": 0
     },
     {
       "fn": "EPH_HEALTH",
@@ -68,17 +68,17 @@
         false,
         0,
         0,
-        true,
+        false,
         0,
-        true,
-        true,
+        false,
+        false,
         0,
         0,
         false,
         0,
         1
       ],
-      "expected": 1.2
+      "expected": 5
     },
     {
       "fn": "EPH_HEALTH",
@@ -91,17 +91,17 @@
         false,
         0,
         0,
-        true,
+        false,
         0,
-        true,
-        true,
+        false,
+        false,
         0,
         0,
         false,
         0,
         1
       ],
-      "expected": 1.236
+      "expected": 5.15
     },
     {
       "fn": "EPH_REGEN",
@@ -118,17 +118,17 @@
         0,
         0,
         0,
-        true,
+        false,
         0,
         false,
-        true,
+        false,
         0,
         0,
         0,
         false,
         0
       ],
-      "expected": 0.019
+      "expected": 0.0005
     },
     {
       "fn": "EPH_WALL_REGEN",
