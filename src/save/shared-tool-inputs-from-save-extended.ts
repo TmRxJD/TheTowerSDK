@@ -73,6 +73,7 @@ import { enrichElsPlannerFromLinkedSources } from '../internal/shared-tool-input
 import { formatCompact } from '../internal/tool-formatting'
 import { listUltimateWeaponCatalogRows } from './catalogs/ultimate-weapons'
 import { POWER_VAULT_SINGLE_PURCHASE_NODE_IDS } from './catalogs/vault-overrides'
+import { CARDS_SAVE_UNLOCKED_KEY } from './cards'
 
 const MODULE_PRIMARY_CATEGORIES: ModuleSaveSlotCategory[] = ['Cannon', 'Armor', 'Generator', 'Core']
 const MODULE_ASSIST_TYPE_TO_CATEGORY: Record<number, ModuleSaveSlotCategory> = {
@@ -182,9 +183,29 @@ function readSaveModuleItem(raw: unknown): {
   }
 }
 
+/**
+ * A card's level, or 0 when the player does not have the card.
+ *
+ * `cardLevel` is over-allocated and pads with **1**, not 0, so reading it
+ * directly reports level 1 for every card the player has never owned. This is
+ * the exact case the package guide warns about: use the unlock flag when one
+ * exists, not the level.
+ *
+ * It surfaced as the thorns calculator importing a Plasma Cannon level of 1
+ * from a save whose owner had no Plasma Cannon -- a wrong input that looks
+ * entirely plausible, which is the worst kind.
+ */
 function readCardLevelBySlug(root: Record<string, unknown>, slug: string): number {
   const cardIndex = CARD_IMPORT_CATALOG.find(row => row.slug === slug)?.index
   if (cardIndex == null) return 0
+
+  const unlockedFlags = Array.isArray(root[CARDS_SAVE_UNLOCKED_KEY])
+    ? (root[CARDS_SAVE_UNLOCKED_KEY] as unknown[]).map(readSaveBoolean)
+    : null
+  // Only trust the flags when the save actually carries them; a save without
+  // the array must not have every card zeroed out.
+  if (unlockedFlags && unlockedFlags[cardIndex] !== true) return 0
+
   const levels = readIndexedNumberArray(root.cardLevel, CARD_IMPORT_CATALOG.length)
   return Math.max(0, Math.floor(levels[cardIndex] ?? 0))
 }
