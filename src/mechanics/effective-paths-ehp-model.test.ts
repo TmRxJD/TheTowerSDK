@@ -1,0 +1,198 @@
+import { describe, expect, it } from 'vitest'
+import fixtures from './effective-paths-ehp-model.fixtures.json'
+import {
+  ZERO_EFFECTIVE_HEALTH_LEVELS,
+  chainThunderReduction,
+  chronoFieldReduction,
+  computeEffectiveHealth,
+  dissonantBoost,
+  tradeOffReduction,
+  type EffectiveHealthConfig,
+  type EffectiveHealthLevels,
+} from './effective-paths-ehp-model'
+
+/**
+ * The whole eHP model against the sheet's own composition.
+ *
+ * Each fixture case is a randomised player state whose expected value came from
+ * asking the live spreadsheet to evaluate `eHP!CS5` with those inputs written
+ * out as literals. So this compares against the sheet's arithmetic rather than
+ * against our reading of it, across states where walls, recovery, perks,
+ * Chrono Field, Chain Thunder, Death Wave, tournament overrides and card
+ * mastery are independently on or off.
+ */
+
+type FixtureCase = (typeof fixtures.cases)[number]
+
+function toConfig(c: FixtureCase['cfg']): EffectiveHealthConfig {
+  return {
+    health: {
+      workshopValue: c.wsHealth,
+      enhancementLevel: c.wseHealth,
+      relicPct: c.relicHealth,
+      vaultPct: c.vaultHealth,
+    },
+    defenseAbsolute: {
+      workshopValue: c.wsDabs,
+      enhancementLevel: c.wseDabs,
+      relicPct: c.relicDabs,
+      vaultPct: c.vaultDabs,
+      primarySubstat: c.primSubDabs,
+      assistSubstat: c.assSubDabs,
+    },
+    defensePercent: {
+      workshopValue: c.wsDefPct,
+      relicPct: c.relicDefPct,
+      vaultPct: c.vaultDefPct,
+      primarySubstat: c.primSubDefPct,
+      assistSubstat: c.assSubDefPct,
+    },
+    wallHealth: {
+      workshopValue: c.wsWall,
+      enhancementLevel: c.wseWall,
+      primarySubstat: c.primSubWall,
+      assistSubstat: c.assSubWall,
+    },
+    maxRecovery: {
+      workshopValue: c.wsRcvr,
+      enhancementLevel: c.wseRcvr,
+      vaultPct: c.vaultRcvr,
+      primarySubstat: c.primSubRcvr,
+      assistSubstat: c.assSubRcvr,
+    },
+    cards: {
+      health: { has: c.hasHealthCard, value: c.healthCardValue, hasMastery: c.hasHealthMastery },
+      defenseAbsolute: { has: c.hasDabsCard, value: c.dabsCardValue },
+      defensePercent: { has: c.hasDefPctCard, value: c.defPctCardValue, hasMastery: c.hasDefPctMastery },
+    },
+    armor: {
+      primaryBonus: c.armorPrimary,
+      hasAssist: c.hasArmorAssist,
+      assistBonus: c.armorAssist,
+      stoneBonusCap: c.armorStoneBonusCap,
+    },
+    stoneSubstatCap: { armor: c.stoneSubArmor, generator: c.stoneSubGenerator },
+    wall: { has: c.hasWall, primaryEffect: c.wallPrimEffect, assistEffect: c.wallAssEffect },
+    recovery: { has: c.hasRecovery },
+    perks: { has: c.hasPerks, hasTradeOff: c.hasTradeOff },
+    chronoField: { unlocked: c.chronoUnlocked },
+    chainThunder: { has: c.hasChainThunder, damageShare: c.chainDamageShare },
+    deathWave: { hasHealth: c.hasDeathWave },
+    tournament: { commonOverride: c.cto, rareOverride: c.rto },
+    enemiesAttackingTogether: c.enemiesAttackingTogether,
+    dissonance: { active: false, tierPersonalBest: 0, allTierPersonalBests: [] },
+  }
+}
+
+describe('the eHP model against the sheet', () => {
+  it('has states worth checking, not forty of the same one', () => {
+    expect(fixtures.cases.length).toBe(40)
+    const varied = (pick: (c: FixtureCase['cfg']) => boolean) =>
+      new Set(fixtures.cases.map(testCase => pick(testCase.cfg))).size
+    // Every toggle must appear both on and off somewhere in the set, or it is
+    // not actually being tested.
+    expect(varied(c => c.hasWall)).toBe(2)
+    expect(varied(c => c.hasRecovery)).toBe(2)
+    expect(varied(c => c.hasPerks)).toBe(2)
+    expect(varied(c => c.chronoUnlocked)).toBe(2)
+    expect(varied(c => c.hasChainThunder)).toBe(2)
+    expect(varied(c => c.hasDeathWave)).toBe(2)
+    expect(varied(c => c.hasArmorAssist)).toBe(2)
+    expect(varied(c => c.cto)).toBe(2)
+  })
+
+  for (const [index, testCase] of fixtures.cases.entries()) {
+    it(`matches the sheet on state ${index}`, () => {
+      const actual = computeEffectiveHealth(
+        toConfig(testCase.cfg),
+        testCase.levels as EffectiveHealthLevels,
+      ).effectiveHealth
+
+      const scale = Math.max(Math.abs(testCase.sheetValue), 1e-9)
+      expect(
+        Math.abs(actual - testCase.sheetValue) / scale,
+        `state ${index}: sheet=${testCase.sheetValue} model=${actual}`,
+      ).toBeLessThan(1e-9)
+    })
+  }
+})
+
+describe('the pieces the composition is built from', () => {
+  it('leaves Chrono Field inert until the unlock lab is taken', () => {
+    // The 10% base only exists once unlocked — levels alone do nothing.
+    expect(chronoFieldReduction(false, 30)).toBe(0)
+    expect(chronoFieldReduction(true, 0)).toBeCloseTo(0.1, 12)
+    expect(chronoFieldReduction(true, 30)).toBeCloseTo(0.25, 12)
+  })
+
+  it('caps Chain Thunder by the damage it is actually responsible for', () => {
+    // 3% a level, but never more than the share of damage it does allows.
+    expect(chainThunderReduction(true, 30, 1)).toBeCloseTo(0.9, 12)
+    expect(chainThunderReduction(true, 30, 0.01)).toBeCloseTo(0.016666666666666666, 12)
+    expect(chainThunderReduction(false, 30, 1)).toBe(0)
+  })
+
+  it('gives the trade-off perk nothing when perks are off', () => {
+    expect(tradeOffReduction(false, true, 10)).toBe(0)
+    expect(tradeOffReduction(true, false, 10)).toBe(0)
+    expect(tradeOffReduction(true, true, 0)).toBeCloseTo(0.5, 12)
+    expect(tradeOffReduction(true, true, 10)).toBeCloseTo(0.55, 12)
+  })
+
+  it('counts the played tier in full and other tiers only through the echo', () => {
+    const tiers = [5000, 5000, 5000]
+    // With no echo levels, the other tiers still contribute at 0.5%.
+    const withoutEcho = dissonantBoost(5000, tiers, 0)
+    const withEcho = dissonantBoost(5000, tiers, 10)
+    expect(withEcho).toBeGreaterThan(withoutEcho)
+
+    // A single tier at its cap: others contribute nothing.
+    expect(dissonantBoost(5000, [5000], 0)).toBeCloseTo(5, 12)
+    // Past the cap changes nothing — the wave term saturates at 5000.
+    expect(dissonantBoost(9999, [9999], 0)).toBeCloseTo(5, 12)
+  })
+})
+
+describe('what the model does with an empty account', () => {
+  const emptyConfig: EffectiveHealthConfig = {
+    health: { workshopValue: 5 },
+    defenseAbsolute: { workshopValue: 0 },
+    defensePercent: { workshopValue: 0 },
+    wallHealth: { workshopValue: 0 },
+    maxRecovery: { workshopValue: 0 },
+    cards: {
+      health: { has: false, value: 1 },
+      defenseAbsolute: { has: false, value: 1 },
+      defensePercent: { has: false, value: 0 },
+    },
+    armor: { primaryBonus: 1.012, hasAssist: false, assistBonus: 1, stoneBonusCap: 0 },
+    stoneSubstatCap: { armor: 0, generator: 0 },
+    wall: { has: false, primaryEffect: 0, assistEffect: 0 },
+    recovery: { has: false },
+    perks: { has: true, hasTradeOff: true },
+    chronoField: { unlocked: false },
+    chainThunder: { has: false, damageShare: 0 },
+    deathWave: { hasHealth: false },
+    tournament: { commonOverride: true, rareOverride: true },
+    enemiesAttackingTogether: 1,
+    dissonance: { active: false, tierPersonalBest: 0, allTierPersonalBests: [] },
+  }
+
+  it('reproduces the starting eHP the sheet shows a fresh account', () => {
+    const result = computeEffectiveHealth(emptyConfig, ZERO_EFFECTIVE_HEALTH_LEVELS)
+    // The same 3.036 the eHP grid opens on, from the path fixture.
+    expect(result.effectiveHealth).toBeCloseTo(3.0360000000000005, 9)
+    expect(result.wallHealth).toBeNull()
+    expect(result.maxRecovery).toBeNull()
+    expect(result.dissonance).toBe(1)
+  })
+
+  it('reports a breakdown, so a path can say what actually moved', () => {
+    const result = computeEffectiveHealth(emptyConfig, {
+      ...ZERO_EFFECTIVE_HEALTH_LEVELS, health: 10,
+    })
+    expect(result.health).toBeGreaterThan(0)
+    expect(result.armor).toBeCloseTo(1.012, 12)
+    expect(result.defenseAbsolute).toBe(0)
+  })
+})
