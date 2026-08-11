@@ -56,6 +56,18 @@ export type EffectivePathsExpr =
   | { kind: 'product', of: EffectivePathsExpr[] }
   | { kind: 'divide', numerator: EffectivePathsExpr, denominator: EffectivePathsExpr }
   | { kind: 'negate', of: EffectivePathsExpr }
+  | { kind: 'power', base: EffectivePathsExpr, exponent: EffectivePathsExpr }
+  | { kind: 'abs', of: EffectivePathsExpr }
+  /**
+   * `ROUND`, `FLOOR` and `CEILING`. `modifier` is decimal places for `nearest`
+   * and a multiple to snap to for `down` and `up`, matching the sheet.
+   */
+  | {
+    kind: 'round'
+    mode: 'nearest' | 'down' | 'up'
+    value: EffectivePathsExpr
+    modifier?: EffectivePathsExpr
+  }
   | { kind: 'compare', op: EffectivePathsCompareOp, left: EffectivePathsExpr, right: EffectivePathsExpr }
   /** `when ? then : otherwise`. A numeric `when` is truthy when non-zero. */
   | { kind: 'gated', when: EffectivePathsExpr, then: EffectivePathsExpr, otherwise: EffectivePathsExpr }
@@ -83,6 +95,18 @@ export const EffectivePathsExprSchema: z.ZodType<EffectivePathsExpr> = z.lazy(()
       denominator: EffectivePathsExprSchema,
     }),
     z.object({ kind: z.literal('negate'), of: EffectivePathsExprSchema }),
+    z.object({
+      kind: z.literal('power'),
+      base: EffectivePathsExprSchema,
+      exponent: EffectivePathsExprSchema,
+    }),
+    z.object({ kind: z.literal('abs'), of: EffectivePathsExprSchema }),
+    z.object({
+      kind: z.literal('round'),
+      mode: z.enum(['nearest', 'down', 'up']),
+      value: EffectivePathsExprSchema,
+      modifier: EffectivePathsExprSchema.optional(),
+    }),
     z.object({
       kind: z.literal('compare'),
       op: z.enum(['eq', 'neq', 'gt', 'gte', 'lt', 'lte']),
@@ -160,6 +184,23 @@ export function evaluateExpr(
       return evaluate(expr.numerator) / evaluate(expr.denominator)
     case 'negate':
       return -evaluate(expr.of)
+    case 'power':
+      return Math.pow(evaluate(expr.base), evaluate(expr.exponent))
+    case 'abs':
+      return Math.abs(evaluate(expr.of))
+    case 'round': {
+      const value = evaluate(expr.value)
+      if (expr.mode === 'nearest') {
+        const places = expr.modifier === undefined ? 0 : evaluate(expr.modifier)
+        const scale = Math.pow(10, places)
+        return Math.round(value * scale) / scale
+      }
+      // FLOOR and CEILING snap to a multiple, which defaults to 1.
+      const multiple = expr.modifier === undefined ? 1 : evaluate(expr.modifier)
+      if (multiple === 0) return 0
+      return (expr.mode === 'down' ? Math.floor(value / multiple) : Math.ceil(value / multiple))
+        * multiple
+    }
     case 'compare': {
       const left = evaluate(expr.left)
       const right = evaluate(expr.right)
@@ -200,7 +241,15 @@ export function collectExprInputs(expr: EffectivePathsExpr, into = new Set<strin
       collectExprInputs(expr.numerator, into)
       collectExprInputs(expr.denominator, into)
       break
-    case 'negate': collectExprInputs(expr.of, into); break
+    case 'negate': case 'abs': collectExprInputs(expr.of, into); break
+    case 'power':
+      collectExprInputs(expr.base, into)
+      collectExprInputs(expr.exponent, into)
+      break
+    case 'round':
+      collectExprInputs(expr.value, into)
+      if (expr.modifier) collectExprInputs(expr.modifier, into)
+      break
     case 'compare':
       collectExprInputs(expr.left, into)
       collectExprInputs(expr.right, into)
@@ -227,7 +276,15 @@ export function collectExprTermRefs(expr: EffectivePathsExpr, into = new Set<str
       collectExprTermRefs(expr.numerator, into)
       collectExprTermRefs(expr.denominator, into)
       break
-    case 'negate': collectExprTermRefs(expr.of, into); break
+    case 'negate': case 'abs': collectExprTermRefs(expr.of, into); break
+    case 'power':
+      collectExprTermRefs(expr.base, into)
+      collectExprTermRefs(expr.exponent, into)
+      break
+    case 'round':
+      collectExprTermRefs(expr.value, into)
+      if (expr.modifier) collectExprTermRefs(expr.modifier, into)
+      break
     case 'compare':
       collectExprTermRefs(expr.left, into)
       collectExprTermRefs(expr.right, into)

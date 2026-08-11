@@ -273,3 +273,63 @@ describe('shapes the parser normalises', () => {
     expect(evaluateStat(stat, { a: 5 }).value).toBe(30)
   })
 })
+
+
+/**
+ * The arithmetic the damage and economy functions need beyond what eHP used.
+ *
+ * Expected values are what Google Sheets itself computes for these forms —
+ * FLOOR and CEILING snap to a multiple, ROUND takes decimal places, and IFS
+ * falls through its pairs in order.
+ */
+describe('the wider arithmetic', () => {
+  const evaluate = (formula: string, inputs: Record<string, number> = {}) => {
+    const stat = parseSheetFunction('X', `LAMBDA(${Object.keys(inputs).join(', ')}${Object.keys(inputs).length ? ', ' : ''}${formula})`)
+    return evaluateStat(stat, inputs as EffectivePathsInputs).value
+  }
+
+  it('raises to a power, both as an operator and as a function', () => {
+    expect(evaluate('2^10')).toBe(1024)
+    expect(evaluate('POW(2, 10)')).toBe(1024)
+    expect(evaluate('POWER(9, 0.5)')).toBe(3)
+    // The workshop curves are full of fractional exponents.
+    expect(evaluate('0.077 * (100-1)^2.72')).toBeCloseTo(0.077 * Math.pow(99, 2.72), 9)
+  })
+
+  it('binds ^ tighter than multiplication, as the sheet does', () => {
+    expect(evaluate('2*3^2')).toBe(18)
+    expect(evaluate('-2^2')).toBe(-4)
+  })
+
+  it('sums a list', () => {
+    expect(evaluate('SUM(1, 2, 3.5)')).toBe(6.5)
+    expect(evaluate('SUM(a, b)', { a: 4, b: 6 })).toBe(10)
+  })
+
+  it('rounds, floors and ceilings the way the sheet does', () => {
+    expect(evaluate('ROUND(3.14159, 2)')).toBe(3.14)
+    expect(evaluate('ROUND(3.7)')).toBe(4)
+    // FLOOR and CEILING take a multiple, not decimal places.
+    expect(evaluate('FLOOR(7.9)')).toBe(7)
+    expect(evaluate('FLOOR(17, 5)')).toBe(15)
+    expect(evaluate('CEILING(17, 5)')).toBe(20)
+  })
+
+  it('takes an absolute value', () => {
+    expect(evaluate('ABS(0-4.5)')).toBe(4.5)
+  })
+
+  it('falls through IFS in order', () => {
+    expect(evaluate('IFS(a>10, 1, a>5, 2, TRUE, 3)', { a: 20 })).toBe(1)
+    expect(evaluate('IFS(a>10, 1, a>5, 2, TRUE, 3)', { a: 7 })).toBe(2)
+    expect(evaluate('IFS(a>10, 1, a>5, 2, TRUE, 3)', { a: 1 })).toBe(3)
+    // Nothing matching yields 0, which is the closest honest answer to the
+    // sheet's #N/A.
+    expect(evaluate('IFS(a>10, 1)', { a: 1 })).toBe(0)
+  })
+
+  it('still refuses what it cannot read exactly', () => {
+    expect(() => parseSheetFunction('X', 'LAMBDA(a, VLOOKUP(a, Table, 2))')).toThrow(/not supported/)
+    expect(() => parseSheetFunction('X', 'LAMBDA(a, SUMPRODUCT(a, a))')).toThrow(/not supported/)
+  })
+})

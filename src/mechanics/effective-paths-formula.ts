@@ -359,6 +359,7 @@ function lower(node: Node, scope: Scope, functionName: string): EffectivePathsEx
         case '-': return foldConstant({ kind: 'sum', of: [left, { kind: 'negate', of: right }] })
         case '*': return normalizeLinear(foldConstant({ kind: 'product', of: [left, right] }))
         case '/': return foldConstant({ kind: 'divide', numerator: left, denominator: right })
+        case '^': return foldConstant({ kind: 'power', base: left, exponent: right })
         default:
           throw new EffectivePathsFormulaError(`operator "${node.op}" is not supported`, functionName)
       }
@@ -376,6 +377,49 @@ function lower(node: Node, scope: Scope, functionName: string): EffectivePathsEx
           then: recurse(node.args[1]),
           otherwise: recurse(node.args[2]),
         }
+      }
+      if (name === 'SUM') {
+        return foldConstant({ kind: 'sum', of: node.args.map(recurse) })
+      }
+      if (name === 'POW' || name === 'POWER') {
+        if (node.args.length !== 2) {
+          throw new EffectivePathsFormulaError(`${name} needs two arguments`, functionName)
+        }
+        return foldConstant({
+          kind: 'power', base: recurse(node.args[0]), exponent: recurse(node.args[1]),
+        })
+      }
+      if (name === 'ABS') {
+        return foldConstant({ kind: 'abs', of: recurse(node.args[0]) })
+      }
+      if (name === 'ROUND' || name === 'FLOOR' || name === 'CEILING') {
+        // The sheet's second argument is decimal places for ROUND and a
+        // multiple for FLOOR and CEILING; both default to 1 / 0 places.
+        const value = recurse(node.args[0])
+        const modifier = node.args.length > 1 ? recurse(node.args[1]) : undefined
+        return {
+          kind: 'round',
+          mode: name === 'ROUND' ? 'nearest' : name === 'FLOOR' ? 'down' : 'up',
+          value,
+          ...(modifier === undefined ? {} : { modifier }),
+        }
+      }
+      if (name === 'IFS') {
+        // IFS(c1, v1, c2, v2, ...) is a chain of gates; the sheet errors when
+        // nothing matches, and 0 is the closest honest fallback here.
+        if (node.args.length < 2 || node.args.length % 2 !== 0) {
+          throw new EffectivePathsFormulaError('IFS needs condition/value pairs', functionName)
+        }
+        let result: EffectivePathsExpr = { kind: 'const', value: 0 }
+        for (let i = node.args.length - 2; i >= 0; i -= 2) {
+          result = {
+            kind: 'gated',
+            when: recurse(node.args[i]),
+            then: recurse(node.args[i + 1]),
+            otherwise: result,
+          }
+        }
+        return result
       }
       if (name === 'MIN' || name === 'MAX') {
         return foldConstant({
