@@ -1,9 +1,9 @@
 import { RELIC_TEMPLATES } from '../data/relics'
 import { IMPORT_CATALOG_META, RELIC_IMPORT_CATALOG } from './catalogs/indexes'
-import { listRelicCatalogRows, resolveRelicLabel } from './catalogs/relics'
+import { listRelicCatalogRows, findRelicLabel } from './catalogs/relics'
 import {
   buildRelicTemplateIdLookup,
-  resolveRelicTemplateIdFromSaveIndex,
+  findRelicTemplateIdFromSaveIndex,
 } from './catalogs/relic-template-match'
 import { readCollectedThemeNamesFromSaveRoot } from './themes'
 import { coerceSaveArray, toNumberArrayPreserveLength } from './workshop'
@@ -120,7 +120,7 @@ export function readRelicsFromSaveRoot(root: Record<string, unknown> | null): Re
   const relics: RelicSaveRow[] = Array.from({ length: slotCount }, (_, index) => ({
     index,
     name: catalog[index]?.name ?? null,
-    label: resolveRelicLabel(index) ?? `Relic ${index + 1}`,
+    label: findRelicLabel(index) ?? `Relic ${index + 1}`,
     description: catalog[index]?.description ?? null,
     unlocked: unlockedSet.has(index),
     onProfile: profileRelicIndices.includes(index),
@@ -140,8 +140,8 @@ export function listUnlockedRelics(extract: RelicsSaveExtract): RelicSaveRow[] {
 
 const RELIC_TEMPLATE_ID_LOOKUP = buildRelicTemplateIdLookup(RELIC_TEMPLATES)
 
-export function resolveRelicTemplateIdForSaveIndex(saveIndex: number): string | null {
-  return resolveRelicTemplateIdFromSaveIndex(saveIndex, RELIC_TEMPLATES, RELIC_TEMPLATE_ID_LOOKUP)
+export function findRelicTemplateIdForSaveIndex(saveIndex: number): string | null {
+  return findRelicTemplateIdFromSaveIndex(saveIndex, RELIC_TEMPLATES, RELIC_TEMPLATE_ID_LOOKUP)
 }
 
 export interface RelicsTrackerSaveImportPayload {
@@ -159,7 +159,7 @@ export function buildRelicsTrackerImportPayload(extract: RelicsSaveExtract): Rel
   const seen = new Set<string>()
 
   for (const relic of unlockedRelics) {
-    const templateId = resolveRelicTemplateIdForSaveIndex(relic.index)
+    const templateId = findRelicTemplateIdForSaveIndex(relic.index)
     if (!templateId) {
       unmatchedSaveIndices.push(relic.index)
       continue

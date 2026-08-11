@@ -1,9 +1,9 @@
 import { findLabResearchBySlug } from '../../data/index'
 import { SITE_LAB_SLUG_ALIASES } from '../../data/index'
-import { getSharedToolLabs, resolveLabValueAtLevel, type ToolLabRecord } from '../../data/index'
+import { getSharedToolLabs, computeLabValueAtLevel, type ToolLabRecord } from '../../data/index'
 import {
   type DissonanceEchoLabSpec,
-  resolveDissonanceEchoBenefitFractionAtLabLevel,
+  computeDissonanceEchoBenefitFractionAtLabLevel,
 } from './dissonance-echo-lab-keys'
 import type { GameDropdownOptionEntry } from './types'
 
@@ -21,17 +21,17 @@ function findLabRecordByResearchSlug(slug: string): ToolLabRecord | undefined {
   )
 }
 
-export function resolveDissonanceEchoLabBenefitFraction(researchSlug: string, level: number): number {
+export function computeDissonanceEchoLabBenefitFraction(researchSlug: string, level: number): number {
   if (level < 0) return 0
   const lab = findLabRecordByResearchSlug(researchSlug)
-  if (!lab) return resolveDissonanceEchoBenefitFractionAtLabLevel(level)
-  const fromCatalog = resolveLabValueAtLevel(lab, level)
+  if (!lab) return computeDissonanceEchoBenefitFractionAtLabLevel(level)
+  const fromCatalog = computeLabValueAtLevel(lab, level)
   if (fromCatalog > 0 || level === 0) return fromCatalog
-  return resolveDissonanceEchoBenefitFractionAtLabLevel(level)
+  return computeDissonanceEchoBenefitFractionAtLabLevel(level)
 }
 
-export function resolveDissonanceEchoLabBenefitPct(researchSlug: string, level: number): number {
-  return resolveDissonanceEchoLabBenefitFraction(researchSlug, level) * 100
+export function computeDissonanceEchoLabBenefitPct(researchSlug: string, level: number): number {
+  return computeDissonanceEchoLabBenefitFraction(researchSlug, level) * 100
 }
 
 export function buildDissonanceEchoLabLevelEntries(
@@ -46,7 +46,7 @@ export function buildDissonanceEchoLabLevelEntries(
 
 export function buildDissonanceEchoLabOptionLabel(researchSlug: string, level: number): string {
   if (level < 0) return '0'
-  const pct = resolveDissonanceEchoLabBenefitPct(researchSlug, level)
+  const pct = computeDissonanceEchoLabBenefitPct(researchSlug, level)
   const formatted = pct.toFixed(1)
   return `${level} - ${formatted}%`
 }

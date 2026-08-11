@@ -7,7 +7,7 @@ import {
   labDurationDaysToReachLevel,
   labMaxCatalogLevel,
   labSpeedTotal,
-  resolveEffectivePathsLabKey,
+  findEffectivePathsLabKey,
 } from './effective-paths-lab-costs'
 
 describe('lab costs against the sheet', () => {
@@ -15,7 +15,7 @@ describe('lab costs against the sheet', () => {
     const mismatches: string[] = []
 
     for (const testCase of fixtures.cases) {
-      const key = resolveEffectivePathsLabKey(testCase.sheetName)
+      const key = findEffectivePathsLabKey(testCase.sheetName)
       if (key === null) {
         mismatches.push(`${testCase.sheetName}: no catalog key`)
         continue
@@ -45,20 +45,20 @@ describe('lab costs against the sheet', () => {
   it('maps "Chrono Field Reduction %" to the reduction lab, not the damage-reduction one', () => {
     // The catalog has both `chrono_field_reduction` and
     // `chrono_field_damage_reduction`; only the first matches the sheet's costs.
-    expect(resolveEffectivePathsLabKey('Chrono Field Reduction %')).toBe('chrono_field_reduction')
+    expect(findEffectivePathsLabKey('Chrono Field Reduction %')).toBe('chrono_field_reduction')
   })
 
   it('accepts both spellings of the trade-off perks lab', () => {
     // The sheet writes it "Improve Trade-off Perks" in one place and
     // "Improve Trade-Off Perks" in another.
-    expect(resolveEffectivePathsLabKey('Improve Trade-off Perks')).toBe('improve_trade_off_perks')
-    expect(resolveEffectivePathsLabKey('Improve Trade-Off Perks')).toBe('improve_trade_off_perks')
+    expect(findEffectivePathsLabKey('Improve Trade-off Perks')).toBe('improve_trade_off_perks')
+    expect(findEffectivePathsLabKey('Improve Trade-Off Perks')).toBe('improve_trade_off_perks')
   })
 
   it('returns null for something that is not a lab', () => {
     // Module substats are bought with stones, so they have no lab cost.
-    expect(resolveEffectivePathsLabKey('Assist Module Substats - Armor')).toBeNull()
-    expect(resolveEffectivePathsLabKey('nonsense')).toBeNull()
+    expect(findEffectivePathsLabKey('Assist Module Substats - Armor')).toBeNull()
+    expect(findEffectivePathsLabKey('nonsense')).toBeNull()
   })
 
   it('maps every key it claims to a lab the catalog actually has', () => {

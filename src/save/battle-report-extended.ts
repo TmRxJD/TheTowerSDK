@@ -2,6 +2,6 @@ export {
   buildBattleReportExtendedFieldsFromSaveEntry,
   buildBattleReportStatFieldsFromSaveEntry,
   readBattleReportRawSaveValue,
-  resolveBattleReportExtendedSaveKeysForTest,
-  resolveBattleReportSaveKeysForTest,
+  getBattleReportExtendedSaveKeysForTest,
+  getBattleReportSaveKeysForTest,
 } from './battle-report-fields'

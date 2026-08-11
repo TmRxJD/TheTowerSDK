@@ -23,7 +23,7 @@ import {
   buildUltimateWeaponsTrackerImportPayload,
   canImportUltimateWeaponsToTracker,
   readUltimateWeaponsFromSaveRoot,
-  resolveUltimateWeaponCatalogForHubSync,
+  getUltimateWeaponCatalogForHubSync,
 } from './ultimate-weapons'
 import { buildVaultTrackerImportPayload, readVaultFromSaveRoot } from './vault'
 import {
@@ -122,7 +122,7 @@ export function planSaveImportTracker(
   if (key === 'ultimateWeapons') {
     const extract = readUltimateWeaponsFromSaveRoot(parsedRoot)
     const canImport = canImportUltimateWeaponsToTracker(extract)
-    const weapons = resolveUltimateWeaponCatalogForHubSync()
+    const weapons = getUltimateWeaponCatalogForHubSync()
     const payload = extract && canImport
       ? buildUltimateWeaponsTrackerImportPayload(extract, weapons)
       : null

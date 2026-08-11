@@ -43,7 +43,7 @@ import {
 import {
   getTournamentLeagueTierBase,
   normalizeTierSelection,
-  resolveTierSelection,
+  getTierSelection,
 } from '../data/index'
 import { getBasicEnemyWaveStats } from '../internal/enemy-wave-stats'
 import { getEnemyWaveStats, getWaveBaseStats } from './enemy-wave-stats'
@@ -526,7 +526,7 @@ describe('tournaments/tier selection', () => {
   })
 
   it('resolves league selections as tournament runs', () => {
-    const champion = resolveTierSelection('Champion')
+    const champion = getTierSelection('Champion')
     expect(champion.tournament).toBe(true)
     expect(champion.tier).toBe(12)
     expect(champion.league).toBe('Champion')
@@ -534,14 +534,14 @@ describe('tournaments/tier selection', () => {
   })
 
   it('migrates legacy t11/t14/t17 aliases to leagues', () => {
-    expect(resolveTierSelection(normalizeTierSelection('t11')).league).toBe('Champion')
-    expect(resolveTierSelection(normalizeTierSelection('t14')).league).toBe('Legend')
-    expect(resolveTierSelection(normalizeTierSelection('t17')).league).toBe('Legend')
+    expect(getTierSelection(normalizeTierSelection('t11')).league).toBe('Champion')
+    expect(getTierSelection(normalizeTierSelection('t14')).league).toBe('Legend')
+    expect(getTierSelection(normalizeTierSelection('t17')).league).toBe('Legend')
   })
 
   it('prefers explicit standard tier over legacy tournamentLeague field', () => {
     expect(normalizeTierSelection(12, 'Legend')).toBe(12)
-    expect(resolveTierSelection(normalizeTierSelection(12, 'Legend')).tournament).toBe(false)
+    expect(getTierSelection(normalizeTierSelection(12, 'Legend')).tournament).toBe(false)
     expect(normalizeTierSelection(undefined, 'Legend')).toBe('Legend')
   })
 })

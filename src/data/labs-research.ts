@@ -3401,7 +3401,7 @@ export function findLabResearchByDisplayName(displayName: string): LabResearchRe
  * an unresolvable name returns undefined, and callers must treat that as "not a
  * lab" rather than substituting a default.
  */
-export function resolveLabResearchRecord(nameOrSlug: string | null | undefined): LabResearchRecord | undefined {
+export function findLabResearchRecord(nameOrSlug: string | null | undefined): LabResearchRecord | undefined {
   const raw = String(nameOrSlug || '').trim()
   if (!raw) return undefined
   return findLabResearchBySlug(raw) ?? findLabResearchByLooseName(raw)

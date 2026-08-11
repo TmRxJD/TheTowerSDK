@@ -2,7 +2,7 @@ import type { ModuleCategory } from '../data/modules'
 import { decodeModuleSaveEffect } from './module-effects-decode'
 import {
   MODULE_SAVE_EFFECT_ID_LABELS,
-  resolveModuleSaveEffectLabel,
+  findModuleSaveEffectLabel,
 } from './module-effects-registry'
 import {
   MODULE_SUBSTAT_BASE_RARITIES,
@@ -42,7 +42,7 @@ function getCanonicalDefinition(category: ModuleCategory, label: string) {
   return MODULE_SUBSTAT_CANONICAL_DATA[canonical].substats.find(definition => definition.label === label)
 }
 
-export { MODULE_SAVE_EFFECT_ID_LABELS, resolveModuleSaveEffectLabel }
+export { MODULE_SAVE_EFFECT_ID_LABELS, findModuleSaveEffectLabel }
 
 export interface DecodedModuleSaveSubstat {
   slotIndex: number

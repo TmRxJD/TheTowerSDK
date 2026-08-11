@@ -507,7 +507,7 @@ export function sumBotUnlockCosts(unlockedBotCount: number): number {
 }
 
 /** Assign sequential unlock slots (1st = 150, 2nd = 300, …) among enabled base bots. */
-export function resolveEnabledBotUnlockOrder(
+export function getEnabledBotUnlockOrder(
   enabledLabels: readonly string[],
   orderLabels?: readonly string[],
 ): string[] {
@@ -531,7 +531,7 @@ export function buildBotUnlockOrdinalByLabel(
   orderLabels?: readonly string[],
 ): Map<string, number> {
   const ordinals = new Map<string, number>()
-  resolveEnabledBotUnlockOrder(enabledLabels, orderLabels).forEach((label, index) => {
+  getEnabledBotUnlockOrder(enabledLabels, orderLabels).forEach((label, index) => {
     ordinals.set(label, index + 1)
   })
   return ordinals

@@ -18,7 +18,7 @@ export function buildModuleStoneCostOptionLabel(index: number, profile: ModuleSt
   return options[clamped]?.title ?? String(index)
 }
 
-export function resolveModuleStoneCostIndex(
+export function computeModuleStoneCostIndex(
   level: number | null | undefined,
   profile: ModuleStoneCostProfile = 'current',
 ): number {
@@ -27,7 +27,7 @@ export function resolveModuleStoneCostIndex(
   return idx >= 0 ? idx : 0
 }
 
-export function resolveModuleStoneCostLevelByIndex(
+export function computeModuleStoneCostLevelByIndex(
   index: number,
   profile: ModuleStoneCostProfile = 'current',
 ): number {

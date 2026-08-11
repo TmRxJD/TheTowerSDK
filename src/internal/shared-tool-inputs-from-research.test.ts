@@ -5,21 +5,21 @@ import {
   readNamedCalculatorLabsFromResearchLevels,
   readWorkshopDiscountsFromResearchLevels,
   enrichSharedToolInputsFromResearchLevels,
-  resolveResearchLabLevel,
+  computeResearchLabLevel,
   syncUptimeResearchLabsFromTracker,
 } from './shared-tool-inputs-from-research'
 import { defaultSharedToolInputs } from './shared-tool-inputs'
 
-describe('resolveResearchLabLevel', () => {
+describe('computeResearchLabLevel', () => {
   it('matches catalog display names and site aliases', () => {
     const levels = {
       'Labs Speed': 12,
       'Labs Coin Discount': 8,
       'Workshop Attack Discount': 5,
     }
-    expect(resolveResearchLabLevel(levels, 'labs_speed')).toBe(12)
-    expect(resolveResearchLabLevel(levels, 'labs_coin_discount')).toBe(8)
-    expect(resolveResearchLabLevel(levels, 'workshop_attack_discount')).toBe(5)
+    expect(computeResearchLabLevel(levels, 'labs_speed')).toBe(12)
+    expect(computeResearchLabLevel(levels, 'labs_coin_discount')).toBe(8)
+    expect(computeResearchLabLevel(levels, 'workshop_attack_discount')).toBe(5)
   })
 
   it('matches dissonant echo slugs by display-name override keys', () => {

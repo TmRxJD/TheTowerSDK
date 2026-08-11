@@ -26,14 +26,14 @@ function getWorkshopStatDefinition(statKey: string) {
   return getWorkshopStatDefinitionByKey(statKey)
 }
 
-export function resolveWorkshopEnhancementKeyFromDataKey(dataKey: string): string {
+export function getWorkshopEnhancementKeyFromDataKey(dataKey: string): string {
   for (const [enhancementKey, mapped] of Object.entries(WORKSHOP_ENHANCEMENT_KEY_ALIASES)) {
     if (mapped === dataKey) return enhancementKey
   }
   return dataKey
 }
 
-export function resolveWorkshopEnhancementSpecFromDataKey(dataKey: string): { dataKey: string } | null {
+export function findWorkshopEnhancementSpecFromDataKey(dataKey: string): { dataKey: string } | null {
   const match = getWorkshopEnhancementDefinitions().find(stat => stat.key === dataKey)
   return match ? { dataKey: match.key } : null
 }
@@ -65,7 +65,7 @@ export function buildWorkshopStatFieldLabel(statKey: string): string {
 }
 
 /** Numeric workshop stat value (e.g. damage) at a given upgrade level. */
-export function resolveWorkshopStatNumericValueAtLevel(statKey: string, level: number): number {
+export function computeWorkshopStatNumericValueAtLevel(statKey: string, level: number): number {
   const stat = getWorkshopStatDefinition(statKey)
   if (!stat) return 0
 

@@ -161,64 +161,64 @@ function resolveStringByIndex<T extends string>(values: readonly T[], index: num
   return values[clamped] ?? fallback
 }
 
-export function resolveModuleTrackerTypeFilterIndex(value: unknown): number {
+export function computeModuleTrackerTypeFilterIndex(value: unknown): number {
   return resolveStringIndex(MODULE_TRACKER_TYPE_FILTER_VALUES, value)
 }
 
-export function resolveModuleTrackerTypeFilterByIndex(index: number): ModuleTrackerTypeFilter {
+export function getModuleTrackerTypeFilterByIndex(index: number): ModuleTrackerTypeFilter {
   return resolveStringByIndex(MODULE_TRACKER_TYPE_FILTER_VALUES, index, 'All')
 }
 
-export function resolveModuleTrackerRarityFilterIndex(value: unknown): number {
+export function computeModuleTrackerRarityFilterIndex(value: unknown): number {
   return resolveStringIndex(MODULE_TRACKER_RARITY_FILTER_VALUES, value)
 }
 
-export function resolveModuleTrackerRarityFilterByIndex(index: number): ModuleTrackerRarityFilter {
+export function getModuleTrackerRarityFilterByIndex(index: number): ModuleTrackerRarityFilter {
   return resolveStringByIndex(MODULE_TRACKER_RARITY_FILTER_VALUES, index, 'All')
 }
 
-export function resolveModuleTrackerSortIndex(value: unknown): number {
+export function computeModuleTrackerSortIndex(value: unknown): number {
   return resolveStringIndex(MODULE_TRACKER_SORT_VALUES, value)
 }
 
-export function resolveModuleTrackerSortByIndex(index: number): ModuleTrackerSortKey {
+export function getModuleTrackerSortByIndex(index: number): ModuleTrackerSortKey {
   return resolveStringByIndex(MODULE_TRACKER_SORT_VALUES, index, 'name')
 }
 
-export function resolveCardTrackerSortIndex(value: unknown): number {
+export function computeCardTrackerSortIndex(value: unknown): number {
   return resolveStringIndex(CARD_TRACKER_SORT_VALUES, value)
 }
 
-export function resolveCardTrackerSortByIndex(index: number): CardTrackerSortKey {
+export function getCardTrackerSortByIndex(index: number): CardTrackerSortKey {
   return resolveStringByIndex(CARD_TRACKER_SORT_VALUES, index, 'name')
 }
 
-export function resolveLabsTrackerSortIndex(value: unknown): number {
+export function computeLabsTrackerSortIndex(value: unknown): number {
   return resolveStringIndex(LABS_TRACKER_SORT_VALUES, value)
 }
 
-export function resolveLabsTrackerSortByIndex(index: number): LabsTrackerSortKey {
+export function getLabsTrackerSortByIndex(index: number): LabsTrackerSortKey {
   return resolveStringByIndex(LABS_TRACKER_SORT_VALUES, index, 'order')
 }
 
 export function buildModuleTrackerTypeFilterOptionLabel(index: number): string {
-  return MODULE_TRACKER_TYPE_FILTER_LABELS[resolveModuleTrackerTypeFilterByIndex(index)]
+  return MODULE_TRACKER_TYPE_FILTER_LABELS[getModuleTrackerTypeFilterByIndex(index)]
 }
 
 export function buildModuleTrackerRarityFilterOptionLabel(index: number): string {
-  return resolveModuleTrackerRarityFilterByIndex(index)
+  return getModuleTrackerRarityFilterByIndex(index)
 }
 
 export function buildModuleTrackerSortOptionLabel(index: number): string {
-  return MODULE_TRACKER_SORT_LABELS[resolveModuleTrackerSortByIndex(index)]
+  return MODULE_TRACKER_SORT_LABELS[getModuleTrackerSortByIndex(index)]
 }
 
 export function buildCardTrackerSortOptionLabel(index: number): string {
-  return CARD_TRACKER_SORT_LABELS[resolveCardTrackerSortByIndex(index)]
+  return CARD_TRACKER_SORT_LABELS[getCardTrackerSortByIndex(index)]
 }
 
 export function buildLabsTrackerSortOptionLabel(index: number): string {
-  return LABS_TRACKER_SORT_LABELS[resolveLabsTrackerSortByIndex(index)]
+  return LABS_TRACKER_SORT_LABELS[getLabsTrackerSortByIndex(index)]
 }
 
 export const WORKSHOP_TRACKER_CATEGORY_FILTER_VALUES = ['all', 'attack', 'defense', 'utility'] as const
@@ -415,103 +415,103 @@ export function buildLabsTypeFilterEntries(typeOptions: readonly string[]): read
   return values.map((value, index) => ({ value: index, baseValue: index, meta: { stringValue: value, label: value } }))
 }
 
-export function resolveWorkshopTrackerCategoryFilterIndex(value: unknown): number {
+export function computeWorkshopTrackerCategoryFilterIndex(value: unknown): number {
   return resolveStringIndex(WORKSHOP_TRACKER_CATEGORY_FILTER_VALUES, value)
 }
 
-export function resolveWorkshopTrackerCategoryFilterByIndex(index: number): WorkshopTrackerCategoryFilter {
+export function getWorkshopTrackerCategoryFilterByIndex(index: number): WorkshopTrackerCategoryFilter {
   return resolveStringByIndex(WORKSHOP_TRACKER_CATEGORY_FILTER_VALUES, index, 'all')
 }
 
-export function resolveWorkshopOverviewLayoutIndex(value: unknown): number {
+export function computeWorkshopOverviewLayoutIndex(value: unknown): number {
   return resolveStringIndex(WORKSHOP_OVERVIEW_LAYOUT_VALUES, String(value))
 }
 
-export function resolveWorkshopOverviewLayoutByIndex(index: number): WorkshopOverviewLayoutMode | number {
+export function getWorkshopOverviewLayoutByIndex(index: number): WorkshopOverviewLayoutMode | number {
   const resolved = resolveStringByIndex(WORKSHOP_OVERVIEW_LAYOUT_VALUES, index, 'auto')
   return resolved === 'auto' ? 'auto' : Number(resolved)
 }
 
-export function resolveUwOverviewViewIndex(value: unknown): number {
+export function computeUwOverviewViewIndex(value: unknown): number {
   return resolveStringIndex(UW_OVERVIEW_VIEW_VALUES, String(value))
 }
 
-export function resolveUwOverviewViewByIndex(index: number): UwOverviewViewMode {
+export function getUwOverviewViewByIndex(index: number): UwOverviewViewMode {
   return resolveStringByIndex(UW_OVERVIEW_VIEW_VALUES, index, 'auto')
 }
 
-export function resolveWorkshopTrackerSortIndex(value: unknown, profile: 'workshop' | 'enhancements', includeCustom: boolean): number {
+export function computeWorkshopTrackerSortIndex(value: unknown, profile: 'workshop' | 'enhancements', includeCustom: boolean): number {
   const values = profile === 'enhancements' ? WORKSHOP_TRACKER_SORT_ENHANCEMENTS_VALUES : WORKSHOP_TRACKER_SORT_WORKSHOP_VALUES
   return resolveSortIndex(values, value, includeCustom)
 }
 
-export function resolveWorkshopTrackerSortByIndex(index: number, profile: 'workshop' | 'enhancements', includeCustom: boolean): string {
+export function getWorkshopTrackerSortByIndex(index: number, profile: 'workshop' | 'enhancements', includeCustom: boolean): string {
   const values = profile === 'enhancements' ? WORKSHOP_TRACKER_SORT_ENHANCEMENTS_VALUES : WORKSHOP_TRACKER_SORT_WORKSHOP_VALUES
   return resolveSortByIndex(values, index, includeCustom, 'default')
 }
 
-export function resolveBotsTrackerSortIndex(value: unknown, includeCustom: boolean): number {
+export function computeBotsTrackerSortIndex(value: unknown, includeCustom: boolean): number {
   return resolveSortIndex(BOTS_TRACKER_SORT_BASE_VALUES, value, includeCustom)
 }
 
-export function resolveBotsTrackerSortByIndex(index: number, includeCustom: boolean): string {
+export function getBotsTrackerSortByIndex(index: number, includeCustom: boolean): string {
   return resolveSortByIndex(BOTS_TRACKER_SORT_BASE_VALUES, index, includeCustom, 'default')
 }
 
-export function resolveGuardiansTrackerSortIndex(value: unknown, includeCustom: boolean): number {
+export function computeGuardiansTrackerSortIndex(value: unknown, includeCustom: boolean): number {
   return resolveSortIndex(GUARDIANS_TRACKER_SORT_BASE_VALUES, value, includeCustom)
 }
 
-export function resolveGuardiansTrackerSortByIndex(index: number, includeCustom: boolean): string {
+export function getGuardiansTrackerSortByIndex(index: number, includeCustom: boolean): string {
   return resolveSortByIndex(GUARDIANS_TRACKER_SORT_BASE_VALUES, index, includeCustom, 'default')
 }
 
-export function resolveUwTrackerSortIndex(value: unknown, includeCustom: boolean): number {
+export function computeUwTrackerSortIndex(value: unknown, includeCustom: boolean): number {
   return resolveSortIndex(UW_TRACKER_SORT_BASE_VALUES, value, includeCustom)
 }
 
-export function resolveUwTrackerSortByIndex(index: number, includeCustom: boolean): string {
+export function getUwTrackerSortByIndex(index: number, includeCustom: boolean): string {
   return resolveSortByIndex(UW_TRACKER_SORT_BASE_VALUES, index, includeCustom, 'default')
 }
 
-export function resolveRelicsBonusSortIndex(value: unknown): number {
+export function computeRelicsBonusSortIndex(value: unknown): number {
   return resolveStringIndex(RELICS_BONUS_SORT_VALUES, value)
 }
 
-export function resolveRelicsBonusSortByIndex(index: number): string {
+export function getRelicsBonusSortByIndex(index: number): string {
   return resolveStringByIndex(RELICS_BONUS_SORT_VALUES, index, 'name')
 }
 
-export function resolveRelicsThemesSortIndex(value: unknown): number {
+export function computeRelicsThemesSortIndex(value: unknown): number {
   return resolveStringIndex(RELICS_THEMES_SORT_VALUES, value)
 }
 
-export function resolveRelicsThemesSortByIndex(index: number): string {
+export function getRelicsThemesSortByIndex(index: number): string {
   return resolveStringByIndex(RELICS_THEMES_SORT_VALUES, index, 'name')
 }
 
-export function resolveLabsSpeedupIndex(value: unknown): number {
+export function computeLabsSpeedupIndex(value: unknown): number {
   const numeric = Number(value)
   const idx = TOOL_LAB_SPEEDUP_OPTIONS.indexOf(numeric as (typeof TOOL_LAB_SPEEDUP_OPTIONS)[number])
   return idx >= 0 ? idx : 0
 }
 
-export function resolveLabsSpeedupByIndex(index: number): number {
+export function computeLabsSpeedupByIndex(index: number): number {
   const clamped = Math.max(0, Math.min(TOOL_LAB_SPEEDUP_OPTIONS.length - 1, Math.floor(Number(index) || 0)))
   return TOOL_LAB_SPEEDUP_OPTIONS[clamped] ?? 1
 }
 
-export function resolveLabsTypeFilterIndex(value: unknown, typeOptions: readonly string[]): number {
+export function computeLabsTypeFilterIndex(value: unknown, typeOptions: readonly string[]): number {
   return resolveStringIndex(typeOptions.length > 0 ? typeOptions : ['All'], value)
 }
 
-export function resolveLabsTypeFilterByIndex(index: number, typeOptions: readonly string[]): string {
+export function getLabsTypeFilterByIndex(index: number, typeOptions: readonly string[]): string {
   const values = typeOptions.length > 0 ? typeOptions : ['All']
   return resolveStringByIndex(values, index, 'All')
 }
 
 export function buildWorkshopTrackerCategoryFilterOptionLabel(index: number): string {
-  return WORKSHOP_CATEGORY_LABELS[resolveWorkshopTrackerCategoryFilterByIndex(index)]
+  return WORKSHOP_CATEGORY_LABELS[getWorkshopTrackerCategoryFilterByIndex(index)]
 }
 
 export function buildWorkshopOverviewLayoutOptionLabel(index: number): string {
@@ -519,29 +519,29 @@ export function buildWorkshopOverviewLayoutOptionLabel(index: number): string {
 }
 
 export function buildWorkshopTrackerSortOptionLabel(index: number, profile: 'workshop' | 'enhancements', includeCustom: boolean): string {
-  const value = resolveWorkshopTrackerSortByIndex(index, profile, includeCustom)
+  const value = getWorkshopTrackerSortByIndex(index, profile, includeCustom)
   const labels = profile === 'enhancements' ? WORKSHOP_SORT_ENHANCEMENTS_LABELS : WORKSHOP_SORT_WORKSHOP_LABELS
   return labels[value] ?? value
 }
 
 export function buildBotsTrackerSortOptionLabel(index: number, includeCustom: boolean): string {
-  return BOTS_SORT_LABELS[resolveBotsTrackerSortByIndex(index, includeCustom)] ?? String(index)
+  return BOTS_SORT_LABELS[getBotsTrackerSortByIndex(index, includeCustom)] ?? String(index)
 }
 
 export function buildGuardiansTrackerSortOptionLabel(index: number, includeCustom: boolean): string {
-  return GUARDIANS_SORT_LABELS[resolveGuardiansTrackerSortByIndex(index, includeCustom)] ?? String(index)
+  return GUARDIANS_SORT_LABELS[getGuardiansTrackerSortByIndex(index, includeCustom)] ?? String(index)
 }
 
 export function buildUwTrackerSortOptionLabel(index: number, includeCustom: boolean): string {
-  return UW_SORT_LABELS[resolveUwTrackerSortByIndex(index, includeCustom)] ?? String(index)
+  return UW_SORT_LABELS[getUwTrackerSortByIndex(index, includeCustom)] ?? String(index)
 }
 
 export function buildRelicsBonusSortOptionLabel(index: number): string {
-  return RELICS_BONUS_SORT_LABELS[resolveRelicsBonusSortByIndex(index)]
+  return RELICS_BONUS_SORT_LABELS[getRelicsBonusSortByIndex(index)]
 }
 
 export function buildRelicsThemesSortOptionLabel(index: number): string {
-  return RELICS_THEMES_SORT_LABELS[resolveRelicsThemesSortByIndex(index)]
+  return RELICS_THEMES_SORT_LABELS[getRelicsThemesSortByIndex(index)]
 }
 
 export function buildBotsTrackerPresetOptionLabel(index: number, labels?: readonly string[]): string {
@@ -550,15 +550,15 @@ export function buildBotsTrackerPresetOptionLabel(index: number, labels?: readon
 }
 
 export function buildLabsSpeedupOptionLabel(index: number): string {
-  return `${resolveLabsSpeedupByIndex(index)}x`
+  return `${computeLabsSpeedupByIndex(index)}x`
 }
 
 export function buildLabsTypeFilterOptionLabel(index: number, typeOptions: readonly string[]): string {
-  return resolveLabsTypeFilterByIndex(index, typeOptions)
+  return getLabsTypeFilterByIndex(index, typeOptions)
 }
 
 export function buildUwOverviewViewOptionLabel(index: number): string {
-  return UW_OVERVIEW_VIEW_LABELS[resolveUwOverviewViewByIndex(index)]
+  return UW_OVERVIEW_VIEW_LABELS[getUwOverviewViewByIndex(index)]
 }
 
 export const LIFETIME_AVERAGE_PERIOD_VALUES = [
@@ -615,26 +615,26 @@ export function buildLifetimeChartLineTypeEntries(): readonly GameDropdownOption
   return buildIndexedStringEntries(LIFETIME_CHART_LINE_TYPE_VALUES, value => LIFETIME_CHART_LINE_TYPE_LABELS[value])
 }
 
-export function resolveLifetimeAveragePeriodIndex(value: unknown): number {
+export function computeLifetimeAveragePeriodIndex(value: unknown): number {
   return resolveStringIndex(LIFETIME_AVERAGE_PERIOD_VALUES, value)
 }
 
-export function resolveLifetimeAveragePeriodByIndex(index: number): LifetimeAveragePeriod {
+export function getLifetimeAveragePeriodByIndex(index: number): LifetimeAveragePeriod {
   return resolveStringByIndex(LIFETIME_AVERAGE_PERIOD_VALUES, index, 'day')
 }
 
-export function resolveLifetimeChartLineTypeIndex(value: unknown): number {
+export function computeLifetimeChartLineTypeIndex(value: unknown): number {
   return resolveStringIndex(LIFETIME_CHART_LINE_TYPE_VALUES, value)
 }
 
-export function resolveLifetimeChartLineTypeByIndex(index: number): LifetimeChartLineType {
+export function getLifetimeChartLineTypeByIndex(index: number): LifetimeChartLineType {
   return resolveStringByIndex(LIFETIME_CHART_LINE_TYPE_VALUES, index, 'solid')
 }
 
 export function buildLifetimeAveragePeriodOptionLabel(index: number): string {
-  return LIFETIME_AVERAGE_PERIOD_LABELS[resolveLifetimeAveragePeriodByIndex(index)]
+  return LIFETIME_AVERAGE_PERIOD_LABELS[getLifetimeAveragePeriodByIndex(index)]
 }
 
 export function buildLifetimeChartLineTypeOptionLabel(index: number): string {
-  return LIFETIME_CHART_LINE_TYPE_LABELS[resolveLifetimeChartLineTypeByIndex(index)]
+  return LIFETIME_CHART_LINE_TYPE_LABELS[getLifetimeChartLineTypeByIndex(index)]
 }

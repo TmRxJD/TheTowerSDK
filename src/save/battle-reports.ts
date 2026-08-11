@@ -3,7 +3,7 @@ import { buildBattleReportStatFieldsFromSaveEntry } from './battle-report-fields
 import { normalizeBattleHistorySaveEntry } from './battle-history-normalize'
 import { parseDurationToHours, parseSaveDateTimeToMs } from '../formatting/index'
 import { listImportableBattleRuns } from './battle-history'
-import { resolveKilledByFromSave } from './killed-by'
+import { getKilledByFromSave } from './killed-by'
 import { normalizeTrackerDateText, normalizeTrackerTimeText } from '../internal/tracker-cloud-schemas'
 import { formatCompact } from '../internal/tool-formatting'
 
@@ -208,7 +208,7 @@ export function buildTrackerRunDataFromBattleHistoryEntry(
     rerollShards: formatCompact(readNumber(normalizedEntry.rerollShardsEarned)),
     totalDice: formatCompact(readNumber(normalizedEntry.rerollShardsEarned)),
     dice: formatCompact(readNumber(normalizedEntry.rerollShardsEarned)),
-    killedBy: resolveKilledByFromSave(normalizedEntry.killedBy).slice(0, 20),
+    killedBy: getKilledByFromSave(normalizedEntry.killedBy).slice(0, 20),
     note: `${notePrefix} - ${isTournament ? 'Tournament' : 'Regular'} run - Tower: ${selectedTower}`,
     notes: `${notePrefix} - ${isTournament ? 'Tournament' : 'Regular'} run - Tower: ${selectedTower}`,
     date: toIsoDate(uploadDate),

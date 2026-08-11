@@ -43,12 +43,12 @@ export function buildUptimeMvnModeOptionLabel(index: number): string {
   return MVN_MODE_LABELS[mode]
 }
 
-export function resolveUptimeMvnModeIndex(mode: MVNMode | null | undefined): number {
+export function computeUptimeMvnModeIndex(mode: MVNMode | null | undefined): number {
   const idx = UPTIME_MVN_MODES.indexOf(mode ?? 'Disabled')
   return idx >= 0 ? idx : 0
 }
 
-export function resolveUptimeMvnModeByIndex(index: number): MVNMode {
+export function getUptimeMvnModeByIndex(index: number): MVNMode {
   const clamped = Math.max(0, Math.min(UPTIME_MVN_MODES.length - 1, Math.floor(Number(index) || 0)))
   return UPTIME_MVN_MODES[clamped] ?? 'Disabled'
 }
@@ -62,12 +62,12 @@ export function buildUptimeCompressorOptionLabel(index: number): string {
   return COMPRESSOR_MODE_LABELS[mode]
 }
 
-export function resolveUptimeCompressorIndex(mode: Compressor | null | undefined): number {
+export function computeUptimeCompressorIndex(mode: Compressor | null | undefined): number {
   const idx = UPTIME_COMPRESSOR_MODES.indexOf(mode ?? 'Disabled')
   return idx >= 0 ? idx : 0
 }
 
-export function resolveUptimeCompressorByIndex(index: number): Compressor {
+export function getUptimeCompressorByIndex(index: number): Compressor {
   const clamped = Math.max(0, Math.min(UPTIME_COMPRESSOR_MODES.length - 1, Math.floor(Number(index) || 0)))
   return UPTIME_COMPRESSOR_MODES[clamped] ?? 'Disabled'
 }

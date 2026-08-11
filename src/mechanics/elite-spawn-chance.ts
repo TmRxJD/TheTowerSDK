@@ -7,7 +7,7 @@ import { clampCampaignTier } from '../data/index'
 import { FLEET_SPAWN_ROWS } from '../data/enemies'
 import type { TournamentLeague } from '../data/index'
 import { enemyBalanceMasteryDoubleSpawnChancePct } from './card-effect-lookup'
-import { resolveBossWaveIntervalFromTier } from './enemy-drops-simulation'
+import { computeBossWaveIntervalFromTier } from './enemy-drops-simulation'
 import { getTournamentHeatProfile } from './tournament-heat-bc'
 
 export type EliteSpawnChanceAtWave = {
@@ -105,12 +105,12 @@ export type WaveInfoBossWaveIntervalInput = {
 }
 
 /** Boss cadence from tier More Bosses BC or tournament league profile (every N waves). */
-export function resolveWaveInfoBossWaveInterval(input: WaveInfoBossWaveIntervalInput): number {
+export function computeWaveInfoBossWaveInterval(input: WaveInfoBossWaveIntervalInput): number {
   if (input.tournament && input.league) {
     const profile = getTournamentHeatProfile(input.league)
     if (profile) return Math.max(1, profile.moreBossesEveryWaves)
   }
-  return resolveBossWaveIntervalFromTier(input.tier)
+  return computeBossWaveIntervalFromTier(input.tier)
 }
 
 export function isBossSpawnWave(wave: number, bossInterval: number): boolean {

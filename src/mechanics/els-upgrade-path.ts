@@ -25,11 +25,11 @@ import {
 } from './enemy-level-skip'
 import {
   computeDiscountedWorkshopCost,
-  resolveWorkshopTotalDiscountPercent,
+  computeWorkshopTotalDiscountPercent,
 } from '../data/workshop'
 import { getWorkshopCostByKeyAndLevel, getWorkshopMaxLevelByKey } from '../data/workshop-costs'
 import { getWorkshopStatDefinitions } from '../data/workshop-tracker-definitions'
-import { formatAdaptiveRoiPct, resolveRoiReferenceCost } from '../internal/roi-scaling'
+import { formatAdaptiveRoiPct, computeRoiReferenceCost } from '../internal/roi-scaling'
 
 export const ELS_ATTACK_WORKSHOP_KEY = 'Enemy Attack Level Skip'
 export const ELS_HEALTH_WORKSHOP_KEY = 'Enemy Health Level Skip'
@@ -42,7 +42,7 @@ export const ELS_ENHANCEMENT_TRACKER_ALIASES = [
 ] as const
 
 /** Read ELS+ enhancement level from workshop tracker keys (canonical + import aliases). */
-export function resolveElsEnhancementLevelFromTracker(
+export function computeElsEnhancementLevelFromTracker(
   enhancementLevels: Record<string, number> | null | undefined,
 ): number {
   if (!enhancementLevels || typeof enhancementLevels !== 'object') return 0
@@ -212,7 +212,7 @@ function readDiscount(record: Record<string, unknown> | undefined, key: string):
 }
 
 /** Resolve ELS calculator defaults from a workshop tracker cloud/local blob when present. */
-export function resolveElsLeadFromWorkshopTrackerBlob(blob: Record<string, unknown> | null | undefined): ElsWorkshopTrackerLead | null {
+export function findElsLeadFromWorkshopTrackerBlob(blob: Record<string, unknown> | null | undefined): ElsWorkshopTrackerLead | null {
   if (!blob || typeof blob !== 'object') return null
 
   const progress = blob.progress && typeof blob.progress === 'object'
@@ -238,7 +238,7 @@ export function resolveElsLeadFromWorkshopTrackerBlob(blob: Record<string, unkno
   const lead: ElsWorkshopTrackerLead = {
     attackUtilityLevel: readNumberRecordValue(levels, ELS_ATTACK_WORKSHOP_KEY),
     healthUtilityLevel: readNumberRecordValue(levels, ELS_HEALTH_WORKSHOP_KEY),
-    enhancementLevel: resolveElsEnhancementLevelFromTracker(enhancementLevels as Record<string, number> | undefined),
+    enhancementLevel: computeElsEnhancementLevelFromTracker(enhancementLevels as Record<string, number> | undefined),
     utilityDiscountPct: readDiscount(ui, 'discountUtility'),
     enhancementDiscountPct: readDiscount(ui, 'enhancementDiscountUtility'),
     enhancementVaultDiscountPct: readDiscount(ui, 'enhancementDiscountVault'),
@@ -354,7 +354,7 @@ function clampLevel(value: number, min: number, max: number): number {
 }
 
 /** Normalize module/vault/lab skip inputs (supports legacy `modulePrimary*` aliases). */
-export function resolveElsSkipSources(input: ElsSkipSourceInput & {
+export function getElsSkipSources(input: ElsSkipSourceInput & {
   moduleClusterAttack?: number
   moduleClusterHealth?: number
   modulePrimaryAttackPct?: number
@@ -409,7 +409,7 @@ export function computeWorkshopSkipChances(
   levels: ElsWorkshopLevels,
   sources: ElsSkipSourceInput = {} as ElsSkipSourceInput,
 ): ElsSkipChanceSnapshot {
-  const resolved = resolveElsSkipSources(sources)
+  const resolved = getElsSkipSources(sources)
   const attack = computeElsTrackSkipChance(
     'attack',
     levels.attackUtilityLevel,
@@ -438,7 +438,7 @@ export function computeWorkshopSkipChances(
 export function elsSkipSourcesForInRunEffectiveBc(
   sources: ElsSkipSourceInput,
 ): ElsSkipSourceInput {
-  const resolved = resolveElsSkipSources(sources)
+  const resolved = getElsSkipSources(sources)
   return {
     ...resolved,
     assistAttackPct: 0,
@@ -459,7 +459,7 @@ export function computeElsInRunEffectiveSkipChances(
   adjustments?: TierSkipChanceAdjustments,
 ): ElsSkipChanceSnapshot {
   if (!adjustments) {
-    return computeWorkshopSkipChances(levels, resolveElsSkipSources(sources))
+    return computeWorkshopSkipChances(levels, getElsSkipSources(sources))
   }
   const stored = computeWorkshopSkipChances(levels, elsSkipSourcesForInRunEffectiveBc(sources))
   return applyElsTierSkipAdjustments(stored, adjustments)
@@ -497,7 +497,7 @@ function pathDisplaySkipSnapshot(
 }
 
 function resolvePathSkipSources(input: ElsUpgradePathInput): ElsSkipSourceInput {
-  return input.resolvedSkipSources ?? resolveElsSkipSources(input)
+  return input.resolvedSkipSources ?? getElsSkipSources(input)
 }
 
 /** Additional enemy levels skipped at `referenceWave` from a skip-chance delta. */
@@ -523,11 +523,11 @@ export function marginalSkipLevelsAtWave(
 }
 
 function utilityDiscountTotal(discounts: ElsUpgradeDiscounts): number {
-  return resolveWorkshopTotalDiscountPercent(discounts.utilityDiscountPct ?? 0, 0)
+  return computeWorkshopTotalDiscountPercent(discounts.utilityDiscountPct ?? 0, 0)
 }
 
 function enhancementDiscountTotal(discounts: ElsUpgradeDiscounts): number {
-  return resolveWorkshopTotalDiscountPercent(
+  return computeWorkshopTotalDiscountPercent(
     discounts.enhancementDiscountPct ?? 0,
     discounts.enhancementVaultDiscountPct ?? 0,
   )
@@ -648,7 +648,7 @@ function resolveElsRoiReferenceCostAtLevels(
     )
     if (cost != null && cost > 0) costs.push(cost)
   }
-  return resolveRoiReferenceCost(costs)
+  return computeRoiReferenceCost(costs)
 }
 
 export function listElsMarginalUpgrades(

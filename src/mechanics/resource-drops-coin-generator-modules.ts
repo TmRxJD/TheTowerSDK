@@ -23,7 +23,7 @@ export interface EquippedGeneratorUnique {
   rarity: string
 }
 
-export function resolveGeneratorUniqueRarityBonus(templateId: string, rarity: string): number {
+export function computeGeneratorUniqueRarityBonus(templateId: string, rarity: string): number {
   const template = getModuleTemplate(templateId)
   const match = template?.rarityBonuses?.find(entry => entry.rarity === rarity)
   return match?.value ?? 0
@@ -35,7 +35,7 @@ export function generatorUniqueTemplateFromEffectId(effectId: number): CoinRelev
   return templateId as CoinRelevantGeneratorUniqueId
 }
 
-export function resolveEquippedGeneratorUniqueFromModuleProgress(
+export function findEquippedGeneratorUniqueFromModuleProgress(
   moduleProgress: SharedModuleProgressInputs,
 ): EquippedGeneratorUnique | null {
   const templateId = moduleProgress.generatorEquippedUniqueId
@@ -79,7 +79,7 @@ export function blackHoleDigestorCpkBonusPct(
 
 /** Singularity Harness flat bot range bonus (meters). */
 export function singularityHarnessRangeBonusMeters(rarity: string): number {
-  return resolveGeneratorUniqueRarityBonus('singularity-harness', rarity)
+  return computeGeneratorUniqueRarityBonus('singularity-harness', rarity)
 }
 
 /**

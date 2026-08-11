@@ -2,7 +2,7 @@
 
 One rule per idea, applied the same way in every domain. This exists because the SDK grew four
 different words for "fetch a value" and names like
-`resolveChainThunderReductionFractionFromAccumulated` (51 characters), and a reader cannot tell from
+`computeChainThunderReductionFractionFromAccumulated` (51 characters), and a reader cannot tell from
 `resolveX` and `getX` whether one of them costs more than the other.
 
 ## Verbs

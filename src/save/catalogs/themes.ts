@@ -23,7 +23,7 @@ export function listThemeCatalogRowsByCategory(category: ThemeCatalogCategory): 
   return themeRows().filter(row => row.category === category)
 }
 
-export function resolveThemeCatalogLabel(category: ThemeCatalogCategory, catalogIndex: number): string | null {
+export function findThemeCatalogLabel(category: ThemeCatalogCategory, catalogIndex: number): string | null {
   return themeRows().find(row => row.category === category && row.catalogIndex === catalogIndex)?.label ?? null
 }
 

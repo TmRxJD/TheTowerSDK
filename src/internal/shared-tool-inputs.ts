@@ -31,7 +31,7 @@ import {
 export {
   compactSharedToolInputsForStorage,
   mergeSparseSharedToolInputs,
-  resolveSharedToolInputs,
+  getSharedToolInputs,
 } from './shared-tool-inputs-storage'
 export {
   diffChangedHubKeys,

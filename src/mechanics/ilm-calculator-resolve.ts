@@ -1,6 +1,6 @@
 import { clampAssistMultiplierEfficiencyPct } from '../internal/assist-module-efficiency'
 import { computeModuleStat, type ModuleCalcType } from '../data/module-bonus'
-import { getSharedToolLabs, resolveLabValueAtLevel } from '../data/index'
+import { getSharedToolLabs, computeLabValueAtLevel } from '../data/index'
 import {
   chainLightningShockMultiplier,
   enemyHitMultiplier,
@@ -11,8 +11,8 @@ import {
   ILM_UNIQUE_MODULE_IDS,
   ilmModuleSubstatBonusFromRarity,
   type IlmUniqueModuleRarityChoice,
-  resolveAmplifyBotBonusMultiplierFromLevel,
-  resolveIlmUniqueModuleRarityBonus,
+  computeAmplifyBotBonusMultiplierFromLevel,
+  computeIlmUniqueModuleRarityBonus,
 } from './ilm-calculator-options'
 import type {
   IlmCalcsScenarioSettings,
@@ -24,9 +24,9 @@ import type {
 import {
   DEFAULT_PROTECTOR_DAMAGE_REDUCTION_MULT,
   PROTECTOR_DAMAGE_REDUCTION_LAB_SLUG,
-  resolveInnerLandMinesDamageMult,
-  resolveMineAgeSecondsFromWaves,
-  resolveTowerDamageFromAttackLevel,
+  computeInnerLandMinesDamageMult,
+  computeMineAgeSecondsFromWaves,
+  computeTowerDamageFromAttackLevel,
   SHOCK_MULTIPLIER_LAB_SLUG,
 } from './ilm-charge'
 
@@ -96,7 +96,7 @@ function isAcpEquipped(rarity: IlmUniqueModuleRarityChoice): boolean {
 }
 
 /** Attack (Cannon) modules scale tower damage before ILM detonation. */
-export function resolveIlmCannonModuleMult(staticSettings: IlmCalcsStaticSettings): number {
+export function computeIlmCannonModuleMult(staticSettings: IlmCalcsStaticSettings): number {
   return resolveCombinedModuleMult(
     staticSettings.primaryCannon,
     staticSettings.assistCannon,
@@ -105,13 +105,13 @@ export function resolveIlmCannonModuleMult(staticSettings: IlmCalcsStaticSetting
   )
 }
 
-export function resolveIlmTowerDamage(staticSettings: IlmCalcsStaticSettings): number {
-  const base = resolveTowerDamageFromAttackLevel(staticSettings.attackDamageLevel)
-  return base * resolveIlmCannonModuleMult(staticSettings)
+export function computeIlmTowerDamage(staticSettings: IlmCalcsStaticSettings): number {
+  const base = computeTowerDamageFromAttackLevel(staticSettings.attackDamageLevel)
+  return base * computeIlmCannonModuleMult(staticSettings)
 }
 
 /** Core modules supply GetModuleBonus at ILM detonation. */
-export function resolveIlmDetonationModuleMult(staticSettings: IlmCalcsStaticSettings): number {
+export function computeIlmDetonationModuleMult(staticSettings: IlmCalcsStaticSettings): number {
   return resolveCombinedModuleMult(
     staticSettings.primaryCore,
     staticSettings.assistCore,
@@ -120,63 +120,63 @@ export function resolveIlmDetonationModuleMult(staticSettings: IlmCalcsStaticSet
   )
 }
 
-export function resolveIlmDamageSubstatAdditive(staticSettings: IlmCalcsStaticSettings): number {
+export function computeIlmDamageSubstatAdditive(staticSettings: IlmCalcsStaticSettings): number {
   const primary = ilmModuleSubstatBonusFromRarity(staticSettings.primaryCore.ilmDamageSubstatRarity)
   const assist = ilmModuleSubstatBonusFromRarity(staticSettings.assistCore.ilmDamageSubstatRarity)
   const efficiency = clampPct(staticSettings.assistEffPct, 0) / 100
   return primary + assist * efficiency
 }
 
-export function resolveIlmUwDamageMult(staticSettings: IlmCalcsStaticSettings): number {
-  const base = resolveInnerLandMinesDamageMult(staticSettings.damageLevel)
-  return base + resolveIlmDamageSubstatAdditive(staticSettings)
+export function computeIlmUwDamageMult(staticSettings: IlmCalcsStaticSettings): number {
+  const base = computeInnerLandMinesDamageMult(staticSettings.damageLevel)
+  return base + computeIlmDamageSubstatAdditive(staticSettings)
 }
 
-export function resolveIlmUwModuleBonus(staticSettings: IlmCalcsStaticSettings): number {
-  const mult = resolveIlmDetonationModuleMult(staticSettings)
+export function computeIlmUwModuleBonus(staticSettings: IlmCalcsStaticSettings): number {
+  const mult = computeIlmDetonationModuleMult(staticSettings)
   return Math.max(0, mult - 1)
 }
 
-export function resolveShockMultiplierFromLabLevel(level: number): number {
+export function computeShockMultiplierFromLabLevel(level: number): number {
   const lab = getSharedToolLabs().find(entry => entry.name === SHOCK_MULTIPLIER_LAB_SLUG)
   if (!lab) return 1
-  return Math.max(1, resolveLabValueAtLevel(lab, Math.max(0, Math.floor(level))))
+  return Math.max(1, computeLabValueAtLevel(lab, Math.max(0, Math.floor(level))))
 }
 
-export function resolveProtectorDamageReductionMult(labLevel: number): number {
+export function computeProtectorDamageReductionMult(labLevel: number): number {
   const lab = getSharedToolLabs().find(entry => entry.name === PROTECTOR_DAMAGE_REDUCTION_LAB_SLUG)
   if (!lab) return DEFAULT_PROTECTOR_DAMAGE_REDUCTION_MULT
-  const benefit = resolveLabValueAtLevel(lab, Math.max(0, Math.floor(labLevel)))
+  const benefit = computeLabValueAtLevel(lab, Math.max(0, Math.floor(labLevel)))
   return Math.min(1, Math.max(0, DEFAULT_PROTECTOR_DAMAGE_REDUCTION_MULT + benefit))
 }
 
-export function resolveDimensionCoreMaxShockStack(
+export function computeDimensionCoreMaxShockStack(
   dimensionCoreRarity: IlmUniqueModuleRarityChoice,
 ): number {
   if (!isDimensionCoreEquipped(dimensionCoreRarity)) return 0
-  return resolveIlmUniqueModuleRarityBonus(ILM_UNIQUE_MODULE_IDS.dimensionCore, dimensionCoreRarity)
+  return computeIlmUniqueModuleRarityBonus(ILM_UNIQUE_MODULE_IDS.dimensionCore, dimensionCoreRarity)
 }
 
-export function resolveEffectiveShockMultiplier(
+export function computeEffectiveShockMultiplier(
   shockMultiplierLabLevel: number,
   dimensionCoreRarity: IlmUniqueModuleRarityChoice,
 ): number {
-  const labMult = resolveShockMultiplierFromLabLevel(shockMultiplierLabLevel)
+  const labMult = computeShockMultiplierFromLabLevel(shockMultiplierLabLevel)
   return isDimensionCoreEquipped(dimensionCoreRarity) ? labMult * 2 : labMult
 }
 
-export function resolveAcpShockwaveMultiplier(
+export function computeAcpShockwaveMultiplier(
   acpRarity: IlmUniqueModuleRarityChoice,
 ): number {
   if (!isAcpEquipped(acpRarity)) return 0
-  return resolveIlmUniqueModuleRarityBonus(ILM_UNIQUE_MODULE_IDS.antiCubePortal, acpRarity)
+  return computeIlmUniqueModuleRarityBonus(ILM_UNIQUE_MODULE_IDS.antiCubePortal, acpRarity)
 }
 
 export function buildEnemyHitMultiplierInput(
   staticSettings: IlmCalcsStaticSettings,
   scenario: IlmCalcsScenarioSettings,
 ): EnemyHitMultiplierInput {
-  const dcMaxStack = resolveDimensionCoreMaxShockStack(staticSettings.dimensionCoreRarity)
+  const dcMaxStack = computeDimensionCoreMaxShockStack(staticSettings.dimensionCoreRarity)
   const shockStack = scenario.enemyShocked
     ? (dcMaxStack > 0
       ? Math.min(dcMaxStack, Math.max(0, Math.floor(scenario.shockStack)))
@@ -186,14 +186,14 @@ export function buildEnemyHitMultiplierInput(
   const shActive = staticSettings.singularityHarnessEquipped && scenario.enemyFlameTagged
 
   const acpMult = scenario.acpShockwaveActive
-    ? resolveAcpShockwaveMultiplier(staticSettings.acpRarity)
+    ? computeAcpShockwaveMultiplier(staticSettings.acpRarity)
     : 0
 
   return {
     chainLightningShock: scenario.enemyShocked
       ? {
         active: true,
-        shockMultiplier: resolveEffectiveShockMultiplier(
+        shockMultiplier: computeEffectiveShockMultiplier(
           staticSettings.shockMultiplierLabLevel,
           staticSettings.dimensionCoreRarity,
         ),
@@ -203,7 +203,7 @@ export function buildEnemyHitMultiplierInput(
     amplifyBot: scenario.amplifyBotOnEnemy
       ? {
         active: true,
-        amplifyBonusMultiplier: resolveAmplifyBotBonusMultiplierFromLevel(
+        amplifyBonusMultiplier: computeAmplifyBotBonusMultiplierFromLevel(
           staticSettings.amplifyBotBonusLevel,
         ),
       }
@@ -211,21 +211,21 @@ export function buildEnemyHitMultiplierInput(
     flameModuleDebuff: shActive ? { active: true } : undefined,
     shockwaveMultiplier: acpMult > 0 ? acpMult : undefined,
     protectorDamageReduction: scenario.protectorAuraActive
-      ? resolveProtectorDamageReductionMult(staticSettings.protectorReductionLabLevel)
+      ? computeProtectorDamageReductionMult(staticSettings.protectorReductionLabLevel)
       : undefined,
   }
 }
 
-export function resolveIlmHitMultiplierBreakdown(
+export function getIlmHitMultiplierBreakdown(
   staticSettings: IlmCalcsStaticSettings,
   scenario: IlmCalcsScenarioSettings,
 ): IlmHitMultiplierBreakdown {
   const input = buildEnemyHitMultiplierInput(staticSettings, scenario)
-  const effectiveShockLabMultiplier = resolveEffectiveShockMultiplier(
+  const effectiveShockLabMultiplier = computeEffectiveShockMultiplier(
     staticSettings.shockMultiplierLabLevel,
     staticSettings.dimensionCoreRarity,
   )
-  const dcMaxStack = resolveDimensionCoreMaxShockStack(staticSettings.dimensionCoreRarity)
+  const dcMaxStack = computeDimensionCoreMaxShockStack(staticSettings.dimensionCoreRarity)
   const shockStack = input.chainLightningShock?.active
     ? (input.chainLightningShock.shockStack ?? 0)
     : 0
@@ -241,7 +241,7 @@ export function resolveIlmHitMultiplierBreakdown(
     dimensionCoreDoublesShock: isDimensionCoreEquipped(staticSettings.dimensionCoreRarity),
     dimensionCoreMaxShockStack: dcMaxStack,
     amplifyBotMultiplier: scenario.amplifyBotOnEnemy
-      ? resolveAmplifyBotBonusMultiplierFromLevel(staticSettings.amplifyBotBonusLevel)
+      ? computeAmplifyBotBonusMultiplierFromLevel(staticSettings.amplifyBotBonusLevel)
       : 1,
     singularityHarnessActive: Boolean(input.flameModuleDebuff?.active),
     acpShockwaveMultiplier: input.shockwaveMultiplier ?? 0,
@@ -249,7 +249,7 @@ export function resolveIlmHitMultiplierBreakdown(
   }
 }
 
-export function resolveEnemyHitMultiplierFromIlmSettings(settings: IlmCalcsSettings): number {
+export function computeEnemyHitMultiplierFromIlmSettings(settings: IlmCalcsSettings): number {
   return enemyHitMultiplier(buildEnemyHitMultiplierInput(settings.static, settings.scenario))
 }
 
@@ -257,11 +257,11 @@ export function buildIlmCalculatorInputFromSettings(
   settings: IlmCalcsSettings,
   waveTimeSeconds: number,
 ): IlmCalculatorInput {
-  const hitMultiplier = resolveEnemyHitMultiplierFromIlmSettings(settings)
+  const hitMultiplier = computeEnemyHitMultiplierFromIlmSettings(settings)
   return {
-    towerDamage: resolveIlmTowerDamage(settings.static),
-    ilmDamageMult: resolveIlmUwDamageMult(settings.static),
-    mineAgeSeconds: resolveMineAgeSecondsFromWaves(
+    towerDamage: computeIlmTowerDamage(settings.static),
+    ilmDamageMult: computeIlmUwDamageMult(settings.static),
+    mineAgeSeconds: computeMineAgeSecondsFromWaves(
       settings.scenario.mineAgeWaves,
       waveTimeSeconds,
     ),
@@ -269,55 +269,55 @@ export function buildIlmCalculatorInputFromSettings(
     chronoJumpLabLevel: settings.static.chronoJumpLabLevel,
     timesHitByIlm: settings.scenario.timesHitByIlm,
     chargedMinesActive: settings.static.chargedMinesActive,
-    moduleBonus: resolveIlmUwModuleBonus(settings.static),
+    moduleBonus: computeIlmUwModuleBonus(settings.static),
     hitMultiplier,
     ultimateCritDisplayFactor: 1,
   }
 }
 
-export function resolveIlmDamageChainBreakdown(
+export function getIlmDamageChainBreakdown(
   settings: IlmCalcsSettings,
   waveTimeSeconds: number,
 ): IlmDamageChainBreakdown {
   const input = buildIlmCalculatorInputFromSettings(settings, waveTimeSeconds)
   const staticSettings = settings.static
   return {
-    towerDamageBase: resolveTowerDamageFromAttackLevel(staticSettings.attackDamageLevel),
-    cannonModuleMult: resolveIlmCannonModuleMult(staticSettings),
+    towerDamageBase: computeTowerDamageFromAttackLevel(staticSettings.attackDamageLevel),
+    cannonModuleMult: computeIlmCannonModuleMult(staticSettings),
     towerDamage: input.towerDamage,
-    uwDamageMultBase: resolveInnerLandMinesDamageMult(staticSettings.damageLevel),
-    uwDamageSubstatAdditive: resolveIlmDamageSubstatAdditive(staticSettings),
+    uwDamageMultBase: computeInnerLandMinesDamageMult(staticSettings.damageLevel),
+    uwDamageSubstatAdditive: computeIlmDamageSubstatAdditive(staticSettings),
     uwDamageMult: input.ilmDamageMult,
-    coreModuleMult: resolveIlmDetonationModuleMult(staticSettings),
+    coreModuleMult: computeIlmDetonationModuleMult(staticSettings),
     charge: 1,
     hitMultiplier: input.hitMultiplier ?? 1,
   }
 }
 
-export function resolveIlmCoreModuleCombinedMult(staticSettings: IlmCalcsStaticSettings): number {
-  return resolveIlmDetonationModuleMult(staticSettings)
+export function computeIlmCoreModuleCombinedMult(staticSettings: IlmCalcsStaticSettings): number {
+  return computeIlmDetonationModuleMult(staticSettings)
 }
 
-export function resolveIlmDamageSubstatBonus(staticSettings: IlmCalcsStaticSettings): number {
-  return resolveIlmDamageSubstatAdditive(staticSettings)
+export function computeIlmDamageSubstatBonus(staticSettings: IlmCalcsStaticSettings): number {
+  return computeIlmDamageSubstatAdditive(staticSettings)
 }
 
 // Back-compat: callers pass full static settings
-export function resolveDimensionCoreMaxShockStackFromSettings(
+export function computeDimensionCoreMaxShockStackFromSettings(
   staticSettings: IlmCalcsStaticSettings,
 ): number {
-  return resolveDimensionCoreMaxShockStack(staticSettings.dimensionCoreRarity)
+  return computeDimensionCoreMaxShockStack(staticSettings.dimensionCoreRarity)
 }
 
-export function resolveEffectiveShockMultiplierFromSettings(
+export function computeEffectiveShockMultiplierFromSettings(
   shockMultiplierLabLevel: number,
   staticSettings: IlmCalcsStaticSettings,
 ): number {
-  return resolveEffectiveShockMultiplier(shockMultiplierLabLevel, staticSettings.dimensionCoreRarity)
+  return computeEffectiveShockMultiplier(shockMultiplierLabLevel, staticSettings.dimensionCoreRarity)
 }
 
-export function resolveAcpShockwaveMultiplierFromSettings(
+export function computeAcpShockwaveMultiplierFromSettings(
   staticSettings: IlmCalcsStaticSettings,
 ): number {
-  return resolveAcpShockwaveMultiplier(staticSettings.acpRarity)
+  return computeAcpShockwaveMultiplier(staticSettings.acpRarity)
 }

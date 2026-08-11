@@ -2,7 +2,7 @@ import {
   ELS_ATTACK_WORKSHOP_KEY,
   ELS_ENHANCEMENT_KEY,
   ELS_HEALTH_WORKSHOP_KEY,
-  resolveElsEnhancementLevelFromTracker,
+  computeElsEnhancementLevelFromTracker,
 } from '../mechanics/els-upgrade-path'
 import {
   VAULT_ELS_ATTACK_NODE_ID,
@@ -33,7 +33,7 @@ export function readElsPlannerLevelsFromWorkshopStats(
   return {
     elsAttackLevel: readWorkshopLevel(workshop.levels, ELS_ATTACK_WORKSHOP_KEY),
     elsHealthLevel: readWorkshopLevel(workshop.levels, ELS_HEALTH_WORKSHOP_KEY),
-    elsEnhancementLevel: resolveElsEnhancementLevelFromTracker(workshop.enhancementLevels),
+    elsEnhancementLevel: computeElsEnhancementLevelFromTracker(workshop.enhancementLevels),
   }
 }
 

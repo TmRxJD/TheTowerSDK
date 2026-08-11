@@ -12,7 +12,7 @@ export interface ResourceDropsCoinIapToggles {
   hasDisableAds: boolean
 }
 
-export function resolvePackCoinMultFromIapToggles(toggles: ResourceDropsCoinIapToggles): number {
+export function computePackCoinMultFromIapToggles(toggles: ResourceDropsCoinIapToggles): number {
   let mult = 1
   if (toggles.hasStarterPack) mult *= RESOURCE_DROPS_COIN_IAP_MULTIPLIERS.starterPack
   if (toggles.hasEpicPack) mult *= RESOURCE_DROPS_COIN_IAP_MULTIPLIERS.epicPack

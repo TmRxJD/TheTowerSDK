@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { evaluateDropdownOptions } from './dropdown-evaluator'
-import { resolveWorkshopEnhancementMaxLevel } from './workshop-enhancement-dropdown-math'
+import { computeWorkshopEnhancementMaxLevel } from './workshop-enhancement-dropdown-math'
 import { buildWorkshopStatOptionLabel } from './workshop-stat-dropdown-math'
 import { ELS_ATTACK_WORKSHOP_KEY, ELS_ENHANCEMENT_KEY } from '../../mechanics/els-upgrade-path'
 
@@ -24,7 +24,7 @@ describe('workshop stat dropdown labels', () => {
 
 describe('workshop enhancement max level', () => {
   it('includes level 60 for Enemy Level Skip enhancement', () => {
-    expect(resolveWorkshopEnhancementMaxLevel(ELS_ENHANCEMENT_KEY)).toBe(60)
+    expect(computeWorkshopEnhancementMaxLevel(ELS_ENHANCEMENT_KEY)).toBe(60)
     const options = evaluateDropdownOptions('workshop_enhancement_level', {
       workshopEnhancementKey: ELS_ENHANCEMENT_KEY,
     })

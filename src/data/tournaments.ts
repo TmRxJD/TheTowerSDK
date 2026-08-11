@@ -402,7 +402,7 @@ export interface ResolvedTier {
   selection: TierSelectionInput
 }
 
-export function resolveTierSelection(selection: TierSelectionInput): ResolvedTier {
+export function getTierSelection(selection: TierSelectionInput): ResolvedTier {
   if (isTournamentLeague(selection)) {
     return {
       tier: getTournamentLeagueTierBase(selection),

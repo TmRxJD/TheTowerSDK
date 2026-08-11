@@ -10,7 +10,7 @@ import {
   LAB_RESEARCH_LEGACY_SLUG_ALIASES,
   type LabResearchRecord,
 } from './labs-research'
-import { resolveSiteLabCategoryForSaveIndex } from './labs-categories'
+import { findSiteLabCategoryForSaveIndex } from './labs-categories'
 
 export interface ToolLabLevel {
   level: number
@@ -191,10 +191,10 @@ export function compareToolLabSaveKeysForOverview(leftKey: string, rightKey: str
   const leftResearch = resolveLabResearchForSaveKey(leftKey)
   const rightResearch = resolveLabResearchForSaveKey(rightKey)
   const leftCategory = leftResearch
-    ? (resolveSiteLabCategoryForSaveIndex(leftResearch.index) ?? leftResearch.category)
+    ? (findSiteLabCategoryForSaveIndex(leftResearch.index) ?? leftResearch.category)
     : null
   const rightCategory = rightResearch
-    ? (resolveSiteLabCategoryForSaveIndex(rightResearch.index) ?? rightResearch.category)
+    ? (findSiteLabCategoryForSaveIndex(rightResearch.index) ?? rightResearch.category)
     : null
   const categoryDiff = toolLabOverviewCategorySortIndex(leftCategory)
     - toolLabOverviewCategorySortIndex(rightCategory)
@@ -288,7 +288,7 @@ export function getLabMaxLevel(lab: ToolLabRecord | null | undefined): number {
   return Math.max(...lab.levels.map(level => Number(level.level || 0)))
 }
 
-export function resolveLabValueAtLevel(lab: ToolLabRecord, level: number): number {
+export function computeLabValueAtLevel(lab: ToolLabRecord, level: number): number {
   const rawValue = lab.value
   if (typeof rawValue === 'number' && Number.isFinite(rawValue)) {
     const base = Number(lab.base ?? 0)
@@ -376,7 +376,7 @@ export function buildLabProgressRows(
     // Absolute coins throughout, so there is no longer a lab whose cost has to
     // be kept to two decimals because it was really a count of quadrillions.
     const coins = Math.round(Number(levelData.cost ?? 0) * coinDiscountMultiplier)
-    const value = resolveLabValueAtLevel(lab, level)
+    const value = computeLabValueAtLevel(lab, level)
 
     cumulativeTimeHours += adjustedTimeHours
     cumulativeGems += gems

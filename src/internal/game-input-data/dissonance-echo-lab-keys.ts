@@ -69,11 +69,11 @@ export function isDissonanceEchoResearchLabSlug(slug: string): boolean {
   return slug in DISSONANCE_ECHO_LAB_SPEC_BY_SLUG
 }
 
-export function resolveDissonanceEchoLabSlug(type: DissonanceTypeKey): string {
+export function getDissonanceEchoLabSlug(type: DissonanceTypeKey): string {
   return DISSONANCE_ECHO_LAB_SLUG_BY_TYPE[type]
 }
 
-export function resolveDissonanceEchoLabGameDataKey(type: DissonanceTypeKey): DissonanceEchoLabDataKey {
+export function getDissonanceEchoLabGameDataKey(type: DissonanceTypeKey): DissonanceEchoLabDataKey {
   return DISSONANCE_ECHO_LAB_SPEC_BY_TYPE[type].key
 }
 
@@ -95,18 +95,18 @@ export function buildDissonanceEchoLabFieldLabel(dataKey: DissonanceEchoLabDataK
 export const DISSONANCE_ECHO_BENEFIT_STEP = 0.005
 
 /** Echo benefit fraction at lab level L when echo labs are unlocked. */
-export function resolveDissonanceEchoBenefitFractionAtLabLevel(level: number): number {
+export function computeDissonanceEchoBenefitFractionAtLabLevel(level: number): number {
   if (level < 0) return 0
   return (level + 1) * DISSONANCE_ECHO_BENEFIT_STEP
 }
 
 /** Max of calculator store level and shared research-lab level for one echo track. */
-export function resolveEffectiveEchoLabLevel(
+export function computeEffectiveEchoLabLevel(
   type: DissonanceTypeKey,
   storeLevels: Partial<DissonanceWaveInputs> | undefined,
   researchLabLevels: Record<string, number> | undefined,
 ): number {
-  const slug = resolveDissonanceEchoLabSlug(type)
+  const slug = getDissonanceEchoLabSlug(type)
   const fromResearch = Math.floor(Number(researchLabLevels?.[slug] ?? 0))
   const fromStore = Math.floor(Number(storeLevels?.[type] ?? 0))
   const resolved = Math.max(
@@ -116,14 +116,14 @@ export function resolveEffectiveEchoLabLevel(
   return Math.max(0, Math.min(20, resolved))
 }
 
-export function resolveEffectiveEchoLabLevels(
+export function getEffectiveEchoLabLevels(
   storeLevels: Partial<DissonanceWaveInputs> | undefined,
   researchLabLevels: Record<string, number> | undefined,
 ): DissonanceWaveInputs {
   return {
-    attack: resolveEffectiveEchoLabLevel('attack', storeLevels, researchLabLevels),
-    defense: resolveEffectiveEchoLabLevel('defense', storeLevels, researchLabLevels),
-    utility: resolveEffectiveEchoLabLevel('utility', storeLevels, researchLabLevels),
-    uw: resolveEffectiveEchoLabLevel('uw', storeLevels, researchLabLevels),
+    attack: computeEffectiveEchoLabLevel('attack', storeLevels, researchLabLevels),
+    defense: computeEffectiveEchoLabLevel('defense', storeLevels, researchLabLevels),
+    utility: computeEffectiveEchoLabLevel('utility', storeLevels, researchLabLevels),
+    uw: computeEffectiveEchoLabLevel('uw', storeLevels, researchLabLevels),
   }
 }

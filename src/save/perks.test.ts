@@ -6,7 +6,7 @@ import { listActivePerkIndices } from './catalogs/perks'
 import {
   readPerkPreferencesFromSaveRoot,
   computeUnbannedPerkIndices,
-  resolveOverviewAutopickPerkIndices,
+  getOverviewAutopickPerkIndices,
 } from './perks'
 
 /** Synthetic, and inside the package, so a fork can run this without a save of its own. */
@@ -54,9 +54,9 @@ describe('readPerkPreferencesFromSaveRoot', () => {
   })
 })
 
-describe('resolveOverviewAutopickPerkIndices', () => {
+describe('getOverviewAutopickPerkIndices', () => {
   it('uses only autoPickOrder entries and excludes banned perks', () => {
-    const indices = resolveOverviewAutopickPerkIndices({
+    const indices = getOverviewAutopickPerkIndices({
       autoPickPerk: true,
       autoPickOrder: [20, 40, 1, 2],
       bannedIndices: [40],
@@ -65,7 +65,7 @@ describe('resolveOverviewAutopickPerkIndices', () => {
   })
 
   it('does not include unbanned perks missing from autoPickOrder', () => {
-    const indices = resolveOverviewAutopickPerkIndices({
+    const indices = getOverviewAutopickPerkIndices({
       autoPickPerk: true,
       autoPickOrder: [20, 1],
       bannedIndices: [],
@@ -74,7 +74,7 @@ describe('resolveOverviewAutopickPerkIndices', () => {
   })
 
   it('returns empty when auto pick is disabled', () => {
-    const indices = resolveOverviewAutopickPerkIndices({
+    const indices = getOverviewAutopickPerkIndices({
       autoPickPerk: false,
       autoPickOrder: [20, 1, 2],
       bannedIndices: [],

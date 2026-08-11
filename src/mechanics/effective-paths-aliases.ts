@@ -250,7 +250,7 @@ for (const alias of EFFECTIVE_PATHS_ALIASES) {
 const BY_ID = new Map(EFFECTIVE_PATHS_ALIASES.map(alias => [alias.id, alias]))
 
 /** Resolve any name the sheet uses, or `null` when it is not one we know. */
-export function resolveEffectivePathsAlias(sheetName: string): EffectivePathsAlias | null {
+export function findEffectivePathsAlias(sheetName: string): EffectivePathsAlias | null {
   return BY_SHEET_NAME.get(sheetName.trim().toLowerCase()) ?? null
 }
 

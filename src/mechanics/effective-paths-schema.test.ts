@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   EFFECTIVE_PATHS_ALIASES,
   getEffectivePathsAliasesByDomain,
-  resolveEffectivePathsAlias,
+  findEffectivePathsAlias,
 } from './effective-paths-aliases'
 import {
   EffectivePathsInputError,
@@ -261,13 +261,13 @@ describe('the alias registry', () => {
   })
 
   it('separates Chrono Field\'s unlock lab from the lab that increases it', () => {
-    const amount = resolveEffectivePathsAlias('Chrono Field Reduction %')
+    const amount = findEffectivePathsAlias('Chrono Field Reduction %')
     expect(amount?.id).toBe('chrono-field-reduction-amount')
     expect(amount?.saveKey).toBe('chrono_field_reduction')
     expect(amount?.isUnlock).toBe(false)
     expect(amount?.category).toBe('Ultimate Weapon')
 
-    const unlock = resolveEffectivePathsAlias('Chrono Field Damage Reduction Unlock')
+    const unlock = findEffectivePathsAlias('Chrono Field Damage Reduction Unlock')
     expect(unlock?.saveKey).toBe('chrono_field_damage_reduction')
     expect(unlock?.isUnlock).toBe(true)
 
@@ -276,19 +276,19 @@ describe('the alias registry', () => {
   })
 
   it('accepts both spellings the sheet uses for the trade-off perks lab', () => {
-    expect(resolveEffectivePathsAlias('Improve Trade-off Perks')?.id)
+    expect(findEffectivePathsAlias('Improve Trade-off Perks')?.id)
       .toBe('improve-trade-off-perks')
-    expect(resolveEffectivePathsAlias('Improve Trade-Off Perks')?.id)
+    expect(findEffectivePathsAlias('Improve Trade-Off Perks')?.id)
       .toBe('improve-trade-off-perks')
   })
 
   it('keeps non-lab upgrades out of the lab domain', () => {
-    const substat = resolveEffectivePathsAlias('Assist Module Substats - Armor')
+    const substat = findEffectivePathsAlias('Assist Module Substats - Armor')
     expect(substat?.domain).toBe('module')
     expect(substat?.saveKey).toBeUndefined()
 
-    expect(resolveEffectivePathsAlias('Health Mastery')?.domain).toBe('card')
-    expect(resolveEffectivePathsAlias('Dissonant Echo - Defense')?.domain).toBe('relic')
+    expect(findEffectivePathsAlias('Health Mastery')?.domain).toBe('card')
+    expect(findEffectivePathsAlias('Dissonant Echo - Defense')?.domain).toBe('relic')
   })
 
   it('has no duplicate ids or sheet names', () => {
@@ -302,7 +302,7 @@ describe('the alias registry', () => {
 
   it('returns null for an unknown name instead of guessing', () => {
     // The weapon's default speed reduction is deliberately not a path upgrade.
-    expect(resolveEffectivePathsAlias('Chrono Field Speed Reduction')).toBeNull()
-    expect(resolveEffectivePathsAlias('')).toBeNull()
+    expect(findEffectivePathsAlias('Chrono Field Speed Reduction')).toBeNull()
+    expect(findEffectivePathsAlias('')).toBeNull()
   })
 })

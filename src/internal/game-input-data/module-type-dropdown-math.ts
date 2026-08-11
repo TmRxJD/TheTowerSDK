@@ -15,12 +15,12 @@ export function buildModuleTypeCategoryOptionLabel(index: number): string {
   return moduleTypeItems[clamped]?.title ?? String(index)
 }
 
-export function resolveModuleTypeCategoryIndex(moduleType: ModuleType | null | undefined): number {
+export function computeModuleTypeCategoryIndex(moduleType: ModuleType | null | undefined): number {
   const idx = moduleTypeItems.findIndex(option => option.value === (moduleType ?? 'cannon'))
   return idx >= 0 ? idx : 0
 }
 
-export function resolveModuleTypeCategoryByIndex(index: number): ModuleType {
+export function getModuleTypeCategoryByIndex(index: number): ModuleType {
   const clamped = Math.max(0, Math.min(moduleTypeItems.length - 1, Math.floor(Number(index) || 0)))
   return moduleTypeItems[clamped]?.value ?? 'cannon'
 }

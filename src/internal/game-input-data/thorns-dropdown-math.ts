@@ -33,12 +33,12 @@ export function buildThornsTierOptionLabel(index: number): string {
   return 'T17+ (Tournament)'
 }
 
-export function resolveThornsTierIndex(tier: ThornsTierValue | null | undefined): number {
+export function computeThornsTierIndex(tier: ThornsTierValue | null | undefined): number {
   const idx = THORNS_TIER_VALUES.indexOf((tier ?? 1) as ThornsTierValue)
   return idx >= 0 ? idx : 0
 }
 
-export function resolveThornsTierByIndex(index: number): ThornsTierValue {
+export function getThornsTierByIndex(index: number): ThornsTierValue {
   const clamped = Math.max(0, Math.min(THORNS_TIER_VALUES.length - 1, Math.floor(Number(index) || 0)))
   return THORNS_TIER_VALUES[clamped] ?? 1
 }
@@ -132,12 +132,12 @@ export function buildThornsHeatWaveOptionLabel(index: number, tournamentTier: st
   return `${row.wave} - ${pct}%`
 }
 
-export function resolveThornsHeatWaveIndex(wave: number | null | undefined): number {
+export function computeThornsHeatWaveIndex(wave: number | null | undefined): number {
   const idx = THORNS_HEAT_WAVE_TABLE.findIndex(row => row.wave === Math.floor(Number(wave) || 0))
   return idx >= 0 ? idx : 0
 }
 
-export function resolveThornsHeatWaveByIndex(index: number): number {
+export function computeThornsHeatWaveByIndex(index: number): number {
   const clamped = Math.max(0, Math.min(THORNS_HEAT_WAVE_TABLE.length - 1, Math.floor(Number(index) || 0)))
   return THORNS_HEAT_WAVE_TABLE[clamped]?.wave ?? 0
 }

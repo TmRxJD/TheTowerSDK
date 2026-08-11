@@ -1,8 +1,8 @@
 import { z } from 'zod'
 import {
   listActivePerkIndices,
-  resolvePerkCatalogRow,
-  resolvePerkNameByIndex,
+  findPerkCatalogRow,
+  findPerkNameByIndex,
 } from './catalogs/perks'
 import {
   coerceSaveNumber,
@@ -31,7 +31,7 @@ export const defaultSharedPerkPreferences: Readonly<SharedPerkPreferences> = {
   unbannedIndices: [...listActivePerkIndices()],
   bannedPerkNames: [],
   unbannedPerkNames: listActivePerkIndices()
-    .map(index => resolvePerkNameByIndex(index))
+    .map(index => findPerkNameByIndex(index))
     .filter((name): name is string => Boolean(name)),
   firstPerkIndex: null,
   firstPerkName: null,
@@ -53,7 +53,7 @@ function uniqueSortedIndices(indices: Iterable<number>): number[] {
 
 function resolvePerkNames(indices: readonly number[]): string[] {
   return indices
-    .map(index => resolvePerkNameByIndex(index))
+    .map(index => findPerkNameByIndex(index))
     .filter((name): name is string => Boolean(name))
 }
 
@@ -91,11 +91,11 @@ export function normalizeSharedPerkPreferences(value: unknown): SharedPerkPrefer
     unbannedPerkNames: resolvePerkNames(unbannedIndices),
     firstPerkIndex: firstPerkRaw == null || firstPerkRaw < 0 ? null : firstPerkRaw,
     firstPerkName: firstPerkRaw != null && firstPerkRaw >= 0
-      ? resolvePerkNameByIndex(firstPerkRaw)
+      ? findPerkNameByIndex(firstPerkRaw)
       : null,
     firstTradeOffPerkIndex: firstTradeOffRaw == null || firstTradeOffRaw < 0 ? null : firstTradeOffRaw,
     firstTradeOffPerkName: firstTradeOffRaw != null && firstTradeOffRaw >= 0
-      ? resolvePerkNameByIndex(firstTradeOffRaw)
+      ? findPerkNameByIndex(firstTradeOffRaw)
       : null,
     autoPickPerk: source.autoPickPerk === true,
     autoPickOrder: Array.isArray(source.autoPickOrder)
@@ -119,7 +119,7 @@ export function readSavePerkOrderList(raw: unknown): number[] {
 
 const ACTIVE_PERK_INDEX_SET = new Set(listActivePerkIndices())
 
-export function resolveOverviewAutopickPerkIndices(
+export function getOverviewAutopickPerkIndices(
   preferences: Pick<SharedPerkPreferences, 'autoPickPerk' | 'autoPickOrder' | 'bannedIndices'>,
 ): number[] {
   if (preferences.autoPickPerk !== true) return []
@@ -134,7 +134,7 @@ export function resolveOverviewAutopickPerkIndices(
     if (!ACTIVE_PERK_INDEX_SET.has(perkIndex)) continue
     if (banned.has(perkIndex)) continue
     if (seen.has(perkIndex)) continue
-    if (!resolvePerkCatalogRow(perkIndex)) continue
+    if (!findPerkCatalogRow(perkIndex)) continue
     seen.add(perkIndex)
     indices.push(perkIndex)
   }

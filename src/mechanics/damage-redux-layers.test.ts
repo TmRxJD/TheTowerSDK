@@ -4,37 +4,37 @@ import {
   SMITE_DAMAGE_BY_CL_PLUS_LEVEL,
 } from './damage-redux-constants'
 import {
-  resolveChainLightningPlusHitDamage,
-  resolveChainThunderMaxReductionPct,
-  resolveChainThunderReductionFraction,
-  resolveChainThunderReductionPct,
-  resolveChronoFieldReductionPctFromLab,
-  resolveFlameBotDamageTakenMultiplier,
-  resolveFlameBotEffectiveReductionPct,
-  resolveNmpTotalReductionPct,
-  resolveSmiteDamageFraction,
+  computeChainLightningPlusHitDamage,
+  computeChainThunderMaxReductionPct,
+  computeChainThunderReductionFraction,
+  computeChainThunderReductionPct,
+  computeChronoFieldReductionPctFromLab,
+  computeFlameBotDamageTakenMultiplier,
+  computeFlameBotEffectiveReductionPct,
+  computeNmpTotalReductionPct,
+  computeSmiteDamageFraction,
 } from './damage-redux-layers'
 
 describe('damage-redux-layers', () => {
   it('SmiteDamage table matches native metadata ', () => {
     expect(SMITE_DAMAGE_BY_CL_PLUS_LEVEL[0]).toBe(0.0005)
     expect(SMITE_DAMAGE_BY_CL_PLUS_LEVEL[11]).toBe(0.006)
-    expect(resolveSmiteDamageFraction(11)).toBe(0.006)
+    expect(computeSmiteDamageFraction(11)).toBe(0.006)
   })
 
   it('chrono lab 55 scales 10% + 0.5% per level when lab 54 unlocked', () => {
-    expect(resolveChronoFieldReductionPctFromLab(0, true)).toBe(0)
-    expect(resolveChronoFieldReductionPctFromLab(1, true)).toBe(10.5)
-    expect(resolveChronoFieldReductionPctFromLab(30, true)).toBe(25)
-    expect(resolveChronoFieldReductionPctFromLab(30, false)).toBe(0)
+    expect(computeChronoFieldReductionPctFromLab(0, true)).toBe(0)
+    expect(computeChronoFieldReductionPctFromLab(1, true)).toBe(10.5)
+    expect(computeChronoFieldReductionPctFromLab(30, true)).toBe(25)
+    expect(computeChronoFieldReductionPctFromLab(30, false)).toBe(0)
   })
 
   it('chain thunder uses accumulated CL damage / enemyHealthMax × 10/6', () => {
     const basicWaveHp = 1_000_000
     const enemyHealthMax = 1_000_000
-    const totalCl = resolveChainLightningPlusHitDamage(11, basicWaveHp, 10)
+    const totalCl = computeChainLightningPlusHitDamage(11, basicWaveHp, 10)
     expect(totalCl).toBeCloseTo(60_000, 4)
-    const fraction = resolveChainThunderReductionFraction({
+    const fraction = computeChainThunderReductionFraction({
       ctLevel: 30,
       enemyHealthMax,
       basicWaveHp,
@@ -43,7 +43,7 @@ describe('damage-redux-layers', () => {
     })
     expect(fraction).toBeCloseTo(0.1, 4)
     expect(fraction * CHAIN_THUNDER_ACCUMULATED_HP_SCALE).toBeGreaterThan(0)
-    expect(resolveChainThunderReductionPct({
+    expect(computeChainThunderReductionPct({
       ctLevel: 30,
       enemyHealthMax,
       basicWaveHp,
@@ -53,8 +53,8 @@ describe('damage-redux-layers', () => {
   })
 
   it('chain thunder caps at lab level × 3% fraction', () => {
-    expect(resolveChainThunderMaxReductionPct(30)).toBeCloseTo(90, 8)
-    expect(resolveChainThunderReductionFraction({
+    expect(computeChainThunderMaxReductionPct(30)).toBeCloseTo(90, 8)
+    expect(computeChainThunderReductionFraction({
       ctLevel: 30,
       enemyHealthMax: 1,
       basicWaveHp: 1_000_000,
@@ -72,11 +72,11 @@ describe('damage-redux-layers', () => {
       clPlusLevel: 11,
       avgClPlusHits: 10,
     }
-    const basicFraction = resolveChainThunderReductionFraction({
+    const basicFraction = computeChainThunderReductionFraction({
       ...baseInput,
       enemyHealthMax: basicWaveHp,
     })
-    const tankFraction = resolveChainThunderReductionFraction({
+    const tankFraction = computeChainThunderReductionFraction({
       ...baseInput,
       enemyHealthMax: basicWaveHp * 5,
     })
@@ -84,15 +84,15 @@ describe('damage-redux-layers', () => {
   })
 
   it('NMP stacks linearly with 50% cap', () => {
-    expect(resolveNmpTotalReductionPct(10, 2.5)).toBe(25)
-    expect(resolveNmpTotalReductionPct(30, 2.5)).toBe(50)
+    expect(computeNmpTotalReductionPct(10, 2.5)).toBe(25)
+    expect(computeNmpTotalReductionPct(30, 2.5)).toBe(50)
   })
 
   it('flame bot Bot Bot bonus uses pow stacking', () => {
-    const base = resolveFlameBotEffectiveReductionPct({ reductionPct: 50 })
-    const boosted = resolveFlameBotEffectiveReductionPct({ reductionPct: 50, botBotBonusMultiplier: 2 })
+    const base = computeFlameBotEffectiveReductionPct({ reductionPct: 50 })
+    const boosted = computeFlameBotEffectiveReductionPct({ reductionPct: 50, botBotBonusMultiplier: 2 })
     expect(boosted).toBeGreaterThan(base)
-    expect(resolveFlameBotDamageTakenMultiplier({ reductionPct: 95, botBotBonusMultiplier: 2 }))
+    expect(computeFlameBotDamageTakenMultiplier({ reductionPct: 95, botBotBonusMultiplier: 2 }))
       .toBeLessThan(0.05)
   })
 })

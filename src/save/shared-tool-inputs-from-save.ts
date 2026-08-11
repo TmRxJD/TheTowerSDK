@@ -3,7 +3,7 @@ import { BOT_UPGRADES_DATA } from '../data/bots'
 import { BOT_IMPORT_CATALOG } from './catalogs/indexes'
 import { listRelicCatalogRows } from './catalogs/relics'
 import { listUltimateWeaponCatalogRows } from './catalogs/ultimate-weapons'
-import { getSharedToolLabs, resolveLabValueAtLevel } from '../data/labs'
+import { getSharedToolLabs, computeLabValueAtLevel } from '../data/labs'
 import { decodeModuleSaveEffect, type ModuleSaveSlotCategory } from './module-effects-decode'
 import { MODULE_RARITIES } from '../data/module-levels'
 import {
@@ -130,7 +130,7 @@ export function readTowerRangeMetersFromSaveRoot(root: Record<string, unknown>):
   const rangeLab = getSharedToolLabs().find(lab => lab.name === 'range')
   if (!rangeLab) return null
 
-  const rangeLabBenefit = resolveLabValueAtLevel(rangeLab, rangeLevelSelected)
+  const rangeLabBenefit = computeLabValueAtLevel(rangeLab, rangeLevelSelected)
   if (!Number.isFinite(rangeLabBenefit) || rangeLabBenefit <= 0) return null
 
   const internal = getOutOfRoundMaxDistance({

@@ -27,7 +27,7 @@ export function getModuleEffectRow(saveIndex: number): GameAssetModuleEffectRow 
   return row
 }
 
-export function resolveModuleEffect(saveIndex: number): ResolvedModuleEffect | null {
+export function findModuleEffect(saveIndex: number): ResolvedModuleEffect | null {
   const row = getModuleEffectRow(saveIndex)
   if (!row) return null
 
@@ -49,6 +49,6 @@ export function resolveModuleEffect(saveIndex: number): ResolvedModuleEffect | n
   }
 }
 
-export function resolveModuleEffectRarityName(saveIndex: number): string | null {
-  return resolveModuleEffect(saveIndex)?.rarityName ?? null
+export function findModuleEffectRarityName(saveIndex: number): string | null {
+  return findModuleEffect(saveIndex)?.rarityName ?? null
 }

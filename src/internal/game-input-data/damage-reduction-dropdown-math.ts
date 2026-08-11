@@ -2,12 +2,12 @@ import { BOT_UPGRADES_DATA } from '../../data/index'
 import { getModuleTemplate } from '../../data/index'
 import {
   chainLightningPlusDamageFraction,
-  resolveChainThunderMaxReductionPct,
-  resolveChronoFieldReductionPctFromLab,
-  resolveFlameBotEffectiveReductionPct,
+  computeChainThunderMaxReductionPct,
+  computeChronoFieldReductionPctFromLab,
+  computeFlameBotEffectiveReductionPct,
 } from '../../mechanics/damage-redux-layers'
 import { SMITE_DAMAGE_BY_CL_PLUS_LEVEL } from '../../mechanics/damage-redux-constants'
-import { resolveResearchLabMaxLevel } from './research-lab-dropdown-math'
+import { computeResearchLabMaxLevel } from './research-lab-dropdown-math'
 import type { GameDropdownOptionEntry } from './types'
 
 const CHRONO_FIELD_REDUCTION_LAB_SLUG = 'chrono_field_reduction'
@@ -78,7 +78,7 @@ function buildBotBotBonusCatalog(): readonly CatalogEntry[] {
   ]
 }
 
-const CHAIN_THUNDER_MAX_LEVEL = resolveResearchLabMaxLevel(CHAIN_THUNDER_LAB_SLUG)
+const CHAIN_THUNDER_MAX_LEVEL = computeResearchLabMaxLevel(CHAIN_THUNDER_LAB_SLUG)
 
 let cfReductionEntriesCache: readonly GameDropdownOptionEntry[] | null = null
 let flameBotEntriesCache: readonly GameDropdownOptionEntry[] | null = null
@@ -118,11 +118,11 @@ function getFlameBotStatCatalog(): readonly CatalogEntry[] {
 export function buildDamageReductionCfReductionEntries(): readonly GameDropdownOptionEntry[] {
   if (cfReductionEntriesCache) return cfReductionEntriesCache
 
-  const maxLevel = resolveResearchLabMaxLevel(CHRONO_FIELD_REDUCTION_LAB_SLUG)
+  const maxLevel = computeResearchLabMaxLevel(CHRONO_FIELD_REDUCTION_LAB_SLUG)
   const entries: GameDropdownOptionEntry[] = []
 
   for (let level = 1; level <= maxLevel; level += 1) {
-    const pct = resolveChronoFieldReductionPctFromLab(level)
+    const pct = computeChronoFieldReductionPctFromLab(level)
     if (pct <= 0) continue
     entries.push({ value: pct, baseValue: level })
   }
@@ -152,7 +152,7 @@ export function buildDamageReductionFlameBotOptionLabel(
 
   if (botBotBonusMultiplier <= 0) return baseLabel
 
-  const effectiveReduction = resolveFlameBotEffectiveReductionPct({
+  const effectiveReduction = computeFlameBotEffectiveReductionPct({
     reductionPct: value,
     botBotBonusMultiplier,
   })
@@ -217,7 +217,7 @@ export function buildDamageReductionCtLevelEntries(): readonly GameDropdownOptio
 
 export function buildDamageReductionCtLevelOptionLabel(level: number): string {
   const clamped = Math.max(1, Math.min(CHAIN_THUNDER_MAX_LEVEL, Math.floor(Number(level) || 1)))
-  const maxPct = resolveChainThunderMaxReductionPct(clamped)
+  const maxPct = computeChainThunderMaxReductionPct(clamped)
   const formatted = Number.isInteger(maxPct) ? String(maxPct) : maxPct.toFixed(1)
   return `${formatted}% max`
 }

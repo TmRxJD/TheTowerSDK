@@ -330,10 +330,10 @@ export function readBattleReportRawSaveValue(
   return readBattleReportSaveValue(run, trackerField)
 }
 
-export function resolveBattleReportSaveKeysForTest(trackerField: string): readonly string[] {
+export function getBattleReportSaveKeysForTest(trackerField: string): readonly string[] {
   return resolveBattleReportSaveKeys(trackerField)
 }
 
-export function resolveBattleReportExtendedSaveKeysForTest(trackerField: string): readonly string[] {
+export function getBattleReportExtendedSaveKeysForTest(trackerField: string): readonly string[] {
   return resolveBattleReportSaveKeys(trackerField)
 }

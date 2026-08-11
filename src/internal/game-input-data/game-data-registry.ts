@@ -265,7 +265,7 @@ export function isGameDataKey(key: string): key is GameDataKey {
   return normalized in GAME_DATA_REGISTRY
 }
 
-export function resolveRegistryGameDataKey(key: string): GameDataKey | null {
+export function findRegistryGameDataKey(key: string): GameDataKey | null {
   const normalized = (GAME_DATA_KEY_ALIASES as Record<string, string>)[key] ?? key
   return normalized in GAME_DATA_REGISTRY ? normalized as GameDataKey : null
 }

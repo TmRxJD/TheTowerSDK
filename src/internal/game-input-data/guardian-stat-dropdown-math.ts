@@ -15,7 +15,7 @@ const GUARDIAN_DISPLAY_TO_STAT_FIELD: Readonly<Record<string, Readonly<Record<st
   summon: { 'Cash Bonus': 'cashBonus' },
 }
 
-export function resolveGuardianParametricStatSpec(
+export function findGuardianParametricStatSpec(
   guardianLabel: string,
   statDisplayName: string,
 ): GuardianStatSpec | null {

@@ -70,15 +70,15 @@ export function listActivePerkIndices(): number[] {
   ]
 }
 
-export function resolvePerkCatalogRow(index: number): PerkCatalogRow | null {
+export function findPerkCatalogRow(index: number): PerkCatalogRow | null {
   return catalogByIndex.get(index) ?? null
 }
 
-export function resolvePerkNameByIndex(index: number): string | null {
+export function findPerkNameByIndex(index: number): string | null {
   return catalogByIndex.get(index)?.name ?? null
 }
 
-export function resolvePerkIndexByName(name: string): number | null {
+export function findPerkIndexByName(name: string): number | null {
   const trimmed = name.trim()
   if (!trimmed) return null
   const index = catalogByName.get(trimmed)

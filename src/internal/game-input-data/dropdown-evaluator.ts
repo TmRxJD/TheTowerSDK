@@ -2,7 +2,7 @@ import { normalizeSharedCardsProgressInputs, type SharedCardsProgressInputs } fr
 import { computeWaveTimeSecondsFromWaCard } from '../../mechanics/enemy-drops-context'
 import { syncUptimeBotsFromTracker, syncUptimeGuardiansFromTracker } from '../shared-uptime-inputs'
 import { syncUptimeResearchLabsFromTracker } from '../shared-tool-inputs-from-research'
-import { GAME_DATA_REGISTRY, type GameDataKey, resolveRegistryGameDataKey } from './game-data-registry'
+import { GAME_DATA_REGISTRY, type GameDataKey, findRegistryGameDataKey } from './game-data-registry'
 import {
   BOT_GAME_INPUT_SPEC_BY_KEY,
   type BotGameDataKey,
@@ -103,7 +103,7 @@ import {
 import {
   buildGameDropdownHubContext,
   type GameDropdownHubContext,
-  resolveBotGameInputLab,
+  computeBotGameInputLab,
 } from './hub-context'
 import type { StandardDropdownOption } from './types'
 import type { SharedToolInputs } from '../shared-tool-inputs'
@@ -120,7 +120,7 @@ function evaluateBotGameInputOptions(
   const spec = BOT_GAME_INPUT_SPEC_BY_KEY[key]
   if (!spec) return []
 
-  const labLevel = resolveBotGameInputLab(context, key, spec.kind)
+  const labLevel = computeBotGameInputLab(context, key, spec.kind)
   const registryItem = (GAME_DATA_REGISTRY as Record<string, typeof GAME_DATA_REGISTRY[keyof typeof GAME_DATA_REGISTRY] | undefined>)[key]
   if (!registryItem) return []
 
@@ -512,7 +512,7 @@ export function evaluateDropdownOptions(
   key: GameDataKey | string,
   hubContext: GameDropdownHubContext | SharedToolInputs,
 ): StandardDropdownOption[] {
-  const resolvedKey = resolveRegistryGameDataKey(String(key))
+  const resolvedKey = findRegistryGameDataKey(String(key))
   if (!resolvedKey) return []
 
   const context = 'uptimeInputs' in hubContext
@@ -570,7 +570,7 @@ export function evaluateDropdownOptions(
   return evaluateByRegistryKey(resolvedKey, context)
 }
 
-export function resolveGameInputDisplayLabel(
+export function findGameInputDisplayLabel(
   key: GameDataKey | string,
   value: number | null | undefined,
   hubContext: GameDropdownHubContext | SharedToolInputs,

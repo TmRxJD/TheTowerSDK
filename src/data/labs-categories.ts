@@ -120,7 +120,7 @@ const SITE_LAB_CATEGORY_BY_SLUG = new Map(
     .map(lab => [lab.name, normalizeToolLabCategory(lab.category)]),
 )
 
-export function resolveSiteLabCategoryForSaveIndex(saveIndex: number): string | null {
+export function findSiteLabCategoryForSaveIndex(saveIndex: number): string | null {
   const siteSlug = SAVE_INDEX_TO_SITE_SLUG.get(saveIndex)
   if (!siteSlug) return null
   const canonical = resolveCanonicalSiteSlug(siteSlug)
@@ -129,11 +129,11 @@ export function resolveSiteLabCategoryForSaveIndex(saveIndex: number): string | 
     ?? null
 }
 
-export function resolveSiteLabSlugForSaveIndex(saveIndex: number): string | null {
+export function findSiteLabSlugForSaveIndex(saveIndex: number): string | null {
   return SAVE_INDEX_TO_SITE_SLUG.get(saveIndex) ?? null
 }
 
-export function resolveSiteLabDisplayNameForSaveIndex(saveIndex: number): string | null {
+export function findSiteLabDisplayNameForSaveIndex(saveIndex: number): string | null {
   const siteSlug = SAVE_INDEX_TO_SITE_SLUG.get(saveIndex)
   if (!siteSlug) return null
   const research = lookupResearch(siteSlug)
@@ -141,7 +141,7 @@ export function resolveSiteLabDisplayNameForSaveIndex(saveIndex: number): string
   return slugToDisplayLabel(siteSlug)
 }
 
-export function resolveSiteLabSlugFromApiName(apiSlug: string): { saveIndex: number; saveSlug: string } | null {
+export function findSiteLabSlugFromApiName(apiSlug: string): { saveIndex: number; saveSlug: string } | null {
   const canonical = resolveCanonicalSiteSlug(apiSlug)
   const index = LAB_RESEARCH_SLUG_TO_INDEX[canonical]
   if (index === undefined) return null

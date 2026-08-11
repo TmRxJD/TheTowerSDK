@@ -58,7 +58,7 @@ for (const rarity of MODULE_RARITIES) {
   RARITY_ALIAS_MAP.set(normalizeKey(rarity), rarity)
 }
 
-export function resolveRarityLabel(rarity: string | null | undefined): ModuleRarity | null {
+export function findRarityLabel(rarity: string | null | undefined): ModuleRarity | null {
   if (typeof rarity !== 'string') return null
   const key = normalizeKey(rarity)
   if (!key) return null
@@ -66,7 +66,7 @@ export function resolveRarityLabel(rarity: string | null | undefined): ModuleRar
 }
 
 export function getLevelCapForRarity(rarity: string | null | undefined): number {
-  const resolved = resolveRarityLabel(rarity)
+  const resolved = findRarityLabel(rarity)
   return resolved ? MODULE_RARITY_LEVEL_CAPS[resolved] : ABSOLUTE_MAX_MODULE_LEVEL
 }
 

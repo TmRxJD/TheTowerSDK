@@ -13,12 +13,12 @@ import {
   filterEnemyStatsBattleConditions,
   getBattleConditionLevel,
   mergeEnemyStatsBattleConditions,
-  resolveWaveInfoBattleConditions,
+  getWaveInfoBattleConditions,
 } from './battle-condition-config'
 import {
   bcCounterLabBenefitIncreaseAtLevel,
   mergeWorkshopBcLabLevels,
-  resolveEnemyStatLevelWithBcLabs,
+  computeEnemyStatLevelWithBcLabs,
 } from './bc-counter-labs'
 import {
   type EnemyHeaderPerkToggles,
@@ -132,7 +132,7 @@ function resolveBattleConditionsForWave(
         level: 0,
       })),
     )
-  return resolveWaveInfoBattleConditions(
+  return getWaveInfoBattleConditions(
     tier,
     modifiers.tournament ?? false,
     modifiers.tournamentLeague ?? null,
@@ -150,7 +150,7 @@ function resolveStatLevelFromModifiers(
   const w = clampWave(wave)
   const battleConditions = resolveBattleConditionsForWave(modifiers.tier, w, modifiers)
   const bcLabs = modifiers.bcCounterLabLevels ?? {}
-  return resolveEnemyStatLevelWithBcLabs(
+  return computeEnemyStatLevelWithBcLabs(
     w,
     skipPct,
     skipCount,
@@ -162,7 +162,7 @@ function resolveStatLevelFromModifiers(
   )
 }
 
-export function resolveEnemyStatsBattleConditions(
+export function getEnemyStatsBattleConditions(
   tier: number,
   wave: number,
   enabledBattleConditions: readonly EnemyStatsBattleConditionName[],
@@ -176,7 +176,7 @@ export function resolveEnemyStatsBattleConditions(
   )
 
   if (tier >= BC_TIER_MIN) {
-    return resolveWaveInfoBattleConditions(tier, false, null, wave, userSelections)
+    return getWaveInfoBattleConditions(tier, false, null, wave, userSelections)
   }
 
   return filterEnemyStatsBattleConditions(

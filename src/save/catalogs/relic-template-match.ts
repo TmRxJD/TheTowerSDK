@@ -1,5 +1,5 @@
 import type { RelicTemplate } from '../../data/relics'
-import { resolveRelicCatalogRow } from './relics'
+import { findRelicCatalogRow } from './relics'
 
 const ROMAN_TIER_VALUES: ReadonlyArray<readonly [string, string]> = [
   ['xxiv', '24'],
@@ -299,13 +299,13 @@ export function buildRelicTemplateIdLookup(
   return lookup
 }
 
-export function resolveRelicTemplateIdFromSaveIndex(
+export function findRelicTemplateIdFromSaveIndex(
   saveIndex: number,
   templates: readonly RelicTemplate[],
   lookup: ReadonlyMap<string, string> = buildRelicTemplateIdLookup(templates),
   requirementLookup: ReadonlyMap<string, string> = buildRelicRequirementLookup(templates),
 ): string | null {
-  const catalog = resolveRelicCatalogRow(saveIndex)
+  const catalog = findRelicCatalogRow(saveIndex)
   if (!catalog) return null
 
   for (const candidate of [

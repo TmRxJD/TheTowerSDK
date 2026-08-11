@@ -112,9 +112,9 @@ export const ENHANCEMENT_STEP = 0.0005
 export const LAB_SKIP_INCREASE_SCALE = 0.01
 
 /**
- * `researchBenefitIncrease[124|125]` scale vs cumulative lab benefit from `resolveLabValueAtLevel`.
+ * `researchBenefitIncrease[124|125]` scale vs cumulative lab benefit from `computeLabValueAtLevel`.
  * Loads `researchBenefitIncrease[124|125]` directly — the lab rate
- * constant (`enemy_*_level_skip` lab `value` = 0.1), not cumulative `resolveLabValueAtLevel`.
+ * constant (`enemy_*_level_skip` lab `value` = 0.1), not cumulative `computeLabValueAtLevel`.
  */
 export const LEVEL_SKIP_LAB_BENEFIT_INCREASE_RATE = 0.1
 export const SKIP_REDUCTION_SUBTRACT_SCALE = 0.005
@@ -221,7 +221,7 @@ export function levelSkipEnhancementMultiplierFromField(enemyLevelSkipEnhancemen
  * Enhancement multiplier applied to the full additive sum.
  * Workshop ELS+ level L stores field `L × 0.01` → effective mult `1 + field`.
  */
-export function resolveLevelSkipEnhancementMultiplier(input: {
+export function computeLevelSkipEnhancementMultiplier(input: {
   enhancementLevel?: number
   enemyLevelSkipEnhancement?: number
 }): number {
@@ -272,7 +272,7 @@ export function buildLevelSkipChanceRaw(input: LevelSkipChanceBuildInput): numbe
   const cached = input.cachedSkipBonus ?? 0
   const card = input.cardBonus ?? 0
   const sum = workshop + labAddon + modules + techTree + cached + card
-  const enhancementMult = resolveLevelSkipEnhancementMultiplier(input)
+  const enhancementMult = computeLevelSkipEnhancementMultiplier(input)
   return sum * enhancementMult
 }
 

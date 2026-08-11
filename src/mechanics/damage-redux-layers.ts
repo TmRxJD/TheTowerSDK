@@ -42,7 +42,7 @@ export function damageTakenMultiplierFromReductionFraction(reductionFraction: nu
 }
 
 /** Lab 55 benefit — requires lab 54 (`chrono_field_damage_reduction`) unlocked for DR to apply. */
-export function resolveChronoFieldReductionPctFromLab(
+export function computeChronoFieldReductionPctFromLab(
   chronoReductionLabLevel: number,
   chronoDamageReductionLabUnlocked = true,
 ): number {
@@ -50,13 +50,13 @@ export function resolveChronoFieldReductionPctFromLab(
   return CHRONO_FIELD_REDUCTION_LAB_BASE_PCT + CHRONO_FIELD_REDUCTION_LAB_PER_LEVEL_PCT * chronoReductionLabLevel
 }
 
-export function resolveChronoFieldDamageTakenMultiplier(reductionPct: number): number {
+export function computeChronoFieldDamageTakenMultiplier(reductionPct: number): number {
   if (reductionPct <= 0) return 1
   return damageTakenMultiplierFromReductionPct(reductionPct)
 }
 
 /** `UltimateWeaponPlusStats.SmiteDamage[level]` with bounds clamp. */
-export function resolveSmiteDamageFraction(clPlusLevel: number): number {
+export function computeSmiteDamageFraction(clPlusLevel: number): number {
   if (clPlusLevel < 0) return 0
   const index = Math.min(Math.floor(clPlusLevel), SMITE_DAMAGE_BY_CL_PLUS_LEVEL.length - 1)
   return SMITE_DAMAGE_BY_CL_PLUS_LEVEL[index] ?? 0
@@ -65,44 +65,44 @@ export function resolveSmiteDamageFraction(clPlusLevel: number): number {
 /**
  * CL+ hit damage: `ultimateWeaponPlusBenefit × basicWaveHp × hits`.
  */
-export function resolveChainLightningPlusHitDamage(
+export function computeChainLightningPlusHitDamage(
   clPlusLevel: number,
   basicWaveHp: number,
   hits: number,
 ): number {
   if (basicWaveHp <= 0 || hits <= 0 || clPlusLevel < 0) return 0
-  return resolveSmiteDamageFraction(clPlusLevel) * basicWaveHp * hits
+  return computeSmiteDamageFraction(clPlusLevel) * basicWaveHp * hits
 }
 
-/** @deprecated Use `resolveChainLightningPlusHitDamage` — kept for import stability. */
+/** @deprecated Use `computeChainLightningPlusHitDamage` — kept for import stability. */
 export function chainLightningPlusDamageFraction(clPlusLevel: number): number {
-  return resolveSmiteDamageFraction(clPlusLevel)
+  return computeSmiteDamageFraction(clPlusLevel)
 }
 
-/** @deprecated Use `resolveChainLightningPlusHitDamage`. */
+/** @deprecated Use `computeChainLightningPlusHitDamage`. */
 export function chainLightningPlusHpDamage(clPlusLevel: number, waveHp: number): number {
   if (waveHp <= 0 || clPlusLevel < 0) return 0
-  return resolveSmiteDamageFraction(clPlusLevel) * waveHp
+  return computeSmiteDamageFraction(clPlusLevel) * waveHp
 }
 
-/** @deprecated Use `resolveChainLightningPlusHitDamage`. */
-export function resolveChainLightningPlusTotalHpDamage(
+/** @deprecated Use `computeChainLightningPlusHitDamage`. */
+export function computeChainLightningPlusTotalHpDamage(
   clPlusLevel: number,
   waveHp: number,
   avgHits: number,
 ): number {
-  return resolveChainLightningPlusHitDamage(clPlusLevel, waveHp, avgHits)
+  return computeChainLightningPlusHitDamage(clPlusLevel, waveHp, avgHits)
 }
 
 /** Max CT reduction fraction from `chain_thunder` lab level. */
-export function resolveChainThunderMaxReductionFraction(ctLevel: number): number {
+export function computeChainThunderMaxReductionFraction(ctLevel: number): number {
   if (ctLevel <= 0) return 0
   return clamp(ctLevel * CHAIN_THUNDER_LAB_MAX_FRACTION_PER_LEVEL, 0, 1)
 }
 
 /** Max CT reduction % for UI. */
-export function resolveChainThunderMaxReductionPct(ctLevel: number): number {
-  return resolveChainThunderMaxReductionFraction(ctLevel) * 100
+export function computeChainThunderMaxReductionPct(ctLevel: number): number {
+  return computeChainThunderMaxReductionFraction(ctLevel) * 100
 }
 
 export interface ChainThunderReductionInput {
@@ -120,12 +120,12 @@ export interface ChainThunderReductionInput {
  * Chain Thunder reduction fraction from accumulated CL+ damage on the enemy.
  * `min((accumulatedClDamage / enemyHealthMax) × 5/3, chainThunderLabMaxFraction)`.
  */
-export function resolveChainThunderReductionFractionFromAccumulated(
+export function computeChainThunderReductionFractionFromAccumulated(
   accumulatedClDamage: number,
   enemyHealthMax: number,
   ctLevel: number,
 ): number {
-  const maxFraction = resolveChainThunderMaxReductionFraction(ctLevel)
+  const maxFraction = computeChainThunderMaxReductionFraction(ctLevel)
   if (maxFraction <= 0 || enemyHealthMax <= 0 || accumulatedClDamage <= 0) return 0
   const scaled = (accumulatedClDamage / enemyHealthMax) * CHAIN_THUNDER_ACCUMULATED_HP_SCALE
   return Math.min(scaled, maxFraction)
@@ -135,38 +135,38 @@ export function resolveChainThunderReductionFractionFromAccumulated(
  * Chain Thunder reduction fraction on the enemy.
  * Uses total CL+ damage from `avgClPlusHits` contacts at full ramp.
  */
-export function resolveChainThunderReductionFraction(input: ChainThunderReductionInput): number {
-  const maxFraction = resolveChainThunderMaxReductionFraction(input.ctLevel)
+export function computeChainThunderReductionFraction(input: ChainThunderReductionInput): number {
+  const maxFraction = computeChainThunderMaxReductionFraction(input.ctLevel)
   if (maxFraction <= 0) return 0
   if (input.assumeMaxReduction) return maxFraction
 
   const { enemyHealthMax, basicWaveHp, clPlusLevel, avgClPlusHits } = input
   if (enemyHealthMax <= 0 || basicWaveHp <= 0 || avgClPlusHits <= 0) return 0
 
-  const totalClDamage = resolveChainLightningPlusHitDamage(clPlusLevel, basicWaveHp, avgClPlusHits)
-  return resolveChainThunderReductionFractionFromAccumulated(totalClDamage, enemyHealthMax, input.ctLevel)
+  const totalClDamage = computeChainLightningPlusHitDamage(clPlusLevel, basicWaveHp, avgClPlusHits)
+  return computeChainThunderReductionFractionFromAccumulated(totalClDamage, enemyHealthMax, input.ctLevel)
 }
 
-export function resolveChainThunderReductionPct(input: ChainThunderReductionInput): number {
-  return resolveChainThunderReductionFraction(input) * 100
+export function computeChainThunderReductionPct(input: ChainThunderReductionInput): number {
+  return computeChainThunderReductionFraction(input) * 100
 }
 
-export function resolveChainThunderDamageTakenMultiplier(input: ChainThunderReductionInput): number {
-  return damageTakenMultiplierFromReductionFraction(resolveChainThunderReductionFraction(input))
+export function computeChainThunderDamageTakenMultiplier(input: ChainThunderReductionInput): number {
+  return damageTakenMultiplierFromReductionFraction(computeChainThunderReductionFraction(input))
 }
 
 /** NMP stacking debuff — linear add per non-lethal orb hit, 50% cap. */
-export function resolveNmpTotalReductionPct(orbHits: number, reductionPerHitPct: number): number {
+export function computeNmpTotalReductionPct(orbHits: number, reductionPerHitPct: number): number {
   if (orbHits <= 0 || reductionPerHitPct <= 0) return 0
   return Math.min(orbHits * reductionPerHitPct, NMP_MAX_DAMAGE_REDUCTION_PCT)
 }
 
-export function resolveNmpDamageTakenMultiplier(orbHits: number, reductionPerHitPct: number): number {
-  return damageTakenMultiplierFromReductionPct(resolveNmpTotalReductionPct(orbHits, reductionPerHitPct))
+export function computeNmpDamageTakenMultiplier(orbHits: number, reductionPerHitPct: number): number {
+  return damageTakenMultiplierFromReductionPct(computeNmpTotalReductionPct(orbHits, reductionPerHitPct))
 }
 
 /** Primordial Collapse — DR for enemies inside a Black Hole (module rarity table). */
-export function resolvePrimordialCollapseDamageTakenMultiplier(reductionPct: number): number {
+export function computePrimordialCollapseDamageTakenMultiplier(reductionPct: number): number {
   return damageTakenMultiplierFromReductionPct(reductionPct)
 }
 
@@ -184,7 +184,7 @@ export interface FlameBotReductionResolveInput {
 }
 
 /** Resolve flame-bot damage taken multiplier. */
-export function resolveFlameBotDamageTakenMultiplier(input: FlameBotReductionResolveInput): number {
+export function computeFlameBotDamageTakenMultiplier(input: FlameBotReductionResolveInput): number {
   if (input.inFlameRange === false && !input.eliteFlamePath) return 1
 
   if (input.eliteFlamePath && input.eliteDamageMultiplier != null) {
@@ -217,7 +217,7 @@ export function resolveFlameBotDamageTakenMultiplier(input: FlameBotReductionRes
 }
 
 /** Effective flame DR % for display (inverse of damage taken mult). */
-export function resolveFlameBotEffectiveReductionPct(input: FlameBotReductionResolveInput): number {
-  const mult = resolveFlameBotDamageTakenMultiplier(input)
+export function computeFlameBotEffectiveReductionPct(input: FlameBotReductionResolveInput): number {
+  const mult = computeFlameBotDamageTakenMultiplier(input)
   return clamp((1 - mult) * 100, 0, 100)
 }

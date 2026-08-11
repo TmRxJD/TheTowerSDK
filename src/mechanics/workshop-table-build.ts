@@ -31,7 +31,7 @@ export type WorkshopTableFloatMap = Map<number, number>
 
 const F32 = Math.fround
 
-export function resolveMainWorkshopLabFactor(
+export function computeMainWorkshopLabFactor(
   _tier: number,
   override?: number,
 ): number {
@@ -60,7 +60,7 @@ export function mergeWorkshopLabLevels(
 /** Full workshop float table for Wave Info (CustomizeGame element offsets). */
 export function buildWorkshopTableFloats(input: WorkshopTableBuildInput): WorkshopTableFloatMap {
   const table: WorkshopTableFloatMap = new Map()
-  const mainFactor = resolveMainWorkshopLabFactor(input.tier, input.mainWorkshopLabFactor)
+  const mainFactor = computeMainWorkshopLabFactor(input.tier, input.mainWorkshopLabFactor)
   const meta = labWorkshopMetaSlots(input.labLevels, mainFactor, {
     existingLabsSpeedSlot: input.existingWorkshopMetaSlots?.labs_speed,
     existingCoinDiscountSlot: input.existingWorkshopMetaSlots?.labs_coin_discount,

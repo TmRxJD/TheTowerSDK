@@ -16,7 +16,7 @@ export function botMedalAmplifyDamageHitSignal(input: {
   return baseHit + ((debuffedHit - baseHit) * coverage)
 }
 
-export function resolveBotMedalRowDamageHitSignal(input: {
+export function computeBotMedalRowDamageHitSignal(input: {
   botLabel: string
   baseNumber: number
   flameDebuffCoverageFraction?: number

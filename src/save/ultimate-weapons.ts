@@ -37,7 +37,7 @@ export const UW_SAVE_PLUS_ON_KEY = 'ultimateWeaponPlusOn'
 export const UW_SAVE_WEAPON_UNLOCKED_INDEX_KEY = 'ultimateWeaponUnlockedIndex'
 export const UW_SAVE_TOGGLE_COUNT_KEY = 'ultimateToggleCount'
 
-export function resolveUltimateWeaponSaveSlotNames(): readonly string[] {
+export function getUltimateWeaponSaveSlotNames(): readonly string[] {
   const catalog = listUltimateWeaponCatalogRows()
   if (catalog.length > 0) {
     return catalog.map(row => row.name).filter((name): name is Exclude<typeof name, null | undefined> => name != null)
@@ -59,8 +59,8 @@ export const UW_SAVE_SLOT_WEAPON_NAMES_LEGACY = [
 ] as const
 
 export const UW_SAVE_SLOT_WEAPON_NAMES = (
-  resolveUltimateWeaponSaveSlotNames().length > 0
-    ? resolveUltimateWeaponSaveSlotNames()
+  getUltimateWeaponSaveSlotNames().length > 0
+    ? getUltimateWeaponSaveSlotNames()
     : UW_SAVE_SLOT_WEAPON_NAMES_LEGACY
 ) as readonly string[]
 
@@ -141,7 +141,7 @@ export function buildUltimateWeaponCatalogFromStoneChart(): UltimateWeaponData[]
 }
 
 /** Stone-chart catalog when the UW tracker store has not hydrated weapon metadata yet. */
-export function resolveUltimateWeaponCatalogForHubSync(
+export function getUltimateWeaponCatalogForHubSync(
   storeWeapons: UltimateWeaponData[] = [],
 ): UltimateWeaponData[] {
   if (storeWeapons.length > 0) return storeWeapons

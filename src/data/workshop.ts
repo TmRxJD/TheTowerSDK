@@ -13,7 +13,7 @@ function clampPercent(value: number): number {
   return Math.min(100, Math.max(0, value))
 }
 
-export function resolveWorkshopTotalDiscountPercent(
+export function computeWorkshopTotalDiscountPercent(
   sectionDiscountPercent: number,
   vaultDiscountPercent = 0,
 ): number {

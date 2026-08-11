@@ -3,7 +3,7 @@ import {
   enemyDisplayNameFromSaveEnumIndex,
   readKilledByEnumIndex,
   normalizeKilledByDisplayLabel,
-  resolveKilledByFromSave,
+  getKilledByFromSave,
 } from './killed-by'
 
 describe('killed-by-from-save', () => {
@@ -32,18 +32,18 @@ describe('killed-by-from-save', () => {
   })
 
   it('resolves killedBy save shapes without touching OCR labels', () => {
-    expect(resolveKilledByFromSave({ value__: 1 })).toBe('Fast')
-    expect(resolveKilledByFromSave({ value__: 2 })).toBe('Tank')
-    expect(resolveKilledByFromSave(3)).toBe('Boss')
-    expect(resolveKilledByFromSave(4)).toBe('Ranged')
-    expect(resolveKilledByFromSave(5)).toBe('Protector')
-    expect(resolveKilledByFromSave({ value__: 12 })).toBe('Overcharge')
-    expect(resolveKilledByFromSave({ value__: 99 })).toBe('Apathy')
-    expect(resolveKilledByFromSave({ typeName: 'Game.Enums.EnemyType+Ray', value__: 9 })).toBe('Ray')
-    expect(resolveKilledByFromSave({ typeName: 'Assembly-CSharp.KilledByType+Apathy', value__: 99 })).toBe('Apathy')
-    expect(resolveKilledByFromSave('  Range  ')).toBe('Ranged')
-    expect(resolveKilledByFromSave(null)).toBe('Apathy')
-    expect(resolveKilledByFromSave(undefined, 'Unknown')).toBe('Unknown')
+    expect(getKilledByFromSave({ value__: 1 })).toBe('Fast')
+    expect(getKilledByFromSave({ value__: 2 })).toBe('Tank')
+    expect(getKilledByFromSave(3)).toBe('Boss')
+    expect(getKilledByFromSave(4)).toBe('Ranged')
+    expect(getKilledByFromSave(5)).toBe('Protector')
+    expect(getKilledByFromSave({ value__: 12 })).toBe('Overcharge')
+    expect(getKilledByFromSave({ value__: 99 })).toBe('Apathy')
+    expect(getKilledByFromSave({ typeName: 'Game.Enums.EnemyType+Ray', value__: 9 })).toBe('Ray')
+    expect(getKilledByFromSave({ typeName: 'Assembly-CSharp.KilledByType+Apathy', value__: 99 })).toBe('Apathy')
+    expect(getKilledByFromSave('  Range  ')).toBe('Ranged')
+    expect(getKilledByFromSave(null)).toBe('Apathy')
+    expect(getKilledByFromSave(undefined, 'Unknown')).toBe('Unknown')
   })
 
   it('normalizes common label variants', () => {

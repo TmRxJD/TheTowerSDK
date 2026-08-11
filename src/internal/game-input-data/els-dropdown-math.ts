@@ -32,7 +32,7 @@ export function buildElsModuleSubstatRarityOptionLabel(label: ElsModuleSubstatLa
   return options[clamped]?.title ?? String(index)
 }
 
-export function resolveElsModuleSubstatRarityIndex(
+export function computeElsModuleSubstatRarityIndex(
   label: ElsModuleSubstatLabel,
   choice: ElsModuleSubstatRarityChoice | null | undefined,
 ): number {
@@ -41,7 +41,7 @@ export function resolveElsModuleSubstatRarityIndex(
   return idx >= 0 ? idx : 0
 }
 
-export function resolveElsModuleSubstatRarityByIndex(
+export function getElsModuleSubstatRarityByIndex(
   label: ElsModuleSubstatLabel,
   index: number,
 ): ElsModuleSubstatRarityChoice {

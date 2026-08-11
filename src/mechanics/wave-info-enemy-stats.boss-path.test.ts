@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { buildStandardTierBattleConditions } from './battle-condition-config'
-import { bcCounterLabBenefitIncreaseAtLevel, resolveEnemyStatLevelWithBcLabs } from './bc-counter-labs'
+import { bcCounterLabBenefitIncreaseAtLevel, computeEnemyStatLevelWithBcLabs } from './bc-counter-labs'
 import { getBasicEnemyWaveStats } from '../internal/enemy-wave-stats'
 import { getWaveInfoEnemyStatsUnfloored, WAVE_INFO_ENEMY_RULES } from './wave-info-enemy-stats'
-import { getSharedToolLabs, resolveLabValueAtLevel } from '../data/index'
+import { getSharedToolLabs, computeLabValueAtLevel } from '../data/index'
 
 describe('Boss hpFixedMult path', () => {
   it('Boss wave base × 20 uses boss_health lab, not common_enemy_health', () => {
@@ -13,11 +13,11 @@ describe('Boss hpFixedMult path', () => {
 
     const bcs = buildStandardTierBattleConditions(20)
     const bcLabs = { battle_condition_reduction: 10, enemy_level_skip_reduction: 10 }
-    const hpLevel = resolveEnemyStatLevelWithBcLabs(2649, null, 1884, bcLabs, 20, false, null, bcs, 'hp')
+    const hpLevel = computeEnemyStatLevelWithBcLabs(2649, null, 1884, bcLabs, 20, false, null, bcs, 'hp')
     const raw = getBasicEnemyWaveStats(20, hpLevel, false).hp
     const enemyLabBenefit = (slug: string, level: number) => {
       const lab = getSharedToolLabs().find(r => r.name === slug)
-      return lab ? resolveLabValueAtLevel(lab, level) : 0
+      return lab ? computeLabValueAtLevel(lab, level) : 0
     }
     const baseInput = {
       waveBaseHp: raw,

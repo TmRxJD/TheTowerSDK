@@ -410,7 +410,7 @@ export function applySharedUptimeInputs(
 }
 
 /** Merge shared hub uptime fields onto uptime calculator defaults and build core state. */
-export function resolveUptimeCoreStateFromSharedInputs(
+export function getUptimeCoreStateFromSharedInputs(
   inputs: SharedUptimeInputs,
   baseRecord?: Record<string, unknown>,
 ): UptimeCoreState {

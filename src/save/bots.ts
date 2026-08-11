@@ -17,7 +17,7 @@ import {
   sumBotSyncSlotCosts,
 } from '../data/bots'
 import { BOT_IMPORT_CATALOG, IMPORT_CATALOG_META } from './catalogs/indexes'
-import { resolveBotSaveLabel } from './catalogs/bots'
+import { getBotSaveLabel } from './catalogs/bots'
 import {
   coerceSaveNumber,
   readSaveBoolean,
@@ -257,7 +257,7 @@ function buildBotRowsFromV28(root: Record<string, unknown>, presetIndex: number)
     return {
       index,
       name: BOT_IMPORT_CATALOG[index]?.name ?? bot.name ?? null,
-      label: resolveBotSaveLabel(index) || bot.label,
+      label: getBotSaveLabel(index) || bot.label,
       unlocked,
       active: activeRow.active,
       statLevels,
@@ -389,7 +389,7 @@ function buildLegacyBotRows(
     return {
       index,
       name: BOT_IMPORT_CATALOG[index]?.name ?? null,
-      label: resolveBotSaveLabel(index),
+      label: getBotSaveLabel(index),
       unlocked: unlocked[index] === true,
       active: active[index] ?? false,
       statLevels,
@@ -426,7 +426,7 @@ function snapshotFromPreset(preset: BotPresetSaveExtract): Pick<BotsSaveExtract,
   }
 }
 
-export function resolveBotsExtractForPreset(
+export function findBotsExtractForPreset(
   extract: BotsSaveExtract | null,
   presetIndex: number,
 ): BotsSaveExtract | null {

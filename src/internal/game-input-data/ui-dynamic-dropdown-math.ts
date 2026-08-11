@@ -36,7 +36,7 @@ export function buildUiDynamicDropdownOptionSubtitle(
   return options[clamped]?.subtitle
 }
 
-export function resolveUiDynamicDropdownIndex(
+export function computeUiDynamicDropdownIndex(
   value: unknown,
   options: readonly UiDynamicDropdownOption[] = [],
 ): number {
@@ -45,7 +45,7 @@ export function resolveUiDynamicDropdownIndex(
   return options.findIndex(option => option.value === normalized)
 }
 
-export function resolveUiDynamicDropdownByIndex(
+export function findUiDynamicDropdownByIndex(
   index: number,
   options: readonly UiDynamicDropdownOption[] = [],
 ): string | null {

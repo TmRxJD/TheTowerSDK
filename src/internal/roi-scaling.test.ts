@@ -4,16 +4,16 @@ import {
   computeEconomyScaledRoiPct,
   formatAdaptiveRoiMultiplier,
   formatAdaptiveRoiPct,
-  resolveRoiReferenceCost,
+  computeRoiReferenceCost,
 } from './roi-scaling'
 
-describe('resolveRoiReferenceCost', () => {
+describe('computeRoiReferenceCost', () => {
   it('returns the minimum positive cost', () => {
-    expect(resolveRoiReferenceCost([4.31e18, 2.03e11, 0, -1])).toBe(2.03e11)
+    expect(computeRoiReferenceCost([4.31e18, 2.03e11, 0, -1])).toBe(2.03e11)
   })
 
   it('falls back to 1 when no positive costs exist', () => {
-    expect(resolveRoiReferenceCost([0, -5, NaN])).toBe(1)
+    expect(computeRoiReferenceCost([0, -5, NaN])).toBe(1)
   })
 })
 

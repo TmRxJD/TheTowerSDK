@@ -10,7 +10,7 @@ import {
   isEliteEnemyType,
   isFleetEnemyType,
   isFleetSpawnWave,
-  resolveWaveInfoBossWaveInterval,
+  computeWaveInfoBossWaveInterval,
   waveInfoBossSpawnColumn,
   waveInfoEliteEffectiveDoubleSpawnPct,
   waveInfoEliteSpawnChancePct,
@@ -250,7 +250,7 @@ export function waveInfoSpawnChancePct(input: WaveInfoPanelStatsInput): number {
   }
 
   if (input.enemyType === 'Boss') {
-    const bossInterval = resolveWaveInfoBossWaveInterval(input)
+    const bossInterval = computeWaveInfoBossWaveInterval(input)
     return isBossSpawnWave(input.wave, bossInterval) ? 100 : 0
   }
 
@@ -276,7 +276,7 @@ export function computeWaveInfoPanelEnemyExtras(input: WaveInfoPanelStatsInput):
   if (isFleetEnemyType(input.enemyType)) {
     spawnColumn = waveInfoFleetSpawnColumn(input.tier, input.wave)
   } else if (input.enemyType === 'Boss') {
-    const bossInterval = resolveWaveInfoBossWaveInterval(input)
+    const bossInterval = computeWaveInfoBossWaveInterval(input)
     spawnColumn = waveInfoBossSpawnColumn(input.wave, bossInterval)
   } else if (isEliteEnemyType(input.enemyType)) {
     const doublePct = waveInfoEliteEffectiveDoubleSpawnPct(input.tier, input.wave, {

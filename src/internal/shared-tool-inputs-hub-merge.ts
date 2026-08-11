@@ -61,7 +61,7 @@ export function mergeEnemyStatsCoreHub(
 }
 
 /** Resolved uptime defaults (readSharedUptimeInputs fills per-field site defaults). */
-export function resolveSharedUptimeHubDefaults(): SharedUptimeInputs {
+export function findSharedUptimeHubDefaults(): SharedUptimeInputs {
   return readSharedUptimeInputs({})
 }
 
@@ -70,7 +70,7 @@ export function mergeSharedUptimeInputsHub(
   incoming: SharedUptimeInputs,
   changedKeys: ReadonlySet<string>,
 ): SharedUptimeInputs {
-  const def = resolveSharedUptimeHubDefaults()
+  const def = findSharedUptimeHubDefaults()
   const merged: Record<string, unknown> = { ...existing }
 
   for (const [key, value] of Object.entries(incoming)) {

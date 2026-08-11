@@ -256,7 +256,7 @@ export function mergeEnemyStatsBattleConditions(
   return [...byName.values()]
 }
 
-export function resolveBattleConditions(
+export function getBattleConditions(
   tier: number,
   tournament: boolean,
   league: TournamentLeague | null,
@@ -276,7 +276,7 @@ export function resolveBattleConditions(
 }
 
 /** Full tier BC set for Wave Info / skip stat level — not limited to UI panel BCs. */
-export function resolveWaveInfoBattleConditions(
+export function getWaveInfoBattleConditions(
   tier: number,
   tournament: boolean,
   league: TournamentLeague | null,
@@ -299,7 +299,7 @@ function labBenefitIncreaseFraction(raw: number): number {
   return raw >= 1 ? raw * 0.01 : raw
 }
 
-export function resolveBcBenefitIncreaseFractions(
+export function getBcBenefitIncreaseFractions(
   counterLabSlug: string | undefined,
   bcLabLevels: Readonly<Record<string, number>>,
   labBenefitIncreaseAtLevel: (slug: string, level: number) => number,
@@ -326,7 +326,7 @@ export function getEffectiveBcLevel(
   labBenefitIncreaseAtLevel: (slug: string, level: number) => number,
 ): number {
   if (bcLevel <= 0) return 0
-  const { global, specific } = resolveBcBenefitIncreaseFractions(
+  const { global, specific } = getBcBenefitIncreaseFractions(
     counterLabSlug,
     bcLabLevels,
     labBenefitIncreaseAtLevel,

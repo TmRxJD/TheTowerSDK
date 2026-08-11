@@ -8,19 +8,19 @@ import {
   ILM_COOLDOWN_FLOOR_SEC,
   ILM_MODULE_SUBSTAT_NONE,
   patchIlmCalcsSettings,
-  resolveChargedMinesRatePerSecond,
-  resolveInnerLandMinesCooldownSeconds,
-  resolveInnerLandMinesDamageMult,
-  resolveTowerDamageFromAttackLevel,
+  computeChargedMinesRatePerSecond,
+  computeInnerLandMinesCooldownSeconds,
+  computeInnerLandMinesDamageMult,
+  computeTowerDamageFromAttackLevel,
 } from './ilm-charge'
 import {
   buildIlmCalculatorInputFromSettings,
-  resolveEnemyHitMultiplierFromIlmSettings,
-  resolveIlmCannonModuleMult,
-  resolveIlmDetonationModuleMult,
-  resolveIlmHitMultiplierBreakdown,
-  resolveIlmTowerDamage,
-  resolveIlmUwDamageMult,
+  computeEnemyHitMultiplierFromIlmSettings,
+  computeIlmCannonModuleMult,
+  computeIlmDetonationModuleMult,
+  getIlmHitMultiplierBreakdown,
+  computeIlmTowerDamage,
+  computeIlmUwDamageMult,
 } from './ilm-calculator-resolve'
 import { enemyHitMultiplier } from './bot-hit-multiplier'
 
@@ -28,7 +28,7 @@ describe('ilm-charge', () => {
   it('defaults attack damage level so detonation damage is non-zero', () => {
     const settings = defaultIlmCalcsSettings()
     expect(settings.static.attackDamageLevel).toBeGreaterThanOrEqual(1)
-    const towerDamage = resolveIlmTowerDamage(settings.static)
+    const towerDamage = computeIlmTowerDamage(settings.static)
     expect(towerDamage).toBeGreaterThan(0)
 
     const input = buildIlmCalculatorInputFromSettings(settings, 30)
@@ -47,18 +47,18 @@ describe('ilm-charge', () => {
   it('exposes charged mines rate table parity', () => {
     expect(CHARGED_MINES_RATE_PER_SECOND[0]).toBe(0.5)
     expect(CHARGED_MINES_RATE_PER_SECOND[14]).toBe(50.9)
-    expect(resolveChargedMinesRatePerSecond(14)).toBe(50.9)
+    expect(computeChargedMinesRatePerSecond(14)).toBe(50.9)
   })
 
   it('resolves ILM workshop damage mult from chart data', () => {
-    expect(resolveInnerLandMinesDamageMult(0)).toBe(10)
-    expect(resolveInnerLandMinesDamageMult(30)).toBe(3021)
+    expect(computeInnerLandMinesDamageMult(0)).toBe(10)
+    expect(computeInnerLandMinesDamageMult(30)).toBe(3021)
   })
 
   it('applies ILM cooldown floor', () => {
-    expect(resolveInnerLandMinesCooldownSeconds(15)).toBe(50)
-    expect(resolveInnerLandMinesCooldownSeconds(0)).toBe(200)
-    expect(resolveInnerLandMinesCooldownSeconds(15)).toBeGreaterThanOrEqual(ILM_COOLDOWN_FLOOR_SEC)
+    expect(computeInnerLandMinesCooldownSeconds(15)).toBe(50)
+    expect(computeInnerLandMinesCooldownSeconds(0)).toBe(200)
+    expect(computeInnerLandMinesCooldownSeconds(15)).toBeGreaterThanOrEqual(ILM_COOLDOWN_FLOOR_SEC)
   })
 
   it('grows charge over mine lifetime without chrono', () => {
@@ -98,25 +98,25 @@ describe('ilm-charge', () => {
 describe('ilm-calculator-resolve', () => {
   it('cannon modules scale tower damage', () => {
     const base = defaultIlmCalcsSettings()
-    const workshopOnly = resolveTowerDamageFromAttackLevel(base.static.attackDamageLevel)
+    const workshopOnly = computeTowerDamageFromAttackLevel(base.static.attackDamageLevel)
     const withCannon = patchIlmCalcsSettings(base, {
       static: {
         primaryCannon: { rarity: 'Epic', level: 50 },
       },
     })
-    expect(resolveIlmCannonModuleMult(withCannon.static)).toBeGreaterThan(1)
-    expect(resolveIlmTowerDamage(withCannon.static)).toBeGreaterThan(workshopOnly)
+    expect(computeIlmCannonModuleMult(withCannon.static)).toBeGreaterThan(1)
+    expect(computeIlmTowerDamage(withCannon.static)).toBeGreaterThan(workshopOnly)
   })
 
   it('core module level and rarity change detonation moduleMult', () => {
     const base = defaultIlmCalcsSettings()
-    const low = resolveIlmDetonationModuleMult(base.static)
+    const low = computeIlmDetonationModuleMult(base.static)
     const high = patchIlmCalcsSettings(base, {
       static: {
         primaryCore: { rarity: 'Ancestral', level: 120, ilmDamageSubstatRarity: ILM_MODULE_SUBSTAT_NONE },
       },
     })
-    expect(resolveIlmDetonationModuleMult(high.static)).toBeGreaterThan(low)
+    expect(computeIlmDetonationModuleMult(high.static)).toBeGreaterThan(low)
   })
 
   it('ILM damage substat adds to uwDamageFactor, not moduleMult', () => {
@@ -129,8 +129,8 @@ describe('ilm-calculator-resolve', () => {
         },
       },
     })
-    expect(resolveIlmUwDamageMult(withSubstat.static)).toBeGreaterThan(resolveIlmUwDamageMult(base.static))
-    expect(resolveIlmDetonationModuleMult(withSubstat.static)).toBe(resolveIlmDetonationModuleMult(base.static))
+    expect(computeIlmUwDamageMult(withSubstat.static)).toBeGreaterThan(computeIlmUwDamageMult(base.static))
+    expect(computeIlmDetonationModuleMult(withSubstat.static)).toBe(computeIlmDetonationModuleMult(base.static))
   })
 
   it('scenario toggles affect hit multiplier when static inputs are set', () => {
@@ -161,18 +161,18 @@ describe('ilm-calculator-resolve', () => {
         protectorAuraActive: false,
       },
     })
-    expect(resolveEnemyHitMultiplierFromIlmSettings(staticReady)).toBeGreaterThan(
-      resolveEnemyHitMultiplierFromIlmSettings(off),
+    expect(computeEnemyHitMultiplierFromIlmSettings(staticReady)).toBeGreaterThan(
+      computeEnemyHitMultiplierFromIlmSettings(off),
     )
   })
 
   it('doubles shock lab multiplier when DC rarity is set', () => {
     const base = defaultIlmCalcsSettings()
-    const withoutDc = resolveIlmHitMultiplierBreakdown(
+    const withoutDc = getIlmHitMultiplierBreakdown(
       { ...base.static, shockMultiplierLabLevel: 10 },
       { ...base.scenario, enemyShocked: true, shockStack: 1 },
     )
-    const withDc = resolveIlmHitMultiplierBreakdown(
+    const withDc = getIlmHitMultiplierBreakdown(
       { ...base.static, shockMultiplierLabLevel: 10, dimensionCoreRarity: 'Epic' },
       { ...base.scenario, enemyShocked: true, shockStack: 1 },
     )
@@ -182,7 +182,7 @@ describe('ilm-calculator-resolve', () => {
 
   it('caps shock stacks to DC max from DC rarity', () => {
     const base = defaultIlmCalcsSettings()
-    const breakdown = resolveIlmHitMultiplierBreakdown(
+    const breakdown = getIlmHitMultiplierBreakdown(
       { ...base.static, dimensionCoreRarity: 'Epic', shockMultiplierLabLevel: 5 },
       { ...base.scenario, enemyShocked: true, shockStack: 99 },
     )

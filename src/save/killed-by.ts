@@ -233,7 +233,7 @@ export function enemyDisplayNameFromSaveEnumIndex(index: number): string {
  * Resolves a battle-history `killedBy` value (enum object, index, or string) to the
  * canonical display name used elsewhere in the tracker. Does not affect OCR parsing.
  */
-export function resolveKilledByFromSave(raw: unknown, fallback = 'Apathy'): string {
+export function getKilledByFromSave(raw: unknown, fallback = 'Apathy'): string {
   if (typeof raw === 'string') {
     const trimmed = raw.trim()
     return trimmed ? normalizeKilledByDisplayLabel(trimmed) : fallback

@@ -3,7 +3,7 @@ import {
   eliteSpawnChanceAtWave,
   isBossSpawnWave,
   isFleetSpawnWave,
-  resolveWaveInfoBossWaveInterval,
+  computeWaveInfoBossWaveInterval,
   waveInfoBossSpawnColumn,
   waveInfoEliteEffectiveDoubleSpawnPct,
   waveInfoEliteSpawnChancePct,
@@ -57,12 +57,12 @@ describe('elite-spawn-chance', () => {
   })
 
   it('boss cadence uses More Bosses tier interval', () => {
-    expect(resolveWaveInfoBossWaveInterval({ tier: 1 })).toBe(10)
-    expect(resolveWaveInfoBossWaveInterval({ tier: 14 })).toBe(9)
-    expect(resolveWaveInfoBossWaveInterval({ tier: 16 })).toBe(7)
-    expect(resolveWaveInfoBossWaveInterval({ tier: 17 })).toBe(6)
-    expect(resolveWaveInfoBossWaveInterval({ tier: 20 })).toBe(5)
-    expect(resolveWaveInfoBossWaveInterval({
+    expect(computeWaveInfoBossWaveInterval({ tier: 1 })).toBe(10)
+    expect(computeWaveInfoBossWaveInterval({ tier: 14 })).toBe(9)
+    expect(computeWaveInfoBossWaveInterval({ tier: 16 })).toBe(7)
+    expect(computeWaveInfoBossWaveInterval({ tier: 17 })).toBe(6)
+    expect(computeWaveInfoBossWaveInterval({ tier: 20 })).toBe(5)
+    expect(computeWaveInfoBossWaveInterval({
       tier: 20,
       tournament: true,
       league: 'Legend',

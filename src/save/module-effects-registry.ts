@@ -3,7 +3,7 @@ import {
   MODULE_EFFECTS_TABLE,
 } from '../data/assets'
 import { MODULE_TYPE_ROWS } from '../data/module-enums'
-import { resolveModuleEffect } from '../data/module-effect-resolver'
+import { findModuleEffect } from '../data/module-effect-resolver'
 import type { ModuleSubstatCanonicalRarity } from '../data/module-substats'
 
 export type ModuleSaveSlotCategory = 'Cannon' | 'Armor' | 'Generator' | 'Core'
@@ -31,7 +31,7 @@ function buildCategoryLabelMaps(): Record<ModuleSaveSlotCategory, Record<number,
 
   for (const [effectId, row] of Object.entries(MODULE_EFFECTS_TABLE)) {
     if (!row) continue
-    const resolved = resolveModuleEffect(Number(effectId))
+    const resolved = findModuleEffect(Number(effectId))
     if (!resolved?.label) continue
     const category = categoryForModuleType(row.type)
     if (!category) continue
@@ -43,22 +43,22 @@ function buildCategoryLabelMaps(): Record<ModuleSaveSlotCategory, Record<number,
 
 export const MODULE_SAVE_EFFECT_ID_LABELS = buildCategoryLabelMaps()
 
-export function resolveModuleSaveEffectLabel(
+export function findModuleSaveEffectLabel(
   effectId: number,
   category: ModuleSaveSlotCategory,
 ): string | null {
   void category
   if (!effectId) return null
-  return resolveModuleEffect(effectId)?.label ?? null
+  return findModuleEffect(effectId)?.label ?? null
 }
 
-export function resolveModuleSaveEffectTier(effectId: number): ModuleSubstatCanonicalRarity | string {
-  const resolved = resolveModuleEffect(effectId)
+export function getModuleSaveEffectTier(effectId: number): ModuleSubstatCanonicalRarity | string {
+  const resolved = findModuleEffect(effectId)
   if (!resolved) return 'Unknown'
   return resolved.rarityName
 }
 
-export function resolveModuleSaveEffectCategory(effectId: number): ModuleSaveSlotCategory | null {
+export function findModuleSaveEffectCategory(effectId: number): ModuleSaveSlotCategory | null {
   const row = MODULE_EFFECTS_TABLE[String(effectId)]
   if (!row) return null
   return categoryForModuleType(row.type)
@@ -66,6 +66,6 @@ export function resolveModuleSaveEffectCategory(effectId: number): ModuleSaveSlo
 
 export function isKnownModuleSaveEffectId(effectId: number, category: ModuleSaveSlotCategory): boolean {
   if (!effectId) return false
-  return resolveModuleSaveEffectCategory(effectId) === category
-    && Boolean(resolveModuleSaveEffectLabel(effectId, category))
+  return findModuleSaveEffectCategory(effectId) === category
+    && Boolean(findModuleSaveEffectLabel(effectId, category))
 }

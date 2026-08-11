@@ -140,7 +140,7 @@ export function buildModuleEquippedPickerOptionSubtitle(
   return templates[clamped]?.initials
 }
 
-export function resolveModuleEquippedPickerIndex(
+export function computeModuleEquippedPickerIndex(
   templateId: unknown,
   category: ModuleCategory | undefined,
   excludeTemplateIds: readonly string[] = [],
@@ -150,7 +150,7 @@ export function resolveModuleEquippedPickerIndex(
   return templates.findIndex(template => template.id === templateId)
 }
 
-export function resolveModuleEquippedPickerByIndex(
+export function findModuleEquippedPickerByIndex(
   index: number,
   category: ModuleCategory | undefined,
   excludeTemplateIds: readonly string[] = [],
@@ -214,7 +214,7 @@ export function buildModuleSubstatTypePickerOptionLabel(
   return entries[clamped]?.label ?? String(index)
 }
 
-export function resolveModuleSubstatTypePickerIndex(
+export function computeModuleSubstatTypePickerIndex(
   substatId: unknown,
   options: {
     category?: ModuleCategory
@@ -228,7 +228,7 @@ export function resolveModuleSubstatTypePickerIndex(
   return entries.findIndex(entry => entry.id === substatId)
 }
 
-export function resolveModuleSubstatTypePickerByIndex(
+export function findModuleSubstatTypePickerByIndex(
   index: number,
   options: {
     category?: ModuleCategory
@@ -242,7 +242,7 @@ export function resolveModuleSubstatTypePickerByIndex(
   return entries[clamped]?.id ?? null
 }
 
-export function resolveModuleSubstatPickerCategoryFromSlotKey(slotKey: string | undefined): ModuleCategory | undefined {
+export function findModuleSubstatPickerCategoryFromSlotKey(slotKey: string | undefined): ModuleCategory | undefined {
   if (!slotKey) return undefined
   const category = slotKey.split(':')[1]
   if (category === 'Cannon' || category === 'Armor' || category === 'Generator' || category === 'Core') {
@@ -251,7 +251,7 @@ export function resolveModuleSubstatPickerCategoryFromSlotKey(slotKey: string | 
   return undefined
 }
 
-export function resolveModuleEquippedExcludeForSlot(
+export function getModuleEquippedExcludeForSlot(
   slotKey: string | undefined,
   otherSlotSelection: string | null | undefined,
 ): string[] {

@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { defaultEnemyStatsPerkState } from './enemy-stats-simplified'
-import { resolveDamageReduxBasicWaveStats } from './damage-redux-wave-stats'
+import { getDamageReduxBasicWaveStats } from './damage-redux-wave-stats'
 
 describe('damage-redux-wave-stats', () => {
   it('resolves basic enemy HP and damage from tier and wave', () => {
-    const stats = resolveDamageReduxBasicWaveStats({
+    const stats = getDamageReduxBasicWaveStats({
       tier: 10,
       wave: 624,
       perks: defaultEnemyStatsPerkState,
@@ -16,7 +16,7 @@ describe('damage-redux-wave-stats', () => {
   })
 
   it('uses full tier-20 Wave Info BC workshop (not UI-filtered subset)', () => {
-    const stats = resolveDamageReduxBasicWaveStats({
+    const stats = getDamageReduxBasicWaveStats({
       tier: 20,
       wave: 4958,
       healthSkipCount: 3526,
@@ -39,7 +39,7 @@ describe('damage-redux-wave-stats', () => {
   })
 
   it('applies ELS skip counter lab when using skip % on tier 20', () => {
-    const base = resolveDamageReduxBasicWaveStats({
+    const base = getDamageReduxBasicWaveStats({
       tier: 20,
       wave: 4958,
       healthSkipPct: 84,
@@ -47,7 +47,7 @@ describe('damage-redux-wave-stats', () => {
       perks: defaultEnemyStatsPerkState,
       bcCounterLabLevels: { enemy_level_skip_reduction: 0 },
     })
-    const mitigated = resolveDamageReduxBasicWaveStats({
+    const mitigated = getDamageReduxBasicWaveStats({
       tier: 20,
       wave: 4958,
       healthSkipPct: 84,
@@ -63,14 +63,14 @@ describe('damage-redux-wave-stats', () => {
   })
 
   it('applies BC counter labs to skip-% stat levels on tier 20', () => {
-    const base = resolveDamageReduxBasicWaveStats({
+    const base = getDamageReduxBasicWaveStats({
       tier: 20,
       wave: 4958,
       healthSkipPct: 84,
       attackSkipPct: 84,
       perks: defaultEnemyStatsPerkState,
     })
-    const mitigated = resolveDamageReduxBasicWaveStats({
+    const mitigated = getDamageReduxBasicWaveStats({
       tier: 20,
       wave: 4958,
       healthSkipPct: 84,

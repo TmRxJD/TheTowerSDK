@@ -16,13 +16,13 @@ export function buildEnemyTierSelectionOptionLabel(index: number): string {
   return options[clamped]?.title ?? String(index)
 }
 
-export function resolveEnemyTierSelectionIndex(selection: TierSelectionInput | null | undefined): number {
+export function computeEnemyTierSelectionIndex(selection: TierSelectionInput | null | undefined): number {
   const options = buildTierSelectItems()
   const idx = options.findIndex(option => option.value === (selection ?? 1))
   return idx >= 0 ? idx : 0
 }
 
-export function resolveEnemyTierSelectionByIndex(index: number): TierSelectionInput {
+export function getEnemyTierSelectionByIndex(index: number): TierSelectionInput {
   const options = buildTierSelectItems()
   const clamped = Math.max(0, Math.min(options.length - 1, Math.floor(Number(index) || 0)))
   return options[clamped]?.value ?? 1
@@ -49,12 +49,12 @@ export function buildElsFocusOptionLabel(index: number): string {
   return ELS_FOCUS_OPTIONS[clamped]?.title ?? String(index)
 }
 
-export function resolveElsFocusIndex(focus: ElsFocusValue | null | undefined): number {
+export function computeElsFocusIndex(focus: ElsFocusValue | null | undefined): number {
   const idx = ELS_FOCUS_OPTIONS.findIndex(option => option.value === (focus ?? 'combined'))
   return idx >= 0 ? idx : 0
 }
 
-export function resolveElsFocusByIndex(index: number): ElsFocusValue {
+export function getElsFocusByIndex(index: number): ElsFocusValue {
   const clamped = Math.max(0, Math.min(ELS_FOCUS_OPTIONS.length - 1, Math.floor(Number(index) || 0)))
   return ELS_FOCUS_OPTIONS[clamped]?.value ?? 'combined'
 }

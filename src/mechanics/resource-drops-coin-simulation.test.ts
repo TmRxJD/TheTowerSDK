@@ -10,7 +10,7 @@ const COIN_GUIDE_MULTIPLIER_EXAMPLE = {
   goldenTowerMultiplier: 20.75,
   combinedMultiplier: 228.25,
 } as const
-import { resolvePackCoinMultFromIapToggles, RESOURCE_DROPS_COIN_IAP_MULTIPLIERS } from './resource-drops-coin-iap'
+import { computePackCoinMultFromIapToggles, RESOURCE_DROPS_COIN_IAP_MULTIPLIERS } from './resource-drops-coin-iap'
 import { moduleCoinsKillBonusFromSubstats } from './resource-drops-coin-module-cpk'
 import { allCoinBonusesPerkMult } from './resource-drops-coin-perks'
 import {
@@ -18,7 +18,7 @@ import {
   buildResourceDropsCoinMultipliers,
   coinBonusEnhancementMult,
   expectedTimedCoinKillMult,
-  resolveGoldenTowerCoinMult,
+  computeGoldenTowerCoinMult,
   RESOURCE_DROPS_AVG_ENEMY_COIN_WEIGHT,
   type ResourceDropsCoinSimulationInput,
   simulateResourceDropsCoins,
@@ -27,7 +27,7 @@ import {
 } from './resource-drops-coin-simulation'
 import {
   enemySpawnRateCapFromWaveAcceleratorChart,
-  resolveWaveAcceleratorMasteryForSpawnCap,
+  findWaveAcceleratorMasteryForSpawnCap,
 } from './wave-accelerator-spawn-rate-cap'
 
 export function baseCoinInput(overrides: Partial<ResourceDropsCoinSimulationInput> = {}): ResourceDropsCoinSimulationInput {
@@ -126,7 +126,7 @@ describe('resource-drops-coin-simulation', () => {
   })
 
   it('IAP toggles multiply to 9× when all owned', () => {
-    expect(resolvePackCoinMultFromIapToggles({
+    expect(computePackCoinMultFromIapToggles({
       hasStarterPack: true,
       hasEpicPack: true,
       hasDisableAds: true,
@@ -182,8 +182,8 @@ describe('resource-drops-coin-simulation', () => {
   })
 
   it('GT stone multiplier level increases golden tower coin mult', () => {
-    expect(resolveGoldenTowerCoinMult(0, 0)).toBeGreaterThanOrEqual(5)
-    expect(resolveGoldenTowerCoinMult(20, 0)).toBeGreaterThan(resolveGoldenTowerCoinMult(0, 0))
+    expect(computeGoldenTowerCoinMult(0, 0)).toBeGreaterThanOrEqual(5)
+    expect(computeGoldenTowerCoinMult(20, 0)).toBeGreaterThan(computeGoldenTowerCoinMult(0, 0))
   })
 
   it('accumulateResourceDropsKillYields matches per-wave brute force', () => {
@@ -210,7 +210,7 @@ describe('resource-drops-coin-simulation', () => {
 
     for (const targetWave of [100, 4786, 50_000, 500_000]) {
       for (const mastery of [null, 0, 5, 9] as const) {
-        const waMastery = resolveWaveAcceleratorMasteryForSpawnCap(mastery)
+        const waMastery = findWaveAcceleratorMasteryForSpawnCap(mastery)
         const payload = {
           targetWave,
           enemyBalanceMult: 1.25,

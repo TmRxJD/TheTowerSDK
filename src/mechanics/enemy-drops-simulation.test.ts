@@ -3,7 +3,7 @@ import {
   averageEliteCellsPerKill,
   BOSS_WAVE_INTERVAL_BY_TIER,
   buildWaveContext,
-  resolveBossWaveIntervalFromTier,
+  computeBossWaveIntervalFromTier,
   simulateEnemyDrops,
   WAVE_SKIP_SKIPPED_WAVE_MULT,
   waveSkipExpectedSkipsPerProc,
@@ -86,7 +86,7 @@ describe('enemy-drops-simulation', () => {
       24: 5,
     }
     for (let tier = 1; tier <= 24; tier += 1) {
-      const interval = resolveBossWaveIntervalFromTier(tier)
+      const interval = computeBossWaveIntervalFromTier(tier)
       expect(BOSS_WAVE_INTERVAL_BY_TIER[tier]).toBe(interval)
       if (spotChecks[tier] != null) {
         expect(interval).toBe(spotChecks[tier])
@@ -94,7 +94,7 @@ describe('enemy-drops-simulation', () => {
         expect(interval).toBe(10)
       }
       if (tier > 1) {
-        expect(interval).toBeLessThanOrEqual(resolveBossWaveIntervalFromTier(tier - 1))
+        expect(interval).toBeLessThanOrEqual(computeBossWaveIntervalFromTier(tier - 1))
       }
     }
   })

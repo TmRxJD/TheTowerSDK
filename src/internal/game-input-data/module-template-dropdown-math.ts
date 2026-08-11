@@ -65,13 +65,13 @@ export function buildModuleTemplatePickerOptionSubtitle(index: number, moduleTyp
   return templates[clamped]?.initials
 }
 
-export function resolveModuleTemplatePickerIndex(templateId: unknown, moduleTypeFilter?: string): number {
+export function computeModuleTemplatePickerIndex(templateId: unknown, moduleTypeFilter?: string): number {
   if (typeof templateId !== 'string' || !templateId) return -1
   const templates = filterModuleTemplatesForPicker(moduleTypeFilter)
   return templates.findIndex(template => template.id === templateId)
 }
 
-export function resolveModuleTemplatePickerByIndex(index: number, moduleTypeFilter?: string): string | null {
+export function findModuleTemplatePickerByIndex(index: number, moduleTypeFilter?: string): string | null {
   const templates = filterModuleTemplatesForPicker(moduleTypeFilter)
   const clamped = Math.max(0, Math.min(templates.length - 1, Math.floor(Number(index) || 0)))
   return templates[clamped]?.id ?? null

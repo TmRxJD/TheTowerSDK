@@ -338,7 +338,7 @@ export function readWorkshopFromSaveRoot(parsedRoot: unknown): WorkshopSaveExtra
   }
 }
 
-export function resolvePresetSnapshot(extract: WorkshopSaveExtract, presetIndex: number): WorkshopSavePresetSnapshot {
+export function getPresetSnapshot(extract: WorkshopSaveExtract, presetIndex: number): WorkshopSavePresetSnapshot {
   const clamped = Math.max(0, Math.min(WORKSHOP_PRESET_COUNT - 1, Math.floor(presetIndex) || 0))
   return extract.presets[clamped] ?? extract.active
 }
@@ -405,7 +405,7 @@ export interface WorkshopTrackerSaveImportPayload {
 export function buildWorkshopTrackerImportPayloadFromSave(parsedRoot: unknown): WorkshopTrackerSaveImportPayload | null {
   const extract = readWorkshopFromSaveRoot(parsedRoot)
   if (!extract) return null
-  const activeSnapshot = resolvePresetSnapshot(extract, extract.meta.currentPreset)
+  const activeSnapshot = getPresetSnapshot(extract, extract.meta.currentPreset)
   return {
     levels: activeSnapshot.levels,
     enhancementLevels: activeSnapshot.enhancementLevels,

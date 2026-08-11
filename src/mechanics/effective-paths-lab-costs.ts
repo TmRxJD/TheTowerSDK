@@ -51,7 +51,7 @@ export const EFFECTIVE_PATHS_LAB_KEYS: Readonly<Record<string, string>> = {
 } as const
 
 /** Resolve a path's label to its catalog key, or `null` when it is not a lab. */
-export function resolveEffectivePathsLabKey(name: string): string | null {
+export function findEffectivePathsLabKey(name: string): string | null {
   return EFFECTIVE_PATHS_LAB_KEYS[name] ?? null
 }
 

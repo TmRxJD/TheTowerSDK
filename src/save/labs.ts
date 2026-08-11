@@ -7,9 +7,9 @@ import {
 import { normalizeLabsTrackerLabLevelMap } from '../internal/labs-persistence'
 import { LAB_RESEARCH_IMPORT_CATALOG, RESEARCH_CATEGORY_ENUM } from '../data/player-stats'
 import {
-  resolveLabResearchCategory,
-  resolveLabResearchDisplayName,
-  resolveLabResearchSlug,
+  findLabResearchCategory,
+  findLabResearchDisplayName,
+  findLabResearchSlug,
 } from '../data/labs-display-overrides'
 import { coerceSaveNumber, toNumberArray } from './read-values'
 import { readFavoriteLabSlugsFromSaveRoot, saveHasFavoriteLabs } from './favorite-labs'
@@ -69,12 +69,12 @@ function readSaveBoolean(value: unknown): boolean {
   return value === true
 }
 
-export function resolveLabResearchLevelMax(index: number): number {
+export function computeLabResearchLevelMax(index: number): number {
   return findLabResearchByIndex(index)?.levelMax ?? 99
 }
 
 export function isLabResearchMaxed(index: number, level: number): boolean {
-  return level >= resolveLabResearchLevelMax(index)
+  return level >= computeLabResearchLevelMax(index)
 }
 
 function readResearchRow(
@@ -84,9 +84,9 @@ function readResearchRow(
   labSpeedLevel = 0,
 ): LabResearchSaveRow {
   const catalog = LAB_RESEARCH_IMPORT_CATALOG[index]
-  const displayName = resolveLabResearchDisplayName(index, catalog?.displayName ?? null)
-  const slug = resolveLabResearchSlug(index, catalog?.slug ?? null)
-  const category = resolveLabResearchCategory(index, displayName, catalog?.category ?? null)
+  const displayName = findLabResearchDisplayName(index, catalog?.displayName ?? null)
+  const slug = findLabResearchSlug(index, catalog?.slug ?? null)
+  const category = findLabResearchCategory(index, displayName, catalog?.category ?? null)
   return {
     index,
     level,
@@ -211,7 +211,7 @@ export function buildCategoryGroupedLabImportRows(researches: LabResearchSaveRow
   for (const row of researches) {
     if (!row.displayName) continue
     const category = researchCategoryLabel(row.category)
-    const levelMax = resolveLabResearchLevelMax(row.index)
+    const levelMax = computeLabResearchLevelMax(row.index)
     const displayRow: LabImportDisplayRow = {
       saveIndex: row.index,
       category,

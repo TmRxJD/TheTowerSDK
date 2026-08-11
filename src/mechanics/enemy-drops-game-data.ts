@@ -6,7 +6,7 @@ import {
   MAX_CAMPAIGN_TIER,
   findLabResearchBySlug,
   getSharedToolLabs,
-  resolveLabValueAtLevel,
+  computeLabValueAtLevel,
 } from '../data/index'
 import { clamp } from './math'
 
@@ -53,7 +53,7 @@ function resolveLabBenefitBySlug(slug: string, level: number): number {
   const research = findLabResearchBySlug(slug)
   const lab = labs.find(entry => entry.name === slug || (research && entry.displayName === research.displayName))
   if (!lab) return 0
-  return resolveLabValueAtLevel(lab, level)
+  return computeLabValueAtLevel(lab, level)
 }
 
 export function getCommonModuleDropChance(labBenefit: number): number {
@@ -94,7 +94,7 @@ export function getShatterShards(rarity: ModuleShatterRarity, shatterLabBenefit:
   return Math.floor(benefit / 100 * config.scale) + config.constant
 }
 
-export function resolveEnemyDropsLabBenefits(
+export function getEnemyDropsLabBenefits(
   levels: {
     commonDropLabLevel: number
     rareDropLabLevel: number

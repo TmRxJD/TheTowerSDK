@@ -93,7 +93,7 @@ export function coerceLabsTrackerLabLevel(value: unknown): number | undefined {
 }
 
 /** Resolve any persisted lab key (slug, display name, or malformed legacy key) to a catalog slug. */
-export function resolveCanonicalLabResearchSlug(key: string | null | undefined): string | null {
+export function findCanonicalLabResearchSlug(key: string | null | undefined): string | null {
   const trimmed = String(key || '').trim()
   if (!trimmed) return null
 
@@ -118,7 +118,7 @@ export function normalizeLabsTrackerLabLevelMap(
   const out: Record<string, number> = {}
   for (const [key, raw] of Object.entries(input)) {
     if (!key.trim()) continue
-    const slug = resolveCanonicalLabResearchSlug(key)
+    const slug = findCanonicalLabResearchSlug(key)
     if (!slug) continue
     const level = coerceLabsTrackerLabLevel(raw)
     if (level === undefined) continue

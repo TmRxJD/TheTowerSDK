@@ -62,7 +62,7 @@ function decayWeight(index: number): number {
   return FOCUS_DECAY_WEIGHTS[Math.min(index, FOCUS_DECAY_WEIGHTS.length - 1)]
 }
 
-export function resolveBotMedalPlannerFocusWeights(
+export function getBotMedalPlannerFocusWeights(
   focusOrder: readonly BotMedalPlannerFocusGoal[],
 ): BotMedalPlannerFocusWeights {
   const w: BotMedalPlannerFocusWeights = { output: 0.6, uptime: 0.6, overlap: 0.6, range: 0.6, timing: 0.6 }

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import fixture from './effective-paths-ehp-path.fixtures.json'
 import { composeEffectiveHealth, effectiveHealth } from './effective-paths-hp'
 import { planPath, type PathUpgrade } from './effective-paths-planner'
-import { labDurationDaysToReachLevel, resolveEffectivePathsLabKey } from './effective-paths-lab-costs'
+import { labDurationDaysToReachLevel, findEffectivePathsLabKey } from './effective-paths-lab-costs'
 
 /**
  * Replay the sheet's own eHP path and check we land on its numbers.
@@ -142,7 +142,7 @@ describe('eHP path replay against the live sheet', () => {
         return effectiveHealthFor(snapshot)
       },
       cost: (id, nextLevel) => {
-        const key = resolveEffectivePathsLabKey(id)
+        const key = findEffectivePathsLabKey(id)
         if (key === null) return Number.NaN
         return labDurationDaysToReachLevel(key, nextLevel) ?? Number.NaN
       },

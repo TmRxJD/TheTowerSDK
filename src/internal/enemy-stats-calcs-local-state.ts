@@ -17,7 +17,7 @@ import {
 import type { EnemyWaveEnemyType } from './enemy-wave-stats'
 import {
   normalizeTierSelection,
-  resolveTierSelection,
+  getTierSelection,
   type TierSelectionInput,
 } from '../data/tournaments'
 import { createNormalizerPersistenceSchema } from './local-persistence-types'
@@ -290,7 +290,7 @@ export function normalizeEnemyStatsCalcsLocalState(
     normalizeBattleConditions(data.battleConditions),
   )
   const tierSelection = normalizeTierSelection(data.tierSelection, data.tournamentLeague)
-  const resolved = resolveTierSelection(tierSelection)
+  const resolved = getTierSelection(tierSelection)
   if (!resolved.tournament && resolved.tier >= 14) {
     battleConditions = mergeEnemyStatsBattleConditions(
       buildStandardTierBattleConditions(resolved.tier),

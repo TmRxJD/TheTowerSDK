@@ -30,7 +30,7 @@ export function waveAcceleratorSpawnMasteryBonusPercent(masteryLevel: number): n
  * Cards tracker mastery → chart column input.
  * `null` / omitted / negative = no WA mastery (chart "Normal" column).
  */
-export function resolveWaveAcceleratorMasteryForSpawnCap(
+export function findWaveAcceleratorMasteryForSpawnCap(
   waveAcceleratorMastery: number | null | undefined,
 ): number | null {
   if (waveAcceleratorMastery == null) return null
@@ -43,7 +43,7 @@ export function resolveWaveAcceleratorMasteryForSpawnCap(
 export function waveAcceleratorSpawnRateChartColumn(
   waveAcceleratorMastery: number | null | undefined,
 ): keyof WaveAcceleratorSpawnRatesRow {
-  const mastery = resolveWaveAcceleratorMasteryForSpawnCap(waveAcceleratorMastery)
+  const mastery = findWaveAcceleratorMasteryForSpawnCap(waveAcceleratorMastery)
   if (mastery == null) {
     return 'normal'
   }
@@ -68,7 +68,7 @@ export function enemySpawnRateCapFromWaveAcceleratorChart(
   input: WaveAcceleratorSpawnRateCapInput,
 ): number {
   const wave = Math.max(1, Math.floor(Number(input.wave) || 1))
-  const mastery = resolveWaveAcceleratorMasteryForSpawnCap(input.waveAcceleratorMastery)
+  const mastery = findWaveAcceleratorMasteryForSpawnCap(input.waveAcceleratorMastery)
   const column = waveAcceleratorSpawnRateChartColumn(mastery)
 
   let cap = 0

@@ -13,8 +13,8 @@ import {
   VAULT_POWER_IMPORT_CATALOG,
 } from '../data/player-stats'
 import {
-  resolveLabResearchDisplayName,
-  resolveLabResearchSlug,
+  findLabResearchDisplayName,
+  findLabResearchSlug,
 } from '../data/labs-display-overrides'
 import { MODULE_RARITIES } from '../data/module-levels'
 import {
@@ -30,7 +30,7 @@ import {
   parseModuleElsBonusPercent,
 } from '../mechanics/els-module-cluster'
 import { ELS_ATTACK_WORKSHOP_KEY, ELS_HEALTH_WORKSHOP_KEY } from '../mechanics/els-upgrade-path'
-import { resolveResearchLabLevel } from '../internal/shared-tool-inputs-from-research'
+import { computeResearchLabLevel } from '../internal/shared-tool-inputs-from-research'
 import {
   createDefaultShardSplitterSnapshot,
   type ModuleType,
@@ -283,8 +283,8 @@ export function readResearchLabLevelsFromSaveRoot(
   levels.forEach((level, index) => {
     if (!Number.isFinite(level) || level <= 0) return
     const catalog = LAB_RESEARCH_IMPORT_CATALOG[index]
-    const displayName = resolveLabResearchDisplayName(index, catalog?.displayName ?? null)
-    const slug = resolveLabResearchSlug(index, catalog?.slug ?? null)
+    const displayName = findLabResearchDisplayName(index, catalog?.displayName ?? null)
+    const slug = findLabResearchSlug(index, catalog?.slug ?? null)
     const normalized = Math.max(0, Math.floor(level))
     if (displayName) out[displayName] = normalized
     if (slug) out[slug] = normalized
@@ -506,8 +506,8 @@ export function readElsPlannerInputsFromSaveRoot(
     : null
 
   const partial: Partial<SharedElsPlannerInputs> = {
-    elsLabAttackLevel: resolveResearchLabLevel(researchLabLevels, 'enemy_attack_level_skip', 20),
-    elsLabHealthLevel: resolveResearchLabLevel(researchLabLevels, 'enemy_health_level_skip', 20),
+    elsLabAttackLevel: computeResearchLabLevel(researchLabLevels, 'enemy_attack_level_skip', 20),
+    elsLabHealthLevel: computeResearchLabLevel(researchLabLevels, 'enemy_health_level_skip', 20),
     elsModulePrimaryAttackPct: primaryAttack.pct,
     elsModuleAssistAttackPct: assistAttack.pct,
     elsModulePrimaryHealthPct: primaryHealth.pct,
@@ -715,7 +715,7 @@ export function readDamageReduxCalculatorSettingsFromSaveRoot(
   root: Record<string, unknown>,
   researchLabLevels: Record<string, number> = {},
 ): Partial<SharedDamageReduxCalculatorSettings> {
-  const chainThunderLab = resolveResearchLabLevel(researchLabLevels, 'chain_thunder', 30)
+  const chainThunderLab = computeResearchLabLevel(researchLabLevels, 'chain_thunder', 30)
   const clPlusLevel = readUwPlusLevel(root, 'Chain Lightning')
   const pcPct = readCardPercentBySlug(root, 'pc')
   const pcLevel = readCardLevelBySlug(root, 'pc')

@@ -21,10 +21,10 @@ import {
 } from './dissonance-echo-lab-keys'
 import {
   type BotGameInputKind,
-  resolveBotLabStatName,
-  resolveUptimeLabFieldName,
+  findBotLabStatName,
+  findUptimeLabFieldName,
 } from './bot-dropdown-math'
-import { type GameDataKey, resolveRegistryGameDataKey } from './game-data-registry'
+import { type GameDataKey, findRegistryGameDataKey } from './game-data-registry'
 
 export interface GameDropdownHubContext {
   uptimeInputs?: Partial<SharedUptimeInputs>
@@ -151,7 +151,7 @@ function isDissonanceEchoLabGameDataKey(key: string): key is DissonanceEchoLabDa
   return key in DISSONANCE_ECHO_LAB_SPEC_BY_KEY
 }
 
-export function resolveGameDataHubGroups(key: GameDataKey): readonly SharedInputGroupId[] {
+export function getGameDataHubGroups(key: GameDataKey): readonly SharedInputGroupId[] {
   if (isBotGameDataKey(key) || key === 'gold_bot_cooldown') {
     return ['uptimeInputs', 'botLabLevels']
   }
@@ -237,11 +237,11 @@ export function resolveGameDataHubGroups(key: GameDataKey): readonly SharedInput
   return CARD_GAME_DATA_HUB_GROUPS[key] ?? []
 }
 
-/** @deprecated Use resolveGameDataHubGroups(key) */
+/** @deprecated Use getGameDataHubGroups(key) */
 export const GAME_DATA_HUB_GROUPS = new Proxy({} as Record<GameDataKey, readonly SharedInputGroupId[]>, {
   get(_target, prop: string) {
-    const key = resolveRegistryGameDataKey(prop)
-    return key ? resolveGameDataHubGroups(key) : []
+    const key = findRegistryGameDataKey(prop)
+    return key ? getGameDataHubGroups(key) : []
   },
 })
 
@@ -249,10 +249,10 @@ export function buildGameDropdownHubContext(
   key: GameDataKey | string,
   inputs: SharedToolInputs | GameDropdownHubContext,
 ): GameDropdownHubContext {
-  const resolvedKey = resolveRegistryGameDataKey(String(key))
+  const resolvedKey = findRegistryGameDataKey(String(key))
   if (!resolvedKey) return {}
 
-  const groups = resolveGameDataHubGroups(resolvedKey)
+  const groups = getGameDataHubGroups(resolvedKey)
   const context: GameDropdownHubContext = {}
 
   for (const groupId of groups) {
@@ -299,7 +299,7 @@ function resolveBotLabLevelForKind(
   return Math.min(cap, Math.max(0, resolved))
 }
 
-export function resolveBotGameInputLab(
+export function computeBotGameInputLab(
   context: GameDropdownHubContext,
   key: BotGameDataKey | 'gold_bot_cooldown',
   kind?: BotGameInputKind,
@@ -313,15 +313,15 @@ export function resolveBotGameInputLab(
     return 0
   }
 
-  const labStatName = resolveBotLabStatName(spec.mapping, resolvedKind === 'cd_level' ? 'cd_level' : 'dur_level')
-  const uptimeField = resolveUptimeLabFieldName(spec.mapping, resolvedKind === 'cd_level' ? 'cd_level' : 'dur_level')
+  const labStatName = findBotLabStatName(spec.mapping, resolvedKind === 'cd_level' ? 'cd_level' : 'dur_level')
+  const uptimeField = findUptimeLabFieldName(spec.mapping, resolvedKind === 'cd_level' ? 'cd_level' : 'dur_level')
   if (!labStatName) return 0
 
   const cap = resolvedKind === 'cd_level' ? 25 : 20
   return resolveBotLabLevelForKind(context, spec.mapping.botLabel, labStatName, uptimeField, cap)
 }
 
-/** @deprecated Use resolveBotGameInputLab(context, 'gb_cd_level') */
-export function resolveGoldenBotCooldownLab(context: GameDropdownHubContext): number {
-  return resolveBotGameInputLab(context, 'gb_cd_level', 'cd_level')
+/** @deprecated Use computeBotGameInputLab(context, 'gb_cd_level') */
+export function computeGoldenBotCooldownLab(context: GameDropdownHubContext): number {
+  return computeBotGameInputLab(context, 'gb_cd_level', 'cd_level')
 }

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   buildBattleReportExtendedFieldsFromSaveEntry,
-  resolveBattleReportExtendedSaveKeysForTest,
+  getBattleReportExtendedSaveKeysForTest,
 } from './battle-report-extended'
 
 describe('buildBattleReportExtendedFieldsFromSaveEntry', () => {
@@ -31,7 +31,7 @@ describe('buildBattleReportExtendedFieldsFromSaveEntry', () => {
   })
 
   it('resolves land mine hit alias', () => {
-    expect(resolveBattleReportExtendedSaveKeysForTest('enemiesHitByLandMines')).toContain(
+    expect(getBattleReportExtendedSaveKeysForTest('enemiesHitByLandMines')).toContain(
       'enemiesHitByLandMineThisRound',
     )
   })

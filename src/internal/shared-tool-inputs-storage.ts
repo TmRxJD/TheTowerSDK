@@ -15,7 +15,7 @@ import { readSharedUptimeInputs } from './shared-uptime-inputs'
  * Expand sparse persisted hub state into a fully resolved payload for UI and simulation.
  * Missing keys receive site defaults only at read time.
  */
-export function resolveSharedToolInputs(stored: Record<string, unknown>): SharedToolInputs {
+export function getSharedToolInputs(stored: Record<string, unknown>): SharedToolInputs {
   const { enemyStatsCore: _ec, perkPreferences: _pp, uptimeInputs: _ui, ...restDefaults } = defaultSharedToolInputs
   const { enemyStatsCore: _ecExt, ...extendedRest } = normalizeExtendedSharedToolInputs({
     ...defaultExtendedSharedToolInputs,

@@ -4,7 +4,7 @@ import { buildGuardianDefinitions } from '../data/index'
 import { guardianUpgrades } from '../data/index'
 import { findLabResearchBySlug } from '../data/index'
 import { type LabProgressModifiers } from '../data/index'
-import { resolveResearchLabLevel } from '../data/index'
+import { computeResearchLabLevel } from '../data/index'
 import type { SharedEnemyDropsInputs } from '../internal/enemy-drops-calcs-local-state'
 import type { SharedLabsSettings } from '../internal/labs-persistence'
 import type {
@@ -13,17 +13,17 @@ import type {
   SharedWorkshopStatLevels,
 } from '../internal/shared-tool-inputs-extended'
 import type { SharedUptimeInputs } from '../internal/shared-uptime-inputs'
-import { resolveUptimeCoreStateFromSharedInputs } from '../internal/shared-uptime-inputs'
+import { getUptimeCoreStateFromSharedInputs } from '../internal/shared-uptime-inputs'
 import {
   computeUptimeCycleWaveTimeSeconds,
   computeUptimePerWaveDurationSeconds,
 } from '../internal/uptime-core'
 import {
   type EnemyDropsSimulationInput,
-  resolveBossWaveIntervalFromTier,
+  computeBossWaveIntervalFromTier,
 } from './enemy-drops-simulation'
 
-export function resolveTierNumber(tierSelection: number | string): number {
+export function computeTierNumber(tierSelection: number | string): number {
   if (typeof tierSelection === 'number' && Number.isFinite(tierSelection)) {
     return clampCampaignTier(tierSelection)
   }
@@ -110,7 +110,7 @@ function resolveLabLevelFromSources(
 ): number {
   const research = findLabResearchBySlug(slug)
   const maxLevel = research?.levelMax ?? 100
-  const fromResearch = resolveResearchLabLevel(researchLabLevels, slug, maxLevel)
+  const fromResearch = computeResearchLabLevel(researchLabLevels, slug, maxLevel)
   const calcKeys = [slug, research?.displayName, research?.slug].filter(
     (key): key is string => typeof key === 'string' && key.length > 0,
   )
@@ -159,24 +159,24 @@ function resolveFetchGuardianLevels(guardianLevels: Record<string, number[]>): {
 }
 
 /** Map Wave Accelerator card game level (1–7) to uptime WA tier (cooldown reduction index). */
-export function resolveWaLevelFromCardLevel(cardLevel: number): number {
+export function computeWaLevelFromCardLevel(cardLevel: number): number {
   return Math.min(7, clampCardGameLevel(cardLevel, 1))
 }
 
 /** Per-wave cycle seconds for fetch timing — 26s combat + WA-reduced inter-wave cooldown. */
 export function computeWaveTimeSecondsFromUptime(uptime: SharedUptimeInputs): number {
-  const state = resolveUptimeCoreStateFromSharedInputs(uptime)
+  const state = getUptimeCoreStateFromSharedInputs(uptime)
   return computeUptimePerWaveDurationSeconds(state)
 }
 
 /** Per-wave cycle seconds from Wave Accelerator card level only. */
 export function computeWaveTimeSecondsFromWaCard(cardLevel: number): number {
-  return computeWaveTimeSecondsFromUptime({ waLevel: resolveWaLevelFromCardLevel(cardLevel) })
+  return computeWaveTimeSecondsFromUptime({ waLevel: computeWaLevelFromCardLevel(cardLevel) })
 }
 
 /** Uptime calculator cycle wave time (same as uptime table "Wave Time" column). */
 export function computeUptimeWaveTimeFromSharedInputs(uptime: SharedUptimeInputs): number {
-  const state = resolveUptimeCoreStateFromSharedInputs(uptime)
+  const state = getUptimeCoreStateFromSharedInputs(uptime)
   return computeUptimeCycleWaveTimeSeconds(state)
 }
 
@@ -241,7 +241,7 @@ export function assembleEnemyDropsSimulationInput(sources: EnemyDropsLinkedSourc
   } = sources
 
   const fetchLevels = resolveFetchGuardianLevels(guardianLevels)
-  const tier = resolveTierNumber(enemyStatsCore.tierSelection)
+  const tier = computeTierNumber(enemyStatsCore.tierSelection)
   const waCardLevel = clampCardGameLevel(cards?.waveAcceleratorLevel, 1)
 
   return {
@@ -262,12 +262,12 @@ export function assembleEnemyDropsSimulationInput(sources: EnemyDropsLinkedSourc
     fetchCooldownLevel: fetchLevels.fetchCooldownLevel,
     fetchFindChanceLevel: fetchLevels.fetchFindChanceLevel,
     fetchDoubleFindLevel: fetchLevels.fetchDoubleFindLevel,
-    wavesPerBoss: resolveBossWaveIntervalFromTier(tier),
+    wavesPerBoss: computeBossWaveIntervalFromTier(tier),
     averageWaveSeconds: computeWaveTimeSecondsFromWaCard(waCardLevel),
   }
 }
 
-export function resolveEnemyDropsLabSlugKeys() {
+export function getEnemyDropsLabSlugKeys() {
   return { ...ENEMY_DROPS_LAB_SLUGS }
 }
 

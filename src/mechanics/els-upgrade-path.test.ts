@@ -15,8 +15,8 @@ import {
   formatElsSkipPctDelta,
   listElsMarginalUpgrades,
   marginalSkipLevelsAtWave,
-  resolveElsEnhancementLevelFromTracker,
-  resolveElsLeadFromWorkshopTrackerBlob,
+  computeElsEnhancementLevelFromTracker,
+  findElsLeadFromWorkshopTrackerBlob,
   standardElsCoinUpgradeCost,
 } from './els-upgrade-path'
 import { computeElsTrackSkipChance } from './els-module-cluster'
@@ -254,7 +254,7 @@ describe('els-upgrade-path', () => {
   })
 
   it('resolves workshop tracker lead from tracker blob shape', () => {
-    const lead = resolveElsLeadFromWorkshopTrackerBlob({
+    const lead = findElsLeadFromWorkshopTrackerBlob({
       progress: {
         levels: {
           [ELS_ATTACK_WORKSHOP_KEY]: 12,
@@ -283,10 +283,10 @@ describe('els-upgrade-path', () => {
   })
 
   it('resolves ELS+ level from save-import tracker alias keys', () => {
-    expect(resolveElsEnhancementLevelFromTracker({
+    expect(computeElsEnhancementLevelFromTracker({
       'Enemy Level Skip +': 42,
     })).toBe(42)
-    expect(resolveElsEnhancementLevelFromTracker({
+    expect(computeElsEnhancementLevelFromTracker({
       [ELS_ENHANCEMENT_KEY]: 10,
       'Enemy Level Skip +': 42,
     })).toBe(10)

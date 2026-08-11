@@ -5,7 +5,7 @@ import {
   BOT_DUR_LAB_COUNT,
   BOT_DUR_LEVEL_COUNT,
   type BotGameInputKind,
-  resolveBotLabStatName,
+  findBotLabStatName,
   THUNDER_BOT_DUR_LEVEL_COUNT,
 } from './bot-dropdown-math'
 
@@ -65,7 +65,7 @@ export function normalizeGameDataKey(key: string): string {
   return (GAME_DATA_KEY_ALIASES as Record<string, string>)[key] ?? key
 }
 
-export function resolveBotStatGameDataKey(botLabel: string, statName: string): BotGameDataKey | null {
+export function findBotStatGameDataKey(botLabel: string, statName: string): BotGameDataKey | null {
   const mapping = UPTIME_BOT_FIELD_MAP.find(entry => entry.botLabel === botLabel)
   if (!mapping) return null
   if (statName === mapping.cdStat) return `${mapping.prefix}_cd_level` as BotGameDataKey
@@ -73,7 +73,7 @@ export function resolveBotStatGameDataKey(botLabel: string, statName: string): B
   return null
 }
 
-export function resolveBotLabGameDataKey(botLabel: string, labName: string): BotGameDataKey | null {
+export function findBotLabGameDataKey(botLabel: string, labName: string): BotGameDataKey | null {
   const mapping = UPTIME_BOT_FIELD_MAP.find(entry => entry.botLabel === botLabel)
   if (!mapping) return null
   if (labName === mapping.cdLab) return `${mapping.prefix}_cd_lab` as BotGameDataKey
@@ -85,22 +85,22 @@ export type BotGameInputDropdownBinding = {
   dataKey: BotGameDataKey
 }
 
-export function resolveBotGameInputDropdownBindingByKey(
+export function getBotGameInputDropdownBindingByKey(
   dataKey: BotGameDataKey,
 ): BotGameInputDropdownBinding {
   return { dataKey }
 }
 
-export function resolveBotGameInputDropdownBinding(
+export function findBotGameInputDropdownBinding(
   botLabel: string,
   options: { statName?: string; labName?: string },
 ): BotGameInputDropdownBinding | null {
   if (options.statName) {
-    const key = resolveBotStatGameDataKey(botLabel, options.statName)
+    const key = findBotStatGameDataKey(botLabel, options.statName)
     return key ? { dataKey: key } : null
   }
   if (options.labName) {
-    const key = resolveBotLabGameDataKey(botLabel, options.labName)
+    const key = findBotLabGameDataKey(botLabel, options.labName)
     return key ? { dataKey: key } : null
   }
   return null
@@ -110,7 +110,7 @@ export function resolveBotGameInputDropdownBinding(
 export function buildBotGameInputFieldLabel(dataKey: BotGameDataKey): string {
   const spec = BOT_GAME_INPUT_SPEC_BY_KEY[dataKey]
   if (!spec) return dataKey
-  const statOrLab = resolveBotLabStatName(spec.mapping, spec.kind)
+  const statOrLab = findBotLabStatName(spec.mapping, spec.kind)
   return statOrLab ? `${spec.mapping.botLabel} - ${statOrLab}` : spec.mapping.botLabel
 }
 
