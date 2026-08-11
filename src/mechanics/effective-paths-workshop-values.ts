@@ -20,13 +20,20 @@
  *
  * ## Where the sheet and the game disagree
  *
- * Seven stats have no consistent scale at all, because the sheet's closed-form
- * approximation and the game's data are simply different functions — Cash Bonus
- * grows at 1% a level in the game data and 0.01% in the sheet, for instance.
- * Those are listed in {@link WORKSHOP_STATS_DIVERGING_FROM_SHEET} and this
- * refuses to convert them rather than pick a winner. None of them feed eHP; if
- * one turns out to matter for a damage or economy path, it needs resolving with
- * the sheet's maintainers rather than silently in code.
+ * Seven stats have no consistent scale, because the sheet's closed form and the
+ * game are different functions. Six of those have since been settled by reading
+ * the game's own getters out of `libil2cpp.so`, and the sheet is wrong in all
+ * six: Cash Bonus and Coin / Kill Bonus grow 1% a level rather than 0.01%,
+ * Land Mine Chance is `0.6 x lvl` with no base, Rend Armor Chance is
+ * `0.1 x (lvl + 1)`, Shockwave Frequency starts at 20 rather than 17, and
+ * Knockback Force bands above about level 11 where the sheet stays linear. The
+ * seventh, Wall Rebuild, is still open.
+ *
+ * Our values are therefore the right ones, but they are still refused here
+ * rather than served: this module's job is to answer in *the sheet's* units for
+ * a port that reproduces the sheet, and quietly returning a different number
+ * under that contract would be worse than returning none. See
+ * `docs/EFFECTIVE_PATHS_SHEET_FINDINGS.md`.
  */
 
 import { WORKSHOP_DATA } from '../data/workshop-table'
