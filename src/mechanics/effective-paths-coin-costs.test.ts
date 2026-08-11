@@ -138,7 +138,8 @@ describe('masteries on the coin path', () => {
     expect(excluded).not.toContain('Extra Defense Mastery')
     // Labs and stone upgrades are still out.
     expect(excluded).toContain('Health')
-    expect(excluded).toContain('Assist Module Substats - Armor')
+    // The *stone* assist upgrade is out; its lab twin is on the coin path.
+    expect(excluded).toContain('Assist Module Bonus - Armor')
   })
 
   it('charges the mastery table, keyed by the level being left', () => {
@@ -168,6 +169,10 @@ describe('masteries on the coin path', () => {
         enhancementDefenseAbsolute: 0,
         enhancementWallHealth: 0,
         enhancementRecoveryPackage: 0,
+        // The coin path buys the Assist Module labs too; pin them so only the
+        // masteries are left to run out.
+        assistSubstatArmorLab: 0,
+        assistSubstatGeneratorLab: 0,
       },
     })
     const masterySteps = plan.steps.filter(entry => entry.name.endsWith('Mastery'))

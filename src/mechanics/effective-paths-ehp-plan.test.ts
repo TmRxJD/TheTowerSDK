@@ -120,10 +120,12 @@ describe('planning the eHP time path with the whole model', () => {
 
   it('says which upgrades it left out, and why', () => {
     const names = plan.excluded.map(entry => entry.sheetName)
-    // The stone- and shard-bought upgrades cannot be on a lab path.
+    // The stone slot upgrades and the workshop enhancements cannot be on a
+    // lab path. Their lab twins, the masteries and the echo all can, and are.
     expect(names).toContain('Assist Module Substats - Armor')
-    expect(names).toContain('Health Mastery')
-    expect(names).toContain('Dissonant Echo - Defense')
+    expect(names).toContain('Health +')
+    expect(names).not.toContain('Health Mastery')
+    expect(names).not.toContain('Dissonant Echo - Defense')
     for (const entry of plan.excluded) expect(entry.reason.length).toBeGreaterThan(0)
   })
 })

@@ -73,12 +73,21 @@ function toConfig(c: ModelCase['cfg']): EffectiveHealthConfig {
  * the config, so lift them across.
  */
 function toLevels(testCase: { levels: unknown, cfg: Record<string, number> }): EffectiveHealthLevels {
+  const levels = testCase.levels as EffectiveHealthLevels
   return {
-    ...(testCase.levels as EffectiveHealthLevels),
+    ...levels,
     enhancementHealth: testCase.cfg.wseHealth,
     enhancementDefenseAbsolute: testCase.cfg.wseDabs,
     enhancementWallHealth: testCase.cfg.wseWall,
     enhancementRecoveryPackage: testCase.cfg.wseRcvr,
+    // The fixture's assist levels are the sheet's lab columns; its config
+    // fields are the stone side.
+    assistSubstatArmorLab: levels.assistSubstatArmor,
+    assistSubstatGeneratorLab: levels.assistSubstatGenerator,
+    assistBonusArmorLab: levels.assistBonusArmor,
+    assistSubstatArmor: testCase.cfg.stoneSubArmor,
+    assistSubstatGenerator: testCase.cfg.stoneSubGenerator,
+    assistBonusArmor: testCase.cfg.armorStoneBonusCap,
   }
 }
 

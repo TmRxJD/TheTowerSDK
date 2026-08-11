@@ -55,14 +55,24 @@ export function findEffectivePathsLabKey(name: string): string | null {
   return EFFECTIVE_PATHS_LAB_KEYS[name] ?? null
 }
 
-const CATALOG_BY_KEY = new Map(LAB_CATALOG.map(record => [record.name, record]))
+/**
+ * The catalog names some labs by slug (`health`) and others by display name
+ * ("Health Mastery"), so a lookup that only matched one form silently reported
+ * "no maximum level known" for six of the eHP path's candidates. Index on
+ * letters and digits alone, which both forms agree on.
+ */
+const catalogKey = (value: string): string => value.toLowerCase().replace(/[^a-z0-9]+/g, '')
+
+const CATALOG_BY_KEY = new Map(
+  LAB_CATALOG.map(record => [catalogKey(record.name), record] as const),
+)
 
 /**
  * The catalog row for reaching `level`, or `null` when the lab or level is
  * unknown. Level 1 is the first row — reaching level 1 costs `levels[0]`.
  */
 function levelRow(labKey: string, level: number) {
-  const record = CATALOG_BY_KEY.get(labKey)
+  const record = CATALOG_BY_KEY.get(catalogKey(labKey))
   if (!record) return null
   if (!Number.isInteger(level) || level < 1) return null
   return record.levels[level - 1] ?? null
@@ -133,5 +143,5 @@ export function labDurationDaysToReachLevel(
 
 /** The highest level the catalog has data for, or `0` for an unknown lab. */
 export function labMaxCatalogLevel(labKey: string): number {
-  return CATALOG_BY_KEY.get(labKey)?.levels.length ?? 0
+  return CATALOG_BY_KEY.get(catalogKey(labKey))?.levels.length ?? 0
 }

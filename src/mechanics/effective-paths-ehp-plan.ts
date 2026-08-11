@@ -16,7 +16,7 @@
 
 import {
   CARD_MASTERY_MAX_LEVEL,
-  cardMasteryCoinCost,
+
 } from './effective-paths-coin-costs'
 import {
   enhancementCoinCost,
@@ -30,16 +30,16 @@ import {
 } from './effective-paths-stone-costs'
 import {
   labCoinCostToReachLevel,
+  type LabCostModifiers,
   labDurationDaysToReachLevel,
   labMaxCatalogLevel,
-  type LabCostModifiers,
 } from './effective-paths-lab-costs'
 import {
   computeEffectiveHealth,
   type EffectiveHealthConfig,
   type EffectiveHealthLevels,
 } from './effective-paths-ehp-model'
-import { planPath, type PathStep, type PathUpgrade } from './effective-paths-planner'
+import { type PathStep, type PathUpgrade, planPath } from './effective-paths-planner'
 
 /** Which currency the path spends, and therefore what it may buy. */
 export type EffectiveHealthPathVariant = 'lab-time' | 'lab-coins' | 'stone' | 'coin'
@@ -67,7 +67,23 @@ export interface EffectiveHealthUpgradeDefinition {
   maxLevel?: number
   /** Enhancement stat name, for upgrades bought with coins. */
   enhancementStat?: string
+  /**
+   * Which paths offer this upgrade.
+   *
+   * The sheet decides this per tab rather than per currency: its coin tab buys
+   * card masteries and the Assist Module *labs* alongside workshop
+   * enhancements, but not the other labs, and its stone tab buys only the three
+   * slot upgrades. Deriving eligibility from the currency alone dropped six of
+   * the lab paths' seventeen candidates.
+   */
+  variants: readonly EffectiveHealthPathVariant[]
 }
+
+/** The two lab paths, which always offer the same candidates. */
+const LAB_PATHS = ['lab-time', 'lab-coins'] as const
+
+/** Bought on a lab path, and again with coins on the Workshop+ path. */
+const LAB_AND_COIN = ['lab-time', 'lab-coins', 'coin'] as const
 
 /**
  * Every upgrade the eHP paths can buy, in the order the sheet lists them.
@@ -76,36 +92,99 @@ export interface EffectiveHealthUpgradeDefinition {
  * sheet taking the leftmost column of a joint maximum.
  */
 export const EFFECTIVE_HEALTH_UPGRADES: readonly EffectiveHealthUpgradeDefinition[] = [
-  { key: 'health', sheetName: 'Health', currency: 'lab', saveKey: 'health' },
-  { key: 'defenseAbsolute', sheetName: 'Defense Absolute', currency: 'lab', saveKey: 'defense_absolute' },
-  { key: 'defensePercent', sheetName: 'Defense %', currency: 'lab', saveKey: 'defense' },
-  { key: 'wallHealth', sheetName: 'Wall Health', currency: 'lab', saveKey: 'wall_health' },
-  { key: 'wallFortification', sheetName: 'Wall Fortification', currency: 'lab', saveKey: 'wall_fortification' },
-  { key: 'recoveryPackageMax', sheetName: 'Recovery Package Max', currency: 'lab', saveKey: 'recovery_package_max' },
-  { key: 'standardPerksBonus', sheetName: 'Standard Perks Bonus', currency: 'lab', saveKey: 'standard_perks_bonus' },
-  { key: 'improveTradeOffPerks', sheetName: 'Improve Trade-Off Perks', currency: 'lab', saveKey: 'improve_trade_off_perks' },
-  { key: 'chronoFieldReduction', sheetName: 'Chrono Field Reduction %', currency: 'lab', saveKey: 'chrono_field_reduction' },
-  { key: 'deathWaveHealth', sheetName: 'Death Wave Health', currency: 'lab', saveKey: 'death_wave_health' },
-  { key: 'chainThunder', sheetName: 'Chain Thunder', currency: 'lab', saveKey: 'chain_thunder' },
+  { key: 'health', sheetName: 'Health', currency: 'lab', saveKey: 'health', variants: LAB_PATHS },
+  { key: 'defenseAbsolute', sheetName: 'Defense Absolute', currency: 'lab', saveKey: 'defense_absolute', variants: LAB_PATHS },
+  { key: 'defensePercent', sheetName: 'Defense %', currency: 'lab', saveKey: 'defense', variants: LAB_PATHS },
+  { key: 'wallHealth', sheetName: 'Wall Health', currency: 'lab', saveKey: 'wall_health', variants: LAB_PATHS },
+  { key: 'wallFortification', sheetName: 'Wall Fortification', currency: 'lab', saveKey: 'wall_fortification', variants: LAB_PATHS },
+  { key: 'recoveryPackageMax', sheetName: 'Recovery Package Max', currency: 'lab', saveKey: 'recovery_package_max', variants: LAB_PATHS },
+  { key: 'standardPerksBonus', sheetName: 'Standard Perks Bonus', currency: 'lab', saveKey: 'standard_perks_bonus', variants: LAB_PATHS },
+  { key: 'improveTradeOffPerks', sheetName: 'Improve Trade-Off Perks', currency: 'lab', saveKey: 'improve_trade_off_perks', variants: LAB_PATHS },
+  { key: 'chronoFieldReduction', sheetName: 'Chrono Field Reduction %', currency: 'lab', saveKey: 'chrono_field_reduction', variants: LAB_PATHS },
+  { key: 'deathWaveHealth', sheetName: 'Death Wave Health', currency: 'lab', saveKey: 'death_wave_health', variants: LAB_PATHS },
+  { key: 'chainThunder', sheetName: 'Chain Thunder', currency: 'lab', saveKey: 'chain_thunder', variants: LAB_PATHS },
 
-  // The stone path's three candidates, capped where the sheet caps them.
+  /*
+   * Card masteries are labs, and both the lab and coin paths buy them —
+   * `eHP!BZ:CA` and `eHP Coins!BS:BT`. The cap is declared rather than read
+   * from the catalog: the sheet's own Max column (`BE19`) stops at
+   * {@link CARD_MASTERY_MAX_LEVEL} while the catalog carries one row more.
+   */
+  {
+    key: 'healthMastery',
+    sheetName: 'Health Mastery',
+    currency: 'lab',
+    saveKey: 'health_mastery',
+    maxLevel: CARD_MASTERY_MAX_LEVEL,
+    variants: LAB_AND_COIN,
+  },
+  {
+    key: 'extraDefenseMastery',
+    sheetName: 'Extra Defense Mastery',
+    currency: 'lab',
+    saveKey: 'extra_defense_mastery',
+    maxLevel: CARD_MASTERY_MAX_LEVEL,
+    variants: LAB_AND_COIN,
+  },
+
+  /*
+   * Assist module capacity comes from two places, and the sheet buys each on
+   * its own path: an Assist Module lab (`eHP!CB:CD`, capped at 30) and a
+   * stone-bought slot upgrade (`eHP Stone!BO:BQ`, capped at 69 and 99). They
+   * add together inside every stat, so both have to be candidates or the lab
+   * paths silently drop three upgrades.
+   */
+  {
+    key: 'assistSubstatArmorLab',
+    sheetName: 'Assist Module Substats - Armor',
+    currency: 'lab',
+    saveKey: 'assist_module_substats_armor',
+    variants: LAB_AND_COIN,
+  },
+  {
+    key: 'assistSubstatGeneratorLab',
+    sheetName: 'Assist Module Substats - Generator',
+    currency: 'lab',
+    saveKey: 'assist_module_substats_generator',
+    variants: LAB_AND_COIN,
+  },
+  {
+    key: 'assistBonusArmorLab',
+    sheetName: 'Assist Module Bonus - Armor',
+    currency: 'lab',
+    saveKey: 'assist_module_bonus_armor',
+    // The coin tab has no ROI column for it, only the two substat labs.
+    variants: LAB_PATHS,
+  },
+
+  {
+    key: 'dissonantEchoDefense',
+    sheetName: 'Dissonant Echo - Defense',
+    currency: 'lab',
+    saveKey: 'dissonant_echo_defense',
+    variants: LAB_PATHS,
+  },
+
   {
     key: 'assistSubstatArmor',
     sheetName: 'Assist Module Substats - Armor',
     currency: 'stone',
     maxLevel: ASSIST_SUBSTAT_MAX_LEVEL,
+    variants: ['stone'],
   },
   {
     key: 'assistSubstatGenerator',
     sheetName: 'Assist Module Substats - Generator',
     currency: 'stone',
     maxLevel: ASSIST_SUBSTAT_MAX_LEVEL,
+    variants: ['stone'],
   },
   {
     key: 'assistBonusArmor',
     sheetName: 'Assist Module Bonus - Armor',
     currency: 'stone',
     maxLevel: ASSIST_BONUS_MAX_LEVEL,
+    variants: ['stone'],
   },
 
   // The coin path's workshop enhancements. Each level is worth 1% of its stat,
@@ -115,32 +194,30 @@ export const EFFECTIVE_HEALTH_UPGRADES: readonly EffectiveHealthUpgradeDefinitio
     sheetName: 'Health +',
     currency: 'enhancement',
     enhancementStat: 'Health',
+    variants: ['coin'],
   },
   {
     key: 'enhancementDefenseAbsolute',
     sheetName: 'Defense Absolute +',
     currency: 'enhancement',
     enhancementStat: 'Defense Absolute',
+    variants: ['coin'],
   },
   {
     key: 'enhancementWallHealth',
     sheetName: 'Wall Health +',
     currency: 'enhancement',
     enhancementStat: 'Wall Health',
+    variants: ['coin'],
   },
   {
     key: 'enhancementRecoveryPackage',
     sheetName: 'Recovery Package +',
     currency: 'enhancement',
     enhancementStat: 'Recovery Package',
+    variants: ['coin'],
   },
 
-  // Feed eHP, but no path buys them here: shards and relics, not stones,
-  // labs or coins. The sheet's coin path also buys card masteries and module
-  // levels; those need their own cost sources and are not wired yet.
-  { key: 'healthMastery', sheetName: 'Health Mastery', currency: 'mastery', maxLevel: CARD_MASTERY_MAX_LEVEL },
-  { key: 'extraDefenseMastery', sheetName: 'Extra Defense Mastery', currency: 'mastery', maxLevel: CARD_MASTERY_MAX_LEVEL },
-  { key: 'dissonantEchoDefense', sheetName: 'Dissonant Echo - Defense', currency: 'other', maxLevel: 20 },
 ]
 
 export interface EffectiveHealthPlanOptions {
@@ -184,19 +261,12 @@ export interface EffectiveHealthPlan {
  * What each variant may spend on. The coin path buys two different kinds of
  * upgrade, which is why this is a list rather than one currency.
  */
-const VARIANT_CURRENCIES: Record<EffectiveHealthPathVariant, readonly EffectiveHealthCurrency[]> = {
-  'lab-time': ['lab'],
-  'lab-coins': ['lab'],
-  stone: ['stone'],
-  coin: ['enhancement', 'mastery'],
-}
-
 /** The upgrades a variant is allowed to buy. */
 function isEligible(
   upgrade: EffectiveHealthUpgradeDefinition,
   variant: EffectiveHealthPathVariant,
 ): boolean {
-  return VARIANT_CURRENCIES[variant].includes(upgrade.currency)
+  return upgrade.variants.includes(variant)
 }
 
 /**
@@ -266,11 +336,8 @@ export function planEffectiveHealthPath(options: EffectiveHealthPlanOptions): Ef
 
       if (variant === 'stone') return assistUpgradeStoneCost(nextLevel) ?? Number.NaN
 
-      if (variant === 'coin') {
-        // Both tables are keyed by the level being left, not the one bought.
-        if (upgrade.currency === 'mastery') {
-          return cardMasteryCoinCost(nextLevel - 1) ?? Number.NaN
-        }
+      if (variant === 'coin' && upgrade.currency === 'enhancement') {
+        // Keyed by the level being left, not the one bought.
         if (!upgrade.enhancementStat) return Number.NaN
         return enhancementCoinCost(
           upgrade.enhancementStat, nextLevel, options.enhancementDiscounts,

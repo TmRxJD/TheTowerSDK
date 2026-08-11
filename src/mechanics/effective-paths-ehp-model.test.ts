@@ -66,9 +66,7 @@ function toConfig(c: FixtureCase['cfg']): EffectiveHealthConfig {
       primaryBonus: c.armorPrimary,
       hasAssist: c.hasArmorAssist,
       assistBonus: c.armorAssist,
-      labBonusCap: c.armorStoneBonusCap,
     },
-    labSubstatCap: { armor: c.stoneSubArmor, generator: c.stoneSubGenerator },
     wall: { has: c.hasWall, primaryEffect: c.wallPrimEffect, assistEffect: c.wallAssEffect },
     recovery: { has: c.hasRecovery },
     perks: effectiveHealthPerks({
@@ -91,16 +89,27 @@ function toConfig(c: FixtureCase['cfg']): EffectiveHealthConfig {
 
 
 /**
- * The fixture predates enhancement levels living with the levels rather than
- * the config, so lift them across.
+ * The fixture predates two things: enhancement levels living with the levels
+ * rather than the config, and assist capacity being split into a lab half and
+ * a stone half. Its `assist*` levels are the sheet's lab columns and its
+ * `*Cap`/`stoneSub*` config fields are the stone side, so both are lifted onto
+ * the levels here. They are summed inside every stat, so the split is a naming
+ * question rather than a numeric one.
  */
 function toLevels(testCase: { levels: unknown, cfg: Record<string, number> }): EffectiveHealthLevels {
+  const levels = testCase.levels as EffectiveHealthLevels
   return {
-    ...(testCase.levels as EffectiveHealthLevels),
+    ...levels,
     enhancementHealth: testCase.cfg.wseHealth,
     enhancementDefenseAbsolute: testCase.cfg.wseDabs,
     enhancementWallHealth: testCase.cfg.wseWall,
     enhancementRecoveryPackage: testCase.cfg.wseRcvr,
+    assistSubstatArmorLab: levels.assistSubstatArmor,
+    assistSubstatGeneratorLab: levels.assistSubstatGenerator,
+    assistBonusArmorLab: levels.assistBonusArmor,
+    assistSubstatArmor: testCase.cfg.stoneSubArmor,
+    assistSubstatGenerator: testCase.cfg.stoneSubGenerator,
+    assistBonusArmor: testCase.cfg.armorStoneBonusCap,
   }
 }
 
@@ -185,8 +194,7 @@ describe('what the model does with an empty account', () => {
       defenseAbsolute: { has: false, value: 1 },
       defensePercent: { has: false, value: 0 },
     },
-    armor: { primaryBonus: 1.012, hasAssist: false, assistBonus: 1, labBonusCap: 0 },
-    labSubstatCap: { armor: 0, generator: 0 },
+    armor: { primaryBonus: 1.012, hasAssist: false, assistBonus: 1 },
     wall: { has: false, primaryEffect: 0, assistEffect: 0 },
     recovery: { has: false },
     perks: effectiveHealthPerks({
