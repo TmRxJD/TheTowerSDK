@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import fixtures from './effective-paths-parity.fixtures.json'
+import oracleFixtures from './effective-paths-oracle.fixtures.json'
 import {
   DEFENSE_PERCENT_CAP,
   effectiveArmor,
@@ -168,6 +169,27 @@ describe('effective paths eHP parity with the spreadsheet', () => {
       // The sheet's cached values are rounded for display in some columns, so
       // compare to a relative tolerance rather than exact equality.
       expect(actual).toBeCloseTo(testCase.expected, 6)
+    })
+  }
+})
+
+/**
+ * The exported workbook only cached the input state it was saved in — an empty
+ * template — which yields barely a handful of distinct vectors. These cases were
+ * asked of the live sheet through the oracle MCP, so they cover combinations the
+ * snapshot could never reach.
+ */
+describe('effective paths eHP parity with the live sheet', () => {
+  for (const testCase of oracleFixtures.cases) {
+    const adapter = ADAPTERS[testCase.fn]
+    it(`${testCase.fn}: ${testCase.why}`, () => {
+      expect(adapter, `no adapter for ${testCase.fn}`).toBeDefined()
+      const actual = adapter(testCase.args as Args)
+      // The sheet answers in IEEE doubles, so compare relatively rather than
+      // demanding the same accumulated floating-point error.
+      expect(actual).toBeCloseTo(testCase.expected, 6)
+      expect(Math.abs(actual - testCase.expected) / Math.abs(testCase.expected || 1))
+        .toBeLessThan(1e-12)
     })
   }
 })
