@@ -31,6 +31,8 @@ const OUT = path.join(ROOT, 'src', 'data', 'fixtures', 'effective-paths-labs.jso
 const SHEET_ID = '1YwZtKP6B4WYhRba5T6APJ1YxKNdfnIGQnprgnxmO7zc'
 const LAB_TAB_GID = '1095671409'
 const SOURCE_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${LAB_TAB_GID}`
+/** The sheet's cumulative "cost to max" row, numbered as if it were a level. */
+const TOTALS_ROW_LEVEL = 999
 
 function parseCsv(text) {
   const rows = []
@@ -99,6 +101,11 @@ for (let column = 1; column < header.length; column += 2) {
   const levels = []
   for (const row of body) {
     const level = Number(String(row[0]).trim())
+    // The sheet closes each lab with a row numbered 999 holding the cumulative
+    // cost and time to max it. It is a total, not a level -- Amp Bot Cooldown
+    // reads 3.99e11 at L25 and 1.81e12 at "999" -- so it must not land in a
+    // table that claims to be per-level.
+    if (level === TOTALS_ROW_LEVEL) continue
     const cost = parseCost(row[column + 1])
     const durationSeconds = parseDurationSeconds(row[column])
     // Levels past a lab's cap are blank in both columns; keep only real rows.

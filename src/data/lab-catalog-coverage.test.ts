@@ -41,20 +41,29 @@ function hasLevelTable(slug: string): boolean {
  * Labs with no cost data in any source. These are an extraction gap, not a
  * lookup bug -- nothing can compute their times until the data is generated.
  * Shrinking this list is the goal; growing it silently is the regression.
+ *
+ * Was twelve. Six were closed by checking the catalog against the Effective
+ * Paths reference, and they split evenly between the two failure modes:
+ *
+ * - Mispointed, data already present. berserker_mastery and
+ *   recovery_package_mastery are filed as "Berzerker Mastery" and "Recovery
+ *   Package Chance Mastery"; both now have aliases.
+ * - Genuinely missing, now acquired. The three enemy Health labs share the
+ *   Attack cost/time table exactly, and wave_skip_mastery shares the card
+ *   mastery table (its effect value is still unknown -- see labs-static).
+ *
+ * The six that remain are all absent from the reference too, and the game dump
+ * has only placeholder defaults for them (levelMax 99, baseCoinCost 30,
+ * baseTime 15 -- identical across all six, and contradicting the research
+ * catalog's own 50/50/50/50/1/1). They need a fresh extraction, not a lookup.
  */
 const KNOWN_MISSING_LEVEL_TABLES = [
   'armor_stats',
-  'berserker_mastery',
   'black_hole_ignore_protector',
   'cannon_stats',
   'core_stats',
   'first_trade_off_choice',
   'generator_stats',
-  'ray_enemy_health',
-  'recovery_package_mastery',
-  'scatter_enemy_health',
-  'vampire_enemy_health',
-  'wave_skip_mastery',
 ]
 
 describe('lab catalog coverage', () => {
@@ -80,7 +89,8 @@ describe('lab catalog coverage', () => {
   })
 
   it('keeps the missing list honest about its size', () => {
-    // A guard against quietly adding entries instead of adding data.
-    expect(KNOWN_MISSING_LEVEL_TABLES.length).toBeLessThanOrEqual(12)
+    // A guard against quietly adding entries instead of adding data. It only
+    // ever ratchets down.
+    expect(KNOWN_MISSING_LEVEL_TABLES.length).toBeLessThanOrEqual(6)
   })
 })

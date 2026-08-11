@@ -131,11 +131,6 @@
      "level": 25,
      "durationSeconds": 7374159,
      "cost": 398880000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 49824820,
-     "cost": 1808240050000
     }
    ]
   },
@@ -241,11 +236,6 @@
      "level": 20,
      "durationSeconds": 10246870,
      "cost": 221680000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 73759344,
-     "cost": 664838130000000
     }
    ]
   },
@@ -271,11 +261,6 @@
      "level": 4,
      "durationSeconds": 17640000,
      "cost": 50000000000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 42840000,
-     "cost": 55050500000000000
     }
    ]
   },
@@ -2121,11 +2106,6 @@
      "level": 99,
      "durationSeconds": 4237020,
      "cost": 4190000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 124846039,
-     "cost": 111695939
     }
    ]
   },
@@ -2134,11 +2114,6 @@
    "levels": [
     {
      "level": 1,
-     "durationSeconds": 429960,
-     "cost": 100000000
-    },
-    {
-     "level": 999,
      "durationSeconds": 429960,
      "cost": 100000000
     }
@@ -2306,11 +2281,6 @@
      "level": 32,
      "durationSeconds": 66302475,
      "cost": 154260000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 1416341,
-     "cost": 948488598820
     }
    ]
   },
@@ -2356,11 +2326,6 @@
      "level": 8,
      "durationSeconds": 28800000,
      "cost": 1000000000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 57199859,
-     "cost": 1101116110000000
     }
    ]
   },
@@ -2516,11 +2481,6 @@
      "level": 30,
      "durationSeconds": 13944480,
      "cost": 2400000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 106784880,
-     "cost": 21116540000000
     }
    ]
   },
@@ -2676,11 +2636,6 @@
      "level": 30,
      "durationSeconds": 13944480,
      "cost": 2400000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 106784880,
-     "cost": 21116540000000
     }
    ]
   },
@@ -2736,11 +2691,6 @@
      "level": 10,
      "durationSeconds": 10730400,
      "cost": 38400000000000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 65315220,
-     "cost": 113330078125000000000
     }
    ]
   },
@@ -2796,11 +2746,6 @@
      "level": 10,
      "durationSeconds": 14400000,
      "cost": 639400000000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 79200000,
-     "cost": 1247500000000000000
     }
    ]
   },
@@ -2906,11 +2851,6 @@
      "level": 20,
      "durationSeconds": 2806800,
      "cost": 24800000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 18494311,
-     "cost": 91921243243
     }
    ]
   },
@@ -2966,11 +2906,6 @@
      "level": 10,
      "durationSeconds": 567060,
      "cost": 300870000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 3177420,
-     "cost": 820520000
     }
    ]
   },
@@ -3136,11 +3071,6 @@
      "level": 30,
      "durationSeconds": 13944480,
      "cost": 3000000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 106784880,
-     "cost": 30412140000000
     }
    ]
   },
@@ -3296,11 +3226,6 @@
      "level": 30,
      "durationSeconds": 13944480,
      "cost": 3000000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 106784880,
-     "cost": 30412140000000
     }
    ]
   },
@@ -3591,11 +3516,6 @@
      "level": 20,
      "durationSeconds": 10246870,
      "cost": 221680000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 73759344,
-     "cost": 664838130000000
     }
    ]
   },
@@ -3621,11 +3541,6 @@
      "level": 4,
      "durationSeconds": 199980,
      "cost": 500000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 323519,
-     "cost": null
     }
    ]
   },
@@ -3651,11 +3566,6 @@
      "level": 4,
      "durationSeconds": 17640000,
      "cost": 50000000000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 42840000,
-     "cost": 55050500000000000
     }
    ]
   },
@@ -3706,11 +3616,6 @@
      "level": 9,
      "durationSeconds": 9000000,
      "cost": 10000000000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 24300000,
-     "cost": 50000000000000000
     }
    ]
   },
@@ -3719,11 +3624,6 @@
    "levels": [
     {
      "level": 1,
-     "durationSeconds": 49980,
-     "cost": null
-    },
-    {
-     "level": 999,
      "durationSeconds": 49980,
      "cost": null
     }
@@ -4226,11 +4126,6 @@
      "level": 99,
      "durationSeconds": 4237080,
      "cost": 4190000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 124846584,
-     "cost": 111696469
     }
    ]
   },
@@ -4731,11 +4626,6 @@
      "level": 99,
      "durationSeconds": 4237080,
      "cost": 4190000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 124846584,
-     "cost": 111696469
     }
    ]
   },
@@ -4744,11 +4634,6 @@
    "levels": [
     {
      "level": 1,
-     "durationSeconds": 85980,
-     "cost": null
-    },
-    {
-     "level": 999,
      "durationSeconds": 85980,
      "cost": null
     }
@@ -4906,11 +4791,6 @@
      "level": 30,
      "durationSeconds": 19259951,
      "cost": 12780000000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 173759526,
-     "cost": 38344338130000000
     }
    ]
   },
@@ -4919,11 +4799,6 @@
    "levels": [
     {
      "level": 1,
-     "durationSeconds": 59940,
-     "cost": null
-    },
-    {
-     "level": 999,
      "durationSeconds": 59940,
      "cost": null
     }
@@ -5081,11 +4956,6 @@
      "level": 30,
      "durationSeconds": 9613680,
      "cost": 19420000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 71316720,
-     "cost": 116241771980
     }
    ]
   },
@@ -5191,11 +5061,6 @@
      "level": 20,
      "durationSeconds": 2734800,
      "cost": 8840000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 17054400,
-     "cost": 34379790000
     }
    ]
   },
@@ -5351,11 +5216,6 @@
      "level": 30,
      "durationSeconds": 9613680,
      "cost": 19420000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 71316720,
-     "cost": 116241771980
     }
    ]
   },
@@ -5856,11 +5716,6 @@
      "level": 99,
      "durationSeconds": 4237080,
      "cost": 4190000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 124846584,
-     "cost": 111696469
     }
    ]
   },
@@ -6361,11 +6216,6 @@
      "level": 99,
      "durationSeconds": 4237080,
      "cost": 4190000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 124846584,
-     "cost": 111696469
     }
    ]
   },
@@ -6576,11 +6426,6 @@
      "level": 10,
      "durationSeconds": 709190,
      "cost": 7320000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 5161627,
-     "cost": 19881980000
     }
    ]
   },
@@ -6621,11 +6466,6 @@
      "level": 7,
      "durationSeconds": null,
      "cost": 500000000000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 78840000,
-     "cost": 555555050000000000
     }
    ]
   },
@@ -7126,11 +6966,6 @@
      "level": 99,
      "durationSeconds": 4237020,
      "cost": 4190000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 124846039,
-     "cost": 111695939
     }
    ]
   },
@@ -7386,11 +7221,6 @@
      "level": 50,
      "durationSeconds": 1064202,
      "cost": 352950000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 21565919,
-     "cost": 4501921030000
     }
    ]
   },
@@ -7896,11 +7726,6 @@
      "level": 100,
      "durationSeconds": 4341120,
      "cost": 4310000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 129187159,
-     "cost": 116005939
     }
    ]
   },
@@ -8401,11 +8226,6 @@
      "level": 99,
      "durationSeconds": 4237080,
      "cost": 4190000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 124846584,
-     "cost": 111696469
     }
    ]
   },
@@ -8461,11 +8281,6 @@
      "level": 10,
      "durationSeconds": 16188900,
      "cost": 1.02e+21
-    },
-    {
-     "level": 999,
-     "durationSeconds": 92607720,
-     "cost": 2.046e+21
     }
    ]
   },
@@ -8571,11 +8386,6 @@
      "level": 20,
      "durationSeconds": 23326920,
      "cost": 4000000000000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 244932540,
-     "cost": 42000000000000000000
     }
    ]
   },
@@ -8631,11 +8441,6 @@
      "level": 10,
      "durationSeconds": 5540375,
      "cost": 147790000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 24474248,
-     "cost": 265931250000000
     }
    ]
   },
@@ -8741,11 +8546,6 @@
      "level": 20,
      "durationSeconds": 2380912,
      "cost": 2220000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 19927295,
-     "cost": 6653790000000
     }
    ]
   },
@@ -8851,11 +8651,6 @@
      "level": 20,
      "durationSeconds": 2734837,
      "cost": 8840000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 17047754,
-     "cost": 34379790000
     }
    ]
   },
@@ -9011,11 +8806,6 @@
      "level": 30,
      "durationSeconds": 19259951,
      "cost": 12780000000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 173791939,
-     "cost": 38344300000000000
     }
    ]
   },
@@ -9171,11 +8961,6 @@
      "level": 30,
      "durationSeconds": 1487024,
      "cost": 1620000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 22892588,
-     "cost": 15790390000
     }
    ]
   },
@@ -9431,11 +9216,6 @@
      "level": 50,
      "durationSeconds": 26620020,
      "cost": 5760000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 318775499,
-     "cost": 59428431500
     }
    ]
   },
@@ -9941,11 +9721,6 @@
      "level": 100,
      "durationSeconds": 4341120,
      "cost": 4310000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 129187159,
-     "cost": 116005939
     }
    ]
   },
@@ -10051,11 +9826,6 @@
      "level": 20,
      "durationSeconds": 36000000,
      "cost": 4.91436992041778e+21
-    },
-    {
-     "level": 999,
-     "durationSeconds": 378000000,
-     "cost": 8.84587e+21
     }
    ]
   },
@@ -10161,11 +9931,6 @@
      "level": 20,
      "durationSeconds": 36000000,
      "cost": 4.91436992041778e+21
-    },
-    {
-     "level": 999,
-     "durationSeconds": 378000000,
-     "cost": 8.84587e+21
     }
    ]
   },
@@ -10271,11 +10036,6 @@
      "level": 20,
      "durationSeconds": 36000000,
      "cost": 4.91436992041778e+21
-    },
-    {
-     "level": 999,
-     "durationSeconds": 378000000,
-     "cost": 8.84587e+21
     }
    ]
   },
@@ -10381,11 +10141,6 @@
      "level": 20,
      "durationSeconds": 36000000,
      "cost": 4.91436992041778e+21
-    },
-    {
-     "level": 999,
-     "durationSeconds": 378000000,
-     "cost": 8.84587e+21
     }
    ]
   },
@@ -10541,11 +10296,6 @@
      "level": 30,
      "durationSeconds": 10067280,
      "cost": 205120000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 77094779,
-     "cost": 1097076750000
     }
    ]
   },
@@ -10651,11 +10401,6 @@
      "level": 20,
      "durationSeconds": 1495140,
      "cost": 152290000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 11258040,
-     "cost": 745230000000
     }
    ]
   },
@@ -10761,11 +10506,6 @@
      "level": 20,
      "durationSeconds": 27992340,
      "cost": 10000000000000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 293919000,
-     "cost": 105000000000000000000
     }
    ]
   },
@@ -10871,11 +10611,6 @@
      "level": 20,
      "durationSeconds": 1495140,
      "cost": 152290000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 11258040,
-     "cost": 745230000000
     }
    ]
   },
@@ -10931,11 +10666,6 @@
      "level": 10,
      "durationSeconds": 16188900,
      "cost": 1.02e+21
-    },
-    {
-     "level": 999,
-     "durationSeconds": 92607720,
-     "cost": 2.046e+21
     }
    ]
   },
@@ -11041,11 +10771,6 @@
      "level": 20,
      "durationSeconds": 27992340,
      "cost": 10000000000000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 293919000,
-     "cost": 105000000000000000000
     }
    ]
   },
@@ -11061,11 +10786,6 @@
      "level": 2,
      "durationSeconds": 2799960,
      "cost": 850000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 3799920,
-     "cost": 890000000000
     }
    ]
   },
@@ -11626,11 +11346,6 @@
      "level": 100,
      "durationSeconds": 9330780,
      "cost": 190718000000000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 471201660,
-     "cost": 826445000000000000000
     }
    ]
   },
@@ -12136,11 +11851,6 @@
      "level": 100,
      "durationSeconds": 9330780,
      "cost": 190718000000000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 471201660,
-     "cost": 826445000000000000000
     }
    ]
   },
@@ -12646,11 +12356,6 @@
      "level": 100,
      "durationSeconds": 9330780,
      "cost": 190718000000000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 471201660,
-     "cost": 826445000000000000000
     }
    ]
   },
@@ -12661,11 +12366,6 @@
      "level": 1,
      "durationSeconds": 1499940,
      "cost": null
-    },
-    {
-     "level": 999,
-     "durationSeconds": 1499940,
-     "cost": 15000000000
     }
    ]
   },
@@ -12681,11 +12381,6 @@
      "level": 2,
      "durationSeconds": 499980,
      "cost": 900000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 639960,
-     "cost": 925000000
     }
    ]
   },
@@ -12694,11 +12389,6 @@
    "levels": [
     {
      "level": 1,
-     "durationSeconds": 179940,
-     "cost": 1500000
-    },
-    {
-     "level": 999,
      "durationSeconds": 179940,
      "cost": 1500000
     }
@@ -12856,11 +12546,6 @@
      "level": 30,
      "durationSeconds": 13944480,
      "cost": 2700000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 106784880,
-     "cost": 25768190000000
     }
    ]
   },
@@ -13016,11 +12701,6 @@
      "level": 30,
      "durationSeconds": 13944480,
      "cost": 2700000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 106784880,
-     "cost": 25768190000000
     }
    ]
   },
@@ -13176,11 +12856,6 @@
      "level": 30,
      "durationSeconds": 13984500,
      "cost": 3600000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 107984940,
-     "cost": 39716400000000
     }
    ]
   },
@@ -13246,11 +12921,6 @@
      "level": 1,
      "durationSeconds": 399960,
      "cost": 1000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 399960,
-     "cost": 1000000000
     }
    ]
   },
@@ -13281,11 +12951,6 @@
      "level": 5,
      "durationSeconds": 6894581,
      "cost": 217690000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 26578463,
-     "cost": 567070000000000
     }
    ]
   },
@@ -13416,11 +13081,6 @@
      "level": 25,
      "durationSeconds": 7374159,
      "cost": 398880000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 49824820,
-     "cost": 1808240050000
     }
    ]
   },
@@ -13461,11 +13121,6 @@
      "level": 7,
      "durationSeconds": 2199960,
      "cost": 1000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 3916319,
-     "cost": null
     }
    ]
   },
@@ -13521,11 +13176,6 @@
      "level": 10,
      "durationSeconds": 448368,
      "cost": 459900
-    },
-    {
-     "level": 999,
-     "durationSeconds": 2192669,
-     "cost": null
     }
    ]
   },
@@ -13546,11 +13196,6 @@
      "level": 3,
      "durationSeconds": 17640000,
      "cost": 50000000000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 37080000,
-     "cost": 50505000000000000
     }
    ]
   },
@@ -13681,11 +13326,6 @@
      "level": 25,
      "durationSeconds": 7374159,
      "cost": 398880000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 49824820,
-     "cost": 1808240050000
     }
    ]
   },
@@ -13791,11 +13431,6 @@
      "level": 20,
      "durationSeconds": 10246870,
      "cost": 221680000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 73759344,
-     "cost": 664838130000000
     }
    ]
   },
@@ -13926,11 +13561,6 @@
      "level": 25,
      "durationSeconds": 5604600,
      "cost": 26190000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 40310640,
-     "cost": 124848790000
     }
    ]
   },
@@ -14036,11 +13666,6 @@
      "level": 20,
      "durationSeconds": 2806800,
      "cost": 8840000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 18494400,
-     "cost": 34388790000
     }
    ]
   },
@@ -14546,11 +14171,6 @@
      "level": 100,
      "durationSeconds": 4341120,
      "cost": 4310000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 129187159,
-     "cost": 116005939
     }
    ]
   },
@@ -15056,11 +14676,6 @@
      "level": 100,
      "durationSeconds": 4341120,
      "cost": 4310000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 129187159,
-     "cost": 116005939
     }
    ]
   },
@@ -15116,11 +14731,6 @@
      "level": 10,
      "durationSeconds": 730680,
      "cost": 4920000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 3624420,
-     "cost": 17261350000
     }
    ]
   },
@@ -15176,11 +14786,6 @@
      "level": 10,
      "durationSeconds": 14400000,
      "cost": 639400000000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 79200000,
-     "cost": 1247500000000000000
     }
    ]
   },
@@ -15286,11 +14891,6 @@
      "level": 20,
      "durationSeconds": 2734800,
      "cost": 8840000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 17054400,
-     "cost": 34379790000
     }
    ]
   },
@@ -15396,11 +14996,6 @@
      "level": 20,
      "durationSeconds": 2734800,
      "cost": 8840000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 17054400,
-     "cost": 34379790000
     }
    ]
   },
@@ -15411,11 +15006,6 @@
      "level": 1,
      "durationSeconds": 1199940,
      "cost": null
-    },
-    {
-     "level": 999,
-     "durationSeconds": 1199940,
-     "cost": 250000000
     }
    ]
   },
@@ -15916,11 +15506,6 @@
      "level": 99,
      "durationSeconds": 10575540,
      "cost": 19360000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 294267249,
-     "cost": 472468836
     }
    ]
   },
@@ -16026,11 +15611,6 @@
      "level": 20,
      "durationSeconds": 23326920,
      "cost": 4000000000000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 244932540,
-     "cost": 42000000000000000000
     }
    ]
   },
@@ -16531,11 +16111,6 @@
      "level": 99,
      "durationSeconds": 8418960,
      "cost": 13670000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 237687149,
-     "cost": 360236110
     }
    ]
   },
@@ -17036,11 +16611,6 @@
      "level": 99,
      "durationSeconds": 2844240,
      "cost": 19360000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 95957112,
-     "cost": 472468456
     }
    ]
   },
@@ -17146,11 +16716,6 @@
      "level": 20,
      "durationSeconds": 2326800,
      "cost": 3150000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 12314340,
-     "cost": 12936316980
     }
    ]
   },
@@ -17331,11 +16896,6 @@
      "level": 35,
      "durationSeconds": 16456560,
      "cost": 38490000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 136718400,
-     "cost": 266556316980
     }
    ]
   },
@@ -17501,11 +17061,6 @@
      "level": 30,
      "durationSeconds": 19259951,
      "cost": 12780000000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 173759526,
-     "cost": 38344338130000000
     }
    ]
   },
@@ -17586,11 +17141,6 @@
      "level": 15,
      "durationSeconds": 2429700,
      "cost": 624680
-    },
-    {
-     "level": 999,
-     "durationSeconds": 8771259,
-     "cost": null
     }
    ]
   },
@@ -17746,11 +17296,6 @@
      "level": 30,
      "durationSeconds": 1865400,
      "cost": 1540000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 31853760,
-     "cost": 24571810000000
     }
    ]
   },
@@ -17881,11 +17426,6 @@
      "level": 25,
      "durationSeconds": 5532600,
      "cost": 26190000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 38510580,
-     "cost": 124846090000
     }
    ]
   },
@@ -17894,11 +17434,6 @@
    "levels": [
     {
      "level": 1,
-     "durationSeconds": 575940,
-     "cost": null
-    },
-    {
-     "level": 999,
      "durationSeconds": 575940,
      "cost": null
     }
@@ -17936,11 +17471,6 @@
      "level": 6,
      "durationSeconds": 523380,
      "cost": 34080000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 1711440,
-     "cost": 59000000
     }
    ]
   },
@@ -18046,11 +17576,6 @@
      "level": 20,
      "durationSeconds": 2392800,
      "cost": 3150000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 13634340,
-     "cost": 12941771980
     }
    ]
   },
@@ -18156,11 +17681,6 @@
      "level": 20,
      "durationSeconds": 2460780,
      "cost": 3150000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 14994300,
-     "cost": 12960025000
     }
    ]
   },
@@ -18169,11 +17689,6 @@
    "levels": [
     {
      "level": 1,
-     "durationSeconds": 80580,
-     "cost": null
-    },
-    {
-     "level": 999,
      "durationSeconds": 80580,
      "cost": null
     }
@@ -18331,11 +17846,6 @@
      "level": 30,
      "durationSeconds": 1755587,
      "cost": 4790000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 27147242,
-     "cost": 35614150000000
     }
    ]
   },
@@ -18491,11 +18001,6 @@
      "level": 30,
      "durationSeconds": 1755587,
      "cost": 4790000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 27147242,
-     "cost": 35614150000000
     }
    ]
   },
@@ -18611,11 +18116,6 @@
      "level": 1,
      "durationSeconds": 43140,
      "cost": null
-    },
-    {
-     "level": 999,
-     "durationSeconds": 43140,
-     "cost": null
     }
    ]
   },
@@ -18671,11 +18171,6 @@
      "level": 10,
      "durationSeconds": 560700,
      "cost": 25540000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 2824500,
-     "cost": 76950000000
     }
    ]
   },
@@ -18781,11 +18276,6 @@
      "level": 20,
      "durationSeconds": 23326920,
      "cost": 4000000000000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 244932540,
-     "cost": 42000000000000000000
     }
    ]
   },
@@ -18891,11 +18381,6 @@
      "level": 20,
      "durationSeconds": 1678200,
      "cost": 874760000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 8770920,
-     "cost": 3712537770
     }
    ]
   },
@@ -19216,11 +18701,6 @@
      "level": 1,
      "durationSeconds": 699960,
      "cost": null
-    },
-    {
-     "level": 999,
-     "durationSeconds": 699960,
-     "cost": 1000000000
     }
    ]
   },
@@ -19236,11 +18716,6 @@
      "level": 2,
      "durationSeconds": 879960,
      "cost": 2000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 1309920,
-     "cost": 2200000000
     }
    ]
   },
@@ -19451,11 +18926,6 @@
      "level": 20,
      "durationSeconds": 3619380,
      "cost": 1770000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 23552400,
-     "cost": 16520890000000
     }
    ]
   },
@@ -19611,11 +19081,6 @@
      "level": 30,
      "durationSeconds": 13944480,
      "cost": 3000000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 106784880,
-     "cost": 30412140000000
     }
    ]
   },
@@ -19771,11 +19236,6 @@
      "level": 30,
      "durationSeconds": 13944480,
      "cost": 3000000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 106784880,
-     "cost": 30412140000000
     }
    ]
   },
@@ -19831,11 +19291,6 @@
      "level": 10,
      "durationSeconds": 10730400,
      "cost": 38400000000000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 65315220,
-     "cost": 113330078125000000000
     }
    ]
   },
@@ -20241,11 +19696,6 @@
      "level": 80,
      "durationSeconds": 2532120,
      "cost": 2320000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 60491779,
-     "cost": 50035939
     }
    ]
   },
@@ -20401,11 +19851,6 @@
      "level": 30,
      "durationSeconds": 13944480,
      "cost": 2700000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 106784880,
-     "cost": 25768190000000
     }
    ]
   },
@@ -20561,11 +20006,6 @@
      "level": 30,
      "durationSeconds": 13944480,
      "cost": 2700000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 106784880,
-     "cost": 25768190000000
     }
    ]
   },
@@ -20721,11 +20161,6 @@
      "level": 30,
      "durationSeconds": 6998040,
      "cost": 17286700000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 108469440,
-     "cost": null
     }
    ]
   },
@@ -20781,11 +20216,6 @@
      "level": 10,
      "durationSeconds": 10730400,
      "cost": 38400000000000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 65315220,
-     "cost": 113330078125000000000
     }
    ]
   },
@@ -20841,11 +20271,6 @@
      "level": 10,
      "durationSeconds": 1189190,
      "cost": 11010000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 9511630,
-     "cost": 28425400000000
     }
    ]
   },
@@ -21001,11 +20426,6 @@
      "level": 30,
      "durationSeconds": 27992340,
      "cost": 7500000000000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 433880640,
-     "cost": null
     }
    ]
   },
@@ -21161,11 +20581,6 @@
      "level": 30,
      "durationSeconds": 27992340,
      "cost": 7500000000000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 433880640,
-     "cost": null
     }
    ]
   },
@@ -21206,11 +20621,6 @@
      "level": 7,
      "durationSeconds": 4435919,
      "cost": 3600000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 10371963,
-     "cost": 14430000000000
     }
    ]
   },
@@ -21251,11 +20661,6 @@
      "level": 7,
      "durationSeconds": 4435920,
      "cost": 3600000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 10371965,
-     "cost": 14430000000000
     }
    ]
   },
@@ -21296,11 +20701,6 @@
      "level": 7,
      "durationSeconds": 4435920,
      "cost": 3600000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 10371965,
-     "cost": 14430000000000
     }
    ]
   },
@@ -21341,11 +20741,6 @@
      "level": 7,
      "durationSeconds": 4435919,
      "cost": 3600000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 10371963,
-     "cost": 14430000000000
     }
    ]
   },
@@ -21451,11 +20846,6 @@
      "level": 20,
      "durationSeconds": 3579360,
      "cost": 476600000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 22752420,
-     "cost": 2968190000000
     }
    ]
   },
@@ -21561,11 +20951,6 @@
      "level": 20,
      "durationSeconds": 3579360,
      "cost": 476600000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 22752420,
-     "cost": 2968190000000
     }
    ]
   },
@@ -21671,11 +21056,6 @@
      "level": 20,
      "durationSeconds": 3579360,
      "cost": 476600000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 22752420,
-     "cost": 2962930000000
     }
    ]
   },
@@ -21684,11 +21064,6 @@
    "levels": [
     {
      "level": 1,
-     "durationSeconds": 143999,
-     "cost": null
-    },
-    {
-     "level": 999,
      "durationSeconds": 143999,
      "cost": null
     }
@@ -22196,11 +21571,6 @@
      "level": 100,
      "durationSeconds": 850315,
      "cost": 488930000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 41859848,
-     "cost": 13327870410000
     }
    ]
   },
@@ -22511,11 +21881,6 @@
      "level": 30,
      "durationSeconds": 27992340,
      "cost": 7500000000000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 433880640,
-     "cost": null
     }
    ]
   },
@@ -22671,11 +22036,6 @@
      "level": 30,
      "durationSeconds": 27992340,
      "cost": 7500000000000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 433880640,
-     "cost": null
     }
    ]
   },
@@ -22701,11 +22061,6 @@
      "level": 4,
      "durationSeconds": 299940,
      "cost": 75000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 749820,
-     "cost": 84300000
     }
    ]
   },
@@ -22736,11 +22091,6 @@
      "level": 5,
      "durationSeconds": 45209703,
      "cost": 1190000000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 127254563,
-     "cost": 2063560000000000
     }
    ]
   },
@@ -22896,11 +22246,6 @@
      "level": 30,
      "durationSeconds": 10135680,
      "cost": 63130000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 79146780,
-     "cost": 356519790000
     }
    ]
   },
@@ -22976,11 +22321,6 @@
      "level": 14,
      "durationSeconds": 1016460,
      "cost": 1520000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 5629260,
-     "cost": 4319790000
     }
    ]
   },
@@ -23086,11 +22426,6 @@
      "level": 20,
      "durationSeconds": 3530940,
      "cost": 3150000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 17838900,
-     "cost": 12937873980
     }
    ]
   },
@@ -23196,11 +22531,6 @@
      "level": 20,
      "durationSeconds": 2806800,
      "cost": 24800000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 18494311,
-     "cost": 91921243243
     }
    ]
   },
@@ -23296,11 +22626,6 @@
      "level": 18,
      "durationSeconds": 2503937,
      "cost": 5470270270
-    },
-    {
-     "level": 999,
-     "durationSeconds": 21046926,
-     "cost": 22233286486
     }
    ]
   },
@@ -23431,11 +22756,6 @@
      "level": 25,
      "durationSeconds": 5082600,
      "cost": 238880000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 32060340,
-     "cost": 1079139580000
     }
    ]
   },
@@ -23936,11 +23256,6 @@
      "level": 99,
      "durationSeconds": 4237020,
      "cost": 4190000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 124846039,
-     "cost": 111695939
     }
    ]
   },
@@ -24196,11 +23511,6 @@
      "level": 50,
      "durationSeconds": 881413080,
      "cost": 87900000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 8793552540,
-     "cost": 800359361760
     }
    ]
   },
@@ -24406,11 +23716,6 @@
      "level": 40,
      "durationSeconds": 163990860,
      "cost": 30070000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 1388491980,
-     "cost": 221179361760
     }
    ]
   },
@@ -24566,11 +23871,6 @@
      "level": 30,
      "durationSeconds": 10081680,
      "cost": 1830000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 77526720,
-     "cost": 11989310000000
     }
    ]
   },
@@ -24726,11 +24026,6 @@
      "level": 30,
      "durationSeconds": 9613680,
      "cost": 19420000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 71316720,
-     "cost": 116241771980
     }
    ]
   },
@@ -24886,11 +24181,6 @@
      "level": 30,
      "durationSeconds": 19259951,
      "cost": 12780000000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 173759526,
-     "cost": 38344338130000000
     }
    ]
   },
@@ -24951,11 +24241,6 @@
      "level": 11,
      "durationSeconds": 7200000,
      "cost": 1000000000000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 5842932,
-     "cost": 2078130000000
     }
    ]
   },
@@ -24964,11 +24249,6 @@
    "levels": [
     {
      "level": 1,
-     "durationSeconds": 71940,
-     "cost": null
-    },
-    {
-     "level": 999,
      "durationSeconds": 71940,
      "cost": null
     }
@@ -25126,11 +24406,6 @@
      "level": 30,
      "durationSeconds": 9613680,
      "cost": 19420000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 71316720,
-     "cost": 116241771980
     }
    ]
   },
@@ -25286,11 +24561,6 @@
      "level": 30,
      "durationSeconds": 9613680,
      "cost": 19420000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 71316720,
-     "cost": 116241771980
     }
    ]
   },
@@ -25446,11 +24716,6 @@
      "level": 30,
      "durationSeconds": 13944480,
      "cost": 2700000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 106784880,
-     "cost": 25768190000000
     }
    ]
   },
@@ -25606,11 +24871,6 @@
      "level": 30,
      "durationSeconds": 13944480,
      "cost": 2700000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 106784880,
-     "cost": 25768190000000
     }
    ]
   },
@@ -25681,11 +24941,6 @@
      "level": 2,
      "durationSeconds": 691200,
      "cost": 1000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 863940,
-     "cost": 1001000000
     }
    ]
   },
@@ -25921,11 +25176,6 @@
      "level": 25,
      "durationSeconds": 7374159,
      "cost": 398880000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 49824820,
-     "cost": 1808240050000
     }
    ]
   },
@@ -26031,11 +25281,6 @@
      "level": 20,
      "durationSeconds": 10246870,
      "cost": 221680000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 73759344,
-     "cost": 664838130000000
     }
    ]
   },
@@ -26101,11 +25346,6 @@
      "level": 1,
      "durationSeconds": 299940,
      "cost": 1500000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 299940,
-     "cost": 1500000
     }
    ]
   },
@@ -26114,11 +25354,6 @@
    "levels": [
     {
      "level": 1,
-     "durationSeconds": 172800,
-     "cost": 10000000
-    },
-    {
-     "level": 999,
      "durationSeconds": 172800,
      "cost": 10000000
     }
@@ -26276,11 +25511,6 @@
      "level": 30,
      "durationSeconds": 27992340,
      "cost": 7500000000000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 433880640,
-     "cost": null
     }
    ]
   },
@@ -26436,11 +25666,6 @@
      "level": 30,
      "durationSeconds": 27992340,
      "cost": 7500000000000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 433880640,
-     "cost": null
     }
    ]
   },
@@ -27001,11 +26226,6 @@
      "level": 50,
      "durationSeconds": 826980,
      "cost": 48610000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 13134780,
-     "cost": 745040000000
     }
    ]
   },
@@ -27061,11 +26281,6 @@
      "level": 10,
      "durationSeconds": 1637820,
      "cost": 783630000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 7236600,
-     "cost": 5383720000000
     }
    ]
   },
@@ -27171,11 +26386,6 @@
      "level": 20,
      "durationSeconds": 3619380,
      "cost": 26330000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 21652380,
-     "cost": 193900000000
     }
    ]
   },
@@ -27331,11 +26541,6 @@
      "level": 30,
      "durationSeconds": 24146811,
      "cost": 217890000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 177700964,
-     "cost": 3540840000000
     }
    ]
   },
@@ -27441,11 +26646,6 @@
      "level": 20,
      "durationSeconds": 22736760,
      "cost": 202030000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 98256000,
-     "cost": 2266110000000
     }
    ]
   },
@@ -27951,11 +27151,6 @@
      "level": 100,
      "durationSeconds": 676998780,
      "cost": 190200000000000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 15265477080,
-     "cost": 3234164520020000
     }
    ]
   },
@@ -28456,11 +27651,6 @@
      "level": 99,
      "durationSeconds": 4237020,
      "cost": 4190000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 124846039,
-     "cost": 111695939
     }
    ]
   },
@@ -28961,11 +28151,6 @@
      "level": 99,
      "durationSeconds": 4237020,
      "cost": 4190000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 124846039,
-     "cost": 111695939
     }
    ]
   },
@@ -28976,11 +28161,6 @@
      "level": 1,
      "durationSeconds": 575999,
      "cost": null
-    },
-    {
-     "level": 999,
-     "durationSeconds": 575999,
-     "cost": 5000000000
     }
    ]
   },
@@ -28989,11 +28169,6 @@
    "levels": [
     {
      "level": 1,
-     "durationSeconds": 219960,
-     "cost": null
-    },
-    {
-     "level": 999,
      "durationSeconds": 219960,
      "cost": null
     }
@@ -29496,11 +28671,6 @@
      "level": 99,
      "durationSeconds": 4237020,
      "cost": 4190000
-    },
-    {
-     "level": 999,
-     "durationSeconds": 124846039,
-     "cost": 111695939
     }
    ]
   }

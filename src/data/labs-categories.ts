@@ -29,6 +29,15 @@ export const SITE_LAB_SLUG_ALIASES: Readonly<Record<string, string>> = {
   // separate labs -- the catalog carries "Bot Bot - Cooldown" and "Amplify Bot -
   // Cooldown" as distinct records. Aliasing them made Bot Bot read Amplify Bot's
   // research levels, so do not add that back.
+  //
+  // Two card masteries whose level tables are filed under a different name than
+  // the research catalog uses. Both looked like missing cost data and were only
+  // ever mispointed. Aliased rather than renamed because the table names are
+  // load-bearing elsewhere -- the AI acronym map, the chart registry and the
+  // towerai knowledge base all key off them -- and "Berzerker" is the spelling
+  // the card carries even where the research catalog says "Berserker".
+  berzerker_mastery: 'berserker_mastery',
+  recovery_package_chance_mastery: 'recovery_package_mastery',
 }
 
 /**

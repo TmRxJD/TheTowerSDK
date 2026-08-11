@@ -43,14 +43,34 @@ const matchKey = (value: string): string => String(value).toLowerCase().replace(
  */
 const CURRENCY_SCALE: Record<string, number> = { B: 1e9, T: 1e12, q: 1e15, Q: 1e18 }
 
-/** "27:46:00" -> seconds. Hours are unbounded, not 0-23. "0s" is a level-0 placeholder. */
+/**
+ * Lab durations come in two shapes and both have to be understood, or the
+ * comparison quietly covers less than it looks like it does. labs-levels writes
+ * "27:46:00" (hours unbounded, not 0-23); labs-static mostly writes
+ * "10d 19h 11m" -- 1110 of its levels, against 270 in the colon form. Parsing
+ * only the colon form skipped every one of them. "0s" is the level-0 baseline.
+ */
 function toSeconds(value: string | number | undefined): number | null {
   const raw = String(value ?? '').trim()
   if (!raw || raw === '0s') return null
-  const parts = raw.split(':')
-  if (parts.length !== 3) return null
-  const seconds = Number(parts[0]) * 3600 + Number(parts[1]) * 60 + Number(parts[2])
-  return Number.isFinite(seconds) ? Math.round(seconds) : null
+
+  const clock = raw.split(':')
+  if (clock.length === 3) {
+    const seconds = Number(clock[0]) * 3600 + Number(clock[1]) * 60 + Number(clock[2])
+    return Number.isFinite(seconds) ? Math.round(seconds) : null
+  }
+
+  const spans = raw.match(/(\d+(?:\.\d+)?)\s*([dhms])/gi)
+  if (!spans) return null
+  const UNIT_SECONDS: Record<string, number> = { d: 86400, h: 3600, m: 60, s: 1 }
+  let total = 0
+  for (const span of spans) {
+    const amount = Number.parseFloat(span)
+    const unit = span.trim().slice(-1).toLowerCase()
+    if (!Number.isFinite(amount) || !(unit in UNIT_SECONDS)) return null
+    total += amount * UNIT_SECONDS[unit]
+  }
+  return Math.round(total)
 }
 
 interface NormalizedLab {
@@ -109,6 +129,7 @@ function agrees(ours: number, theirs: number): boolean {
 describe('lab tables against the Effective Paths reference', () => {
   it('agrees on every cost the reference also has', () => {
     const mismatches: string[] = []
+    let compared = 0
     for (const lab of ourLabs) {
       const ref = referenceFor(lab.name)
       if (!ref) continue
@@ -116,16 +137,20 @@ describe('lab tables against the Effective Paths reference', () => {
       for (const level of lab.levels) {
         const theirs = refByLevel.get(level.level)
         if (!theirs || theirs.cost === null || !Number.isFinite(level.cost)) continue
+        compared += 1
         if (!agrees(level.cost, theirs.cost)) {
           mismatches.push(`${lab.name} L${level.level}: ours=${level.cost} reference=${theirs.cost}`)
         }
       }
     }
     expect(mismatches).toEqual([])
+    // A comparison that silently skips everything passes just as loudly.
+    expect(compared).toBeGreaterThanOrEqual(5000)
   })
 
   it('agrees on every duration the reference also has', () => {
     const mismatches: string[] = []
+    let compared = 0
     for (const lab of ourLabs) {
       const ref = referenceFor(lab.name)
       if (!ref) continue
@@ -133,12 +158,16 @@ describe('lab tables against the Effective Paths reference', () => {
       for (const level of lab.levels) {
         const theirs = refByLevel.get(level.level)
         if (!theirs || theirs.durationSeconds === null || level.seconds === null) continue
+        compared += 1
         if (!agrees(level.seconds, theirs.durationSeconds)) {
           mismatches.push(`${lab.name} L${level.level}: ours=${level.seconds}s reference=${theirs.durationSeconds}s`)
         }
       }
     }
     expect(mismatches).toEqual([])
+    // Was 4426 while "10d 19h 11m" went unparsed and every static lab was
+    // skipped without a word. Now 5213.
+    expect(compared).toBeGreaterThanOrEqual(5000)
   })
 
   it('covers most of the catalog, so the check is not vacuous', () => {

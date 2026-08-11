@@ -53,6 +53,13 @@ const enemyAttackTimes = assistSubstatTimes
 const enemyAttackValues = Array.from({ length: 30 }, (_, i) => -0.004 * (i + 1))
 const enemyAttackLevels = createLevels(enemyAttackCosts, enemyAttackTimes, enemyAttackValues)
 const enemyDefenseLevels = enemyAttackLevels
+// The Health labs for Ray, Vampire and Scatter had no table at all, so the
+// tracker showed a real level and cap against 0 for every time and coin column.
+// The Effective Paths reference has all three, and all 30 levels of both cost
+// and time are identical to the Attack table -- so they share it, as Defense
+// already does. Only cost and time are reference-verified; the effect value is
+// inherited from Attack the same way Defense inherits it.
+const enemyHealthLevels = enemyAttackLevels
 
 const rangedCosts = [1,1.4,1.96,2.744,3.8416,5.37824,7.529536,10.5413504,14.75789056,20.66104678,28.9254655,40.4956517,56.69391238,79.37147733,111.1200683,155.5680956,217.7953338,304.9134673,426.8788542,597.6303959,836.6825543,1171.355576,1639.897806,2295.856929,3214.1997,4499.879581,6299.831413,8819.763978,12347.66957,17286.7374]
 const rangedTimes = ['2d 16h 47m','5d 9h 35m','8d 2h 23m','10d 19h 11m','13d 11h 59m','16d 4h 46m','18d 21h 34m','21d 14h 22m','24d 7h 10m','26d 23h 58m','29d 16h 46m','32d 9h 33m','35d 2h 21m','37d 19h 9m','40d 11h 57m','43d 4h 45m','45d 21h 33m','48d 14h 20m','51d 7h 8m','53d 23h 56m','56d 16h 44m','59d 9h 32m','62d 2h 20m','64d 19h 7m','67d 11h 55m','70d 4h 43m','72d 21h 31m','75d 14h 19m','78d 7h 6m','80d 23h 54m']
@@ -146,6 +153,15 @@ const demonModeMasteryLevels = createLevels(masteryCosts, masteryTimes, [1.5,2,2
 const energyShieldMasteryLevels = createLevels(masteryCosts, masteryTimes, [5,10,15,20,25,30,35,40,45,50], 'percent', true)
 const waveAcceleratorMasteryLevels = createLevels(masteryCosts, masteryTimes, [110,120,130,140,150,160,170,180,190,200], 'percent', true)
 const berzerkerMasteryLevels = createLevels(masteryCosts, masteryTimes, [30,60,90,120,150,180,210,240,270,300], 'duration', true)
+// Wave Skip Mastery is the one card mastery with no effect data anywhere: not
+// in the game dump (its cards section is empty), not in the Effective Paths
+// sheet (which models all 31 masteries as a single shared row), and not in the
+// towerai knowledge base. Its cost and time are not in doubt -- every mastery
+// shares masteryCosts/masteryTimes -- so it is listed with those and a zeroed
+// effect, which leaves the tracker's time and coin columns correct instead of
+// blank. The zeros mean "not known", not "no effect"; replace them the moment
+// the values can be read off the game.
+const waveSkipMasteryLevels = createLevels(masteryCosts, masteryTimes, [0,0,0,0,0,0,0,0,0,0], 'percent', true)
 const ultimateCritMasteryLevels = createLevels(masteryCosts, masteryTimes, [0.3,0.7,1,1.3,1.7,2,2.3,2.7,3,3.3], 'percent', true)
 const nukeMasteryLevels = createLevels(masteryCosts, masteryTimes, [5,10,15,20,25,30,35,40,45,50], 'percent', true)
 const aoeMasteryLevels = createLevels(masteryCosts, masteryTimes, [2.5,5,7.5,10,12.5,15,17.5,20,22.5,25], 'percent', true)
@@ -181,6 +197,7 @@ export const labs: Lab[] = [
   { name: 'Demon Mode Mastery', category: 'Card Mastery', description: 'Unlocks a lingering damage buff when activated which lasts for 300 waves', currency: 'q', levels: demonModeMasteryLevels, unit: 'multi' },
   { name: 'Energy Shield Mastery', category: 'Card Mastery', description: 'Energy Shield activates a blast that repels all enemies back by a percent of tower max range and destroys all enemy projectiles. The charge times of Rays are reset.', currency: 'q', levels: energyShieldMasteryLevels, unit: 'percent' },
   { name: 'Wave Accelerator Mastery', category: 'Card Mastery', description: 'Increases the rate at which spawn rates accelerate causing more enemies to spawn in earlier waves', currency: 'q', levels: waveAcceleratorMasteryLevels, unit: 'percent' },
+  { name: 'Wave Skip Mastery', category: 'Card Mastery', description: 'Increases the effect of the Wave Skip card', currency: 'q', levels: waveSkipMasteryLevels, unit: 'percent' },
   { name: 'Berzerker Mastery', category: 'Card Mastery', description: 'Increases the damage cap to x500 for a duration when Death Defy is activated', currency: 'q', levels: berzerkerMasteryLevels, unit: 'duration' },
   { name: 'Ultimate Crit Mastery', category: 'Card Mastery', description: 'Increases the card\'s stat multiplier', currency: 'q', levels: ultimateCritMasteryLevels, unit: 'percent' },
   { name: 'Nuke Mastery', category: 'Card Mastery', description: 'Unlocks a lingering attack speed slow which lasts for 300 waves after the Nuke', currency: 'q', levels: nukeMasteryLevels, unit: 'percent' },
@@ -199,6 +216,9 @@ export const labs: Lab[] = [
   { name: 'Vampire Enemy Defense', category: 'Enemies', description: 'Reduces defense of Vampire enemies.', currency: 'Q', levels: enemyDefenseLevels },
   { name: 'Scatter Enemy Attack', category: 'Enemies', description: 'Reduces attack power of Scatter enemies.', currency: 'Q', levels: enemyAttackLevels },
   { name: 'Scatter Enemy Defense', category: 'Enemies', description: 'Reduces defense of Scatter enemies.', currency: 'Q', levels: enemyDefenseLevels },
+  { name: 'Ray Enemy Health', category: 'Enemies', description: 'Reduces health of Ray enemies.', currency: 'Q', levels: enemyHealthLevels },
+  { name: 'Vampire Enemy Health', category: 'Enemies', description: 'Reduces health of Vampire enemies.', currency: 'Q', levels: enemyHealthLevels },
+  { name: 'Scatter Enemy Health', category: 'Enemies', description: 'Reduces health of Scatter enemies.', currency: 'Q', levels: enemyHealthLevels },
   { name: 'Ranged Enemy Range', category: 'Enemies', description: 'Reduces range of Ranged enemies.', currency: 'T', levels: rangedLevels },
   { name: 'Enhancement Attack - Coin Discount', category: 'Main', description: 'Reduces coin cost for Attack enhancements.', currency: 'B', levels: mainLevels },
   { name: 'Enhancement Defense - Coin Discount', category: 'Main', description: 'Reduces coin cost for Defense enhancements.', currency: 'B', levels: mainLevels },
