@@ -1,5 +1,5 @@
 import { readDurationSecondsFromSave, formatBattleDurationFromSaveSeconds } from './battle-duration'
-import { buildBattleReportStatFieldsFromSaveEntry } from './battle-report-fields'
+import { buildBattleReportStatFields } from './battle-report-fields'
 import { normalizeBattleHistorySaveEntry } from './battle-history-normalize'
 import { parseDurationToHours, parseSaveDateTimeToMs } from '../formatting/index'
 import { listImportableBattleRuns } from './battle-history'
@@ -181,7 +181,7 @@ export function buildBattleRunDedupKeyFromBattleEntry(entry: Record<string, unkn
   )
 }
 
-export function buildTrackerRunDataFromBattleHistoryEntry(
+export function buildTrackerRunData(
   entry: Record<string, unknown>,
   context?: { notePrefix?: string },
 ): Record<string, unknown> {
@@ -217,7 +217,7 @@ export function buildTrackerRunDataFromBattleHistoryEntry(
     battleDate: normalizedEntry.battleDate ?? normalizedEntry.runDate,
     reportTimestamp: battleTimestampMs != null ? String(battleTimestampMs) : undefined,
     type: isTournament ? 'Tournament' : 'Farming',
-    ...buildBattleReportStatFieldsFromSaveEntry(normalizedEntry),
+    ...buildBattleReportStatFields(normalizedEntry),
     verified: true,
   }
 }
@@ -250,7 +250,7 @@ export function planBattleReportImport(
       continue
     }
     existingKeys.add(key)
-    importable.push(buildTrackerRunDataFromBattleHistoryEntry(entry))
+    importable.push(buildTrackerRunData(entry))
   }
 
   return {

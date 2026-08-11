@@ -77,7 +77,7 @@ export {
   normalizeSharedEnemyDropsInputs,
 } from './shared-tool-inputs-extended'
 export {
-  readElsPlannerLevelsFromWorkshopStats,
+  readElsPlannerLevels,
   readElsVaultStarsFromVaultLevels,
   enrichElsPlannerFromLinkedSources,
   syncVaultLevelsFromElsPlanner,

@@ -552,7 +552,7 @@ export function countBotSyncUnlocksFromSaveRoot(root: Record<string, unknown> | 
 }
 
 /** Stones spent on Bots+ and synchronicity slot unlocks (matches Bots tracker summary). */
-export function computeBotsTrackerStonesSpentFromStore(
+export function computeBotsTrackerStonesSpent(
   plusUnlocked: Record<string, boolean>,
   syncUnlocked: Record<string, boolean>,
 ): number {
@@ -564,7 +564,7 @@ export function computeBotsTrackerStonesSpentFromStore(
   return total
 }
 
-export function readBotsPlusAndSyncStonesSpentFromSave(
+export function readBotsPlusAndSyncStonesSpent(
   extract: BotsSaveExtract,
   root?: Record<string, unknown> | null,
 ): number {

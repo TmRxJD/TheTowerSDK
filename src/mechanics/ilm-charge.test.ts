@@ -15,7 +15,7 @@ import {
 } from './ilm-charge'
 import {
   buildIlmCalculatorInputFromSettings,
-  computeEnemyHitMultiplierFromIlmSettings,
+  computeEnemyHitMultiplier,
   computeIlmCannonModuleMult,
   computeIlmDetonationModuleMult,
   getIlmHitMultiplierBreakdown,
@@ -161,8 +161,8 @@ describe('ilm-calculator-resolve', () => {
         protectorAuraActive: false,
       },
     })
-    expect(computeEnemyHitMultiplierFromIlmSettings(staticReady)).toBeGreaterThan(
-      computeEnemyHitMultiplierFromIlmSettings(off),
+    expect(computeEnemyHitMultiplier(staticReady)).toBeGreaterThan(
+      computeEnemyHitMultiplier(off),
     )
   })
 

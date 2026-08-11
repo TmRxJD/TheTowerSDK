@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest'
 import {
   readLabsEconomyFromResearchLevels,
   readModuleEconomyFromResearchLevels,
-  readNamedCalculatorLabsFromResearchLevels,
-  readWorkshopDiscountsFromResearchLevels,
-  enrichSharedToolInputsFromResearchLevels,
+  readNamedCalculatorLabs,
+  readWorkshopDiscounts,
+  enrichSharedToolInputs,
   computeResearchLabLevel,
   syncUptimeResearchLabsFromTracker,
 } from './shared-tool-inputs-from-research'
@@ -29,7 +29,7 @@ describe('computeResearchLabLevel', () => {
       'Dissonant Echo - Utility': 2,
       'Dissonant Echo - Ultimate Weapons': 1,
     }
-    const named = readNamedCalculatorLabsFromResearchLevels(levels)
+    const named = readNamedCalculatorLabs(levels)
     expect(named.echoLabLevels.attack).toBe(3)
     expect(named.echoLabLevels.defense).toBe(4)
     expect(named.echoLabLevels.utility).toBe(2)
@@ -68,9 +68,9 @@ describe('readModuleEconomyFromResearchLevels', () => {
   })
 })
 
-describe('readWorkshopDiscountsFromResearchLevels', () => {
+describe('readWorkshopDiscounts', () => {
   it('maps workshop and enhancement discount researches', () => {
-    const result = readWorkshopDiscountsFromResearchLevels({
+    const result = readWorkshopDiscounts({
       'Workshop Attack Discount': 10,
       'Workshop Defense Discount': 11,
       'Workshop Utility Discount': 12,
@@ -102,9 +102,9 @@ describe('syncUptimeResearchLabsFromTracker', () => {
   })
 })
 
-describe('enrichSharedToolInputsFromResearchLevels', () => {
+describe('enrichSharedToolInputs', () => {
   it('preserves explicit workshop discounts when preserveExplicitWorkshopDiscounts is set', () => {
-    const enriched = enrichSharedToolInputsFromResearchLevels({
+    const enriched = enrichSharedToolInputs({
       ...defaultSharedToolInputs,
       workshopDiscounts: {
         ...defaultSharedToolInputs.workshopDiscounts,
@@ -125,7 +125,7 @@ describe('enrichSharedToolInputsFromResearchLevels', () => {
   })
 
   it('fills economy and named calculator labs from researchLabLevels', () => {
-    const enriched = enrichSharedToolInputsFromResearchLevels({
+    const enriched = enrichSharedToolInputs({
       ...defaultSharedToolInputs,
       researchLabLevels: {
         'Labs Speed': 20,

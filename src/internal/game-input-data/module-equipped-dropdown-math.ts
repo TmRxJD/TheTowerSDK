@@ -242,7 +242,7 @@ export function findModuleSubstatTypePickerByIndex(
   return entries[clamped]?.id ?? null
 }
 
-export function findModuleSubstatPickerCategoryFromSlotKey(slotKey: string | undefined): ModuleCategory | undefined {
+export function findModuleSubstatPickerCategory(slotKey: string | undefined): ModuleCategory | undefined {
   if (!slotKey) return undefined
   const category = slotKey.split(':')[1]
   if (category === 'Cannon' || category === 'Armor' || category === 'Generator' || category === 'Core') {

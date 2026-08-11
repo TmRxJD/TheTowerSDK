@@ -426,7 +426,7 @@ function readEquippedElsModulePct(
   return { pct, rarity }
 }
 
-export function readGeneratorCpkSubstatAddsFromSaveRoot(
+export function readGeneratorCpkSubstatAdds(
   root: Record<string, unknown>,
 ): GeneratorCpkSubstatAdds {
   let primaryAdd = 0
@@ -469,7 +469,7 @@ export function readGeneratorCpkSubstatAddsFromSaveRoot(
   return { primaryAdd, assistAdd }
 }
 
-export function readEquippedGeneratorUniqueFromSaveRoot(
+export function readEquippedGeneratorUnique(
   root: Record<string, unknown>,
 ): string | null {
   const primaryRaw = root.moduleEquipped
@@ -574,8 +574,8 @@ export function readModuleProgressFromSaveRoot(
     return {}
   }
 
-  const cpkSubstats = readGeneratorCpkSubstatAddsFromSaveRoot(root)
-  const generatorEquippedUniqueId = readEquippedGeneratorUniqueFromSaveRoot(root)
+  const cpkSubstats = readGeneratorCpkSubstatAdds(root)
+  const generatorEquippedUniqueId = readEquippedGeneratorUnique(root)
 
   return {
     currentLevel,
@@ -678,7 +678,7 @@ function readCardMasteryLevelBySlug(root: Record<string, unknown>, slug: string)
   return Math.max(0, Math.floor(level))
 }
 
-export function readThornsCalculatorSettingsFromSaveRoot(
+export function readThornsCalculatorSettings(
   root: Record<string, unknown>,
 ): Partial<SharedThornsCalculatorSettings> {
   const thornLevel = readWorkshopLevelByTrackerKey(root, 'Thorn Damage')
@@ -711,7 +711,7 @@ export function readThornsCalculatorSettingsFromSaveRoot(
   return partial
 }
 
-export function readDamageReduxCalculatorSettingsFromSaveRoot(
+export function readDamageReduxCalculatorSettings(
   root: Record<string, unknown>,
   researchLabLevels: Record<string, number> = {},
 ): Partial<SharedDamageReduxCalculatorSettings> {
@@ -736,7 +736,7 @@ export function readDamageReduxCalculatorSettingsFromSaveRoot(
   return partial
 }
 
-export function readBotMedalSplitterPlannerFromSaveRoot(
+export function readBotMedalSplitterPlanner(
   root: Record<string, unknown>,
   towerRange: number | null,
 ): Partial<SharedBotMedalSplitterPlanner> {
@@ -859,7 +859,7 @@ export function readDissonanceCycleWavesFromSaveRoot(
   return { cycleWaves, layout }
 }
 
-export function readDissonanceBoostWavesByTypeFromSaveRoot(
+export function readDissonanceBoostWavesByType(
   root: Record<string, unknown>,
 ): Record<DissonanceTypeKey, number[]> {
   const wavesByType = {} as Record<DissonanceTypeKey, number[]>
@@ -951,10 +951,10 @@ export function buildDissonanceWaveInputsFromCycleWaves(
   return { waves, maxFlags, hasData }
 }
 
-export function readDissonanceCalculatorStateFromSaveRoot(
+export function readDissonanceCalculatorState(
   root: Record<string, unknown>,
 ): Partial<SharedDissonanceCalculatorState> {
-  const boostWavesByType = readDissonanceBoostWavesByTypeFromSaveRoot(root)
+  const boostWavesByType = readDissonanceBoostWavesByType(root)
   const wavesByTier: Record<string, DissonanceWaveInputs> = {}
   const maxByTier: Record<string, DissonanceMaxFlags> = {}
   let hasWaveData = false
@@ -1047,7 +1047,7 @@ export function readLabsCalcByLabFromResearchLevels(
   return out
 }
 
-export function readExtendedSharedToolInputsFromSaveRoot(
+export function readExtendedSharedToolInputs(
   root: Record<string, unknown> | null | undefined,
   options?: { towerRangeMeters?: number | null },
 ): Partial<SharedToolInputsExtended> {
@@ -1067,17 +1067,17 @@ export function readExtendedSharedToolInputsFromSaveRoot(
   const shardSplitter = readShardSplitterInputsFromSaveRoot(root, moduleProgress)
   const thornsCalculatorSettings = {
     ...defaultExtendedSharedToolInputs.thornsCalculatorSettings,
-    ...readThornsCalculatorSettingsFromSaveRoot(root),
+    ...readThornsCalculatorSettings(root),
   }
   const damageReduxCalculatorSettings = {
     ...defaultExtendedSharedToolInputs.damageReduxCalculatorSettings,
-    ...readDamageReduxCalculatorSettingsFromSaveRoot(root, researchLabLevels),
+    ...readDamageReduxCalculatorSettings(root, researchLabLevels),
   }
 
-  const botMedalSplitter = readBotMedalSplitterPlannerFromSaveRoot(root, options?.towerRangeMeters ?? null)
+  const botMedalSplitter = readBotMedalSplitterPlanner(root, options?.towerRangeMeters ?? null)
   const uwCalcProgress = readUwCalcProgressFromSaveRoot(root)
   const labsCalcByLab = readLabsCalcByLabFromResearchLevels(researchLabLevels)
-  const dissonanceDerived = readDissonanceCalculatorStateFromSaveRoot(root)
+  const dissonanceDerived = readDissonanceCalculatorState(root)
   const botsSynchronicityDerived = readBotsSynchronicityFromSaveRoot(root)
 
   const enemyStatsCore = {

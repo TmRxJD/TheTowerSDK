@@ -175,7 +175,7 @@ export function computeWaveTimeSecondsFromWaCard(cardLevel: number): number {
 }
 
 /** Uptime calculator cycle wave time (same as uptime table "Wave Time" column). */
-export function computeUptimeWaveTimeFromSharedInputs(uptime: SharedUptimeInputs): number {
+export function computeUptimeWaveTime(uptime: SharedUptimeInputs): number {
   const state = getUptimeCoreStateFromSharedInputs(uptime)
   return computeUptimeCycleWaveTimeSeconds(state)
 }

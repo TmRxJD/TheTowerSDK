@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { CARDS_ASSET_TABLE } from '../data/assets'
-import { readThornsCalculatorSettingsFromSaveRoot } from './shared-tool-inputs-from-save-extended'
+import { readThornsCalculatorSettings } from './shared-tool-inputs-from-save-extended'
 
 /**
  * `cardLevel` is over-allocated and pads with 1, not 0. Reading it without
@@ -26,7 +26,7 @@ function paddedSave(overrides: Record<string, unknown> = {}) {
 
 describe('thorns settings from a save', () => {
   it('does not import a card level for a card the player does not have', () => {
-    const settings = readThornsCalculatorSettingsFromSaveRoot(paddedSave())
+    const settings = readThornsCalculatorSettings(paddedSave())
     expect(settings.pcLevel ?? 0).toBe(0)
   })
 
@@ -36,7 +36,7 @@ describe('thorns settings from a save', () => {
     const levels = Array.from({ length: assetNames.length }, () => 1)
     levels[pcIndex] = 5
 
-    const settings = readThornsCalculatorSettingsFromSaveRoot(
+    const settings = readThornsCalculatorSettings(
       paddedSave({ cardUnlocked: unlocked, cardLevel: levels }),
     )
     expect(settings.pcLevel).toBe(5)
@@ -47,7 +47,7 @@ describe('thorns settings from a save', () => {
     // would be a worse failure than trusting the level.
     const levels = Array.from({ length: assetNames.length }, () => 0)
     levels[pcIndex] = 4
-    const settings = readThornsCalculatorSettingsFromSaveRoot({ cardLevel: levels })
+    const settings = readThornsCalculatorSettings({ cardLevel: levels })
     expect(settings.pcLevel).toBe(4)
   })
 
@@ -58,7 +58,7 @@ describe('thorns settings from a save', () => {
     const levels = Array.from({ length: assetNames.length }, () => 0)
     levels[pcIndex] = 99
 
-    const settings = readThornsCalculatorSettingsFromSaveRoot(
+    const settings = readThornsCalculatorSettings(
       paddedSave({ cardUnlocked: unlocked, cardLevel: levels }),
     )
     expect(settings.pcLevel).toBe(7)

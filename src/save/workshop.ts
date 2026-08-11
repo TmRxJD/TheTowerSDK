@@ -402,7 +402,7 @@ export interface WorkshopTrackerSaveImportPayload {
   presetNames?: string[]
 }
 
-export function buildWorkshopTrackerImportPayloadFromSave(parsedRoot: unknown): WorkshopTrackerSaveImportPayload | null {
+export function buildWorkshopTrackerImportPayload(parsedRoot: unknown): WorkshopTrackerSaveImportPayload | null {
   const extract = readWorkshopFromSaveRoot(parsedRoot)
   if (!extract) return null
   const activeSnapshot = getPresetSnapshot(extract, extract.meta.currentPreset)

@@ -2,9 +2,9 @@ import { formatNumberForDisplay } from '../formatting/index'
 import { DISSONANCE_TYPE_KEYS, type DissonanceTypeKey } from '../internal/dissonance-calcs-local-state'
 import { type SharedDissonanceCalculatorState } from '../internal/shared-tool-inputs-extended'
 import {
-  readDissonanceCalculatorStateFromSaveRoot,
+  readDissonanceCalculatorState,
   DISSONANCE_BOOST_SAVE_FIELD_BY_TYPE,
-  readDissonanceBoostWavesByTypeFromSaveRoot,
+  readDissonanceBoostWavesByType,
 } from './shared-tool-inputs-from-save-extended'
 import { MAX_CAMPAIGN_TIER } from '../data/campaign-tier'
 
@@ -70,8 +70,8 @@ export function readDissonanceFromSaveRoot(root: unknown): DissonanceSaveExtract
     warnings.push('No dissonance wave data found in this save.')
   }
 
-  readDissonanceBoostWavesByTypeFromSaveRoot(root)
-  const derived = readDissonanceCalculatorStateFromSaveRoot(root)
+  readDissonanceBoostWavesByType(root)
+  const derived = readDissonanceCalculatorState(root)
 
   const tierRows = Array.from({ length: MAX_CAMPAIGN_TIER }, (_, index) =>
     buildTierPreviewRowFromDerived(index + 1, derived),

@@ -25,7 +25,7 @@ import {
   compressorRarityFromGeneratorUnique,
   expectedFreeUpgradesPerWave,
   goldenBotCoverageWithSingularityHarness,
-  findEquippedGeneratorUniqueFromModuleProgress,
+  findEquippedGeneratorUnique,
   computeGeneratorUniqueRarityBonus,
   singularityHarnessRangeBonusMeters,
 } from './resource-drops-coin-generator-modules'
@@ -164,7 +164,7 @@ function resolveTowerRangeMeters(
 
 function mergeGeneratorUniqueIntoUptime(
   uptime: SharedUptimeInputs,
-  generatorUnique: ReturnType<typeof findEquippedGeneratorUniqueFromModuleProgress>,
+  generatorUnique: ReturnType<typeof findEquippedGeneratorUnique>,
 ): SharedUptimeInputs {
   if (!generatorUnique) return uptime
   if (generatorUnique.templateId === 'galaxy-compressor') {
@@ -177,7 +177,7 @@ function mergeGeneratorUniqueIntoUptime(
 }
 
 function resolveSingularityHarnessBonus(
-  generatorUnique: ReturnType<typeof findEquippedGeneratorUniqueFromModuleProgress>,
+  generatorUnique: ReturnType<typeof findEquippedGeneratorUnique>,
   botMedalPlanner?: SharedBotMedalSplitterPlanner,
 ): number {
   if (generatorUnique?.templateId === 'singularity-harness') {
@@ -209,7 +209,7 @@ export function assembleResourceDropsCoinSimulationInput(
 ): ResourceDropsCoinSimulationInput {
   const cardsProgress = normalizeSharedCardsProgressInputs(sources.cardsProgress)
   const uwWeapons = Object.values(uwStoneChartData)
-  const generatorUnique = findEquippedGeneratorUniqueFromModuleProgress(sources.moduleProgressInputs)
+  const generatorUnique = findEquippedGeneratorUnique(sources.moduleProgressInputs)
   const mergedUptimeBase = mergeSharedUptimeInputs(
     sources.uptimeInputs,
     syncUptimeFromUwProgressLevels(sources.uwCalcProgress, uwWeapons, sources.uptimeInputs),

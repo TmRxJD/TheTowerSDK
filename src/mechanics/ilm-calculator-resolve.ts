@@ -11,7 +11,7 @@ import {
   ILM_UNIQUE_MODULE_IDS,
   ilmModuleSubstatBonusFromRarity,
   type IlmUniqueModuleRarityChoice,
-  computeAmplifyBotBonusMultiplierFromLevel,
+  computeAmplifyBotBonusMultiplier,
   computeIlmUniqueModuleRarityBonus,
 } from './ilm-calculator-options'
 import type {
@@ -203,7 +203,7 @@ export function buildEnemyHitMultiplierInput(
     amplifyBot: scenario.amplifyBotOnEnemy
       ? {
         active: true,
-        amplifyBonusMultiplier: computeAmplifyBotBonusMultiplierFromLevel(
+        amplifyBonusMultiplier: computeAmplifyBotBonusMultiplier(
           staticSettings.amplifyBotBonusLevel,
         ),
       }
@@ -241,7 +241,7 @@ export function getIlmHitMultiplierBreakdown(
     dimensionCoreDoublesShock: isDimensionCoreEquipped(staticSettings.dimensionCoreRarity),
     dimensionCoreMaxShockStack: dcMaxStack,
     amplifyBotMultiplier: scenario.amplifyBotOnEnemy
-      ? computeAmplifyBotBonusMultiplierFromLevel(staticSettings.amplifyBotBonusLevel)
+      ? computeAmplifyBotBonusMultiplier(staticSettings.amplifyBotBonusLevel)
       : 1,
     singularityHarnessActive: Boolean(input.flameModuleDebuff?.active),
     acpShockwaveMultiplier: input.shockwaveMultiplier ?? 0,
@@ -249,7 +249,7 @@ export function getIlmHitMultiplierBreakdown(
   }
 }
 
-export function computeEnemyHitMultiplierFromIlmSettings(settings: IlmCalcsSettings): number {
+export function computeEnemyHitMultiplier(settings: IlmCalcsSettings): number {
   return enemyHitMultiplier(buildEnemyHitMultiplierInput(settings.static, settings.scenario))
 }
 
@@ -257,7 +257,7 @@ export function buildIlmCalculatorInputFromSettings(
   settings: IlmCalcsSettings,
   waveTimeSeconds: number,
 ): IlmCalculatorInput {
-  const hitMultiplier = computeEnemyHitMultiplierFromIlmSettings(settings)
+  const hitMultiplier = computeEnemyHitMultiplier(settings)
   return {
     towerDamage: computeIlmTowerDamage(settings.static),
     ilmDamageMult: computeIlmUwDamageMult(settings.static),

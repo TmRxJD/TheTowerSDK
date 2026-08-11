@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  buildBattleReportExtendedFieldsFromSaveEntry,
-  buildBattleReportStatFieldsFromSaveEntry,
+  buildBattleReportExtendedFields,
+  buildBattleReportStatFields,
   getBattleReportExtendedSaveKeysForTest,
 } from './battle-report-fields'
 
-describe('buildBattleReportStatFieldsFromSaveEntry', () => {
+describe('buildBattleReportStatFields', () => {
   it('maps save aliases onto extended tracker keys', () => {
-    const mapped = buildBattleReportExtendedFieldsFromSaveEntry({
+    const mapped = buildBattleReportExtendedFields({
       highestCPM: 3_135_332_723_149_766_700,
       nukesUsed: 1,
       secondWindsUsed: 3,
@@ -40,7 +40,7 @@ describe('buildBattleReportStatFieldsFromSaveEntry', () => {
   })
 
   it('derives per-hour and coins-per-kill stats from save totals', () => {
-    const mapped = buildBattleReportStatFieldsFromSaveEntry({
+    const mapped = buildBattleReportStatFields({
       realTime: 3600,
       coinsEarned: 3_600_000,
       cellsEarned: 3_600,
@@ -55,7 +55,7 @@ describe('buildBattleReportStatFieldsFromSaveEntry', () => {
   })
 
   it('maps destroyedInGoldenBot from save key', () => {
-    const mapped = buildBattleReportStatFieldsFromSaveEntry({
+    const mapped = buildBattleReportStatFields({
       destroyedInGoldenBot: 950_458,
     })
 
@@ -63,7 +63,7 @@ describe('buildBattleReportStatFieldsFromSaveEntry', () => {
   })
 
   it('defaults omitted zero-valued battle report stats', () => {
-    const mapped = buildBattleReportStatFieldsFromSaveEntry({
+    const mapped = buildBattleReportStatFields({
       enemiesHitByAttackChipThisRound: 0,
     })
 

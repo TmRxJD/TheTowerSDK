@@ -104,7 +104,7 @@ export {
   buildWorkshopTierLevelEntries,
   buildWorkshopTierOptionLabel,
   getWorkshopEnhancementKeyFromDataKey,
-  findWorkshopEnhancementSpecFromDataKey,
+  findWorkshopEnhancementSpec,
   computeWorkshopStatNumericValueAtLevel,
   type WorkshopStatSpec,
   type WorkshopTierKind,

@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import {
-  readGemDiscountMultiplierFromSaveRoot,
+  readGemDiscountMultiplier,
   readLabRelicPctFromSaveRoot,
   readTradeOffPerksFromSaveRoot,
   readSharedToolInputsFromSaveRoot,
@@ -35,10 +35,10 @@ describe('readTradeOffPerksFromSaveRoot', () => {
   })
 })
 
-describe('readGemDiscountMultiplierFromSaveRoot', () => {
+describe('readGemDiscountMultiplier', () => {
   it('uses researchesComplete × 1.5% + 1 multiplier formula', () => {
-    expect(readGemDiscountMultiplierFromSaveRoot({ researchesComplete: 20 })).toBeCloseTo(1.3, 5)
-    expect(readGemDiscountMultiplierFromSaveRoot({ researchesComplete: 0 })).toBe(1)
+    expect(readGemDiscountMultiplier({ researchesComplete: 20 })).toBeCloseTo(1.3, 5)
+    expect(readGemDiscountMultiplier({ researchesComplete: 0 })).toBe(1)
   })
 })
 

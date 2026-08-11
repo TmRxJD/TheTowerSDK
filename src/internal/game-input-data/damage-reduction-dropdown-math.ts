@@ -3,7 +3,7 @@ import { getModuleTemplate } from '../../data/index'
 import {
   chainLightningPlusDamageFraction,
   computeChainThunderMaxReductionPct,
-  computeChronoFieldReductionPctFromLab,
+  computeChronoFieldReductionPct,
   computeFlameBotEffectiveReductionPct,
 } from '../../mechanics/damage-redux-layers'
 import { SMITE_DAMAGE_BY_CL_PLUS_LEVEL } from '../../mechanics/damage-redux-constants'
@@ -122,7 +122,7 @@ export function buildDamageReductionCfReductionEntries(): readonly GameDropdownO
   const entries: GameDropdownOptionEntry[] = []
 
   for (let level = 1; level <= maxLevel; level += 1) {
-    const pct = computeChronoFieldReductionPctFromLab(level)
+    const pct = computeChronoFieldReductionPct(level)
     if (pct <= 0) continue
     entries.push({ value: pct, baseValue: level })
   }

@@ -515,7 +515,7 @@ export function applyRunDataAliasGroups(
   return normalized
 }
 
-export function normalizeGuardianSummonedEnemiesFromDamage(data: RunDataRecordLike): RunDataRecordLike {
+export function normalizeGuardianSummonedEnemies(data: RunDataRecordLike): RunDataRecordLike {
   const normalized: RunDataRecordLike = { ...data }
   const guardianDamageRaw = normalized.guardianDamage
   if (!hasMeaningfulValue(guardianDamageRaw)) return normalized
@@ -572,7 +572,7 @@ export function dedupeEquivalentRunDataKeys(data: RunDataRecordLike): RunDataRec
 
 export function canonicalizeRunDataForOutput(data: RunDataRecordLike): RunDataRecordLike {
   return dedupeEquivalentRunDataKeys(
-    normalizeGuardianSummonedEnemiesFromDamage(
+    normalizeGuardianSummonedEnemies(
       applyRunDataAliasGroups(flattenNestedRunValues(data), TRACK_RUN_OUTPUT_ALIAS_GROUPS),
     ),
   )

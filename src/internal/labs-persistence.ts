@@ -140,7 +140,7 @@ export function labsTrackerLabLevelMapsEqual(
 }
 
 /** Merge hub + tracker lab levels into one slug-keyed map (same shape everywhere). */
-export function buildTrackerCurrentLabLevelsFromResearchHub(
+export function buildTrackerCurrentLabLevels(
   hubLevels: Record<string, unknown> | null | undefined,
   existing: Record<string, number> = {},
 ): Record<string, number> {
@@ -151,7 +151,7 @@ export function buildTrackerCurrentLabLevelsFromResearchHub(
 }
 
 /** Hub persistence uses the same slug-keyed map as the tracker store. */
-export function buildResearchHubLevelsFromTrackerLevels(
+export function buildResearchHubLevels(
   trackerLevels: Record<string, unknown> | null | undefined,
 ): Record<string, number> {
   return normalizeLabsTrackerLabLevelMap(trackerLevels)

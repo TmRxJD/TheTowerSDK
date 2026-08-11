@@ -491,7 +491,7 @@ export function buildModulesEquippedImportPreviews(
   })
 }
 
-export function parseModuleTrackerEntryFieldsFromSaveRarity(
+export function parseModuleTrackerEntryFields(
   rarityLabel: string | null,
 ): Pick<ModuleTrackerEntry, 'rarity' | 'level'> | null {
   if (!rarityLabel?.trim()) return null
@@ -552,7 +552,7 @@ export function buildModulesTrackerInventoryImportPayload(
     const moduleId = findModuleIdFromSaveItem(item, templates)
     if (!moduleId || !item.rarityLabel) continue
 
-    const parsed = parseModuleTrackerEntryFieldsFromSaveRarity(item.rarityLabel)
+    const parsed = parseModuleTrackerEntryFields(item.rarityLabel)
     if (!parsed) continue
 
     const existing = grouped.get(moduleId)

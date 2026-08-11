@@ -100,7 +100,7 @@ export function computeIlmUniqueModuleRarityBonus(
   return match?.value ?? 0
 }
 
-export function computeAmplifyBotBonusMultiplierFromLevel(level: number): number {
+export function computeAmplifyBotBonusMultiplier(level: number): number {
   const bot = BOT_UPGRADES_DATA.find(entry => entry.label === 'Amplify Bot')
   const raw = bot?.stats.Bonus?.levels[Math.max(0, Math.floor(level))]
   if (!raw) return 1

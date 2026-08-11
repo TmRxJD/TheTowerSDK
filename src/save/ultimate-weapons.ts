@@ -136,7 +136,7 @@ export function mapUwWeaponValueToUltimateWeaponData(weapon: UwWeaponValue): Ult
 }
 
 /** Canonical weapon catalog for import previews and stat-name resolution. */
-export function buildUltimateWeaponCatalogFromStoneChart(): UltimateWeaponData[] {
+export function buildUltimateWeaponCatalog(): UltimateWeaponData[] {
   return Object.values(uwStoneChartData).map(mapUwWeaponValueToUltimateWeaponData)
 }
 
@@ -145,7 +145,7 @@ export function getUltimateWeaponCatalogForHubSync(
   storeWeapons: UltimateWeaponData[] = [],
 ): UltimateWeaponData[] {
   if (storeWeapons.length > 0) return storeWeapons
-  const catalog = buildUltimateWeaponCatalogFromStoneChart()
+  const catalog = buildUltimateWeaponCatalog()
   if (catalog.length > 0) return catalog
   return UW_SAVE_SLOT_WEAPON_NAMES.map(name => ({
     name,
@@ -270,7 +270,7 @@ export function buildUltimateWeaponsImportWeaponPreviews(
   extract: UltimateWeaponsSaveExtract,
   storeWeapons: UltimateWeaponData[] = [],
 ): UltimateWeaponsImportWeaponPreview[] {
-  const catalog = buildUltimateWeaponCatalogFromStoneChart()
+  const catalog = buildUltimateWeaponCatalog()
   const weapons = catalog.length ? catalog : storeWeapons
 
   return extract.slots.map(slot => {

@@ -42,7 +42,7 @@ export function damageTakenMultiplierFromReductionFraction(reductionFraction: nu
 }
 
 /** Lab 55 benefit — requires lab 54 (`chrono_field_damage_reduction`) unlocked for DR to apply. */
-export function computeChronoFieldReductionPctFromLab(
+export function computeChronoFieldReductionPct(
   chronoReductionLabLevel: number,
   chronoDamageReductionLabUnlocked = true,
 ): number {

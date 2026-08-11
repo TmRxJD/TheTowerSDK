@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  buildBattleReportExtendedFieldsFromSaveEntry,
+  buildBattleReportExtendedFields,
   getBattleReportExtendedSaveKeysForTest,
 } from './battle-report-extended'
 
-describe('buildBattleReportExtendedFieldsFromSaveEntry', () => {
+describe('buildBattleReportExtendedFields', () => {
   it('maps save aliases onto extended tracker keys', () => {
-    const mapped = buildBattleReportExtendedFieldsFromSaveEntry({
+    const mapped = buildBattleReportExtendedFields({
       highestCPM: 3_135_332_723_149_766_700,
       nukesUsed: 1,
       secondWindsUsed: 3,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { MAX_CAMPAIGN_TIER } from '../data/campaign-tier'
-import { readDissonanceCalculatorStateFromSaveRoot } from './shared-tool-inputs-from-save-extended'
+import { readDissonanceCalculatorState } from './shared-tool-inputs-from-save-extended'
 
 /**
  * Tier/type wave values were reported as 0 on the dissonance calculator for a
@@ -28,7 +28,7 @@ describe('dissonance waves from a save', () => {
       dissonanceUltDamageBoost: trackWaves([130, 230, 330]),
     }
 
-    const state = readDissonanceCalculatorStateFromSaveRoot(root)
+    const state = readDissonanceCalculatorState(root)
 
     expect(state.wavesByTier, 'no wave data was extracted at all').toBeDefined()
     expect(state.wavesByTier?.['1']).toEqual({ attack: 100, defense: 110, utility: 120, uw: 130 })
@@ -37,19 +37,19 @@ describe('dissonance waves from a save', () => {
 
   it('marks a maxed tier rather than dropping it', () => {
     const root = { dissonanceDamageBoost: trackWaves([5000]) }
-    const state = readDissonanceCalculatorStateFromSaveRoot(root)
+    const state = readDissonanceCalculatorState(root)
     expect(state.wavesByTier?.['1']?.attack).toBeGreaterThan(0)
     expect(state.maxByTier?.['1']?.attack).toBe(true)
   })
 
   it('reads a plain array too, in case the save is already unwrapped', () => {
     const root = { dissonanceDamageBoost: [0, 400, 500] }
-    const state = readDissonanceCalculatorStateFromSaveRoot(root)
+    const state = readDissonanceCalculatorState(root)
     expect(state.wavesByTier?.['2']?.attack).toBe(500)
   })
 
   it('reports no wave data for a save with none, instead of inventing zeros', () => {
-    const state = readDissonanceCalculatorStateFromSaveRoot({})
+    const state = readDissonanceCalculatorState({})
     expect(state.wavesByTier).toBeUndefined()
   })
 
@@ -61,7 +61,7 @@ describe('dissonance waves from a save', () => {
    */
   it('reads every campaign tier, including the ones added after 21', () => {
     const perTier = Array.from({ length: MAX_CAMPAIGN_TIER }, (_, index) => (index + 1) * 10)
-    const state = readDissonanceCalculatorStateFromSaveRoot({
+    const state = readDissonanceCalculatorState({
       dissonanceDamageBoost: trackWaves(perTier),
     })
 

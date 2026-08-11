@@ -8,7 +8,7 @@ import {
   computeChainThunderMaxReductionPct,
   computeChainThunderReductionFraction,
   computeChainThunderReductionPct,
-  computeChronoFieldReductionPctFromLab,
+  computeChronoFieldReductionPct,
   computeFlameBotDamageTakenMultiplier,
   computeFlameBotEffectiveReductionPct,
   computeNmpTotalReductionPct,
@@ -23,10 +23,10 @@ describe('damage-redux-layers', () => {
   })
 
   it('chrono lab 55 scales 10% + 0.5% per level when lab 54 unlocked', () => {
-    expect(computeChronoFieldReductionPctFromLab(0, true)).toBe(0)
-    expect(computeChronoFieldReductionPctFromLab(1, true)).toBe(10.5)
-    expect(computeChronoFieldReductionPctFromLab(30, true)).toBe(25)
-    expect(computeChronoFieldReductionPctFromLab(30, false)).toBe(0)
+    expect(computeChronoFieldReductionPct(0, true)).toBe(0)
+    expect(computeChronoFieldReductionPct(1, true)).toBe(10.5)
+    expect(computeChronoFieldReductionPct(30, true)).toBe(25)
+    expect(computeChronoFieldReductionPct(30, false)).toBe(0)
   })
 
   it('chain thunder uses accumulated CL damage / enemyHealthMax × 10/6', () => {

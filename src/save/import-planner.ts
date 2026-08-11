@@ -27,13 +27,13 @@ import {
 } from './ultimate-weapons'
 import { buildVaultTrackerImportPayload, readVaultFromSaveRoot } from './vault'
 import {
-  buildWorkshopTrackerImportPayloadFromSave,
+  buildWorkshopTrackerImportPayload,
 } from './workshop'
 
 export type SaveImportTrackerPayload =
   | { key: 'battleReports'; plan: ReturnType<typeof planBattleReportImport> }
   | { key: 'lifetime'; payload: ReturnType<typeof buildLifetimeTrackerImportPayload> }
-  | { key: 'workshop'; payload: NonNullable<ReturnType<typeof buildWorkshopTrackerImportPayloadFromSave>> }
+  | { key: 'workshop'; payload: NonNullable<ReturnType<typeof buildWorkshopTrackerImportPayload>> }
   | { key: 'labs'; payload: ReturnType<typeof buildLabsTrackerImportPayload> }
   | { key: 'ultimateWeapons'; payload: NonNullable<ReturnType<typeof buildUltimateWeaponsTrackerImportPayload>> }
   | { key: 'modules'; payload: NonNullable<ReturnType<typeof buildModulesTrackerImportPayload>> }
@@ -90,7 +90,7 @@ export function planSaveImportTracker(
   }
 
   if (key === 'workshop') {
-    const payload = buildWorkshopTrackerImportPayloadFromSave(parsedRoot)
+    const payload = buildWorkshopTrackerImportPayload(parsedRoot)
     return {
       key,
       label,

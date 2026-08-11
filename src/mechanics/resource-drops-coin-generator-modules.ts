@@ -35,7 +35,7 @@ export function generatorUniqueTemplateFromEffectId(effectId: number): CoinRelev
   return templateId as CoinRelevantGeneratorUniqueId
 }
 
-export function findEquippedGeneratorUniqueFromModuleProgress(
+export function findEquippedGeneratorUnique(
   moduleProgress: SharedModuleProgressInputs,
 ): EquippedGeneratorUnique | null {
   const templateId = moduleProgress.generatorEquippedUniqueId

@@ -16,10 +16,10 @@ import {
 import { readPerkPreferencesFromSaveRoot } from './perks'
 import {
   readResearchLabLevelsFromSaveRoot,
-  readExtendedSharedToolInputsFromSaveRoot,
+  readExtendedSharedToolInputs,
   mergeSaveDerivedExtendedSharedToolInputs,
 } from './shared-tool-inputs-from-save-extended'
-import { enrichSharedToolInputsFromResearchLevels } from '../internal/shared-tool-inputs-from-research'
+import { enrichSharedToolInputs } from '../internal/shared-tool-inputs-from-research'
 import {
   defaultSharedToolInputs,
   mergeNumberRecords,
@@ -110,7 +110,7 @@ export function readLabRelicPctFromSaveRoot(root: Record<string, unknown>): numb
   return Math.max(0, total)
 }
 
-export function readGemDiscountMultiplierFromSaveRoot(root: Record<string, unknown>): number {
+export function readGemDiscountMultiplier(root: Record<string, unknown>): number {
   const completed = coerceSaveNumber(root.researchesComplete)
   const count = Math.max(0, Math.floor(completed ?? 0))
   return roundToDisplayPrecision(1 + count * GEM_DISCOUNT_PER_COMPLETED_RESEARCH) || 1
@@ -140,7 +140,7 @@ export function readTowerRangeMetersFromSaveRoot(root: Record<string, unknown>):
   return clampInt(Math.round(internal * 10), 0, 1000)
 }
 
-export function readBotBotBonusMultiplierFromSaveRoot(root: Record<string, unknown>): number {
+export function readBotBotBonusMultiplier(root: Record<string, unknown>): number {
   const botBotIndex = BOT_IMPORT_CATALOG.findIndex(row => row.name === 'Bot Bot')
   if (botBotIndex < 0) return 0
 
@@ -315,7 +315,7 @@ export function readSharedToolInputsFromSaveRoot(
 
   const labsEconomy = {
     labRelic: readLabRelicPctFromSaveRoot(root),
-    gemDiscount: readGemDiscountMultiplierFromSaveRoot(root),
+    gemDiscount: readGemDiscountMultiplier(root),
     speedUp: readLabSpeedUpFromSaveRoot(root),
   }
 
@@ -323,7 +323,7 @@ export function readSharedToolInputsFromSaveRoot(
   const dwBaseWavesLevel = readDeathWaveBaseWavesFromSaveRoot(root)
   const uptimeModuleRarities = readUptimeModuleRaritiesFromSaveRoot(root)
   const researchLabLevels = readResearchLabLevelsFromSaveRoot(root)
-  const extended = readExtendedSharedToolInputsFromSaveRoot(root, { towerRangeMeters: towerRange })
+  const extended = readExtendedSharedToolInputs(root, { towerRangeMeters: towerRange })
 
   const uptimeInputs: Partial<SharedUptimeInputs> = {
     ...uptimeModuleRarities,
@@ -341,7 +341,7 @@ export function readSharedToolInputsFromSaveRoot(
     towerRange: towerRange ?? 0,
     namedCalculatorLabs: {
       ...defaultSharedToolInputs.namedCalculatorLabs,
-      botBotBonusMultiplier: readBotBotBonusMultiplierFromSaveRoot(root),
+      botBotBonusMultiplier: readBotBotBonusMultiplier(root),
     },
     uptimeInputs,
     perkPreferences: readPerkPreferencesFromSaveRoot(root),
@@ -437,5 +437,5 @@ export function mergeSaveDerivedSharedToolInputs(
     perkPreferences: saveDerived.perkPreferences ?? base.perkPreferences,
   })
 
-  return enrichSharedToolInputsFromResearchLevels(merged)
+  return enrichSharedToolInputs(merged)
 }

@@ -33,7 +33,7 @@ export function getWorkshopEnhancementKeyFromDataKey(dataKey: string): string {
   return dataKey
 }
 
-export function findWorkshopEnhancementSpecFromDataKey(dataKey: string): { dataKey: string } | null {
+export function findWorkshopEnhancementSpec(dataKey: string): { dataKey: string } | null {
   const match = getWorkshopEnhancementDefinitions().find(stat => stat.key === dataKey)
   return match ? { dataKey: match.key } : null
 }

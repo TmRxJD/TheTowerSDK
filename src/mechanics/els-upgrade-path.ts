@@ -42,7 +42,7 @@ export const ELS_ENHANCEMENT_TRACKER_ALIASES = [
 ] as const
 
 /** Read ELS+ enhancement level from workshop tracker keys (canonical + import aliases). */
-export function computeElsEnhancementLevelFromTracker(
+export function computeElsEnhancementLevel(
   enhancementLevels: Record<string, number> | null | undefined,
 ): number {
   if (!enhancementLevels || typeof enhancementLevels !== 'object') return 0
@@ -238,7 +238,7 @@ export function findElsLeadFromWorkshopTrackerBlob(blob: Record<string, unknown>
   const lead: ElsWorkshopTrackerLead = {
     attackUtilityLevel: readNumberRecordValue(levels, ELS_ATTACK_WORKSHOP_KEY),
     healthUtilityLevel: readNumberRecordValue(levels, ELS_HEALTH_WORKSHOP_KEY),
-    enhancementLevel: computeElsEnhancementLevelFromTracker(enhancementLevels as Record<string, number> | undefined),
+    enhancementLevel: computeElsEnhancementLevel(enhancementLevels as Record<string, number> | undefined),
     utilityDiscountPct: readDiscount(ui, 'discountUtility'),
     enhancementDiscountPct: readDiscount(ui, 'enhancementDiscountUtility'),
     enhancementVaultDiscountPct: readDiscount(ui, 'enhancementDiscountVault'),

@@ -59,7 +59,7 @@ export function readLabsEconomyFromResearchLevels(
   }
 }
 
-export function readWorkshopDiscountsFromResearchLevels(
+export function readWorkshopDiscounts(
   researchLabLevels: Record<string, number>,
   existing: Partial<SharedWorkshopDiscounts> = {},
 ): SharedWorkshopDiscounts {
@@ -208,7 +208,7 @@ export function readEchoLabLevelsFromResearchLevels(
   }
 }
 
-export function readNamedCalculatorLabsFromResearchLevels(
+export function readNamedCalculatorLabs(
   researchLabLevels: Record<string, number>,
   existing: Partial<SharedNamedCalculatorLabs> = {},
 ): SharedNamedCalculatorLabs {
@@ -276,7 +276,7 @@ export type EnrichSharedToolInputsFromResearchOptions = {
   preserveExplicitWorkshopDiscounts?: boolean
 }
 
-export function enrichSharedToolInputsFromResearchLevels<
+export function enrichSharedToolInputs<
   T extends {
     researchLabLevels: Record<string, number>
     labsEconomy: SharedLabsSettings
@@ -295,7 +295,7 @@ export function enrichSharedToolInputsFromResearchLevels<
 
   const workshopDiscounts = options?.preserveExplicitWorkshopDiscounts
     ? normalizeSharedWorkshopDiscounts(payload.workshopDiscounts, defaultSharedWorkshopDiscounts)
-    : readWorkshopDiscountsFromResearchLevels(researchLabLevels, payload.workshopDiscounts)
+    : readWorkshopDiscounts(researchLabLevels, payload.workshopDiscounts)
 
   return {
     ...payload,
@@ -303,7 +303,7 @@ export function enrichSharedToolInputsFromResearchLevels<
     workshopDiscounts,
     moduleDiscounts: moduleEconomy.moduleDiscounts,
     moduleEfficiencyLabs: moduleEconomy.moduleEfficiencyLabs,
-    namedCalculatorLabs: readNamedCalculatorLabsFromResearchLevels(researchLabLevels, payload.namedCalculatorLabs),
+    namedCalculatorLabs: readNamedCalculatorLabs(researchLabLevels, payload.namedCalculatorLabs),
     uptimeInputs: syncUptimeResearchLabsFromTracker(researchLabLevels, payload.uptimeInputs),
   }
 }

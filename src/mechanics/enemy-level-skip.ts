@@ -190,7 +190,7 @@ export function levelSkipLabBenefitIncreaseActive(
 }
 
 /** @deprecated Use {@link levelSkipLabBenefitIncreaseActive}. Cumulative lab value is not the skip field. */
-export function levelSkipLabBenefitIncreaseFromCumulative(cumulativeLabBenefit: number): number {
+export function levelSkipLabBenefitIncrease(cumulativeLabBenefit: number): number {
   if (!Number.isFinite(cumulativeLabBenefit) || cumulativeLabBenefit <= 0) return 0
   return LEVEL_SKIP_LAB_BENEFIT_INCREASE_RATE
 }

@@ -145,7 +145,7 @@ Useful for showing someone what you found before doing anything with it.
 Every completed run the game kept is available, with all of its stored fields:
 
 ```ts
-import { listImportableBattleRuns, buildBattleReportStatFieldsFromSaveEntry } from 'thetowersdk/save'
+import { listImportableBattleRuns, buildBattleReportStatFields } from 'thetowersdk/save'
 
 const runs = listImportableBattleRuns(parsedRoot)
 
@@ -155,7 +155,7 @@ const runs = listImportableBattleRuns(parsedRoot)
 console.log(Object.keys(runs[0]))
 
 // Or the same run flattened into named stat fields.
-const stats = buildBattleReportStatFieldsFromSaveEntry(runs[0])
+const stats = buildBattleReportStatFields(runs[0])
 ```
 
 `listImportableBattleRuns` hands back the decoded entries themselves, not a filtered view, so you

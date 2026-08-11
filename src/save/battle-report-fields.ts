@@ -293,7 +293,7 @@ const BATTLE_REPORT_STAT_FIELDS = TRACKER_RUN_OPTIONAL_STRING_FIELDS.filter(
 )
 
 /** Map save battle-history entry fields onto all optional tracker stat keys. */
-export function buildBattleReportStatFieldsFromSaveEntry(
+export function buildBattleReportStatFields(
   run: Record<string, unknown>,
 ): Partial<Record<BattleReportStatField, string | null>> {
   const mapped: Partial<Record<BattleReportStatField, string | null>> = {}
@@ -308,10 +308,10 @@ export function buildBattleReportStatFieldsFromSaveEntry(
 }
 
 /** Extended-only subset for runs_extended_data writes. */
-export function buildBattleReportExtendedFieldsFromSaveEntry(
+export function buildBattleReportExtendedFields(
   run: Record<string, unknown>,
 ): Partial<Record<(typeof TRACKER_RUN_EXTENDED_FIELDS)[number], string | null>> {
-  const all = buildBattleReportStatFieldsFromSaveEntry(run)
+  const all = buildBattleReportStatFields(run)
   const mapped: Partial<Record<(typeof TRACKER_RUN_EXTENDED_FIELDS)[number], string | null>> = {}
 
   for (const trackerField of TRACKER_RUN_EXTENDED_FIELDS) {
