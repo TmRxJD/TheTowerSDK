@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import fixtures from './effective-paths-formula.fixtures.json'
+import liveDocument from './effective-paths-live-document.fixtures.json'
 import {
   EffectivePathsFormulaError,
   parseSheetFunction,
@@ -152,6 +153,61 @@ describe('parsing the sheet\'s eHP functions', () => {
         const scale = Math.max(Math.abs(handWritten), 1e-9)
         expect(
           Math.abs(parsed - handWritten) / scale,
+          `${name} trial ${trial} args=${JSON.stringify(args)}`,
+        ).toBeLessThan(1e-9)
+      }
+    })
+  }
+})
+
+/**
+ * End-to-end: the document the deployed Appwrite function actually returned.
+ *
+ * The tests above parse a fixture of formula text committed alongside them, so
+ * they prove the parser is right about a snapshot. This one takes what the live
+ * pipeline produced — sheet export, zip, XML decode, parse, validate — and
+ * holds it to the same standard.
+ *
+ * It also catches something nothing else here can: the maintainers changing a
+ * formula. Captured at v5.09.03.01, one release *newer* than the workbook the
+ * rest of these fixtures came from, and it still agrees — so that release
+ * changed nothing in the eHP layer. A release that does will fail this, which
+ * is the point.
+ */
+describe('the document the deployed function returned', () => {
+  it('is a valid document at the schema version this package speaks', () => {
+    const result = parseEffectivePathsDocument(liveDocument)
+    expect(result.ok, result.ok ? '' : result.errors.join('; ')).toBe(true)
+    expect(liveDocument.stats.length).toBe(8)
+  })
+
+  it('carries the alias registry, so a consumer can map names without this package', () => {
+    expect(liveDocument.aliases.length).toBeGreaterThan(10)
+    const chrono = liveDocument.aliases.filter(a => a.id.startsWith('chrono-field-'))
+    expect(chrono.map(a => a.isUnlock).sort()).toEqual([false, true])
+  })
+
+  for (const stat of liveDocument.stats) {
+    const name = stat.sheetFunction as string
+    it(`${name} evaluates identically to the hand-written version`, () => {
+      const handWritten = HAND_WRITTEN[name]
+      expect(handWritten, `no hand-written twin for ${name}`).toBeDefined()
+
+      const random = makeRandom(0xd0c + name.length)
+      for (let trial = 0; trial < 250; trial++) {
+        const args = stat.inputs.map(parameter => sampleFor(parameter, random))
+        const inputs: Record<string, number> = {}
+        stat.inputs.forEach((parameter, i) => { inputs[parameter] = args[i] })
+
+        const fromSheet = evaluateStat(
+          stat as unknown as Parameters<typeof evaluateStat>[0],
+          inputs as EffectivePathsInputs,
+        ).value
+        const expected = handWritten(args)
+
+        const scale = Math.max(Math.abs(expected), 1e-9)
+        expect(
+          Math.abs(fromSheet - expected) / scale,
           `${name} trial ${trial} args=${JSON.stringify(args)}`,
         ).toBeLessThan(1e-9)
       }
