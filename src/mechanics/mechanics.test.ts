@@ -4,7 +4,7 @@ import { botTowerFactor, getFlameBotDamageReduction, getThunderBotLinger } from 
 import {
   applyTierBattleConditionsToSkipChance,
   buildLevelSkipChanceRaw,
-  calculateLevelSkipChance,
+  computeLevelSkipChance,
   deterministicSkipLevelsFromChance,
   enemyStatLevelFromRunWave,
   estimatedEnemyStatLevelFromSkip,
@@ -86,7 +86,7 @@ import { knockbackImpulseApplied } from './knockback'
 import { titanShockAttackSpeedDivider } from './crowd-control'
 import {
   applyDamageReductionStats,
-  calculateDamageReductionResult,
+  computeDamageReductionResult,
 } from './damage-reduction'
 import {
   getOutOfRoundOrbSpeedPreview,
@@ -163,7 +163,7 @@ describe('mechanics/enemy-level-skip', () => {
   })
 
   it('chance clamps to [0, 1]', () => {
-    const high = calculateLevelSkipChance({
+    const high = computeLevelSkipChance({
       kind: 'attack',
       utilityLevel: 1300,
       enemyLevelSkipEnhancement: 10,
@@ -824,7 +824,7 @@ describe('mechanics/damage-reduction', () => {
   })
 
   it('uses precomputed flame bot mult when provided', () => {
-    const dmg = calculateDamageReductionResult({
+    const dmg = computeDamageReductionResult({
       rawDamage: 100,
       flameBotDamageMult: 0.5,
     })

@@ -23,14 +23,18 @@ TypeScript, one runtime dependency (`zod`), MIT licensed.
 ### Use the game data
 
 ```ts
-import { generatedLabs } from 'thetowersdk/data'
+import { LAB_CATALOG } from 'thetowersdk/data'
 
-const costToMax = (lab) => (lab.levels ?? []).reduce((sum, level) => sum + (level.cost ?? 0), 0)
+const costToMax = (lab) => lab.levels.reduce((sum, level) => sum + level.cost, 0)
 
-const priciest = generatedLabs
+const priciest = LAB_CATALOG
   .map((lab) => ({ name: lab.name, total: costToMax(lab) }))
   .sort((a, b) => b.total - a.total)[0]
 ```
+
+Every `cost` is a plain number of coins. There is no scaling factor to apply and no currency field
+to read first — a lab that costs 1.1 quadrillion is `1.1e15`, so you can add two labs together
+without checking where either came from.
 
 ### Read a save file
 
@@ -233,15 +237,27 @@ npx tsx examples/02-read-a-save-file.ts ~/playerInfo.dat
 
 ## Names and acronyms
 
-The game and the community use a lot of shorthand, and some of it is ambiguous — `SR` is both Shrink
-Ray and Solar Reflector. The SDK ships a glossary so you do not have to guess:
+The game and the community use a lot of shorthand, and plenty of it collides. `CF` is Chrono Field
+to one player and critical factor to another; `GC` is Galaxy Compressor or glass cannon. The SDK
+ships a glossary of 233 terms so you do not have to guess:
 
 ```ts
-import { lookupGlossary, expandAcronym } from 'thetowersdk/data'
+import { lookupGlossary, expandAcronym, listAmbiguousGlossaryTerms } from 'thetowersdk/data'
 
-expandAcronym('ILM')     // 'Inner Land Mines'
-lookupGlossary('SR')     // two entries; check `domain` to pick one
+expandAcronym('CF')      // 'Chrono Field'
+expandAcronym('GC')      // 'Galaxy Compressor'
+
+lookupGlossary('CF')[0]  // { term, kind, domain: 'ultimate-weapon', expansion, definition }
+listAmbiguousGlossaryTerms()   // 13 terms that resolve to more than one thing
 ```
+
+Each entry carries a `domain`, which is usually enough to pick the one you meant. Usually, not
+always: `SR` returns both Shrink Ray and Solar Reflector and *both* are modules, so for the terms in
+`listAmbiguousGlossaryTerms()` you need the `expansion` rather than the domain.
+
+The glossary only covers what the game calls things. Community shorthand that never became a game
+name — critical factor for `CF`, glass cannon for `GC` — is not in it, so `expandAcronym` gives you
+the game's meaning and nothing else.
 
 Names in it are generated from the same catalogs the SDK ships, and every acronym is checked against
 those names, so a term cannot appear unless it is real.
@@ -280,6 +296,23 @@ Agent instructions live in [AGENTS.md](AGENTS.md); `CLAUDE.md` and
 ```ts
 import { computeWaveBaseHealth, abilityDamage, goldenComboBonus } from 'thetowersdk/mechanics'
 ```
+
+---
+
+## Effective Paths
+
+> **Not shipped yet.** This section is a placeholder for work in progress.
+
+[Effective Paths][ep] is the community spreadsheet that works out the cheapest order to buy things
+in — which lab, workshop stat or card to put your next coins into for the most effect. Its author
+takes the numbers from the developers, which is why the SDK already checks its own tables against
+it: see [`src/data/fixtures/README.md`](src/data/fixtures/README.md).
+
+The plan is to port the path solver itself, so `thetowersdk` can answer "what should I buy next"
+rather than only "what does this cost". Nothing is exported for it yet; this section will describe
+the entry points when there are some.
+
+[ep]: https://docs.google.com/spreadsheets/d/1YwZtKP6B4WYhRba5T6APJ1YxKNdfnIGQnprgnxmO7zc/edit
 
 ---
 

@@ -42,7 +42,7 @@ export interface BotData extends BotUpgradeTierData {
 export type BotLabLevels = Record<string, number | undefined>
 export type BotUpgradeTier = 'base' | 'plus'
 
-import { calculateUptimeRatio } from '../internal/uptime-core'
+import { computeUptimeRatio } from '../internal/uptime-core'
 import { botBotBoostedMultiplier } from '../mechanics/bot-hit-multiplier'
 
 export interface BotBotOverlapArgs {
@@ -600,7 +600,7 @@ export function estimateBotBotAmplificationMultiplier(botBotBonusValue: string, 
 }
 
 export function estimateBotUptimeFraction(durationValue: string, cooldownValue: string): number {
-  return calculateUptimeRatio(parseBaseNumber(durationValue), parseBaseNumber(cooldownValue))
+  return computeUptimeRatio(parseBaseNumber(durationValue), parseBaseNumber(cooldownValue))
 }
 
 export function estimateAmplifiedBotMetricValue(baseMetricValue: string, botBotBonusValue: string, maxPowerValue: string | undefined, overlapFraction: number): string {

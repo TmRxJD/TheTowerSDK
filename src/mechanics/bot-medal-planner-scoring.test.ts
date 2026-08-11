@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   aggregateBotMedalPlanObjective,
-  calculateOverlapPotentialScore,
+  computeOverlapPotentialScore,
   consolidatedSimulatedOverlap,
   getSustainedApplicationFactor,
 } from './bot-medal-planner-scoring'
@@ -23,15 +23,15 @@ describe('consolidatedSimulatedOverlap', () => {
   })
 })
 
-describe('calculateOverlapPotentialScore', () => {
+describe('computeOverlapPotentialScore', () => {
   it('rises with effectiveNumber and overlap', () => {
-    const low = calculateOverlapPotentialScore({ synced: false, isBotBot: false }, {
+    const low = computeOverlapPotentialScore({ synced: false, isBotBot: false }, {
       ...baseSnapshot,
       effectiveNumber: 50,
       avgOverlapFraction: 0.05,
       overlapFraction: 0.05,
     })
-    const high = calculateOverlapPotentialScore({ synced: true, isBotBot: false }, baseSnapshot)
+    const high = computeOverlapPotentialScore({ synced: true, isBotBot: false }, baseSnapshot)
     expect(high).toBeGreaterThan(low)
   })
 })

@@ -183,7 +183,7 @@ function bankersRound(n: number): number {
   return floor % 2 === 0 ? floor : floor + 1
 }
 
-export function calculateUptimeRatio(duration: number, cooldown: number): number {
+export function computeUptimeRatio(duration: number, cooldown: number): number {
   const normalizedDuration = Math.max(0, Number(duration) || 0)
   const normalizedCooldown = Math.max(0, Number(cooldown) || 0)
   if (normalizedCooldown <= 0) {

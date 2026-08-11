@@ -526,7 +526,7 @@ export function parseResource(raw: string | null | undefined): { error?: true; v
   return { value }
 }
 
-export function calculateHourlyRate(value: unknown, duration?: string | null): string | null {
+export function computeHourlyRate(value: unknown, duration?: string | null): string | null {
   const hours = parseDurationToHours(duration)
   if (!hours || hours <= 0) return null
   const numeric = parseNumberInput(standardizeNotation(String(value ?? '0')))

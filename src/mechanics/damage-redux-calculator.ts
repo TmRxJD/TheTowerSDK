@@ -58,7 +58,7 @@ export function applyDamageReduxLayerStack(
   const steps: DamageReduxLayerStep[] = []
   let working = rawDamage
 
-  // Matches `calculateDamageReductionResult` + run blocked-stat order:
+  // Matches `computeDamageReductionResult` + run blocked-stat order:
   // Defense % → Defense Absolute → chrono → CT → flame → PC → NMP.
   if (config.useDefense && config.defenseRel > 0) {
     const prev = working

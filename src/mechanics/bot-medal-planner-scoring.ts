@@ -59,7 +59,7 @@ export function consolidatedSimulatedOverlap(snapshot: BotMedalMetricSnapshot): 
 }
 
 /** Scores how much simulated overlap + uptime can move the needle for this row. */
-export function calculateOverlapPotentialScore(
+export function computeOverlapPotentialScore(
   row: BotMedalPlannerRowContext,
   snapshot: BotMedalMetricSnapshot,
 ): number {

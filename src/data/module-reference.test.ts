@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { calculateModuleStat } from './module-bonus'
+import { computeModuleStat } from './module-bonus'
 import { MODULE_RARITIES } from './module-levels'
 
 /**
@@ -52,8 +52,8 @@ describe('module stats against the Effective Paths reference', () => {
         const theirs = entry.levelOneStats[column]
         if (!Number.isFinite(theirs)) continue
         compared += 1
-        // calculateModuleStat returns a multiplier, so 1 + the stat.
-        const ours = calculateModuleStat({ type, rarityLabel, level: 1 }) - 1
+        // computeModuleStat returns a multiplier, so 1 + the stat.
+        const ours = computeModuleStat({ type, rarityLabel, level: 1 }) - 1
         // The sheet quotes three decimals.
         if (Math.abs(ours - theirs) >= 5e-4) {
           mismatches.push(`${entry.rarity} ${column}: ours=${ours.toFixed(4)} reference=${theirs.toFixed(4)}`)
@@ -69,8 +69,8 @@ describe('module stats against the Effective Paths reference', () => {
   it('applies the ancestral star bonus the way the reference does', () => {
     // Ancestral 1* reads 0.314 against Ancestral's 0.302, which is 0.302 x 1.04
     // -- our multiplicative 4%-per-star, not a flat additive step.
-    const base = calculateModuleStat({ type: 'cannon', rarityLabel: 'Ancestral', level: 1 }) - 1
-    const oneStar = calculateModuleStat({ type: 'cannon', rarityLabel: 'Ancestral 1', level: 1 }) - 1
+    const base = computeModuleStat({ type: 'cannon', rarityLabel: 'Ancestral', level: 1 }) - 1
+    const oneStar = computeModuleStat({ type: 'cannon', rarityLabel: 'Ancestral 1', level: 1 }) - 1
     expect(oneStar).toBeCloseTo(base * 1.04, 3)
   })
 })

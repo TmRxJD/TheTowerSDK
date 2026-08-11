@@ -308,7 +308,7 @@ export function resolveLabValueAtLevel(lab: ToolLabRecord, level: number): numbe
   return 0
 }
 
-export function calculateLabGems(timeHours: number): number {
+export function computeLabGems(timeHours: number): number {
   const time = timeHours / 24
   const secs = time * 86400
   return Math.ceil(
@@ -372,7 +372,7 @@ export function buildLabProgressRows(
 
     const adjustedNoSpeedup = baseTimeHours * finalMultiplier
     const adjustedTimeHours = adjustedNoSpeedup / Math.max(1, modifiers.speedUp)
-    const gems = calculateLabGems(adjustedNoSpeedup)
+    const gems = computeLabGems(adjustedNoSpeedup)
     // Absolute coins throughout, so there is no longer a lab whose cost has to
     // be kept to two decimals because it was really a count of quadrillions.
     const coins = Math.round(Number(levelData.cost ?? 0) * coinDiscountMultiplier)

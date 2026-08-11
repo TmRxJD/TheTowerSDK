@@ -3,7 +3,7 @@ import {
   applyEnemyBotRangeEnter,
   applyEnemyBotRangeExit,
   botBotAmplificationApplicationFraction,
-  calculateAverageAmplifiedBotMetric,
+  computeAverageAmplifiedBotMetric,
   EMPTY_ENEMY_BOT_RANGE_FLAGS,
 } from './bot-bot-overlap'
 
@@ -21,11 +21,11 @@ describe('enemy bot range flags', () => {
   })
 })
 
-describe('calculateAverageAmplifiedBotMetric', () => {
+describe('computeAverageAmplifiedBotMetric', () => {
   it('interpolates overlap gain linearly', () => {
-    expect(calculateAverageAmplifiedBotMetric(100, 200, 0.5, 0)).toBe(50)
-    expect(calculateAverageAmplifiedBotMetric(100, 200, 0.5, 1)).toBe(150)
-    expect(calculateAverageAmplifiedBotMetric(100, 200, 0.5, 0.5)).toBe(100)
+    expect(computeAverageAmplifiedBotMetric(100, 200, 0.5, 0)).toBe(50)
+    expect(computeAverageAmplifiedBotMetric(100, 200, 0.5, 1)).toBe(150)
+    expect(computeAverageAmplifiedBotMetric(100, 200, 0.5, 0.5)).toBe(100)
   })
 })
 

@@ -55,7 +55,7 @@ function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value))
 }
 
-export function calculateAverageAmplifiedBotMetric(
+export function computeAverageAmplifiedBotMetric(
   baseNumber: number,
   projectedNumber: number,
   uptimeFraction: number,

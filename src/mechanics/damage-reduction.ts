@@ -72,7 +72,7 @@ export function applyAbsoluteDefense(damage: number, defenseAbsolute: number): n
   return Math.max(0, damage - defenseAbsolute)
 }
 
-export function calculateDamageReductionResult(input: DamageReductionInput): number {
+export function computeDamageReductionResult(input: DamageReductionInput): number {
   let dmg = input.rawDamage
 
   if (input.defenseRel != null) {

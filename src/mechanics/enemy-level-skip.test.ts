@@ -3,7 +3,7 @@ import { getBasicEnemyWaveStats } from '../internal/enemy-wave-stats'
 import {
   applyTierBattleConditionsToSkipChance,
   buildLevelSkipChanceRaw,
-  calculateLevelSkipChance,
+  computeLevelSkipChance,
   deterministicSkipLevelsFromChance,
   enemyStatLevelFromRunWave,
   estimatedEnemyStatLevelFromSkip,
@@ -77,7 +77,7 @@ describe('mechanics/enemy-level-skip', () => {
   })
 
   it('chance clamps to [0, 1]', () => {
-    const high = calculateLevelSkipChance({
+    const high = computeLevelSkipChance({
       kind: 'attack',
       utilityLevel: 1300,
       enemyLevelSkipEnhancement: 10,

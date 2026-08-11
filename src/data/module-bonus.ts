@@ -124,7 +124,7 @@ const MODULE_MULTIPLIER_INCREMENT: Record<ModuleCalcType, Array<{ start: number;
   ],
 }
 
-export function calculateModuleStat(opts: { type: ModuleCalcType; rarityLabel: string; level: number }): number {
+export function computeModuleStat(opts: { type: ModuleCalcType; rarityLabel: string; level: number }): number {
   const { type, rarityLabel } = opts
   const level = Math.max(1, Math.floor(Number(opts.level) || 1))
   const base = MODULE_MULTIPLIER_BASE[type]?.[rarityLabel as ModuleRarity]

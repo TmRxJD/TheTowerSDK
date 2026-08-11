@@ -22,7 +22,7 @@ import {
 } from './enemy-drops-simulation'
 import { clamp } from './math'
 import {
-  calculateUptimeRatio,
+  computeUptimeRatio,
   computeDurations,
   computeEffectiveCooldowns,
   type UptimeCoreState,
@@ -387,13 +387,13 @@ function resolveUwUptimeRatios(
   const cds = computeEffectiveCooldowns(uptime)
   const durations = computeDurations(uptime)
 
-  const gtUptimeRatio = calculateUptimeRatio(durations.gt, cds.gt)
-  const bhUptimeRatio = calculateUptimeRatio(durations.bh, cds.bh)
-  const dwUptimeRatio = calculateUptimeRatio(durations.dw, cds.dw)
+  const gtUptimeRatio = computeUptimeRatio(durations.gt, cds.gt)
+  const bhUptimeRatio = computeUptimeRatio(durations.bh, cds.bh)
+  const dwUptimeRatio = computeUptimeRatio(durations.dw, cds.dw)
   const slUptimeRatio = clamp(durations.sl / 100, 0, 1)
   const gbCd = parseBotStatSeconds('Golden Bot', 'Cooldown', uptime.gbCdLevel ?? 0)
   const gbDur = parseBotStatSeconds('Golden Bot', 'Duration', uptime.gbDurLevel ?? 0)
-  const gbUptimeRatio = calculateUptimeRatio(gbDur, gbCd)
+  const gbUptimeRatio = computeUptimeRatio(gbDur, gbCd)
 
   return {
     gtUptimeRatio,

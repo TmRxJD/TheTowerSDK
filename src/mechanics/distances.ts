@@ -49,7 +49,7 @@ export interface EnemyDistanceResult {
   inTowerMeleeAttackDistance: boolean
 }
 
-export function calculateEnemyDistances(input: EnemyDistanceInput): EnemyDistanceResult {
+export function computeEnemyDistances(input: EnemyDistanceInput): EnemyDistanceResult {
   const dx = input.towerX - input.enemyX
   const dy = input.towerY - input.enemyY
   const sumSq = dx * dx + dy * dy

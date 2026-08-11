@@ -1,5 +1,5 @@
 import { clampAssistMultiplierEfficiencyPct } from '../internal/assist-module-efficiency'
-import { calculateModuleStat, type ModuleCalcType } from '../data/module-bonus'
+import { computeModuleStat, type ModuleCalcType } from '../data/module-bonus'
 import { getSharedToolLabs, resolveLabValueAtLevel } from '../data/index'
 import {
   chainLightningShockMultiplier,
@@ -69,7 +69,7 @@ function assistEffectiveBonus(baseMult: number, assistEffPct: number): number {
 }
 
 function resolveModuleMult(type: ModuleCalcType, slot: IlmModuleLevelRarity): number {
-  return calculateModuleStat({
+  return computeModuleStat({
     type,
     rarityLabel: slot.rarity || 'Common',
     level: Math.max(1, slot.level),

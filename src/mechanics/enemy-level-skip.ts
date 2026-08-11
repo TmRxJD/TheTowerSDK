@@ -307,7 +307,7 @@ export interface LevelSkipChanceInput {
 }
 
 /** Steps 1–5: final per-type skip chance stored before the wave roll. */
-export function calculateLevelSkipChance(input: LevelSkipChanceInput): number {
+export function computeLevelSkipChance(input: LevelSkipChanceInput): number {
   const workshopStat = input.workshopStat
     ?? (input.utilityLevel != null
       ? levelSkipWorkshopBase(input.utilityLevel)
@@ -423,7 +423,7 @@ export function levelSkipRollModifier(context: LevelSkipRollContext = {}): numbe
 
 export interface LevelSkipWaveRollInput {
   wave: number
-  /** Stored attack or health skip chance from calculateLevelSkipChance. */
+  /** Stored attack or health skip chance from computeLevelSkipChance. */
   skipChance: number
   /** Uniform [0, 1) — pass `Math.random()` or deterministic value for testing. */
   roll: number
