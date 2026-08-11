@@ -29,11 +29,13 @@
 
 /**
  * Assist substat contributions are scaled by the assist's "substat capacity",
- * which stone and lab investment both raise. The sheet spells this out as
- * `(1 + stone + lab) * 0.01` in every formula that uses an assist module.
+ * which stone and lab investment both raise, and which the trackers record only
+ * as a combined total. The sheet spells it out as `(1 + lab + stone) * 0.01` in
+ * every formula that uses an assist module — the two halves are interchangeable
+ * in the arithmetic, and kept apart only because the stone path can buy one.
  */
-function assistSubstatScale(stoneSubstatCap: number, labSubstatCap: number): number {
-  return (1 + stoneSubstatCap + labSubstatCap) * 0.01
+function assistSubstatScale(labSubstatCap: number, stoneSubstatCap: number): number {
+  return (1 + labSubstatCap + stoneSubstatCap) * 0.01
 }
 
 /**
@@ -43,7 +45,7 @@ function assistSubstatScale(stoneSubstatCap: number, labSubstatCap: number): num
  * taken at face value.
  */
 function substatTotal(input: SubstatInput): number {
-  return input.primarySubstat + input.assistSubstat * assistSubstatScale(input.stoneSubstatCap, input.labSubstatCap)
+  return input.primarySubstat + input.assistSubstat * assistSubstatScale(input.labSubstatCap, input.stoneSubstatCap)
 }
 
 /** The substat inputs shared by most `EPH_*` functions. */
@@ -52,10 +54,10 @@ export interface SubstatInput {
   primarySubstat: number
   /** Substat bonus from the assist module, before capacity scaling. */
   assistSubstat: number
-  /** Assist substat capacity from stone investment. */
-  stoneSubstatCap: number
-  /** Assist substat capacity from lab investment. */
+  /** Assist substat capacity from the Assist Module Substats lab. */
   labSubstatCap: number
+  /** Assist substat capacity bought with stones — what the stone path raises. */
+  stoneSubstatCap: number
 }
 
 /**
@@ -245,10 +247,10 @@ export interface EffectiveArmorInput {
   hasAssist: boolean
   /** Armor bonus from the assist module, as a multiplier. */
   assistBonus: number
-  /** Assist bonus capacity from stone investment. */
-  stoneBonusCap: number
-  /** Assist bonus capacity from lab investment. */
+  /** Assist bonus capacity from the Assist Module Bonus lab. */
   labBonusCap: number
+  /** Assist bonus capacity bought with stones — what the stone path raises. */
+  stoneBonusCap: number
 }
 
 /**
@@ -259,7 +261,7 @@ export interface EffectiveArmorInput {
  */
 export function effectiveArmor(input: EffectiveArmorInput): number {
   if (!input.hasAssist) return input.primaryBonus
-  const assist = (input.assistBonus - 1) * (1 + input.stoneBonusCap + input.labBonusCap) * 0.01 + 1
+  const assist = (input.assistBonus - 1) * (1 + input.labBonusCap + input.stoneBonusCap) * 0.01 + 1
   return input.primaryBonus * assist
 }
 

@@ -168,7 +168,7 @@ const cardTemplates: CardTemplate[] = [
     description: 'Increase defense absolute by x',
     rarity: 'common',
     levelType: 'multi',
-    levelValues: [1.3, 1.45, 1.6, 0.75, 1.9, 2.05, 2.2],
+    levelValues: [1.3, 1.45, 1.6, 1.75, 1.9, 2.05, 2.2],
     masteryName: 'Fortress Walls',
     masteryDescription: 'Reduces Wall rebuild time',
     masteryType: 'duration',

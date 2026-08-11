@@ -6,9 +6,9 @@ import {
   parseSheetFunction,
 } from './effective-paths-formula'
 import {
+  type EffectivePathsInputs,
   evaluateStat,
   parseEffectivePathsDocument,
-  type EffectivePathsInputs,
 } from './effective-paths-schema'
 import {
   effectiveArmor,
@@ -76,7 +76,7 @@ const HAND_WRITTEN: Record<string, (a: Args) => number> = {
   }),
   EPH_REGEN: a => effectiveRegen({
     workshopValue: a[0], labLevel: a[1], hasRegenCard: !!a[2], cardValue: a[3],
-    hasCardMastery: !!a[4], masteryLevel: a[5], stoneSubstatCap: a[6], labSubstatCap: a[7],
+    hasCardMastery: !!a[4], masteryLevel: a[5], labSubstatCap: a[6], stoneSubstatCap: a[7],
     primarySubstat: a[8], assistSubstat: a[9], workshopEnhancementLevel: a[10],
     hasPerk: !!a[11], perkBonusLabLevel: a[12], hasRegenTournamentOverride: !!a[13],
     hasRareTournamentOverride: !!a[14], introSprintLabLevel: a[15], relicPct: a[16],
@@ -84,22 +84,22 @@ const HAND_WRITTEN: Record<string, (a: Args) => number> = {
   }),
   EPH_DABS: a => effectiveDefenseAbsolute({
     workshopValue: a[0], labLevel: a[1], hasDefenseAbsoluteCard: !!a[2], cardValue: a[3],
-    stoneSubstatCap: a[4], labSubstatCap: a[5], primarySubstat: a[6], assistSubstat: a[7],
+    labSubstatCap: a[4], stoneSubstatCap: a[5], primarySubstat: a[6], assistSubstat: a[7],
     workshopEnhancementLevel: a[8], hasPerk: !!a[9], perkBonusLabLevel: a[10],
     relicPct: a[11], vaultPct: a[12],
   }),
   EPH_DEF_PCT: a => effectiveDefensePercent({
     workshopValue: a[0], labLevel: a[1], hasDefensePercentCard: !!a[2], cardValue: a[3],
-    hasCardMastery: !!a[4], masteryLevel: a[5], stoneSubstatCap: a[6], labSubstatCap: a[7],
+    hasCardMastery: !!a[4], masteryLevel: a[5], labSubstatCap: a[6], stoneSubstatCap: a[7],
     primarySubstat: a[8], assistSubstat: a[9], hasPerk: !!a[10], perkBonusLabLevel: a[11],
     relicPct: a[12], vaultPct: a[13],
   }),
   EPH_ARMOR: a => effectiveArmor({
     primaryBonus: a[0], hasAssist: !!a[1], assistBonus: a[2],
-    stoneBonusCap: a[3], labBonusCap: a[4],
+    labBonusCap: a[3], stoneBonusCap: a[4],
   }),
   EPH_WALL_HEALTH: a => effectiveWallHealth({
-    workshopValue: a[0], labLevel: a[1], stoneSubstatCap: a[2], labSubstatCap: a[3],
+    workshopValue: a[0], labLevel: a[1], labSubstatCap: a[2], stoneSubstatCap: a[3],
     primarySubstat: a[4], assistSubstat: a[5], workshopEnhancementLevel: a[6],
     primaryEffect: a[7], assistEffect: a[8], fortressLevel: a[9],
   }),
@@ -107,7 +107,7 @@ const HAND_WRITTEN: Record<string, (a: Args) => number> = {
     labLevel: a[0], primaryEffect: a[1], assistEffect: a[2],
   }),
   EPH_MAX_RCVR: a => effectiveMaxRecovery({
-    workshopValue: a[0], labLevel: a[1], stoneSubstatCap: a[2], labSubstatCap: a[3],
+    workshopValue: a[0], labLevel: a[1], labSubstatCap: a[2], stoneSubstatCap: a[3],
     primarySubstat: a[4], assistSubstat: a[5], workshopEnhancementLevel: a[6], vaultPct: a[7],
   }),
 }

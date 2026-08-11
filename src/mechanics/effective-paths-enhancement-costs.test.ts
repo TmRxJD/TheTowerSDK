@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import {
   EFFECTIVE_HEALTH_ENHANCEMENTS,
-  WORKSHOP_ENHANCEMENT_CATEGORIES,
   enhancementCoinCost,
   enhancementMaxLevel,
   enhancementStats,
+  WORKSHOP_ENHANCEMENT_CATEGORIES,
 } from './effective-paths-enhancement-costs'
 import {
-  ZERO_EFFECTIVE_HEALTH_LEVELS,
   computeEffectiveHealth,
   type EffectiveHealthConfig,
+  ZERO_EFFECTIVE_HEALTH_LEVELS,
 } from './effective-paths-ehp-model'
 import { EFFECTIVE_HEALTH_UPGRADES, planEffectiveHealthPath } from './effective-paths-ehp-plan'
 
@@ -82,8 +82,8 @@ describe('planning a coin path', () => {
       defenseAbsolute: { has: false, value: 1 },
       defensePercent: { has: false, value: 0 },
     },
-    armor: { primaryBonus: 1.5, hasAssist: true, assistBonus: 1.3, stoneBonusCap: 20 },
-    stoneSubstatCap: { armor: 20, generator: 20 },
+    armor: { primaryBonus: 1.5, hasAssist: true, assistBonus: 1.3, labBonusCap: 20 },
+    labSubstatCap: { armor: 20, generator: 20 },
     wall: { has: true, primaryEffect: 2, assistEffect: 1 },
     recovery: { has: true },
     perks: { has: true, hasTradeOff: true },
@@ -178,8 +178,8 @@ describe('workshop levels resolve through the table', () => {
         defenseAbsolute: { has: false, value: 1 },
         defensePercent: { has: false, value: 0 },
       },
-      armor: { primaryBonus: 1, hasAssist: false, assistBonus: 1, stoneBonusCap: 0 },
-      stoneSubstatCap: { armor: 0, generator: 0 },
+      armor: { primaryBonus: 1, hasAssist: false, assistBonus: 1, labBonusCap: 0 },
+      labSubstatCap: { armor: 0, generator: 0 },
       wall: { has: false, primaryEffect: 0, assistEffect: 0 },
       recovery: { has: false },
       perks: { has: false, hasTradeOff: false },
@@ -210,8 +210,8 @@ describe('workshop levels resolve through the table', () => {
         defenseAbsolute: { has: false, value: 1 },
         defensePercent: { has: false, value: 0 },
       },
-      armor: { primaryBonus: 1, hasAssist: false, assistBonus: 1, stoneBonusCap: 0 },
-      stoneSubstatCap: { armor: 0, generator: 0 },
+      armor: { primaryBonus: 1, hasAssist: false, assistBonus: 1, labBonusCap: 0 },
+      labSubstatCap: { armor: 0, generator: 0 },
       wall: { has: false, primaryEffect: 0, assistEffect: 0 },
       recovery: { has: false },
       perks: { has: false, hasTradeOff: false },
@@ -238,8 +238,8 @@ describe('workshop levels resolve through the table', () => {
         defenseAbsolute: { has: false, value: 1 },
         defensePercent: { has: false, value: 0 },
       },
-      armor: { primaryBonus: 1, hasAssist: false, assistBonus: 1, stoneBonusCap: 0 },
-      stoneSubstatCap: { armor: 0, generator: 0 },
+      armor: { primaryBonus: 1, hasAssist: false, assistBonus: 1, labBonusCap: 0 },
+      labSubstatCap: { armor: 0, generator: 0 },
       wall: { has: false, primaryEffect: 0, assistEffect: 0 },
       recovery: { has: false },
       perks: { has: false, hasTradeOff: false },

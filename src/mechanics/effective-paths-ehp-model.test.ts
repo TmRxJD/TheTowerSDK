@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import fixtures from './effective-paths-ehp-model.fixtures.json'
 import {
-  ZERO_EFFECTIVE_HEALTH_LEVELS,
   chainThunderReduction,
   chronoFieldReduction,
   computeEffectiveHealth,
   dissonantBoost,
-  tradeOffReduction,
   type EffectiveHealthConfig,
   type EffectiveHealthLevels,
+  tradeOffReduction,
+  ZERO_EFFECTIVE_HEALTH_LEVELS,
 } from './effective-paths-ehp-model'
 
 /**
@@ -65,9 +65,9 @@ function toConfig(c: FixtureCase['cfg']): EffectiveHealthConfig {
       primaryBonus: c.armorPrimary,
       hasAssist: c.hasArmorAssist,
       assistBonus: c.armorAssist,
-      stoneBonusCap: c.armorStoneBonusCap,
+      labBonusCap: c.armorStoneBonusCap,
     },
-    stoneSubstatCap: { armor: c.stoneSubArmor, generator: c.stoneSubGenerator },
+    labSubstatCap: { armor: c.stoneSubArmor, generator: c.stoneSubGenerator },
     wall: { has: c.hasWall, primaryEffect: c.wallPrimEffect, assistEffect: c.wallAssEffect },
     recovery: { has: c.hasRecovery },
     perks: { has: c.hasPerks, hasTradeOff: c.hasTradeOff },
@@ -176,8 +176,8 @@ describe('what the model does with an empty account', () => {
       defenseAbsolute: { has: false, value: 1 },
       defensePercent: { has: false, value: 0 },
     },
-    armor: { primaryBonus: 1.012, hasAssist: false, assistBonus: 1, stoneBonusCap: 0 },
-    stoneSubstatCap: { armor: 0, generator: 0 },
+    armor: { primaryBonus: 1.012, hasAssist: false, assistBonus: 1, labBonusCap: 0 },
+    labSubstatCap: { armor: 0, generator: 0 },
     wall: { has: false, primaryEffect: 0, assistEffect: 0 },
     recovery: { has: false },
     perks: { has: true, hasTradeOff: true },

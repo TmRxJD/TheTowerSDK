@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import fixtures from './effective-paths-parity.fixtures.json'
 import oracleFixtures from './effective-paths-oracle.fixtures.json'
 import {
+  composeEffectiveHealth,
   DEFENSE_PERCENT_CAP,
   effectiveArmor,
   effectiveDefenseAbsolute,
@@ -11,7 +12,6 @@ import {
   effectiveRegen,
   effectiveWallHealth,
   effectiveWallRegen,
-  composeEffectiveHealth,
   survivalMultiplier,
 } from './effective-paths-hp'
 
@@ -61,8 +61,8 @@ const ADAPTERS: Record<string, (args: Args) => number> = {
     cardValue: num(a, 3),
     hasCardMastery: bool(a, 4),
     masteryLevel: num(a, 5),
-    stoneSubstatCap: num(a, 6),
-    labSubstatCap: num(a, 7),
+    labSubstatCap: num(a, 6),
+    stoneSubstatCap: num(a, 7),
     primarySubstat: num(a, 8),
     assistSubstat: num(a, 9),
     workshopEnhancementLevel: num(a, 10),
@@ -84,8 +84,8 @@ const ADAPTERS: Record<string, (args: Args) => number> = {
     labLevel: num(a, 1),
     hasDefenseAbsoluteCard: bool(a, 2),
     cardValue: num(a, 3),
-    stoneSubstatCap: num(a, 4),
-    labSubstatCap: num(a, 5),
+    labSubstatCap: num(a, 4),
+    stoneSubstatCap: num(a, 5),
     primarySubstat: num(a, 6),
     assistSubstat: num(a, 7),
     workshopEnhancementLevel: num(a, 8),
@@ -104,8 +104,8 @@ const ADAPTERS: Record<string, (args: Args) => number> = {
     cardValue: num(a, 3),
     hasCardMastery: bool(a, 4),
     masteryLevel: num(a, 5),
-    stoneSubstatCap: num(a, 6),
-    labSubstatCap: num(a, 7),
+    labSubstatCap: num(a, 6),
+    stoneSubstatCap: num(a, 7),
     primarySubstat: num(a, 8),
     assistSubstat: num(a, 9),
     hasPerk: bool(a, 10),
@@ -119,8 +119,8 @@ const ADAPTERS: Record<string, (args: Args) => number> = {
     primaryBonus: num(a, 0),
     hasAssist: bool(a, 1),
     assistBonus: num(a, 2),
-    stoneBonusCap: num(a, 3),
-    labBonusCap: num(a, 4),
+    labBonusCap: num(a, 3),
+    stoneBonusCap: num(a, 4),
   }),
 
   // LAMBDA(ws_val, lab_lvl, stone_sac, lab_sac, prim_sub, ass_sub, wse_lvl,
@@ -128,8 +128,8 @@ const ADAPTERS: Record<string, (args: Args) => number> = {
   EPH_WALL_HEALTH: a => effectiveWallHealth({
     workshopValue: num(a, 0),
     labLevel: num(a, 1),
-    stoneSubstatCap: num(a, 2),
-    labSubstatCap: num(a, 3),
+    labSubstatCap: num(a, 2),
+    stoneSubstatCap: num(a, 3),
     primarySubstat: num(a, 4),
     assistSubstat: num(a, 5),
     workshopEnhancementLevel: num(a, 6),
@@ -149,8 +149,8 @@ const ADAPTERS: Record<string, (args: Args) => number> = {
   EPH_MAX_RCVR: a => effectiveMaxRecovery({
     workshopValue: num(a, 0),
     labLevel: num(a, 1),
-    stoneSubstatCap: num(a, 2),
-    labSubstatCap: num(a, 3),
+    labSubstatCap: num(a, 2),
+    stoneSubstatCap: num(a, 3),
     primarySubstat: num(a, 4),
     assistSubstat: num(a, 5),
     workshopEnhancementLevel: num(a, 6),
@@ -286,8 +286,8 @@ describe('effective paths eHP branches the template does not exercise', () => {
       cardValue: 0.5,
       hasCardMastery: false,
       masteryLevel: 0,
-      stoneSubstatCap: 0,
       labSubstatCap: 0,
+      stoneSubstatCap: 0,
       primarySubstat: 0,
       assistSubstat: 0,
       hasPerk: false,
@@ -302,8 +302,8 @@ describe('effective paths eHP branches the template does not exercise', () => {
     const withAssist = effectiveMaxRecovery({
       workshopValue: 1,
       labLevel: 0,
-      stoneSubstatCap: 50,
       labSubstatCap: 50,
+      stoneSubstatCap: 50,
       primarySubstat: 0,
       assistSubstat: 2,
       workshopEnhancementLevel: 0,
@@ -313,7 +313,7 @@ describe('effective paths eHP branches the template does not exercise', () => {
     expect(withAssist).toBeCloseTo(1 + 2 * 1.01, 9)
 
     expect(effectiveArmor({
-      primaryBonus: 1.5, hasAssist: false, assistBonus: 99, stoneBonusCap: 99, labBonusCap: 99,
+      primaryBonus: 1.5, hasAssist: false, assistBonus: 99, labBonusCap: 99, stoneBonusCap: 99,
     })).toBe(1.5)
   })
 

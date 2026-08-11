@@ -43,9 +43,9 @@ function toConfig(c: ModelCase['cfg']): EffectiveHealthConfig {
     },
     armor: {
       primaryBonus: c.armorPrimary, hasAssist: c.hasArmorAssist,
-      assistBonus: c.armorAssist, stoneBonusCap: c.armorStoneBonusCap,
+      assistBonus: c.armorAssist, labBonusCap: c.armorStoneBonusCap,
     },
-    stoneSubstatCap: { armor: c.stoneSubArmor, generator: c.stoneSubGenerator },
+    labSubstatCap: { armor: c.stoneSubArmor, generator: c.stoneSubGenerator },
     wall: { has: c.hasWall, primaryEffect: c.wallPrimEffect, assistEffect: c.wallAssEffect },
     recovery: { has: c.hasRecovery },
     perks: { has: c.hasPerks, hasTradeOff: c.hasTradeOff },

@@ -157,12 +157,18 @@ export interface EffectiveHealthConfig {
     hasAssist: boolean
     /** Armor bonus from the assist module, as a multiplier. */
     assistBonus: number
-    /** Assist bonus capacity from stone investment. */
-    stoneBonusCap: number
+    /**
+     * Assist bonus capacity from the Assist Module Bonus lab. The stone-bought
+     * half is a level the path buys, so it lives on `levels` instead.
+     */
+    labBonusCap: number
   }
 
-  /** Assist substat capacity from stones, per module the eHP path touches. */
-  stoneSubstatCap: {
+  /**
+   * Assist substat capacity from the Assist Module Substats labs, per module
+   * the eHP path touches. As with the bonus, the stone half is on `levels`.
+   */
+  labSubstatCap: {
     armor: number
     generator: number
   }
@@ -364,8 +370,8 @@ export function computeEffectiveHealth(
     primaryBonus: config.armor.primaryBonus,
     hasAssist: config.armor.hasAssist,
     assistBonus: config.armor.assistBonus,
-    stoneBonusCap: config.armor.stoneBonusCap,
-    labBonusCap: levels.assistBonusArmor,
+    labBonusCap: config.armor.labBonusCap,
+    stoneBonusCap: levels.assistBonusArmor,
   })
 
   const dabsSource = source(config.defenseAbsolute, EFFECTIVE_HEALTH_WORKSHOP_STATS.defenseAbsolute)
@@ -376,8 +382,8 @@ export function computeEffectiveHealth(
     labLevel: levels.defenseAbsolute,
     hasDefenseAbsoluteCard: config.cards.defenseAbsolute.has,
     cardValue: config.cards.defenseAbsolute.value,
-    stoneSubstatCap: config.stoneSubstatCap.armor,
-    labSubstatCap: levels.assistSubstatArmor,
+    labSubstatCap: config.labSubstatCap.armor,
+    stoneSubstatCap: levels.assistSubstatArmor,
     primarySubstat: dabsSource.primarySubstat,
     assistSubstat: dabsSource.assistSubstat,
     workshopEnhancementLevel: levels.enhancementDefenseAbsolute,
@@ -395,8 +401,8 @@ export function computeEffectiveHealth(
     cardValue: config.cards.defensePercent.value,
     hasCardMastery: config.cards.defensePercent.hasMastery ?? false,
     masteryLevel: levels.extraDefenseMastery,
-    stoneSubstatCap: config.stoneSubstatCap.armor,
-    labSubstatCap: levels.assistSubstatArmor,
+    labSubstatCap: config.labSubstatCap.armor,
+    stoneSubstatCap: levels.assistSubstatArmor,
     primarySubstat: defPctSource.primarySubstat,
     assistSubstat: defPctSource.assistSubstat,
     hasPerk: config.perks.has,
@@ -410,8 +416,8 @@ export function computeEffectiveHealth(
     ? effectiveWallHealth({
       workshopValue: wallSource.workshopValue,
       labLevel: levels.wallHealth,
-      stoneSubstatCap: config.stoneSubstatCap.armor,
-      labSubstatCap: levels.assistSubstatArmor,
+      labSubstatCap: config.labSubstatCap.armor,
+      stoneSubstatCap: levels.assistSubstatArmor,
       primarySubstat: wallSource.primarySubstat,
       assistSubstat: wallSource.assistSubstat,
       workshopEnhancementLevel: levels.enhancementWallHealth,
@@ -426,8 +432,8 @@ export function computeEffectiveHealth(
     ? effectiveMaxRecovery({
       workshopValue: recoverySource.workshopValue,
       labLevel: levels.recoveryPackageMax,
-      stoneSubstatCap: config.stoneSubstatCap.generator,
-      labSubstatCap: levels.assistSubstatGenerator,
+      labSubstatCap: config.labSubstatCap.generator,
+      stoneSubstatCap: levels.assistSubstatGenerator,
       primarySubstat: recoverySource.primarySubstat,
       assistSubstat: recoverySource.assistSubstat,
       workshopEnhancementLevel: levels.enhancementRecoveryPackage,

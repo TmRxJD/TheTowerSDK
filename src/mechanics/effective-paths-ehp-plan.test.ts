@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import fixture from './effective-paths-ehp-path.fixtures.json'
 import {
-  ZERO_EFFECTIVE_HEALTH_LEVELS,
   type EffectiveHealthConfig,
   type EffectiveHealthLevels,
+  ZERO_EFFECTIVE_HEALTH_LEVELS,
 } from './effective-paths-ehp-model'
 import {
   EFFECTIVE_HEALTH_UPGRADES,
@@ -33,8 +33,8 @@ const EMPTY_ACCOUNT: EffectiveHealthConfig = {
     defenseAbsolute: { has: false, value: 1 },
     defensePercent: { has: false, value: 0 },
   },
-  armor: { primaryBonus: 1.012, hasAssist: false, assistBonus: 1, stoneBonusCap: 0 },
-  stoneSubstatCap: { armor: 0, generator: 0 },
+  armor: { primaryBonus: 1.012, hasAssist: false, assistBonus: 1, labBonusCap: 0 },
+  labSubstatCap: { armor: 0, generator: 0 },
   wall: { has: false, primaryEffect: 0, assistEffect: 0 },
   recovery: { has: false },
   perks: { has: true, hasTradeOff: true },

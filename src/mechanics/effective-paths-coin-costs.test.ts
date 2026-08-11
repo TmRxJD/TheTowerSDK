@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import {
-  ZERO_EFFECTIVE_HEALTH_LEVELS,
   type EffectiveHealthConfig,
+  ZERO_EFFECTIVE_HEALTH_LEVELS,
 } from './effective-paths-ehp-model'
 import { planEffectiveHealthPath } from './effective-paths-ehp-plan'
 import {
   CARD_MASTERY_MAX_LEVEL,
-  MODULE_COIN_PATH_MAX_LEVEL,
-  MODULE_COIN_PATH_MIN_LEVEL,
   cardMasteryCoinCost,
   isModuleCoinPathCandidate,
+  MODULE_COIN_PATH_MAX_LEVEL,
+  MODULE_COIN_PATH_MIN_LEVEL,
   moduleUpgradeCoinCost,
   moduleUpgradeMaxFromLevel,
 } from './effective-paths-coin-costs'
@@ -109,8 +109,8 @@ describe('masteries on the coin path', () => {
       defenseAbsolute: { has: false, value: 1 },
       defensePercent: { has: true, value: 0.05, hasMastery: true },
     },
-    armor: { primaryBonus: 1.5, hasAssist: true, assistBonus: 1.3, stoneBonusCap: 20 },
-    stoneSubstatCap: { armor: 20, generator: 20 },
+    armor: { primaryBonus: 1.5, hasAssist: true, assistBonus: 1.3, labBonusCap: 20 },
+    labSubstatCap: { armor: 20, generator: 20 },
     wall: { has: true, primaryEffect: 2, assistEffect: 1 },
     recovery: { has: true },
     perks: { has: true, hasTradeOff: true },
