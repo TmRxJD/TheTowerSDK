@@ -1,23 +1,24 @@
 #!/usr/bin/env node
 /**
- * Refreshes `src/data/fixtures/effective-paths-labs.json` from the community
- * Effective Paths spreadsheet.
+ * Refreshes the Effective Paths reference fixtures under `src/data/fixtures/`.
  *
- * This is a *reference*, not a source: nothing in the SDK is generated from it.
- * It exists so `lab-reference.test.ts` can check our lab cost and duration
- * tables against an independent authority. The sheet's author gets the numbers
- * from the developers, which makes it the best cross-check available short of
+ * These are *references*, not sources: nothing in the SDK is generated from
+ * them. They exist so the reference tests can check our tables against an
+ * independent authority. The sheet's author gets the numbers from the
+ * developers, which makes it the best cross-check available short of
  * re-extracting the game.
  *
- * The sheet is public. Only the DVT_Laboratory tab is read; its gid is pinned
- * below because the `sheet=` query parameter is ignored by both the export and
- * gviz endpoints -- they always return the first tab -- so the gid is the only
- * way to select it.
+ * The sheet is public. Tabs are selected by gid and nothing else -- the
+ * `sheet=` query parameter is ignored by both the export and gviz endpoints,
+ * which silently return the first tab instead. So a stale gid yields the
+ * changelog rather than an error, and every tab below asserts on its own header
+ * before anything is written. To find a tab's gid, open the sheet, click the
+ * tab, and read `gid=` out of the address bar.
  *
  *   node scripts/refresh-lab-reference.mjs
  *
  * Re-run when the sheet publishes a new game version, then run the tests: a
- * diff there is either a game balance change to absorb or a real error in our
+ * diff there is either a balance change to absorb or a real error in our
  * tables, and both are worth looking at deliberately.
  */
 import fs from 'node:fs/promises'
@@ -26,11 +27,12 @@ import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)))
-const OUT = path.join(ROOT, 'src', 'data', 'fixtures', 'effective-paths-labs.json')
+const FIXTURES = path.join(ROOT, 'src', 'data', 'fixtures')
 
 const SHEET_ID = '1YwZtKP6B4WYhRba5T6APJ1YxKNdfnIGQnprgnxmO7zc'
-const LAB_TAB_GID = '1095671409'
-const SOURCE_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${LAB_TAB_GID}`
+const sheetUrl = gid => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${gid}`
+const editUrl = gid => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit?gid=${gid}`
+
 /** The sheet's cumulative "cost to max" row, numbered as if it were a level. */
 const TOTALS_ROW_LEVEL = 999
 
@@ -72,60 +74,158 @@ function parseDurationSeconds(raw) {
   return Number.isFinite(seconds) ? Math.round(seconds) : null
 }
 
-const response = await fetch(SOURCE_URL)
-if (!response.ok) {
-  console.error(`sheet fetch failed: ${response.status} ${response.statusText}`)
-  process.exit(1)
-}
-const rows = parseCsv(await response.text())
-const header = rows[0] ?? []
-const body = rows.slice(1).filter(row => String(row[0] ?? '').trim())
-
-if (String(header[0] ?? '').trim() !== 'Lvl') {
-  // The endpoints silently fall back to the first tab, so a wrong gid returns
-  // the changelog rather than an error. Fail instead of writing that out.
-  console.error(`unexpected first column "${header[0]}" -- expected "Lvl". Has the gid changed?`)
-  process.exit(1)
+async function fetchTab(gid, expectFirstCell) {
+  const response = await fetch(sheetUrl(gid))
+  if (!response.ok) throw new Error(`fetch failed for gid ${gid}: ${response.status} ${response.statusText}`)
+  const rows = parseCsv(await response.text())
+  const first = String(rows[0]?.[0] ?? '').trim()
+  if (!first.startsWith(expectFirstCell)) {
+    throw new Error(`gid ${gid}: first cell is "${first}", expected "${expectFirstCell}". Has the gid changed?`)
+  }
+  return rows
 }
 
-// Columns repeat as "<Lab Name> Duration", "Cost".
-const labs = []
-for (let column = 1; column < header.length; column += 2) {
-  const rawName = String(header[column] ?? '').trim()
-  if (!rawName) continue
-  if (String(header[column + 1] ?? '').trim() !== 'Cost') {
-    console.warn(`skipping column ${column} (${rawName}): no Cost column follows it`)
-    continue
+/** DVT_Laboratory: "Lvl" then repeating "<Lab> Duration", "Cost" column pairs. */
+async function buildLabLevels() {
+  const rows = await fetchTab('1095671409', 'Lvl')
+  const header = rows[0]
+  const body = rows.slice(1).filter(row => String(row[0] ?? '').trim())
+
+  const labs = []
+  for (let column = 1; column < header.length; column += 2) {
+    const rawName = String(header[column] ?? '').trim()
+    if (!rawName) continue
+    if (String(header[column + 1] ?? '').trim() !== 'Cost') {
+      console.warn(`  skipping column ${column} (${rawName}): no Cost column follows it`)
+      continue
+    }
+    const levels = []
+    for (const row of body) {
+      const level = Number(String(row[0]).trim())
+      // The sheet closes each lab with a row numbered 999 holding the
+      // cumulative cost and time to max it. It is a total, not a level.
+      if (level === TOTALS_ROW_LEVEL) continue
+      const cost = parseCost(row[column + 1])
+      const durationSeconds = parseDurationSeconds(row[column])
+      // Levels past a lab's cap are blank in both columns.
+      if (cost === null && durationSeconds === null) continue
+      levels.push({ level, durationSeconds, cost })
+    }
+    labs.push({ name: rawName.replace(/\s+Duration$/, ''), levels })
+  }
+  labs.sort((left, right) => left.name.localeCompare(right.name))
+  return {
+    file: 'effective-paths-labs.json',
+    payload: { source: 'Effective Paths spreadsheet, DVT_Laboratory tab', url: editUrl('1095671409'), labCount: labs.length, labs },
+    summary: `${labs.length} labs, ${labs.reduce((n, l) => n + l.levels.length, 0)} levels`,
+  }
+}
+
+/** DVT_Laboratory_Unlock: lab name, tier and wave that unlock it. */
+async function buildLabUnlocks() {
+  const rows = await fetchTab('421045311', 'Lab Name')
+  const unlocks = []
+  for (const row of rows.slice(1)) {
+    const name = String(row[0] ?? '').trim()
+    const tier = String(row[1] ?? '').trim()
+    const wave = String(row[2] ?? '').trim()
+    if (!name || !tier || !wave) continue
+    unlocks.push({ name, tier: Number(tier), wave: Number(wave) })
+  }
+  unlocks.sort((left, right) => left.name.localeCompare(right.name))
+  return {
+    file: 'effective-paths-lab-unlocks.json',
+    payload: { source: 'Effective Paths spreadsheet, DVT_Laboratory_Unlock tab', url: editUrl('421045311'), unlockCount: unlocks.length, unlocks },
+    summary: `${unlocks.length} lab unlocks`,
+  }
+}
+
+/**
+ * Module Base Stat: a "base stat" per rarity per module type. The value is the
+ * LEVEL 1 stat, not a level-0 base -- the tab's own "Increase / lvl" section
+ * shows level 1 contributing 0.002 for Cannon, which is exactly the gap against
+ * our MODULE_MULTIPLIER_BASE of 0.01.
+ */
+async function buildModuleBaseStats() {
+  const rows = await fetchTab('310534174', 'Base stat')
+  const header = rows[0].map(cell => String(cell ?? '').trim())
+  const rarities = []
+  for (const row of rows.slice(1)) {
+    const rarity = String(row[0] ?? '').trim()
+    // The tab continues into an "Increase / lvl" block keyed by level number.
+    if (!rarity || rarity === 'Increase / lvl' || /^\d+$/.test(rarity)) continue
+    const stats = {}
+    for (let column = 1; column < header.length; column += 1) {
+      const value = Number(String(row[column] ?? '').trim())
+      if (Number.isFinite(value)) stats[header[column]] = value
+    }
+    if (Object.keys(stats).length) rarities.push({ rarity, levelOneStats: stats })
+  }
+  return {
+    file: 'effective-paths-module-base-stats.json',
+    payload: { source: 'Effective Paths spreadsheet, Module Base Stat tab', url: editUrl('310534174'), note: 'Values are the level 1 stat, not a level 0 base.', rarityCount: rarities.length, rarities },
+    summary: `${rarities.length} rarities`,
+  }
+}
+
+/**
+ * DVT_Bot: one block per bot -- a level column, then five (value, Cost) pairs.
+ * The fifth upgrade has its own cost curve; the first four share one.
+ */
+async function buildBotUpgrades() {
+  const rows = await fetchTab('1815553480', 'BOTS')
+  const header = rows[0]
+  // Row 1 is a lock-state row and row 2 is level 0, so data starts at row 2.
+  const body = rows.slice(2)
+
+  const BLOCKS = [
+    { name: 'Flame Bot', levelColumn: 7 },
+    { name: 'Thunder Bot', levelColumn: 24 },
+    { name: 'Golden Bot', levelColumn: 41 },
+    { name: 'Amplify Bot', levelColumn: 58 },
+    { name: 'Bot Bot', levelColumn: 75 },
+  ]
+  const num = value => Number(String(value ?? '').replace(/[, ⧓]/g, '').trim())
+
+  const bots = []
+  for (const block of BLOCKS) {
+    const stats = []
+    for (let index = 0; index < 5; index += 1) {
+      const column = block.levelColumn + 1 + index * 2
+      const label = String(header[column] ?? '').trim().replace(new RegExp(`^${block.name}\\s+`), '')
+      if (!label || label === 'Cost') continue
+      stats.push({ label, column })
+    }
+
+    const upgrades = stats.map(stat => {
+      const levels = []
+      for (const row of body) {
+        const level = num(row[block.levelColumn])
+        const display = String(row[stat.column] ?? '').trim()
+        const cost = num(row[stat.column + 1])
+        if (!Number.isFinite(level) || !display) continue
+        levels.push({ level, display, cost: Number.isFinite(cost) ? cost : null })
+      }
+      return { stat: stat.label, levels }
+    })
+    bots.push({ name: block.name, statOrder: stats.map(s => s.label), upgrades })
   }
 
-  const levels = []
-  for (const row of body) {
-    const level = Number(String(row[0]).trim())
-    // The sheet closes each lab with a row numbered 999 holding the cumulative
-    // cost and time to max it. It is a total, not a level -- Amp Bot Cooldown
-    // reads 3.99e11 at L25 and 1.81e12 at "999" -- so it must not land in a
-    // table that claims to be per-level.
-    if (level === TOTALS_ROW_LEVEL) continue
-    const cost = parseCost(row[column + 1])
-    const durationSeconds = parseDurationSeconds(row[column])
-    // Levels past a lab's cap are blank in both columns; keep only real rows.
-    if (cost === null && durationSeconds === null) continue
-    levels.push({ level, durationSeconds, cost })
+  return {
+    file: 'effective-paths-bots.json',
+    payload: { source: 'Effective Paths spreadsheet, DVT_Bot tab', url: editUrl('1815553480'), botCount: bots.length, bots },
+    summary: `${bots.length} bots, ${bots.reduce((n, b) => n + b.upgrades.length, 0)} upgrades`,
   }
-
-  labs.push({ name: rawName.replace(/\s+Duration$/, ''), levels })
 }
 
-const payload = {
-  source: 'Effective Paths spreadsheet, DVT_Laboratory tab',
-  url: `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit?gid=${LAB_TAB_GID}`,
-  note: 'Reference data for validation only. Nothing in the SDK is generated from this file.',
-  labCount: labs.length,
-  labs: labs.sort((left, right) => left.name.localeCompare(right.name)),
+await fs.mkdir(FIXTURES, { recursive: true })
+for (const build of [buildLabLevels, buildLabUnlocks, buildModuleBaseStats, buildBotUpgrades]) {
+  try {
+    const { file, payload, summary } = await build()
+    await fs.writeFile(path.join(FIXTURES, file), `${JSON.stringify(payload, null, 1)}\n`, 'utf8')
+    console.log(`wrote ${file}: ${summary}`)
+  } catch (error) {
+    console.error(`FAILED: ${error.message}`)
+    process.exitCode = 1
+  }
 }
-
-await fs.mkdir(path.dirname(OUT), { recursive: true })
-await fs.writeFile(OUT, `${JSON.stringify(payload, null, 1)}\n`, 'utf8')
-
-const levelCount = labs.reduce((total, lab) => total + lab.levels.length, 0)
-console.log(`wrote ${path.relative(ROOT, OUT)}: ${labs.length} labs, ${levelCount} levels`)

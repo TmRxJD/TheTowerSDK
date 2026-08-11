@@ -1,7 +1,6 @@
 {
  "source": "Effective Paths spreadsheet, DVT_Laboratory tab",
  "url": "https://docs.google.com/spreadsheets/d/1YwZtKP6B4WYhRba5T6APJ1YxKNdfnIGQnprgnxmO7zc/edit?gid=1095671409",
- "note": "Reference data for validation only. Nothing in the SDK is generated from this file.",
  "labCount": 191,
  "labs": [
   {
