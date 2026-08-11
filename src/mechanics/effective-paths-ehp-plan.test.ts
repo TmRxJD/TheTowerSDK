@@ -3,11 +3,12 @@ import fixture from './effective-paths-ehp-path.fixtures.json'
 import {
   type EffectiveHealthConfig,
   type EffectiveHealthLevels,
-  ZERO_EFFECTIVE_HEALTH_LEVELS,
   effectiveHealthPerks,
+  ZERO_EFFECTIVE_HEALTH_LEVELS,
 } from './effective-paths-ehp-model'
 import {
   EFFECTIVE_HEALTH_UPGRADES,
+  type EffectiveHealthPathVariant,
   planEffectiveHealthPath,
 } from './effective-paths-ehp-plan'
 
@@ -39,7 +40,7 @@ const EMPTY_ACCOUNT: EffectiveHealthConfig = {
   wall: { has: false, primaryEffect: 0, assistEffect: 0 },
   recovery: { has: false },
   perks: effectiveHealthPerks({
-      apply: true,
+    apply: true,
     health: true,
     healthRegen: true,
     extraDefense: true,
@@ -204,5 +205,66 @@ describe('planning against a developed account', () => {
     for (const step of plan.steps.filter(s => s.name === 'Health')) {
       expect(step.level).toBeGreaterThan(30)
     }
+  })
+})
+
+describe('the candidate list against the sheet', () => {
+  /**
+   * Each path's candidates, read off the sheet's own "UPDATE MATRIX" header
+   * rows — `eHP!EA:EQ`, `eHP Stone!CH:CJ`, `eHP Coins!DL:DW`. A candidate
+   * missing here is an upgrade the path silently never offers, which is
+   * invisible in the output.
+   */
+  const offered = (variant: EffectiveHealthPathVariant) => EFFECTIVE_HEALTH_UPGRADES
+    .filter(upgrade => upgrade.variants.includes(variant))
+    .map(upgrade => upgrade.sheetName)
+
+  it('offers the lab paths all seventeen', () => {
+    expect(offered('lab-time')).toEqual([
+      'Health',
+      'Defense Absolute',
+      'Defense %',
+      'Wall Health',
+      'Wall Fortification',
+      'Recovery Package Max',
+      'Standard Perks Bonus',
+      'Improve Trade-Off Perks',
+      'Chrono Field Reduction %',
+      'Death Wave Health',
+      'Chain Thunder',
+      'Health Mastery',
+      'Extra Defense Mastery',
+      'Assist Module Substats - Armor',
+      'Assist Module Substats - Generator',
+      'Assist Module Bonus - Armor',
+      'Dissonant Echo - Defense',
+    ])
+    expect(offered('lab-coins')).toEqual(offered('lab-time'))
+  })
+
+  it('offers the stone path its three', () => {
+    expect(offered('stone')).toEqual([
+      'Assist Module Substats - Armor',
+      'Assist Module Substats - Generator',
+      'Assist Module Bonus - Armor',
+    ])
+  })
+
+  it('offers the coin path ten of its twelve', () => {
+    // Primary Module - Armor and Assist Module - Armor are the two the sheet
+    // has and this does not; they buy module *levels*, which the model has no
+    // level for yet.
+    expect(offered('coin')).toEqual([
+      'Health Mastery',
+      'Extra Defense Mastery',
+      'Assist Module Substats - Armor',
+      'Assist Module Substats - Generator',
+      'Assist Module Bonus - Armor',
+      'Dissonant Echo - Defense',
+      'Health +',
+      'Defense Absolute +',
+      'Wall Health +',
+      'Recovery Package +',
+    ])
   })
 })

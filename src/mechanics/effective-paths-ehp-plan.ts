@@ -153,8 +153,7 @@ export const EFFECTIVE_HEALTH_UPGRADES: readonly EffectiveHealthUpgradeDefinitio
     sheetName: 'Assist Module Bonus - Armor',
     currency: 'lab',
     saveKey: 'assist_module_bonus_armor',
-    // The coin tab has no ROI column for it, only the two substat labs.
-    variants: LAB_PATHS,
+    variants: LAB_AND_COIN,
   },
 
   {
@@ -162,7 +161,7 @@ export const EFFECTIVE_HEALTH_UPGRADES: readonly EffectiveHealthUpgradeDefinitio
     sheetName: 'Dissonant Echo - Defense',
     currency: 'lab',
     saveKey: 'dissonant_echo_defense',
-    variants: LAB_PATHS,
+    variants: LAB_AND_COIN,
   },
 
   {
