@@ -192,3 +192,174 @@ export function rapidFireMultiplier(chance: number, duration: number, bulletsPer
   const active = chance * duration * bulletsPerSecond
   return (1 + 4 * active) / (1 + active)
 }
+
+// ---------------------------------------------------------------------------
+// Attack speed, range and damage per meter
+// ---------------------------------------------------------------------------
+
+export interface AttackSpeedInput {
+  /** Attack Speed workshop level; 5% a level over a base of 1. */
+  workshopLevel: number
+  /** Workshop enhancement level; 1% a level. */
+  enhancementLevel: number
+  /** Attack Speed lab level; 2% a level. */
+  labLevel: number
+  hasAttackSpeedCard: boolean
+  cardLevel: number
+  hasCardMastery: boolean
+  masteryLevel: number
+  substat: number
+  relicPct: number
+  vaultPct: number
+}
+
+/**
+ * `EPD_ASPD` — attacks per second.
+ *
+ * The substat is added *inside* the enhancement, relic and vault multipliers
+ * but outside the workshop/lab/card product, which is the sheet's own grouping
+ * and not the obvious one.
+ */
+export function attackSpeed(input: AttackSpeedInput): number {
+  const workshop = 1 + 0.05 * input.workshopLevel
+  const lab = 1 + 0.02 * input.labLevel
+  const card = input.hasAttackSpeedCard
+    ? (1.1 + input.cardLevel * 0.15)
+      * (input.hasCardMastery ? 1 + 0.03 * (1 + input.masteryLevel) : 1)
+    : 1
+
+  return (workshop * lab * card + input.substat)
+    * (1 + 0.01 * input.enhancementLevel)
+    * (1 + input.relicPct)
+    * (1 + input.vaultPct)
+}
+
+export interface DamagePerMeterInput {
+  /** Resolved Damage / Meter workshop value, before the sheet's ÷1000. */
+  workshopValue: number
+  enhancementLevel: number
+  /** Damage / Meter lab level; 2% a level. */
+  labLevel: number
+  substat: number
+  relicPct: number
+  vaultPct: number
+  /** The Range card mastery, worth 20% a level. */
+  hasRangeMastery: boolean
+  masteryLevel: number
+}
+
+/**
+ * `EPD_DPM` — damage per meter.
+ *
+ * The workshop table for this stat is stored a thousand times larger than the
+ * value the formula wants, so the divide is part of the stat rather than a
+ * units quirk of the table.
+ */
+export function damagePerMeter(input: DamagePerMeterInput): number {
+  const workshop = input.workshopValue / 1000
+  const lab = 1 + 0.02 * input.labLevel
+  const mastery = input.hasRangeMastery ? 1 + 0.2 * (1 + input.masteryLevel) : 1
+
+  return (workshop * lab + input.substat)
+    * (1 + 0.01 * input.enhancementLevel)
+    * (1 + input.relicPct)
+    * (1 + input.vaultPct)
+    * mastery
+}
+
+/**
+ * `FUDDSMATH_RANGE` — the sheet's correction for range past 80 metres.
+ *
+ * Range stops paying for itself the further out it goes: everything above 80m
+ * is discounted on a straight line up to 16% at 220m, and past 220m it stops
+ * counting at all. The two `ROUND(…, 4)` calls are the sheet's, and they
+ * matter — dropping them moves the answer in the fourth decimal.
+ */
+export function effectiveRangeMetres(range: number): number {
+  const capped = Math.min(range, 220)
+  const overflow = Math.max(capped - 80, 0)
+  const ratio = Math.round((overflow / (220 - 80)) * 1e4) / 1e4
+  const discount = Math.round(ratio * 0.16 * 1e4) / 1e4
+  return range * (1 - discount)
+}
+
+/** `EPD_RANGE` — attack range in metres, after the range correction. */
+export function attackRange(input: {
+  /** Attack Range workshop level; half a metre a level over a 30m base. */
+  workshopLevel: number
+  hasRangeCard: boolean
+  cardLevel: number
+  /** Range lab level; 2% a level. */
+  labLevel: number
+  substat: number
+}): number {
+  const workshop = 30 + 0.5 * input.workshopLevel
+  const card = input.hasRangeCard ? 1.1 + 0.05 * input.cardLevel : 1
+  const lab = 1 + 0.02 * input.labLevel
+  return effectiveRangeMetres(workshop * card * lab + input.substat)
+}
+
+/**
+ * `EPD_RANGEDPM` — what range and damage/meter are worth together.
+ *
+ * Damage per meter only pays on enemies killed away from the tower, so the
+ * player's estimate of how far out they die scales the whole term.
+ */
+export function rangeDamageMultiplier(
+  range: number,
+  damagePerMeterValue: number,
+  killAtRangeShare: number,
+): number {
+  return 1 + range * damagePerMeterValue * killAtRangeShare
+}
+
+// ---------------------------------------------------------------------------
+// Rend armour, perks and the area-of-effect card
+// ---------------------------------------------------------------------------
+
+/**
+ * `EPD_MAXREND` — the maximum rend armour multiplier.
+ *
+ * Without the rend armour ultimate weapon this is 1, not 0 — it multiplies
+ * damage, so the identity is one.
+ */
+export function maxRendArmourMultiplier(input: {
+  hasRend: boolean
+  /** Max Rend Armor Multiplier lab level; a quarter a level. */
+  labLevel: number
+  substat: number
+  enhancementLevel: number
+}): number {
+  if (!input.hasRend) return 1
+  return (8 + input.substat + input.labLevel * 0.25) * (1 + input.enhancementLevel * 0.01)
+}
+
+/**
+ * `EPD_SPB` — what the damage perk is worth.
+ *
+ * 15% a stack, raised by the Standard Perks Bonus lab. The eHP side writes the
+ * same shape inline with its own per-stat rate.
+ */
+export function damagePerkMultiplier(
+  hasPerk: boolean,
+  standardPerksBonusLabLevel: number,
+  quantity: number,
+): number {
+  if (!hasPerk) return 1
+  return (1 + 0.15 * quantity) * (1 + standardPerksBonusLabLevel / 100)
+}
+
+/** The Area of Effect card's bonus by level — the sheet's own literal table. */
+const AOE_CARD_LEVELS = [0.05, 0.08, 0.11, 0.14, 0.17, 0.2, 0.25]
+
+/**
+ * `EPD_AOE_CARD_BOOST` — the Area of Effect card's multiplier.
+ *
+ * Not a formula: the sheet indexes a literal seven-entry table, and the last
+ * step is 5 points where every other step is 3.
+ */
+export function areaOfEffectCardBoost(hasCard: boolean, cardLevel: number): number {
+  if (!hasCard) return 1
+  const bonus = AOE_CARD_LEVELS[Math.floor(cardLevel) - 1]
+  return bonus === undefined ? 1 : 1 + bonus
+}
