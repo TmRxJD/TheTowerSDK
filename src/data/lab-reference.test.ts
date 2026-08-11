@@ -10,7 +10,7 @@ import { labs as staticLabs } from './labs-static'
  *
  * The reference is the DVT_Laboratory tab of the community Effective Paths
  * spreadsheet, pinned under fixtures/ and refreshed by
- * `node scripts/refresh-lab-reference.mjs`. Its author gets the numbers from
+ * `node scripts/refresh-effective-paths-reference.mjs`. Its author gets the numbers from
  * the developers, so it is the best cross-check available without re-extracting
  * the game -- and it earns its keep: it caught 25 corrupted levels in
  * super_tower_bonus, where our table dropped from 4.07e9 at L3 to 1.03e9 at L4.

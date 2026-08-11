@@ -15,7 +15,7 @@
  * before anything is written. To find a tab's gid, open the sheet, click the
  * tab, and read `gid=` out of the address bar.
  *
- *   node scripts/refresh-lab-reference.mjs
+ *   node scripts/refresh-effective-paths-reference.mjs
  *
  * Re-run when the sheet publishes a new game version, then run the tests: a
  * diff there is either a balance change to absorb or a real error in our
