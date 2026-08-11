@@ -323,19 +323,48 @@ function waveToBonus(wave: number): number {
 }
 
 /**
- * `TTG_DISSONANT_ATTACK_BOOST` — the multiplier dissonance applies.
+ * The four dissonance types, and what each multiplies its stat by.
  *
- * The tier being played contributes in full; every other tier contributes only
- * through Dissonant Echo, at half a percent per level.
+ * `TTG_DISSONANT_ATTACK_BOOST`, `_DEFENSE_`, `_UW_` and `_UTILITY_` are the
+ * same function with one number changed: utility pays 2× where the other three
+ * pay 4×. Everything else — the 5000-wave cap, the 1.75 exponent, the half a
+ * percent an Echo level gives every other tier — is shared.
  */
-export function dissonantBoost(
+export const DISSONANCE_BOOST_FACTORS = {
+  attack: 4,
+  defense: 4,
+  uw: 4,
+  utility: 2,
+} as const
+
+export type DissonanceType = keyof typeof DISSONANCE_BOOST_FACTORS
+
+/**
+ * `TTG_DISSONANT_*_BOOST` — the multiplier a dissonance type applies.
+ *
+ * The bonus is a property of the account, not of the run: it is built from the
+ * personal bests already recorded. The tier being played contributes in full;
+ * every other tier contributes only through Dissonant Echo, at half a percent
+ * a level. A wave past 5000 counts as 5000.
+ */
+export function dissonantBoostOfType(
+  type: DissonanceType,
   tierPersonalBest: number,
   allTierPersonalBests: readonly number[],
   echoLevel: number,
 ): number {
   const current = waveToBonus(tierPersonalBest)
   const others = allTierPersonalBests.reduce((total, wave) => total + waveToBonus(wave), 0) - current
-  return 1 + 4 * (others * ((echoLevel + 1) * 0.005) + current)
+  return 1 + DISSONANCE_BOOST_FACTORS[type] * (others * ((echoLevel + 1) * 0.005) + current)
+}
+
+/** The Defense boost, which is the one eHP reads. */
+export function dissonantBoost(
+  tierPersonalBest: number,
+  allTierPersonalBests: readonly number[],
+  echoLevel: number,
+): number {
+  return dissonantBoostOfType('defense', tierPersonalBest, allTierPersonalBests, echoLevel)
 }
 
 // ---------------------------------------------------------------------------
