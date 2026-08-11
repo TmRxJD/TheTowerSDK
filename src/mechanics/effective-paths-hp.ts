@@ -329,6 +329,69 @@ export function effectiveMaxRecovery(input: EffectiveMaxRecoveryInput): number {
 }
 
 // ---------------------------------------------------------------------------
+// Composition
+// ---------------------------------------------------------------------------
+
+/**
+ * Turn a damage reduction into the multiplier it is worth as health.
+ *
+ * Taking 20% less damage means surviving 1/(1−0.2) = 1.25× as much, which is
+ * how every reduction on the sheet enters the eHP product.
+ */
+export function survivalMultiplier(reduction: number): number {
+  if (reduction >= 1) return Infinity
+  return 1 / (1 - reduction)
+}
+
+export interface EffectiveHealthCompositionInput {
+  /** {@link effectiveHealth}. */
+  health: number
+  /** {@link effectiveArmor}. */
+  armor: number
+  /** {@link effectiveDefenseAbsolute}. */
+  defenseAbsolute: number
+  /** {@link effectiveDefensePercent}, as a reduction rather than a multiplier. */
+  defensePercent: number
+  /**
+   * Wall contribution — {@link effectiveWallHealth} — or `null` when the player
+   * has no wall. The sheet leaves the cell blank in that case.
+   */
+  wallHealth?: number | null
+  /** {@link effectiveMaxRecovery}, or `null` when recovery is not in play. */
+  maxRecovery?: number | null
+  /** Chrono Field damage reduction, as a fraction. */
+  chronoFieldReduction?: number
+  /** Chain Thunder damage reduction, as a fraction. */
+  chainThunderReduction?: number
+  /** Improved Trade-off perk damage reduction, as a fraction. */
+  tradeOffReduction?: number
+}
+
+/**
+ * `eHP` — the number the eHP path maximises.
+ *
+ * Multiplicative sources compound onto health; defense absolute is flat damage
+ * removed per hit, so it is added to the pool rather than scaling it; and the
+ * reductions become survival multipliers on the total.
+ *
+ * Wall health and max recovery are *added together* before multiplying, because
+ * they are alternative pools rather than compounding effects — and when neither
+ * is in play the whole term drops to 1 rather than 0.
+ */
+export function composeEffectiveHealth(input: EffectiveHealthCompositionInput): number {
+  const hasPool = input.wallHealth != null || input.maxRecovery != null
+  const pool = hasPool ? (input.wallHealth ?? 0) + (input.maxRecovery ?? 0) : 1
+
+  const chrono = survivalMultiplier(input.chronoFieldReduction ?? 0)
+  const chainThunder = survivalMultiplier(input.chainThunderReduction ?? 0)
+  const tradeOff = survivalMultiplier(input.tradeOffReduction ?? 0)
+  const defense = survivalMultiplier(input.defensePercent)
+
+  const pooled = input.health * input.armor * pool * chrono * chainThunder
+  return (pooled + input.defenseAbsolute) * defense * tradeOff
+}
+
+// ---------------------------------------------------------------------------
 // The sheet's own workshop curves
 // ---------------------------------------------------------------------------
 

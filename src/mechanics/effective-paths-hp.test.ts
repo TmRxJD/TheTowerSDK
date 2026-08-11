@@ -11,6 +11,8 @@ import {
   effectiveRegen,
   effectiveWallHealth,
   effectiveWallRegen,
+  composeEffectiveHealth,
+  survivalMultiplier,
 } from './effective-paths-hp'
 
 /**
@@ -192,6 +194,51 @@ describe('effective paths eHP parity with the live sheet', () => {
         .toBeLessThan(1e-12)
     })
   }
+})
+
+describe('composeEffectiveHealth', () => {
+  it('reproduces the sheet\'s eHP cell', () => {
+    // eHP!CJ5:CS5 on the live sheet — health 1.2, armor 1.012, no defense
+    // absolute, defense % worth 1.25x, no wall or recovery, trade-off worth 2x.
+    expect(composeEffectiveHealth({
+      health: 1.2000000000000002,
+      armor: 1.012,
+      defenseAbsolute: 0,
+      defensePercent: 0.2,
+      wallHealth: null,
+      maxRecovery: null,
+      chronoFieldReduction: 0,
+      chainThunderReduction: 0,
+      tradeOffReduction: 0.5,
+    })).toBeCloseTo(3.0360000000000005, 12)
+  })
+
+  it('adds defense absolute to the pool instead of scaling it', () => {
+    const withoutFlat = composeEffectiveHealth({
+      health: 100, armor: 1, defenseAbsolute: 0, defensePercent: 0.5,
+    })
+    const withFlat = composeEffectiveHealth({
+      health: 100, armor: 1, defenseAbsolute: 10, defensePercent: 0.5,
+    })
+    // The flat 10 is added before the 2x survival multiplier, not after.
+    expect(withoutFlat).toBeCloseTo(200, 9)
+    expect(withFlat).toBeCloseTo(220, 9)
+  })
+
+  it('adds wall and recovery together, and drops the term when neither applies', () => {
+    const base = { health: 100, armor: 1, defenseAbsolute: 0, defensePercent: 0 }
+    expect(composeEffectiveHealth(base)).toBeCloseTo(100, 9)
+    expect(composeEffectiveHealth({ ...base, wallHealth: 3 })).toBeCloseTo(300, 9)
+    expect(composeEffectiveHealth({ ...base, wallHealth: 3, maxRecovery: 2 }))
+      .toBeCloseTo(500, 9)
+  })
+
+  it('turns a reduction into the health it is worth', () => {
+    expect(survivalMultiplier(0)).toBe(1)
+    expect(survivalMultiplier(0.5)).toBe(2)
+    expect(survivalMultiplier(0.98)).toBeCloseTo(50, 9)
+    expect(survivalMultiplier(1)).toBe(Infinity)
+  })
 })
 
 /**
