@@ -1,7 +1,7 @@
 import { parseDurationToHours } from '../formatting/index'
 // Local dataset, front-end owned. There is no lab API and no lab-data-api.ts;
 // both were removed when this data moved into the front end.
-import { generatedLabs } from './labs-levels'
+import { LAB_CATALOG, type LabCatalogRecord } from './labs-catalog'
 import {
   displayNameToLabSlug,
   findLabResearchByDisplayName,
@@ -10,12 +10,12 @@ import {
   LAB_RESEARCH_LEGACY_SLUG_ALIASES,
   type LabResearchRecord,
 } from './labs-research'
-import { type Lab as StaticLab, labs as staticLabs } from './labs-static'
 import { resolveSiteLabCategoryForSaveIndex } from './labs-categories'
 
 export interface ToolLabLevel {
   level: number
   duration: string | number
+  /** Absolute coins. There is no currency suffix to apply. */
   cost?: number
 }
 
@@ -25,7 +25,6 @@ export interface ToolLabRecord {
   base?: number
   value?: unknown
   levels?: ToolLabLevel[]
-  currency?: string
   saveIndex?: number
   displayName?: string
 }
@@ -143,16 +142,15 @@ export function normalizeToolLabLookupKey(name: string): string {
   return name.trim().toLowerCase().replace(/[_\s]+/g, ' ')
 }
 
-function normalizeStaticLab(lab: StaticLab): ToolLabRecord {
+function normalizeCatalogLab(lab: LabCatalogRecord): ToolLabRecord {
   return {
     name: lab.name,
-    displayName: lab.name,
-    type: lab.category,
-    value: lab.levels[0]?.value ?? [],
-    currency: lab.currency,
+    type: lab.category ?? undefined,
+    base: lab.base,
+    value: lab.value,
     levels: lab.levels.map(level => ({
       level: level.level,
-      duration: level.time,
+      duration: level.duration,
       cost: level.cost,
     })),
   }
@@ -226,16 +224,6 @@ export function getLabResearchCatalog(): readonly LabResearchRecord[] {
   return LAB_RESEARCH_BY_INDEX
 }
 
-function normalizeGeneratedLab(lab: (typeof generatedLabs)[number]): ToolLabRecord {
-  return {
-    name: lab.name,
-    type: lab.type,
-    base: lab.base,
-    value: lab.value,
-    levels: lab.levels,
-  }
-}
-
 function enrichLabFromResearch(record: ToolLabRecord, research: LabResearchRecord | undefined): ToolLabRecord {
   if (!research) return record
   return {
@@ -261,28 +249,13 @@ function lookupResearchForLab(record: ToolLabRecord): LabResearchRecord | undefi
 }
 
 export function getSharedToolLabs(): ToolLabRecord[] {
-  const merged = new Map<string, ToolLabRecord>()
-
-  for (const lab of generatedLabs) {
-    if (!lab?.name) continue
-    const record = normalizeGeneratedLab(lab)
-    merged.set(lab.name, enrichLabFromResearch(record, lookupResearchForLab(record)))
-  }
-
-  for (const lab of staticLabs) {
-    if (!lab?.name) continue
-    const slug = displayNameToLabSlug(lab.name)
-    const existing = merged.get(lab.name) ?? (slug ? merged.get(slug) : undefined)
-    const record = normalizeStaticLab(lab)
-    const enriched = enrichLabFromResearch({
-      ...record,
-      ...(existing ? { base: existing.base, name: existing.name } : {}),
-    }, lookupResearchForLab(record))
-    merged.set(lab.name, enriched)
-    if (slug) merged.set(slug, enriched)
-  }
-
-  return Array.from(new Set(merged.values()))
+  // One catalog, one pass. This used to merge two files whose entries could
+  // collide and whose costs were in different units; they are one file now, and
+  // the names are asserted unique by labs-catalog.test.ts.
+  return LAB_CATALOG.map(lab => {
+    const record = normalizeCatalogLab(lab)
+    return enrichLabFromResearch(record, lookupResearchForLab(record))
+  })
 }
 
 export function formatLabDisplayName(input: string): string {
@@ -322,14 +295,13 @@ export function resolveLabValueAtLevel(lab: ToolLabRecord, level: number): numbe
     return base + rawValue * level
   }
 
-  if (Array.isArray(rawValue) && rawValue.length > 0) {
-    const first = rawValue[0]
-    if (first && typeof first === 'object' && !Array.isArray(first)) {
-      const record = first as Record<string, unknown>
+  // The effect keyed by level. The catalog stores this as a plain object; it
+  // used to be wrapped in a single-element array and repeated on every level.
+  if (rawValue && typeof rawValue === 'object') {
+    const record = (Array.isArray(rawValue) ? rawValue[0] : rawValue) as Record<string, unknown> | undefined
+    if (record && typeof record === 'object') {
       const exact = Number(record[String(level)])
-      if (Number.isFinite(exact)) {
-        return exact
-      }
+      if (Number.isFinite(exact)) return exact
     }
   }
 
@@ -401,10 +373,9 @@ export function buildLabProgressRows(
     const adjustedNoSpeedup = baseTimeHours * finalMultiplier
     const adjustedTimeHours = adjustedNoSpeedup / Math.max(1, modifiers.speedUp)
     const gems = calculateLabGems(adjustedNoSpeedup)
-    const baseCoins = Number(levelData.cost ?? 0) * coinDiscountMultiplier
-    const coins = typeof lab.currency === 'string'
-      ? Math.round(baseCoins * 100) / 100
-      : Math.round(baseCoins)
+    // Absolute coins throughout, so there is no longer a lab whose cost has to
+    // be kept to two decimals because it was really a count of quadrillions.
+    const coins = Math.round(Number(levelData.cost ?? 0) * coinDiscountMultiplier)
     const value = resolveLabValueAtLevel(lab, level)
 
     cumulativeTimeHours += adjustedTimeHours

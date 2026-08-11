@@ -46,26 +46,23 @@ for (const row of MILESTONE_KEY_UNLOCK_ROWS) {
 }
 
 /**
- * Labs where we and the reference disagree on tier or wave.
+ * Six labs used to sit at the wrong tier or wave and now match the reference.
  *
- * Not treated as defects to fix, because the sheet lists one tier per lab while
- * our rows carry a track -- Land Mine Decay is ours on *premium* -- so the
- * sheet may simply be describing the standard track. Recorded exactly so the
- * set cannot grow unnoticed and so a future answer has something to check
- * against. Changing milestone tiers moves rewards in a user-facing tracker, so
- * it wants better evidence than "the sheet says otherwise".
+ * Each was checked against the rest of its tier before being moved, and in
+ * every case the surrounding rows already agreed, which is what made the
+ * placement rather than the sheet the thing at fault:
+ *
+ * - Max Interest was tier 1 wave 80; it belongs at tier 2 wave 80 next to
+ *   Interest %, which we already had there.
+ * - Land Mine Decay was tier 4 premium; tier 6 wave 30 already held Land Mine
+ *   Damage, and the reference lists both together.
+ * - Wall Rebuild was tier 7 wave 10; tier 8 wave 10 already held Wall Health.
+ * - The four tier 10 bot unlocks and the two tier 16 Swamp Rend unlocks sat at
+ *   wave 50, where the reference puts every unlock in those groups at wave 60.
  */
-const KNOWN_DISAGREEMENTS = [
-  'Flame Bot - Burn Stack: reference=T10 W60, ours=T10 W50 [standard]',
-  'Land Mine Decay: reference=T6 W30, ours=T4 W30 [premium]',
-  'Max Interest: reference=T2 W80, ours=T1 W80 [standard]',
-  'Swamp Rend - Additional Enemies: reference=T16 W60, ours=T16 W50 [standard]',
-  'Thunder Bot - Linger Time: reference=T10 W60, ours=T10 W50 [standard]',
-  'Wall Rebuild: reference=T8 W10, ours=T7 W10 [standard]',
-]
 
 describe('lab unlocks against the Effective Paths reference', () => {
-  it('agrees on tier and wave for every lab it shares, bar the recorded few', () => {
+  it('agrees on tier and wave for every lab it shares', () => {
     const disagreements: string[] = []
     let matched = 0
 
@@ -80,8 +77,8 @@ describe('lab unlocks against the Effective Paths reference', () => {
       disagreements.push(`${entry.name}: reference=T${entry.tier} W${entry.wave}, ours=${describe}`)
     }
 
-    expect(disagreements.sort()).toEqual(KNOWN_DISAGREEMENTS)
-    expect(matched).toBeGreaterThanOrEqual(85)
+    expect(disagreements.sort()).toEqual([])
+    expect(matched).toBeGreaterThanOrEqual(94)
   })
 
   it('records how much of the reference our milestone rows cover', () => {

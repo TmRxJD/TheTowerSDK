@@ -100,7 +100,7 @@ describeServer('mcp server', () => {
   })
 
   it('previews a large table instead of returning it whole', async () => {
-    const result = await call('get_export', { name: 'generatedLabs', limit: 3 })
+    const result = await call('get_export', { name: 'LAB_CATALOG', limit: 3 })
     expect(result.kind).toBe('array')
     expect(result.length).toBeGreaterThan(3)
     expect(result.sample).toHaveLength(3)

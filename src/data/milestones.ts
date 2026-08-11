@@ -108,7 +108,8 @@ const tier1Standard = createTrackData(1, 'standard', [
   createWave(50, '15 Gems'),
   createWave(60, 'Tournaments'),
   createWave(70, 'Events'),
-  createWave(80, '1.5k Coins', 'Max Interest'),
+  // Max Interest is a tier 2 wave 80 unlock, alongside Interest %.
+  createWave(80, '1.5k Coins'),
   createWave(90, '20 Gems'),
   createWave(100, 'Tier 2'),
   createWave(150, 'Lab Speed'),
@@ -160,7 +161,7 @@ const tier2Standard = createTrackData(2, 'standard', [
   createWave(50, 'Workshop Defense Discount'),
   createWave(60, 'Workshop Utility Discount'),
   createWave(70, '20 Gems'),
-  createWave(80, 'Interest %'),
+  createWave(80, 'Interest %', 'Max Interest'),
   createWave(90, 'Modules'),
   createWave(100, 'Tier 3'),
   createWave(150, 'Unlock Perks'),
@@ -285,7 +286,8 @@ const tier4Standard = createTrackData(4, 'standard', [
 const tier4Premium = createTrackData(4, 'premium', [
   createWave(10, '100k Coins'),
   createWave(20, '25 Gems'),
-  createWave(30, '150k Coins', 'Land Mine Decay'),
+  // Land Mine Decay is a tier 6 wave 30 unlock, beside Land Mine Damage.
+  createWave(30, '150k Coins'),
   createWave(40, '30 Gems'),
   createWave(50, '200k Coins'),
   createWave(60, '40 Gems'),
@@ -363,7 +365,7 @@ const tier5Premium = createTrackData(5, 'premium', [
 const tier6Standard = createTrackData(6, 'standard', [
   createWave(10, 'Auto Pick Ranking'),
   createWave(20, '20 Gems'),
-  createWave(30, 'Land Mine Damage'),
+  createWave(30, 'Land Mine Damage', 'Land Mine Decay'),
   createWave(40, '25 Gems'),
   createWave(50, 'Extra Orb Adjuster'),
   createWave(60, '1m Coins'),
@@ -413,7 +415,8 @@ const tier6Premium = createTrackData(6, 'premium', [
 ], createTrackTotals('36.3m Coins', '560 Gems', '105 Stones'))
 
 const tier7Standard = createTrackData(7, 'standard', [
-  createWave(10, 'Light Speed Shots', 'Wall Rebuild'),
+  // Wall Rebuild is a tier 8 wave 10 unlock, beside Wall Health.
+  createWave(10, 'Light Speed Shots'),
   createWave(20, '25 Gems'),
   createWave(30, 'Missile Despawn Time', 'Missile Amplifier', 'Missile Explosion', 'Missile Radius'),
   createWave(40, 'Inner Mines Blast Radius', 'Inner Mines Rotation Speed', 'Inner Mines Stun'),
@@ -465,7 +468,7 @@ const tier7Premium = createTrackData(7, 'premium', [
 ], createTrackTotals('40m Coins', '600 Gems', '140 Stones'))
 
 const tier8Standard = createTrackData(8, 'standard', [
-  createWave(10, 'Wall Health'),
+  createWave(10, 'Wall Health', 'Wall Rebuild'),
   createWave(20, 'Unmerge Module'),
   createWave(30, '5 Stones'),
   createWave(40, '30 Gems'),
@@ -573,8 +576,8 @@ const tier10Standard = createTrackData(10, 'standard', [
   createWave(20, '40 Gems'),
   createWave(30, '5 Stones'),
   createWave(40, 'Module Shard Cost', 'Module Coin Cost', 'Rare Drop Chance', 'Substat Effect Bans'),
-  createWave(50, 'Flame Bot Burn Stack', 'Thunder Bot Linger Time', 'Golden Bot Duration', 'Amplify Bot Duration'),
-  createWave(60, '5 Stones'),
+  // The reference puts every tier 10 bot unlock at wave 60, not 50.
+  createWave(60, '5 Stones', 'Flame Bot Burn Stack', 'Thunder Bot Linger Time', 'Golden Bot Duration', 'Amplify Bot Duration'),
   createWave(70, 'Wall Thorns', 'Wall Regen'),
   createWave(80, '60 Gems'),
   createWave(90, '5 Stones'),
@@ -885,8 +888,8 @@ const tier16Standard = createTrackData(16, 'standard', [
   createWave(20, '60 Gems'),
   createWave(30, '20 Stones'),
   createWave(40, 'Shatter Shards'),
-  createWave(50, 'Swamp Rend - Basic Enemies', 'Swamp Rend - Additional Enemies'),
-  createWave(60, 'Chain Thunder', 'Lightning Amplifier - Scatters'),
+  // The reference puts all four tier 16 unlocks at wave 60, not split over 50.
+  createWave(60, 'Chain Thunder', 'Lightning Amplifier - Scatters', 'Swamp Rend - Basic Enemies', 'Swamp Rend - Additional Enemies'),
   createWave(70, '25 Stones'),
   createWave(80, '120 Gems'),
   createWave(90, '25 Stones'),

@@ -1,18 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import { SITE_LAB_SLUG_ALIASES } from './labs-categories'
-import { generatedLabs } from './labs-levels'
+import { LAB_CATALOG } from './labs-catalog'
 import { LAB_RESEARCH_BY_INDEX } from './labs-research'
-import { labs as staticLabs } from './labs-static'
 
 /**
  * Every lab in the research catalog needs a level table somewhere, or the
  * tracker renders it with a real level and cap but 0 for every time, gem and
  * coin column -- which reads as "this lab is free".
  *
- * The tables are spread across three sources and keyed inconsistently: the
- * generated tables use slugs (some of them the site's older names), the static
- * tables use display names with punctuation. This checks coverage across all of
- * them so a lab cannot silently lose its costs again.
+ * The catalog is keyed inconsistently by history: some labs are filed under a
+ * slug (occasionally the site's older name), others under a display name with
+ * punctuation. This checks coverage across all of them so a lab cannot silently
+ * lose its costs again.
  */
 
 /** Ignores case, separators and punctuation: `a_b_c` and "A B - C" are the same lab. */
@@ -22,10 +21,9 @@ const catalogSlugs = [...new Set(
   LAB_RESEARCH_BY_INDEX.map(record => record.slug).filter((slug): slug is string => Boolean(slug)),
 )]
 
-const tableKeys = new Set([
-  ...generatedLabs.filter(lab => lab.levels?.length).map(lab => matchKey(lab.name)),
-  ...staticLabs.filter(lab => lab.levels?.length).map(lab => matchKey(lab.name)),
-])
+const tableKeys = new Set(
+  LAB_CATALOG.filter(lab => lab.levels?.length).map(lab => matchKey(lab.name)),
+)
 
 const aliasByCanonical = new Map(
   Object.entries(SITE_LAB_SLUG_ALIASES).map(([site, canonical]) => [canonical, site]),
@@ -50,7 +48,7 @@ function hasLevelTable(slug: string): boolean {
  *   Package Chance Mastery"; both now have aliases.
  * - Genuinely missing, now acquired. The three enemy Health labs share the
  *   Attack cost/time table exactly, and wave_skip_mastery shares the card
- *   mastery table (its effect value is still unknown -- see labs-static).
+ *   mastery table (its effect value is still unknown -- see labs-catalog).
  *
  * The six that remain are all absent from the reference too, and the game dump
  * has only placeholder defaults for them (levelMax 99, baseCoinCost 30,

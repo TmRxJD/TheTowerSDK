@@ -4,16 +4,15 @@
  * No I/O and no side effects: import a table and read it.
  *
  * @example
- * import { generatedLabs } from 'thetowersdk/data'
+ * import { LAB_CATALOG } from 'thetowersdk/data'
  *
  * const totalCost = (lab) => (lab.levels ?? []).reduce((sum, l) => sum + (l.cost ?? 0), 0)
  */
 
 // Labs and research
 export * from './labs'
-export * from './labs-levels'
+export * from './labs-catalog'
 export * from './labs-research'
-export * from './labs-static'
 export * from './labs-categories'
 export * from './labs-display-overrides'
 export * from './research-lab-level'

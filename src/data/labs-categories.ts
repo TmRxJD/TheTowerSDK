@@ -3,7 +3,7 @@ import {
   LAB_RESEARCH_SLUG_TO_INDEX,
   type LabResearchRecord,
 } from './labs-research'
-import { generatedLabs } from './labs-levels'
+import { LAB_CATALOG } from './labs-catalog'
 import { normalizeToolLabCategory } from './labs'
 
 export const SITE_LAB_SLUG_ALIASES: Readonly<Record<string, string>> = {
@@ -98,9 +98,9 @@ function buildSaveIndexToSiteSlug(): ReadonlyMap<number, string> {
 const SAVE_INDEX_TO_SITE_SLUG = buildSaveIndexToSiteSlug()
 
 const SITE_LAB_CATEGORY_BY_SLUG = new Map(
-  generatedLabs
-    .filter(lab => lab.type)
-    .map(lab => [lab.name, normalizeToolLabCategory(lab.type)]),
+  LAB_CATALOG
+    .filter(lab => lab.category)
+    .map(lab => [lab.name, normalizeToolLabCategory(lab.category)]),
 )
 
 export function resolveSiteLabCategoryForSaveIndex(saveIndex: number): string | null {

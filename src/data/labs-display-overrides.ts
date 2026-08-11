@@ -1,4 +1,4 @@
-import { labs as staticLabs } from './labs-static'
+import { LAB_CATALOG } from './labs-catalog'
 import { findLabResearchByIndex, findLabResearchBySlug } from './labs-research'
 import { normalizeToolLabCategory, normalizeToolLabLookupKey } from './labs'
 import {
@@ -40,7 +40,7 @@ function isUsableLabExtractedSlug(slug: string | null | undefined): boolean {
 }
 
 const STATIC_LAB_CATEGORY_BY_LOOKUP_KEY = new Map(
-  staticLabs.map(lab => [
+  LAB_CATALOG.map(lab => [
     normalizeToolLabLookupKey(lab.name),
     normalizeToolLabCategory(lab.category),
   ]),

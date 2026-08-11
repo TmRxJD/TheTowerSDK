@@ -1,6 +1,6 @@
 // Tower lab research catalog.
 
-import { generatedLabs } from './labs-levels'
+import { LAB_CATALOG } from './labs-catalog'
 
 export interface LabResearchRecord {
   index: number
@@ -3337,9 +3337,9 @@ function normalizeLabCategory(type: string | null | undefined): string {
 
 const SITE_LAB_TYPE_BY_SLUG = (() => {
   const bySlug = new Map<string, string>()
-  for (const lab of generatedLabs) {
-    if (!lab.type) continue
-    bySlug.set(lab.name, normalizeLabCategory(lab.type))
+  for (const lab of LAB_CATALOG) {
+    if (!lab.category) continue
+    bySlug.set(lab.name, normalizeLabCategory(lab.category))
   }
   for (const [alias, target] of Object.entries(LAB_RESEARCH_LEGACY_SLUG_ALIASES)) {
     const category = bySlug.get(alias)

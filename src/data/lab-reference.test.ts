@@ -2,8 +2,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { SITE_LAB_SLUG_ALIASES } from './labs-categories'
-import { generatedLabs } from './labs-levels'
-import { labs as staticLabs } from './labs-static'
+import { LAB_CATALOG } from './labs-catalog'
 
 /**
  * Checks our lab cost and duration tables against an independent authority.
@@ -37,18 +36,14 @@ const reference = JSON.parse(
 const matchKey = (value: string): string => String(value).toLowerCase().replace(/[^a-z0-9]+/g, '')
 
 /**
- * labs-static stores costs pre-scaled with a currency suffix (`cost: 1.1` with
- * `currency: 'q'` is 1.1 quadrillion) while labs-levels stores absolute coins.
- * The reference is absolute, so scale before comparing.
- */
-const CURRENCY_SCALE: Record<string, number> = { B: 1e9, T: 1e12, q: 1e15, Q: 1e18 }
-
-/**
  * Lab durations come in two shapes and both have to be understood, or the
- * comparison quietly covers less than it looks like it does. labs-levels writes
- * "27:46:00" (hours unbounded, not 0-23); labs-static mostly writes
- * "10d 19h 11m" -- 1110 of its levels, against 270 in the colon form. Parsing
- * only the colon form skipped every one of them. "0s" is the level-0 baseline.
+ * comparison quietly covers less than it looks like it does. Most are written
+ * "27:46:00" (hours unbounded, not 0-23), but 1110 levels use "10d 19h 11m",
+ * and parsing only the colon form skipped every one of them. "0s" is the
+ * level-0 baseline.
+ *
+ * Costs need no such care any more: the catalog is absolute coins throughout,
+ * where the old labs-static half stored them pre-scaled by a currency suffix.
  */
 function toSeconds(value: string | number | undefined): number | null {
   const raw = String(value ?? '').trim()
@@ -75,28 +70,17 @@ function toSeconds(value: string | number | undefined): number | null {
 
 interface NormalizedLab {
   name: string
-  source: 'generated' | 'static'
   levels: Array<{ level: number; cost: number; seconds: number | null }>
 }
 
 const ourLabs: NormalizedLab[] = [
-  ...generatedLabs.filter(lab => lab.levels?.length).map(lab => ({
+  ...LAB_CATALOG.filter(lab => lab.levels?.length).map(lab => ({
     name: lab.name,
-    source: 'generated' as const,
-    levels: (lab.levels ?? []).map(level => ({
-      level: Number(level.level),
-      cost: Number(level.cost ?? Number.NaN),
-      seconds: toSeconds(level.duration),
-    })),
-  })),
-  ...staticLabs.filter(lab => lab.levels?.length).map(lab => ({
-    name: lab.name,
-    source: 'static' as const,
     // Level 0 is a baseline row with no purchase; the reference starts at 1.
     levels: lab.levels.filter(level => Number(level.level) >= 1).map(level => ({
       level: Number(level.level),
-      cost: Number(level.cost ?? Number.NaN) * (CURRENCY_SCALE[lab.currency ?? ''] ?? 1),
-      seconds: toSeconds(level.time),
+      cost: Number(level.cost ?? Number.NaN),
+      seconds: toSeconds(level.duration),
     })),
   })),
 ]
