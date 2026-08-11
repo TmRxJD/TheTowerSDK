@@ -283,8 +283,11 @@ export interface EffectiveHealthConfig {
   chainThunder: {
     has: boolean
     /**
-     * The player's guess at the share of total damage Chain Thunder accounts
-     * for. The sheet caps the reduction with it — `min(share / 6 × 10, …)`.
+     * The share of all health lost that the **Chain Lightning ultimate
+     * weapon** is responsible for, as a fraction — 0.3 for 30%.
+     *
+     * Chain Lightning's Smite procs are Chain Lightning damage, so they count.
+     * The player has to estimate it; nothing in a save records it.
      */
     damageShare: number
   }
@@ -345,12 +348,33 @@ export function chronoFieldReduction(unlocked: boolean, level: number): number {
 }
 
 /**
- * Chain Thunder's damage reduction, capped by how much of your damage it is
- * actually responsible for.
+ * Chain Thunder's damage reduction.
+ *
+ * The lab's own wording is exact and worth keeping in front of you:
+ *
+ * > Enemy damage is reduced by 10% for every 6% of health lost from Chain
+ * > Lightning.
+ *
+ * So the reduction is `share ÷ 6% × 10%`, and the cap is the lab itself at 3
+ * points a level — level 19 gives 57%, the number the game's own description
+ * quotes, and level 30 gives 90%.
+ *
+ * `damageShare` is **health lost to the Chain Lightning ultimate weapon as a
+ * fraction of all health lost**: 0.3 for 30%, not 30. Smite is one of Chain
+ * Lightning's own stats, so Smite procs count towards the share — it is the
+ * weapon's total, not its base hits and not Smite alone.
+ *
+ * The share is clamped: the reduction feeds `1 / (1 − reduction)`, which flips
+ * sign above 1 and would turn a defensive bonus into a silent catastrophe.
  */
 export function chainThunderReduction(has: boolean, level: number, damageShare: number): number {
-  return has ? Math.min((damageShare / 6) * 10, 0.03 * level) : 0
+  if (!has) return 0
+  const share = Math.max(0, Math.min(1, damageShare))
+  return Math.min((share / 6) * 10, Math.max(0, 0.03 * level), CHAIN_THUNDER_MAX_REDUCTION)
 }
+
+/** Chain Thunder cannot take damage below a tenth, whatever the lab level. */
+export const CHAIN_THUNDER_MAX_REDUCTION = 0.9
 
 /**
  * The "E. Dmg -50%" trade-off perk's damage reduction, raised by the Improve

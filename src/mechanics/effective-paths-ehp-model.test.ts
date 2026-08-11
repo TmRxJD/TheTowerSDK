@@ -156,7 +156,17 @@ describe('the pieces the composition is built from', () => {
 
   it('caps Chain Thunder by the damage it is actually responsible for', () => {
     // 3% a level, but never more than the share of damage it does allows.
+    // 100% of your damage being Chain Lightning would be 166% reduction, so
+    // the lab caps it: 3 points a level, and never past 90%.
     expect(chainThunderReduction(true, 30, 1)).toBeCloseTo(0.9, 12)
+    // The lab's own wording — 10% off for every 6% of health lost to it.
+    expect(chainThunderReduction(true, 30, 0.06)).toBeCloseTo(0.1, 12)
+    expect(chainThunderReduction(true, 30, 0.3)).toBeCloseTo(0.5, 12)
+    // Level 19 is the 57% the game's description quotes.
+    expect(chainThunderReduction(true, 19, 1)).toBeCloseTo(0.57, 12)
+    // A share handed in out of range cannot invert `1 / (1 - reduction)`.
+    expect(chainThunderReduction(true, 30, 42)).toBeCloseTo(0.9, 12)
+    expect(chainThunderReduction(true, 30, -1)).toBe(0)
     expect(chainThunderReduction(true, 30, 0.01)).toBeCloseTo(0.016666666666666666, 12)
     expect(chainThunderReduction(false, 30, 1)).toBe(0)
   })
