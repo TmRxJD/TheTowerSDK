@@ -320,8 +320,47 @@ async function buildUltimateWeapons() {
   }
 }
 
+/**
+ * DVT_Workshop: 6001 rows, one per workshop level. Columns 1-6 are the base
+ * workshop stat values; the rest are the "Workshop +" enhancement costs, which
+ * we do not model in workshop.json and are skipped.
+ *
+ * Values are stored as a flat array per stat, indexed by level, because 6 stats
+ * across 6001 levels as objects would be a megabyte of punctuation. Full
+ * coverage rather than a sample: the faults this whole exercise turned up were
+ * single bad rows, and sampling walks straight past those.
+ */
+async function buildWorkshopValues() {
+  const rows = await fetchTab('374526250', '')
+  const header = rows[0]
+  // Row 1 is workshop level 0.
+  const body = rows.slice(1)
+
+  const stats = {}
+  for (let column = 1; column <= 6; column += 1) {
+    const name = String(header[column] ?? '').trim()
+    if (!name) continue
+    const values = []
+    for (const row of body) {
+      const raw = String(row[column] ?? '').trim()
+      if (!raw) { values.push(null); continue }
+      const value = Number(raw)
+      values.push(Number.isFinite(value) ? value : null)
+    }
+    // Trim trailing holes so the array ends at the last real level.
+    while (values.length && values[values.length - 1] === null) values.pop()
+    stats[name] = values
+  }
+
+  return {
+    file: 'effective-paths-workshop.json',
+    payload: { source: 'Effective Paths spreadsheet, DVT_Workshop tab', url: editUrl('374526250'), note: 'Values are indexed by workshop level, starting at 0. Quoted to three significant figures.', stats },
+    summary: `${Object.keys(stats).length} stats, ${Object.values(stats)[0]?.length ?? 0} levels`,
+  }
+}
+
 await fs.mkdir(FIXTURES, { recursive: true })
-for (const build of [buildLabLevels, buildLabUnlocks, buildModuleBaseStats, buildBotUpgrades, buildGuardianUpgrades, buildUltimateWeapons]) {
+for (const build of [buildLabLevels, buildLabUnlocks, buildModuleBaseStats, buildBotUpgrades, buildGuardianUpgrades, buildUltimateWeapons, buildWorkshopValues]) {
   try {
     const { file, payload, summary } = await build()
     await fs.writeFile(path.join(FIXTURES, file), `${JSON.stringify(payload, null, 1)}\n`, 'utf8')
