@@ -442,6 +442,41 @@ function lower(node: Node, scope: Scope, functionName: string): EffectivePathsEx
   }
 }
 
+/** Term names an expression refers to, one level deep. */
+function collectTermRefs(expr: EffectivePathsExpr, into = new Set<string>()): Set<string> {
+  switch (expr.kind) {
+    case 'ref': into.add(expr.term); break
+    case 'sum': case 'product': case 'min': case 'max':
+      for (const part of expr.of) collectTermRefs(part, into)
+      break
+    case 'divide':
+      collectTermRefs(expr.numerator, into)
+      collectTermRefs(expr.denominator, into)
+      break
+    case 'power':
+      collectTermRefs(expr.base, into)
+      collectTermRefs(expr.exponent, into)
+      break
+    case 'negate': case 'abs': collectTermRefs(expr.of, into); break
+    case 'compare':
+      collectTermRefs(expr.left, into)
+      collectTermRefs(expr.right, into)
+      break
+    case 'gated':
+      collectTermRefs(expr.when, into)
+      collectTermRefs(expr.then, into)
+      collectTermRefs(expr.otherwise, into)
+      break
+    case 'clamp': collectTermRefs(expr.value, into); break
+    case 'round':
+      collectTermRefs(expr.value, into)
+      if (expr.modifier) collectTermRefs(expr.modifier, into)
+      break
+    case 'const': case 'input': case 'linear': break
+  }
+  return into
+}
+
 // ---------------------------------------------------------------------------
 // Public entry point
 // ---------------------------------------------------------------------------
@@ -497,21 +532,68 @@ export function parseSheetFunction(
     if (args.length % 2 === 0) {
       throw new EffectivePathsFormulaError('LET must end with a result expression', functionName)
     }
+    /*
+     * The sheet evaluates LET bindings lazily: one that the result never reaches
+     * is never computed, so it can reference a name that does not exist without
+     * anyone noticing. EPD_BST does exactly that — it binds `1 + vault` while
+     * declaring no `vault` parameter, and the sheet still answers, because the
+     * binding is unused.
+     *
+     * Lowering eagerly would reject a formula the sheet is perfectly happy
+     * with, so a binding that fails to lower is set aside rather than fatal. It
+     * only becomes an error if something actually depends on it, which is
+     * checked once the result is known.
+     */
+    const deferred = new Map<string, EffectivePathsFormulaError>()
+
     for (let i = 0; i + 1 < args.length; i += 2) {
       const nameNode = args[i]
       if (nameNode.kind !== 'name') {
         throw new EffectivePathsFormulaError('LET binding names must be plain names', functionName)
       }
-      const expr = lower(args[i + 1], scope, functionName)
+
+      let expr: EffectivePathsExpr | null = null
+      try {
+        expr = lower(args[i + 1], scope, functionName)
+      } catch (error) {
+        if (!(error instanceof EffectivePathsFormulaError)) throw error
+        deferred.set(nameNode.name, error)
+      }
+
       // Register only after lowering, so a binding cannot refer to itself.
       scope.terms.set(nameNode.name.toLowerCase(), nameNode.name)
-      terms.push({
-        id: nameNode.name,
-        label: options.termLabels?.[nameNode.name] ?? nameNode.name,
-        expr,
-      })
+      if (expr !== null) {
+        terms.push({
+          id: nameNode.name,
+          label: options.termLabels?.[nameNode.name] ?? nameNode.name,
+          expr,
+        })
+      }
     }
     resultNode = args[args.length - 1]
+
+    if (deferred.size) {
+      // Anything the result reaches, directly or through another term, must
+      // have lowered. Walk from the result outwards.
+      const result = lower(resultNode, scope, functionName)
+      const byId = new Map(terms.map(term => [term.id, term]))
+      const reached = new Set<string>()
+      const visit = (expr: EffectivePathsExpr) => {
+        for (const ref of collectTermRefs(expr)) {
+          if (reached.has(ref)) continue
+          reached.add(ref)
+          const term = byId.get(ref)
+          if (term) visit(term.expr)
+        }
+      }
+      visit(result)
+
+      for (const [name, error] of deferred) {
+        if (reached.has(name)) throw error
+      }
+      // Drop the unreachable ones; they are dead in the sheet too.
+      for (const name of deferred.keys()) scope.terms.delete(name.toLowerCase())
+    }
   }
 
   return {

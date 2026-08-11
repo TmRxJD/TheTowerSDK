@@ -333,3 +333,33 @@ describe('the wider arithmetic', () => {
     expect(() => parseSheetFunction('X', 'LAMBDA(a, SUMPRODUCT(a, a))')).toThrow(/not supported/)
   })
 })
+
+
+describe('LET bindings are lazy, as the sheet makes them', () => {
+  it('ignores a dead binding that references a name which does not exist', () => {
+    // EPD_BST verbatim: it binds `1 + vault` while declaring no `vault`, and
+    // the sheet answers anyway because nothing reads VaultBonus.
+    const stat = parseSheetFunction('EPD_BST', `LAMBDA(ws_level, perk, substat, LET(
+      WS, 1 + ws_level,
+      VaultBonus, 1 + vault,
+      WS + Perk + FLOOR(Substat)))`)
+
+    expect(stat.terms.map(term => term.id)).toEqual(['WS'])
+    // 1 + 10 = 11, plus perk 2, plus FLOOR(3.7) = 3.
+    expect(evaluateStat(stat, { ws_level: 10, perk: 2, substat: 3.7 }).value).toBe(16)
+  })
+
+  it('still fails when the result actually depends on the broken binding', () => {
+    expect(() => parseSheetFunction('X', `LAMBDA(a, LET(
+      Bad, 1 + mystery,
+      a * Bad))`)).toThrow(/unknown name "mystery"/)
+  })
+
+  it('fails when a live binding depends on a broken one', () => {
+    // Bad is dead on its own, but Used reaches it, so it cannot be dropped.
+    expect(() => parseSheetFunction('X', `LAMBDA(a, LET(
+      Bad, 1 + mystery,
+      Used, Bad * 2,
+      a * Used))`)).toThrow(/unknown name "mystery"/)
+  })
+})
