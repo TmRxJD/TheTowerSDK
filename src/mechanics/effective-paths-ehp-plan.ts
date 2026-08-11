@@ -15,6 +15,11 @@
  */
 
 import {
+  enhancementCoinCost,
+  enhancementMaxLevel,
+  type WorkshopEnhancementDiscounts,
+} from './effective-paths-enhancement-costs'
+import {
   ASSIST_BONUS_MAX_LEVEL,
   ASSIST_SUBSTAT_MAX_LEVEL,
   assistUpgradeStoneCost,
@@ -33,7 +38,7 @@ import {
 import { planPath, type PathStep, type PathUpgrade } from './effective-paths-planner'
 
 /** Which currency the path spends, and therefore what it may buy. */
-export type EffectiveHealthPathVariant = 'lab-time' | 'lab-coins' | 'stone'
+export type EffectiveHealthPathVariant = 'lab-time' | 'lab-coins' | 'stone' | 'coin'
 
 /**
  * How an upgrade is paid for.
@@ -43,7 +48,7 @@ export type EffectiveHealthPathVariant = 'lab-time' | 'lab-coins' | 'stone'
  * model can value them and so a plan can say why it left them out, not because
  * a path can recommend them.
  */
-export type EffectiveHealthCurrency = 'lab' | 'stone' | 'other'
+export type EffectiveHealthCurrency = 'lab' | 'stone' | 'enhancement' | 'other'
 
 /** One eHP upgrade: how it is named, keyed, and where its levels live. */
 export interface EffectiveHealthUpgradeDefinition {
@@ -56,6 +61,8 @@ export interface EffectiveHealthUpgradeDefinition {
   saveKey?: string
   /** Cap, for upgrades with no catalog to read one from. */
   maxLevel?: number
+  /** Enhancement stat name, for upgrades bought with coins. */
+  enhancementStat?: string
 }
 
 /**
@@ -97,7 +104,36 @@ export const EFFECTIVE_HEALTH_UPGRADES: readonly EffectiveHealthUpgradeDefinitio
     maxLevel: ASSIST_BONUS_MAX_LEVEL,
   },
 
-  // Feed eHP, but no path buys them: shards and relics, not stones or labs.
+  // The coin path's workshop enhancements. Each level is worth 1% of its stat,
+  // and defense percent has none, which is why there are four rather than five.
+  {
+    key: 'enhancementHealth',
+    sheetName: 'Health +',
+    currency: 'enhancement',
+    enhancementStat: 'Health',
+  },
+  {
+    key: 'enhancementDefenseAbsolute',
+    sheetName: 'Defense Absolute +',
+    currency: 'enhancement',
+    enhancementStat: 'Defense Absolute',
+  },
+  {
+    key: 'enhancementWallHealth',
+    sheetName: 'Wall Health +',
+    currency: 'enhancement',
+    enhancementStat: 'Wall Health',
+  },
+  {
+    key: 'enhancementRecoveryPackage',
+    sheetName: 'Recovery Package +',
+    currency: 'enhancement',
+    enhancementStat: 'Recovery Package',
+  },
+
+  // Feed eHP, but no path buys them here: shards and relics, not stones,
+  // labs or coins. The sheet's coin path also buys card masteries and module
+  // levels; those need their own cost sources and are not wired yet.
   { key: 'healthMastery', sheetName: 'Health Mastery', currency: 'other', maxLevel: 9 },
   { key: 'extraDefenseMastery', sheetName: 'Extra Defense Mastery', currency: 'other', maxLevel: 9 },
   { key: 'dissonantEchoDefense', sheetName: 'Dissonant Echo - Defense', currency: 'other', maxLevel: 20 },
@@ -120,6 +156,8 @@ export interface EffectiveHealthPlanOptions {
   targetLevels?: Partial<Record<keyof EffectiveHealthLevels, number>>
   /** Lab coin discount and lab speed. */
   labModifiers?: LabCostModifiers
+  /** Workshop discount labs and the vault discount, for the coin path. */
+  enhancementDiscounts?: WorkshopEnhancementDiscounts
 }
 
 export interface EffectiveHealthPlan {
@@ -137,6 +175,7 @@ const VARIANT_CURRENCY: Record<EffectiveHealthPathVariant, EffectiveHealthCurren
   'lab-time': 'lab',
   'lab-coins': 'lab',
   stone: 'stone',
+  coin: 'enhancement',
 }
 
 /** The upgrades a variant is allowed to buy. */
@@ -170,8 +209,12 @@ export function planEffectiveHealthPath(options: EffectiveHealthPlanOptions): Ef
 
     const declaredMax = options.maxLevels?.[upgrade.key]
     const catalogMax = upgrade.saveKey ? labMaxCatalogLevel(upgrade.saveKey) : 0
+    const enhancementMax = upgrade.enhancementStat
+      ? enhancementMaxLevel(upgrade.enhancementStat)
+      : null
     const maxLevel = declaredMax
       ?? upgrade.maxLevel
+      ?? enhancementMax
       ?? (catalogMax > 0 ? catalogMax : undefined)
 
     if (maxLevel === undefined) {
@@ -203,6 +246,13 @@ export function planEffectiveHealthPath(options: EffectiveHealthPlanOptions): Ef
       if (!upgrade) return Number.NaN
 
       if (variant === 'stone') return assistUpgradeStoneCost(nextLevel) ?? Number.NaN
+
+      if (variant === 'coin') {
+        if (!upgrade.enhancementStat) return Number.NaN
+        return enhancementCoinCost(
+          upgrade.enhancementStat, nextLevel, options.enhancementDiscounts,
+        ) ?? Number.NaN
+      }
 
       if (!upgrade.saveKey) return Number.NaN
       const cost = variant === 'lab-time'

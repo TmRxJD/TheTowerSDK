@@ -19,9 +19,9 @@ type ModelCase = (typeof modelFixtures.cases)[number]
 /** Same mapping the model test uses; the two fixtures share their states. */
 function toConfig(c: ModelCase['cfg']): EffectiveHealthConfig {
   return {
-    health: { workshopValue: c.wsHealth, enhancementLevel: c.wseHealth, relicPct: c.relicHealth, vaultPct: c.vaultHealth },
+    health: { workshopValue: c.wsHealth, relicPct: c.relicHealth, vaultPct: c.vaultHealth },
     defenseAbsolute: {
-      workshopValue: c.wsDabs, enhancementLevel: c.wseDabs, relicPct: c.relicDabs, vaultPct: c.vaultDabs,
+      workshopValue: c.wsDabs, relicPct: c.relicDabs, vaultPct: c.vaultDabs,
       primarySubstat: c.primSubDabs, assistSubstat: c.assSubDabs,
     },
     defensePercent: {
@@ -29,11 +29,11 @@ function toConfig(c: ModelCase['cfg']): EffectiveHealthConfig {
       primarySubstat: c.primSubDefPct, assistSubstat: c.assSubDefPct,
     },
     wallHealth: {
-      workshopValue: c.wsWall, enhancementLevel: c.wseWall,
+      workshopValue: c.wsWall,
       primarySubstat: c.primSubWall, assistSubstat: c.assSubWall,
     },
     maxRecovery: {
-      workshopValue: c.wsRcvr, enhancementLevel: c.wseRcvr, vaultPct: c.vaultRcvr,
+      workshopValue: c.wsRcvr, vaultPct: c.vaultRcvr,
       primarySubstat: c.primSubRcvr, assistSubstat: c.assSubRcvr,
     },
     cards: {
@@ -55,6 +55,21 @@ function toConfig(c: ModelCase['cfg']): EffectiveHealthConfig {
     tournament: { commonOverride: c.cto, rareOverride: c.rto },
     enemiesAttackingTogether: c.enemiesAttackingTogether,
     dissonance: { active: false, tierPersonalBest: 0, allTierPersonalBests: [] },
+  }
+}
+
+
+/**
+ * The fixture predates enhancement levels living with the levels rather than
+ * the config, so lift them across.
+ */
+function toLevels(testCase: { levels: unknown, cfg: Record<string, number> }): EffectiveHealthLevels {
+  return {
+    ...(testCase.levels as EffectiveHealthLevels),
+    enhancementHealth: testCase.cfg.wseHealth,
+    enhancementDefenseAbsolute: testCase.cfg.wseDabs,
+    enhancementWallHealth: testCase.cfg.wseWall,
+    enhancementRecoveryPackage: testCase.cfg.wseRcvr,
   }
 }
 
@@ -93,7 +108,7 @@ describe('stone-path ROI against the sheet', () => {
     for (const testCase of roiFixtures.cases) {
       const state = modelFixtures.cases[testCase.index]
       const config = toConfig(state.cfg)
-      const levels = state.levels as EffectiveHealthLevels
+      const levels = toLevels(state)
       const key = testCase.levelKey as keyof EffectiveHealthLevels
 
       const now = computeEffectiveHealth(config, levels).effectiveHealth
@@ -148,7 +163,7 @@ describe('planning a stone path', () => {
   it('buys only the three stone upgrades, and says why the rest are out', () => {
     const plan = planEffectiveHealthPath({
       config,
-      levels: state.levels as EffectiveHealthLevels,
+      levels: toLevels(state),
       variant: 'stone',
       steps: 30,
     })
@@ -166,7 +181,7 @@ describe('planning a stone path', () => {
   it('charges the stone price, not a lab price', () => {
     const plan = planEffectiveHealthPath({
       config,
-      levels: state.levels as EffectiveHealthLevels,
+      levels: toLevels(state),
       variant: 'stone',
       steps: 10,
     })
@@ -177,7 +192,7 @@ describe('planning a stone path', () => {
 
   it('stops each upgrade at its own cap', () => {
     const nearlyDone: EffectiveHealthLevels = {
-      ...(state.levels as EffectiveHealthLevels),
+      ...toLevels(state),
       assistSubstatArmor: 68,
       assistSubstatGenerator: 68,
       assistBonusArmor: 98,

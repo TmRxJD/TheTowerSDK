@@ -28,13 +28,11 @@ function toConfig(c: FixtureCase['cfg']): EffectiveHealthConfig {
   return {
     health: {
       workshopValue: c.wsHealth,
-      enhancementLevel: c.wseHealth,
       relicPct: c.relicHealth,
       vaultPct: c.vaultHealth,
     },
     defenseAbsolute: {
       workshopValue: c.wsDabs,
-      enhancementLevel: c.wseDabs,
       relicPct: c.relicDabs,
       vaultPct: c.vaultDabs,
       primarySubstat: c.primSubDabs,
@@ -49,13 +47,11 @@ function toConfig(c: FixtureCase['cfg']): EffectiveHealthConfig {
     },
     wallHealth: {
       workshopValue: c.wsWall,
-      enhancementLevel: c.wseWall,
       primarySubstat: c.primSubWall,
       assistSubstat: c.assSubWall,
     },
     maxRecovery: {
       workshopValue: c.wsRcvr,
-      enhancementLevel: c.wseRcvr,
       vaultPct: c.vaultRcvr,
       primarySubstat: c.primSubRcvr,
       assistSubstat: c.assSubRcvr,
@@ -84,6 +80,21 @@ function toConfig(c: FixtureCase['cfg']): EffectiveHealthConfig {
   }
 }
 
+
+/**
+ * The fixture predates enhancement levels living with the levels rather than
+ * the config, so lift them across.
+ */
+function toLevels(testCase: { levels: unknown, cfg: Record<string, number> }): EffectiveHealthLevels {
+  return {
+    ...(testCase.levels as EffectiveHealthLevels),
+    enhancementHealth: testCase.cfg.wseHealth,
+    enhancementDefenseAbsolute: testCase.cfg.wseDabs,
+    enhancementWallHealth: testCase.cfg.wseWall,
+    enhancementRecoveryPackage: testCase.cfg.wseRcvr,
+  }
+}
+
 describe('the eHP model against the sheet', () => {
   it('has states worth checking, not forty of the same one', () => {
     expect(fixtures.cases.length).toBe(40)
@@ -105,7 +116,7 @@ describe('the eHP model against the sheet', () => {
     it(`matches the sheet on state ${index}`, () => {
       const actual = computeEffectiveHealth(
         toConfig(testCase.cfg),
-        testCase.levels as EffectiveHealthLevels,
+        toLevels(testCase),
       ).effectiveHealth
 
       const scale = Math.max(Math.abs(testCase.sheetValue), 1e-9)

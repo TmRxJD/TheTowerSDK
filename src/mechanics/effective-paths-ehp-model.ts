@@ -37,6 +37,10 @@
  */
 
 import {
+  EFFECTIVE_HEALTH_WORKSHOP_STATS,
+  workshopStatValue,
+} from './effective-paths-workshop-values'
+import {
   composeEffectiveHealth,
   effectiveArmor,
   effectiveDefenseAbsolute,
@@ -65,6 +69,18 @@ export interface EffectiveHealthLevels {
   assistSubstatGenerator: number
   assistBonusArmor: number
   dissonantEchoDefense: number
+
+  /**
+   * Workshop enhancement ("WS+") levels, each worth 1% of its stat.
+   *
+   * These live with the levels rather than the config because the coin path
+   * buys them — they are upgrade candidates, not fixed player state. Only four
+   * stats have an enhancement; defense percent has none.
+   */
+  enhancementHealth: number
+  enhancementDefenseAbsolute: number
+  enhancementWallHealth: number
+  enhancementRecoveryPackage: number
 }
 
 /** Every level at zero — a fresh account, and a safe base to spread over. */
@@ -86,14 +102,25 @@ export const ZERO_EFFECTIVE_HEALTH_LEVELS: EffectiveHealthLevels = {
   assistSubstatGenerator: 0,
   assistBonusArmor: 0,
   dissonantEchoDefense: 0,
+  enhancementHealth: 0,
+  enhancementDefenseAbsolute: 0,
+  enhancementWallHealth: 0,
+  enhancementRecoveryPackage: 0,
 }
 
-/** A stat's workshop value, enhancement level, relic and vault bonuses. */
+/**
+ * A stat's workshop contribution, relic and vault bonuses.
+ *
+ * Give either a `workshopLevel`, which is resolved through the workshop table,
+ * or a `workshopValue` when the value is already known. Supplying a level is
+ * the normal case and keeps the caller out of the units question — the table
+ * stores percentages out of 100 and the paths want fractions.
+ */
 export interface EffectiveHealthStatSource {
-  /** Resolved workshop value for the stat. */
-  workshopValue: number
-  /** Workshop enhancement level; each adds 1%. */
-  enhancementLevel?: number
+  /** Workshop level. Resolved through the table, in the sheet's units. */
+  workshopLevel?: number
+  /** Resolved workshop value, when a level is not the right way to say it. */
+  workshopValue?: number
   /** Relic bonus, as a fraction. */
   relicPct?: number
   /** Vault bonus, as a fraction. */
@@ -271,14 +298,28 @@ export interface EffectiveHealthBreakdown {
   dissonance: number
 }
 
-const source = (stat: EffectiveHealthStatSource) => ({
-  workshopValue: stat.workshopValue,
-  workshopEnhancementLevel: stat.enhancementLevel ?? 0,
-  relicPct: stat.relicPct ?? 0,
-  vaultPct: stat.vaultPct ?? 0,
-  primarySubstat: stat.primarySubstat ?? 0,
-  assistSubstat: stat.assistSubstat ?? 0,
-})
+/**
+ * Resolve a stat source into plain numbers.
+ *
+ * A `workshopLevel` is looked up in the table; an explicit `workshopValue`
+ * wins when both are given, so a caller can override a stat the table cannot
+ * express. A level the table does not cover resolves to 0 rather than
+ * throwing — the planner reads a stat that cannot improve as one not worth
+ * buying, which is the right behaviour at a cap.
+ */
+function source(stat: EffectiveHealthStatSource, workshopStat: string) {
+  let workshopValue = stat.workshopValue
+  if (workshopValue === undefined && stat.workshopLevel !== undefined) {
+    workshopValue = workshopStatValue(workshopStat, stat.workshopLevel)?.value ?? 0
+  }
+  return {
+    workshopValue: workshopValue ?? 0,
+    relicPct: stat.relicPct ?? 0,
+    vaultPct: stat.vaultPct ?? 0,
+    primarySubstat: stat.primarySubstat ?? 0,
+    assistSubstat: stat.assistSubstat ?? 0,
+  }
+}
 
 /**
  * Compute eHP and every stat behind it.
@@ -299,7 +340,7 @@ export function computeEffectiveHealth(
     )
     : 1
 
-  const healthSource = source(config.health)
+  const healthSource = source(config.health, EFFECTIVE_HEALTH_WORKSHOP_STATS.health)
   const health = effectiveHealth({
     workshopValue: healthSource.workshopValue,
     labLevel: levels.health,
@@ -307,7 +348,7 @@ export function computeEffectiveHealth(
     cardValue: config.cards.health.value,
     hasCardMastery: config.cards.health.hasMastery ?? false,
     masteryLevel: levels.healthMastery,
-    workshopEnhancementLevel: healthSource.workshopEnhancementLevel,
+    workshopEnhancementLevel: levels.enhancementHealth,
     hasPerk: config.perks.has,
     perkBonusLabLevel: levels.standardPerksBonus,
     hasCommonTournamentOverride: config.tournament.commonOverride,
@@ -327,7 +368,7 @@ export function computeEffectiveHealth(
     labBonusCap: levels.assistBonusArmor,
   })
 
-  const dabsSource = source(config.defenseAbsolute)
+  const dabsSource = source(config.defenseAbsolute, EFFECTIVE_HEALTH_WORKSHOP_STATS.defenseAbsolute)
   // Flat reduction applies per hit, so it is worth the number of enemies
   // hitting you at once.
   const defenseAbsolute = effectiveDefenseAbsolute({
@@ -339,14 +380,14 @@ export function computeEffectiveHealth(
     labSubstatCap: levels.assistSubstatArmor,
     primarySubstat: dabsSource.primarySubstat,
     assistSubstat: dabsSource.assistSubstat,
-    workshopEnhancementLevel: dabsSource.workshopEnhancementLevel,
+    workshopEnhancementLevel: levels.enhancementDefenseAbsolute,
     hasPerk: config.perks.has,
     perkBonusLabLevel: levels.standardPerksBonus,
     relicPct: dabsSource.relicPct,
     vaultPct: dabsSource.vaultPct,
   }) * config.enemiesAttackingTogether
 
-  const defPctSource = source(config.defensePercent)
+  const defPctSource = source(config.defensePercent, EFFECTIVE_HEALTH_WORKSHOP_STATS.defensePercent)
   const defensePercent = effectiveDefensePercent({
     workshopValue: defPctSource.workshopValue,
     labLevel: levels.defensePercent,
@@ -364,7 +405,7 @@ export function computeEffectiveHealth(
     vaultPct: defPctSource.vaultPct,
   })
 
-  const wallSource = source(config.wallHealth)
+  const wallSource = source(config.wallHealth, EFFECTIVE_HEALTH_WORKSHOP_STATS.wallHealth)
   const wallHealth = config.wall.has
     ? effectiveWallHealth({
       workshopValue: wallSource.workshopValue,
@@ -373,14 +414,14 @@ export function computeEffectiveHealth(
       labSubstatCap: levels.assistSubstatArmor,
       primarySubstat: wallSource.primarySubstat,
       assistSubstat: wallSource.assistSubstat,
-      workshopEnhancementLevel: wallSource.workshopEnhancementLevel,
+      workshopEnhancementLevel: levels.enhancementWallHealth,
       primaryEffect: config.wall.primaryEffect,
       assistEffect: config.wall.assistEffect,
       fortressLevel: levels.wallFortification,
     })
     : null
 
-  const recoverySource = source(config.maxRecovery)
+  const recoverySource = source(config.maxRecovery, EFFECTIVE_HEALTH_WORKSHOP_STATS.maxRecovery)
   const maxRecovery = config.recovery.has
     ? effectiveMaxRecovery({
       workshopValue: recoverySource.workshopValue,
@@ -389,7 +430,7 @@ export function computeEffectiveHealth(
       labSubstatCap: levels.assistSubstatGenerator,
       primarySubstat: recoverySource.primarySubstat,
       assistSubstat: recoverySource.assistSubstat,
-      workshopEnhancementLevel: recoverySource.workshopEnhancementLevel,
+      workshopEnhancementLevel: levels.enhancementRecoveryPackage,
       vaultPct: recoverySource.vaultPct,
     })
     : null
