@@ -1,0 +1,96 @@
+/**
+ * Effective Paths — the `EPG_*` helpers.
+ *
+ * "G" for generic: these are the pieces the damage and economy tabs share, and
+ * they open nearly every column of both. The eHP tab predates them and inlines
+ * the same arithmetic instead, which is why {@link assistSubstatCap} and
+ * `effective-paths-hp.ts`'s own substat scaling look like duplicates — they are
+ * the same idea written twice by the sheet, and one of them has a gate the
+ * other does not.
+ *
+ * Credit for the originals belongs to the Effective Paths maintainers — see
+ * `effective-paths-credits.ts`.
+ */
+
+/**
+ * `EPG_ASSIST_SUB_CAP` — how much of an assist module's substat counts.
+ *
+ * Capacity is stone-bought plus lab, in percentage points, and the `1 +` is the
+ * point every assist module starts with.
+ *
+ * The gate matters: with no assist module this is **zero**, not the scale. The
+ * eHP tab has no equivalent gate, because its `EPH_*` functions multiply the
+ * assist substat by the scale and a missing assist contributes a zero substat
+ * anyway. Here the caller often multiplies something else by the result, so
+ * the difference is real.
+ */
+export function assistSubstatCap(
+  hasAssist: boolean,
+  stoneCap: number,
+  labCap: number,
+): number {
+  return hasAssist ? (1 + stoneCap + labCap) / 100 : 0
+}
+
+/**
+ * `EPG_MODULE_BONUS` — a module pair's combined multiplier.
+ *
+ * The assist contributes only the part of its multiplier above 1, scaled by
+ * its bonus capacity. Identical to `EPH_ARMOR`; the sheet has both because the
+ * damage tab needed it for the Cannon and the Core as well as the Armor.
+ */
+export function moduleBonus(input: {
+  primaryBonus: number
+  hasAssist: boolean
+  assistBonus: number
+  /** Bonus capacity bought with stones, in percentage points. */
+  stoneBonusCap: number
+  /** Bonus capacity from the Assist Module Bonus lab, in percentage points. */
+  labBonusCap: number
+}): number {
+  if (!input.hasAssist) return input.primaryBonus
+  const assist = (input.assistBonus - 1) * (1 + input.stoneBonusCap + input.labBonusCap) * 0.01 + 1
+  return input.primaryBonus * assist
+}
+
+/**
+ * `EPG_SPB` — what the Standard Perks Bonus lab multiplies a perk by.
+ *
+ * One percent a level. The eHP functions inline this as `(1 + 0.01 × level)`.
+ */
+export function standardPerksBonusScale(labLevel: number): number {
+  return 1 + labLevel / 100
+}
+
+/**
+ * `EPG_LEVEL_CHECK` — whether an upgrade has already passed its stop.
+ *
+ * A target set on the tracker wins over the game's own maximum; with no target
+ * the maximum applies. True means "no longer a candidate", which is the sense
+ * the sheet uses it in — its grid blanks the column when this is true.
+ */
+export function isPastLevelStop(
+  currentLevel: number,
+  targetLevel: number | null | undefined,
+  maxLevel: number,
+): boolean {
+  // The sheet tests `LEN(targetLevel)`, so a blank cell falls back to the
+  // maximum. Here that blank is null or undefined.
+  const stop = targetLevel ?? maxLevel
+  return currentLevel > stop
+}
+
+/**
+ * `EPG_MODULE_LEVEL_LIMIT` — how far a module may be taken.
+ *
+ * The sheet stores this as free text on the module: `"none"`, `"all"`, or a
+ * number, sometimes followed by more words it ignores. Anything else is zero,
+ * which is the sheet's own fallback rather than an error.
+ */
+export function moduleLevelLimit(text: string | number | null | undefined): number {
+  const raw = String(text ?? '').trim().split(' ')[0].toLowerCase()
+  if (raw === 'none') return 0
+  if (raw === 'all') return 300
+  const value = Number(raw)
+  return Number.isFinite(value) ? value : 0
+}
