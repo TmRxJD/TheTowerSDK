@@ -1,16 +1,19 @@
 import { describe, expect, it } from 'vitest'
 import {
   EFFECTIVE_HEALTH_ENHANCEMENTS,
+  ENHANCEMENT_SPEND_UNLOCKS,
   enhancementCoinCost,
+  enhancementCoinSpend,
   enhancementMaxLevel,
   enhancementStats,
   WORKSHOP_ENHANCEMENT_CATEGORIES,
+  workshopEnhancementSpend,
 } from './effective-paths-enhancement-costs'
 import {
   computeEffectiveHealth,
   type EffectiveHealthConfig,
-  ZERO_EFFECTIVE_HEALTH_LEVELS,
   effectiveHealthPerks,
+  ZERO_EFFECTIVE_HEALTH_LEVELS,
 } from './effective-paths-ehp-model'
 import { EFFECTIVE_HEALTH_UPGRADES, planEffectiveHealthPath } from './effective-paths-ehp-plan'
 
@@ -260,5 +263,39 @@ describe('workshop levels resolve through the table', () => {
       ...ZERO_EFFECTIVE_HEALTH_LEVELS, enhancementHealth: 25,
     }).health
     expect(enhanced).toBeCloseTo(plain * 1.25, 9)
+  })
+})
+
+describe('the enhancement spend gate', () => {
+  it('counts nothing at level zero, and the first level at level one', () => {
+    // `WSPCOST_SINGLE_ADJUSTED_CUMULATIVE("Health", 1)` is 0 and `(…, 2)` is
+    // 5e9 on the live sheet, so the sum runs up to but not past the level.
+    expect(enhancementCoinSpend('Health', 0)).toBe(0)
+    expect(enhancementCoinSpend('Health', 1)).toBe(5_000_000_000)
+    expect(enhancementCoinSpend('Health', 5)).toBe(25_680_000_000)
+    expect(enhancementCoinSpend('Health', 10)).toBe(55_540_000_000)
+    expect(enhancementCoinSpend('Orb Size', 10)).toBe(1_420_900_000_000)
+  })
+
+  it('takes the vault discount, and not the category lab', () => {
+    // The sheet's cumulative variant applies only `1 - AY25`, unlike its
+    // single-level twin, so a category lab must not change it.
+    expect(enhancementCoinSpend('Health', 5, { globalDiscountPct: 0.1 }))
+      .toBeCloseTo(25_680_000_000 * 0.9, 3)
+    expect(enhancementCoinSpend('Health', 5, { defenseDiscountLabLevel: 50 }))
+      .toBe(25_680_000_000)
+  })
+
+  it('sums the six defensive enhancements, including the three eHP ignores', () => {
+    const levels = { 'Health': 5, 'Orb Size': 10 }
+    expect(workshopEnhancementSpend(levels))
+      .toBe(25_680_000_000 + 1_420_900_000_000)
+  })
+
+  it('gates only the two enhancements the sheet gates', () => {
+    expect(ENHANCEMENT_SPEND_UNLOCKS['Defense Absolute']).toBe(500_000_000_000)
+    expect(ENHANCEMENT_SPEND_UNLOCKS['Wall Health']).toBe(50_000_000_000_000)
+    expect(ENHANCEMENT_SPEND_UNLOCKS['Health']).toBeUndefined()
+    expect(ENHANCEMENT_SPEND_UNLOCKS['Recovery Package']).toBeUndefined()
   })
 })

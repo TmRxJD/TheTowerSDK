@@ -3,10 +3,10 @@
  */
 
 import {
-  MAX_CAMPAIGN_TIER,
+  computeLabValueAtLevel,
   findLabResearchBySlug,
   getSharedToolLabs,
-  computeLabValueAtLevel,
+  MAX_CAMPAIGN_TIER,
 } from '../data/index'
 import { clamp } from './math'
 

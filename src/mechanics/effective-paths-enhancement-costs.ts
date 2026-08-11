@@ -129,3 +129,67 @@ export const EFFECTIVE_HEALTH_ENHANCEMENTS = {
   enhancementWallHealth: 'Wall Health',
   enhancementRecoveryPackage: 'Recovery Package',
 } as const
+
+/**
+ * The six defensive enhancements whose spend unlocks the later ones.
+ *
+ * `eHP Coins!CQ` sums cumulative spend across exactly these, in this order.
+ * Three of them — Health Regen, Land Mine Damage and Orb Size — do nothing for
+ * eHP; they are in the sum because the game's unlock ladder counts every
+ * defensive enhancement, not because the path wants them.
+ */
+export const WORKSHOP_ENHANCEMENT_SPEND_STATS = [
+  'Health',
+  'Health Regen',
+  'Defense Absolute',
+  'Land Mine Damage',
+  'Wall Health',
+  'Orb Size',
+] as const
+
+/**
+ * `WSPCOST_SINGLE_ADJUSTED_CUMULATIVE` — coins already spent taking one
+ * enhancement to its current level.
+ *
+ * Only the vault discount applies. The sheet's cumulative variant deliberately
+ * leaves the category lab discount out, unlike its single-level twin, which is
+ * why this cannot be a loop over {@link enhancementCoinCost}.
+ */
+export function enhancementCoinSpend(
+  stat: string,
+  currentLevel: number,
+  discounts: WorkshopEnhancementDiscounts = {},
+): number {
+  const table = COSTS[stat]
+  if (!table) return 0
+  const levels = Math.max(0, Math.min(table.length, Math.floor(currentLevel) || 0))
+
+  let total = 0
+  for (let level = 0; level < levels; level++) total += table[level]
+  return total * (1 - (discounts.globalDiscountPct ?? 0))
+}
+
+/**
+ * Total workshop-enhancement coins spent, which is what gates the later
+ * defensive enhancements.
+ */
+export function workshopEnhancementSpend(
+  levels: Readonly<Record<string, number>>,
+  discounts: WorkshopEnhancementDiscounts = {},
+): number {
+  return WORKSHOP_ENHANCEMENT_SPEND_STATS.reduce(
+    (total, stat) => total + enhancementCoinSpend(stat, levels[stat] ?? 0, discounts),
+    0,
+  )
+}
+
+/**
+ * How much has to have been spent on enhancements before one unlocks.
+ *
+ * `eHP Coins!CR` and `CS` gate Defense Absolute + and Wall Health + on the
+ * running total; the other two eHP enhancements have no gate.
+ */
+export const ENHANCEMENT_SPEND_UNLOCKS: Readonly<Record<string, number>> = {
+  'Defense Absolute': 500_000_000_000,
+  'Wall Health': 50_000_000_000_000,
+}

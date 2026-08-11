@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
+  computeEffectiveHealth,
   type EffectiveHealthConfig,
-  ZERO_EFFECTIVE_HEALTH_LEVELS,
   effectiveHealthPerks,
+  ZERO_EFFECTIVE_HEALTH_LEVELS,
 } from './effective-paths-ehp-model'
 import { planEffectiveHealthPath } from './effective-paths-ehp-plan'
 import {
@@ -97,37 +98,38 @@ describe('module upgrade coin costs', () => {
 })
 
 
+const config: EffectiveHealthConfig = {
+  health: { workshopLevel: 600 },
+  defenseAbsolute: { workshopLevel: 300 },
+  defensePercent: { workshopLevel: 60 },
+  wallHealth: { workshopLevel: 150 },
+  maxRecovery: { workshopLevel: 60 },
+  cards: {
+    // Masteries only do anything through a card that is actually equipped.
+    health: { has: true, value: 2.4, hasMastery: true },
+    defenseAbsolute: { has: false, value: 1 },
+    defensePercent: { has: true, value: 0.05, hasMastery: true },
+  },
+  armor: { primaryBonus: 1.5, hasAssist: true, assistBonus: 1.3, labBonusCap: 20 },
+  labSubstatCap: { armor: 20, generator: 20 },
+  wall: { has: true, primaryEffect: 2, assistEffect: 1 },
+  recovery: { has: true },
+  perks: effectiveHealthPerks({
+    apply: true,
+    health: true,
+    healthRegen: true,
+    extraDefense: true,
+    absoluteDefense: true,
+    enemyDamageTradeOff: true,
+  }),
+  chronoField: { unlocked: false },
+  chainThunder: { has: false, damageShare: 0 },
+  deathWave: { hasHealth: false },
+  enemiesAttackingTogether: 2,
+  dissonance: { active: false, tierPersonalBest: 0, allTierPersonalBests: [] },
+}
 describe('masteries on the coin path', () => {
-  const config: EffectiveHealthConfig = {
-    health: { workshopLevel: 600 },
-    defenseAbsolute: { workshopLevel: 300 },
-    defensePercent: { workshopLevel: 60 },
-    wallHealth: { workshopLevel: 150 },
-    maxRecovery: { workshopLevel: 60 },
-    cards: {
-      // Masteries only do anything through a card that is actually equipped.
-      health: { has: true, value: 2.4, hasMastery: true },
-      defenseAbsolute: { has: false, value: 1 },
-      defensePercent: { has: true, value: 0.05, hasMastery: true },
-    },
-    armor: { primaryBonus: 1.5, hasAssist: true, assistBonus: 1.3, labBonusCap: 20 },
-    labSubstatCap: { armor: 20, generator: 20 },
-    wall: { has: true, primaryEffect: 2, assistEffect: 1 },
-    recovery: { has: true },
-    perks: effectiveHealthPerks({
-      apply: true,
-      health: true,
-      healthRegen: true,
-      extraDefense: true,
-      absoluteDefense: true,
-      enemyDamageTradeOff: true,
-    }),
-    chronoField: { unlocked: false },
-    chainThunder: { has: false, damageShare: 0 },
-    deathWave: { hasHealth: false },
-    enemiesAttackingTogether: 2,
-    dissonance: { active: false, tierPersonalBest: 0, allTierPersonalBests: [] },
-  }
+
 
   it('offers masteries alongside enhancements', () => {
     const plan = planEffectiveHealthPath({
@@ -178,5 +180,85 @@ describe('masteries on the coin path', () => {
     const masterySteps = plan.steps.filter(entry => entry.name.endsWith('Mastery'))
     expect(masterySteps).toHaveLength(2)
     for (const step of masterySteps) expect(step.level).toBe(CARD_MASTERY_MAX_LEVEL)
+  })
+})
+
+describe('module levels on the coin path', () => {
+  const withModules = {
+    ...config,
+    armor: {
+      ...config.armor,
+      hasAssist: true,
+      primaryRarity: 'Ancestral 5',
+      assistRarity: 'Mythic',
+    },
+  }
+  const at = (primary: number, assist: number) => ({
+    ...ZERO_EFFECTIVE_HEALTH_LEVELS,
+    primaryModuleArmor: primary,
+    assistModuleArmor: assist,
+  })
+
+  /** Pin everything else so only the module levels are left to buy. */
+  const MODULES_ONLY = {
+    enhancementHealth: 0,
+    enhancementDefenseAbsolute: 0,
+    enhancementWallHealth: 0,
+    enhancementRecoveryPackage: 0,
+    healthMastery: 0,
+    extraDefenseMastery: 0,
+    assistSubstatArmorLab: 0,
+    assistSubstatGeneratorLab: 0,
+    assistBonusArmorLab: 0,
+    dissonantEchoDefense: 0,
+  }
+
+  it('leaves a module below 160 out, and says why', () => {
+    const plan = planEffectiveHealthPath({
+      config: withModules, levels: at(159, 100), variant: 'coin', steps: 5,
+    })
+    const reason = plan.excluded.find(entry => entry.sheetName === 'Primary Module - Armor')?.reason
+    expect(reason).toMatch(/below level 160/)
+  })
+
+  it("charges the sheet's own module table", () => {
+    const plan = planEffectiveHealthPath({
+      config: withModules,
+      levels: at(160, 160),
+      variant: 'coin',
+      steps: 4,
+      maxLevels: MODULES_ONLY,
+    })
+    const first = plan.steps.find(step => step.name === 'Primary Module - Armor')
+    // INDEX(Data_Val_Tables!$EV$4:$EV, 160) on the live sheet.
+    expect(first?.level).toBe(161)
+    expect(first?.cost).toBe(10_000_000_000_000)
+  })
+
+  it('takes the module discount off that price', () => {
+    const plan = planEffectiveHealthPath({
+      config: withModules,
+      levels: at(160, 160),
+      variant: 'coin',
+      steps: 4,
+      moduleDiscountPercent: 25,
+      maxLevels: MODULES_ONLY,
+    })
+    const first = plan.steps.find(step => step.name === 'Primary Module - Armor')
+    expect(first?.cost).toBe(10_000_000_000_000 * 0.75)
+  })
+
+  it('is worth more the rarer the module, because the bonus is recomputed', () => {
+    const armorAt = (rarity: string) => computeEffectiveHealth(
+      { ...withModules, armor: { ...withModules.armor, primaryRarity: rarity } },
+      at(200, 160),
+    ).armor
+    expect(armorAt('Ancestral 5')).toBeGreaterThan(armorAt('Mythic'))
+  })
+
+  it('recomputes the bonus as the level moves, rather than holding it fixed', () => {
+    const armorAt = (level: number) =>
+      computeEffectiveHealth(withModules, at(level, 160)).armor
+    expect(armorAt(200)).toBeGreaterThan(armorAt(160))
   })
 })

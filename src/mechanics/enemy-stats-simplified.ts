@@ -12,13 +12,13 @@ import {
   type EnemyStatsBattleConditionName,
   filterEnemyStatsBattleConditions,
   getBattleConditionLevel,
-  mergeEnemyStatsBattleConditions,
   getWaveInfoBattleConditions,
+  mergeEnemyStatsBattleConditions,
 } from './battle-condition-config'
 import {
   bcCounterLabBenefitIncreaseAtLevel,
-  mergeWorkshopBcLabLevels,
   computeEnemyStatLevelWithBcLabs,
+  mergeWorkshopBcLabLevels,
 } from './bc-counter-labs'
 import {
   type EnemyHeaderPerkToggles,

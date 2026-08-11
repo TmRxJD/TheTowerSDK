@@ -36,6 +36,7 @@
  * number": several upgrades are worth more once others are bought.
  */
 
+import { computeModuleStat } from '../data/module-bonus'
 import {
   EFFECTIVE_HEALTH_WORKSHOP_STATS,
   workshopStatValue,
@@ -77,6 +78,14 @@ export interface EffectiveHealthLevels {
   dissonantEchoDefense: number
 
   /**
+   * Armor module levels. The coin path buys these between 160 and 300; below
+   * 160 the sheet leaves them out, because shards are the cheaper currency
+   * there.
+   */
+  primaryModuleArmor: number
+  assistModuleArmor: number
+
+  /**
    * Workshop enhancement ("WS+") levels, each worth 1% of its stat.
    *
    * These live with the levels rather than the config because the coin path
@@ -111,6 +120,8 @@ export const ZERO_EFFECTIVE_HEALTH_LEVELS: EffectiveHealthLevels = {
   assistSubstatGeneratorLab: 0,
   assistBonusArmorLab: 0,
   dissonantEchoDefense: 0,
+  primaryModuleArmor: 0,
+  assistModuleArmor: 0,
   enhancementHealth: 0,
   enhancementDefenseAbsolute: 0,
   enhancementWallHealth: 0,
@@ -232,11 +243,20 @@ export interface EffectiveHealthConfig {
   }
 
   armor: {
-    /** Armor bonus from the primary module. */
+    /**
+     * Armor bonus from the primary module, already resolved.
+     *
+     * Ignored when `primaryRarity` is given: the coin path buys module levels,
+     * so the bonus has to be recomputed as the level moves rather than fixed.
+     */
     primaryBonus: number
     hasAssist: boolean
     /** Armor bonus from the assist module, as a multiplier. */
     assistBonus: number
+    /** The primary module's rarity label, e.g. `"Ancestral 5*"`. */
+    primaryRarity?: string
+    /** The assist module's rarity label. */
+    assistRarity?: string
   }
 
   wall: {
@@ -435,10 +455,21 @@ export function computeEffectiveHealth(
     dissonance,
   })
 
+  /**
+   * A module's armor bonus at the level the path has taken it to, when the
+   * rarity is known — `eHP Coins!CF` recomputes both the same way.
+   */
+  const moduleBonus = (rarity: string | undefined, level: number, fallback: number): number =>
+    (rarity && level > 0 ? computeModuleStat({ type: 'armor', rarityLabel: rarity, level }) : fallback)
+
   const armor = effectiveArmor({
-    primaryBonus: config.armor.primaryBonus,
+    primaryBonus: moduleBonus(
+      config.armor.primaryRarity, levels.primaryModuleArmor, config.armor.primaryBonus,
+    ),
     hasAssist: config.armor.hasAssist,
-    assistBonus: config.armor.assistBonus,
+    assistBonus: moduleBonus(
+      config.armor.assistRarity, levels.assistModuleArmor, config.armor.assistBonus,
+    ),
     labBonusCap: levels.assistBonusArmorLab,
     stoneBonusCap: levels.assistBonusArmor,
   })

@@ -26,8 +26,8 @@
 
 import { LAB_CATALOG } from '../data/labs-catalog'
 import {
-  EffectivePathsAliasSchema,
   type EffectivePathsAlias,
+  EffectivePathsAliasSchema,
   type EffectivePathsDomain,
 } from './effective-paths-schema'
 

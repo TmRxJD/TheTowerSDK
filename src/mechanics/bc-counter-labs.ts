@@ -6,7 +6,7 @@
  */
 import { SITE_LAB_SLUG_ALIASES } from '../data/index'
 import { findLabResearchBySlug } from '../data/index'
-import { getSharedToolLabs, computeLabValueAtLevel, type ToolLabRecord } from '../data/index'
+import { computeLabValueAtLevel, getSharedToolLabs, type ToolLabRecord } from '../data/index'
 import type { TournamentLeague } from '../data/index'
 import {
   type BattleConditionSelection,

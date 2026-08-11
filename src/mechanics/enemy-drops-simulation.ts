@@ -8,10 +8,10 @@ import { ENEMY_BALANCE_MASTERY_ROWS } from '../data/chart-tables'
 import { type FetchUpgrade, guardianUpgrades } from '../data/index'
 import {
   FETCH_LOOT_OUTCOME_WEIGHTS,
+  getEnemyDropsLabBenefits,
   getExpectedBossRerollShardsPerKill,
   getFetchRerollShardCount,
   getShatterShards,
-  getEnemyDropsLabBenefits,
 } from './enemy-drops-game-data'
 import { findLabResearchBySlug } from '../data/index'
 import {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { levelsAfterPath, planPath, type PathUpgrade } from './effective-paths-planner'
+import { levelsAfterPath, type PathUpgrade, planPath } from './effective-paths-planner'
 
 /** A linear stat: each level of each upgrade adds a fixed amount. */
 function linearEvaluate(weights: Record<string, number>) {

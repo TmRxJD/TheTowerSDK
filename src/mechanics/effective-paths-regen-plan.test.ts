@@ -8,8 +8,8 @@ import {
 } from './effective-paths-regen-plan'
 import { effectiveRegen, effectiveWallRegen } from './effective-paths-hp'
 import {
-  effectiveHealthPerks,
   type EffectiveHealthConfig,
+  effectiveHealthPerks,
   ZERO_EFFECTIVE_HEALTH_LEVELS,
 } from './effective-paths-ehp-model'
 import fixtures from './effective-paths-regen.fixtures.json'

@@ -16,12 +16,16 @@
 
 import {
   CARD_MASTERY_MAX_LEVEL,
-
+  MODULE_COIN_PATH_MAX_LEVEL,
+  MODULE_COIN_PATH_MIN_LEVEL,
+  moduleUpgradeCoinCost,
 } from './effective-paths-coin-costs'
 import {
+  ENHANCEMENT_SPEND_UNLOCKS,
   enhancementCoinCost,
   enhancementMaxLevel,
   type WorkshopEnhancementDiscounts,
+  workshopEnhancementSpend,
 } from './effective-paths-enhancement-costs'
 import {
   ASSIST_BONUS_MAX_LEVEL,
@@ -52,7 +56,9 @@ export type EffectiveHealthPathVariant = 'lab-time' | 'lab-coins' | 'stone' | 'c
  * model can value them and so a plan can say why it left them out, not because
  * a path can recommend them.
  */
-export type EffectiveHealthCurrency = 'lab' | 'stone' | 'enhancement' | 'mastery' | 'other'
+export type EffectiveHealthCurrency =
+  'lab' | 'stone' | 'enhancement' | 'mastery' | 'module' | 'other'
+
 
 /** One eHP upgrade: how it is named, keyed, and where its levels live. */
 export interface EffectiveHealthUpgradeDefinition {
@@ -164,6 +170,22 @@ export const EFFECTIVE_HEALTH_UPGRADES: readonly EffectiveHealthUpgradeDefinitio
     variants: LAB_AND_COIN,
   },
 
+  // Module levels, which only the coin path buys.
+  {
+    key: 'primaryModuleArmor',
+    sheetName: 'Primary Module - Armor',
+    currency: 'module',
+    maxLevel: MODULE_COIN_PATH_MAX_LEVEL,
+    variants: ['coin'],
+  },
+  {
+    key: 'assistModuleArmor',
+    sheetName: 'Assist Module - Armor',
+    currency: 'module',
+    maxLevel: MODULE_COIN_PATH_MAX_LEVEL,
+    variants: ['coin'],
+  },
+
   {
     key: 'assistSubstatArmor',
     sheetName: 'Assist Module Substats - Armor',
@@ -241,8 +263,18 @@ export interface EffectiveHealthPlanOptions {
   excludeKeys?: readonly (keyof EffectiveHealthLevels)[]
   /** Lab coin discount and lab speed. */
   labModifiers?: LabCostModifiers
+  /** Module upgrade coin discount, as a percentage — the sheet's `F73`. */
+  moduleDiscountPercent?: number
   /** Workshop discount labs and the vault discount, for the coin path. */
   enhancementDiscounts?: WorkshopEnhancementDiscounts
+  /**
+   * Every workshop enhancement level the player has, by the stat's own name.
+   *
+   * The coin path's later enhancements unlock on total coins already spent
+   * across all six defensive enhancements — including three that do nothing
+   * for eHP — so the gate cannot be worked out from `levels` alone.
+   */
+  enhancementLevels?: Readonly<Record<string, number>>
 }
 
 export interface EffectiveHealthPlan {
@@ -260,6 +292,13 @@ export interface EffectiveHealthPlan {
  * What each variant may spend on. The coin path buys two different kinds of
  * upgrade, which is why this is a list rather than one currency.
  */
+/** A spend threshold, in the short scale the game uses. */
+function formatSpend(value: number): string {
+  if (value >= 1e12) return `${value / 1e12}T`
+  if (value >= 1e9) return `${value / 1e9}B`
+  return String(value)
+}
+
 /** The upgrades a variant is allowed to buy. */
 function isEligible(
   upgrade: EffectiveHealthUpgradeDefinition,
@@ -285,6 +324,15 @@ export function planEffectiveHealthPath(options: EffectiveHealthPlanOptions): Ef
 
   const skipped = new Set<string>(options.excludeKeys ?? [])
 
+  /**
+   * `eHP Coins!CQ` — what the player has already spent on enhancements, which
+   * is what unlocks the later ones. Without the levels there is nothing to
+   * measure, so the gate stays open rather than locking everything out.
+   */
+  const spent = options.enhancementLevels
+    ? workshopEnhancementSpend(options.enhancementLevels, options.enhancementDiscounts)
+    : Number.POSITIVE_INFINITY
+
   for (const upgrade of EFFECTIVE_HEALTH_UPGRADES) {
     if (skipped.has(upgrade.key)) {
       excluded.push({ sheetName: upgrade.sheetName, reason: 'not unlocked yet' })
@@ -292,6 +340,25 @@ export function planEffectiveHealthPath(options: EffectiveHealthPlanOptions): Ef
     }
     if (!isEligible(upgrade, variant)) {
       excluded.push({ sheetName: upgrade.sheetName, reason: `not bought with ${variant} currency` })
+      continue
+    }
+
+    if (upgrade.currency === 'module' && levels[upgrade.key] < MODULE_COIN_PATH_MIN_LEVEL) {
+      excluded.push({
+        sheetName: upgrade.sheetName,
+        reason: `below level ${MODULE_COIN_PATH_MIN_LEVEL}, where shards are cheaper`,
+      })
+      continue
+    }
+
+    const unlockAt = upgrade.enhancementStat
+      ? ENHANCEMENT_SPEND_UNLOCKS[upgrade.enhancementStat]
+      : undefined
+    if (unlockAt !== undefined && spent < unlockAt) {
+      excluded.push({
+        sheetName: upgrade.sheetName,
+        reason: `locked until ${formatSpend(unlockAt)} coins are spent on enhancements`,
+      })
       continue
     }
 
@@ -334,6 +401,13 @@ export function planEffectiveHealthPath(options: EffectiveHealthPlanOptions): Ef
       if (!upgrade) return Number.NaN
 
       if (variant === 'stone') return assistUpgradeStoneCost(nextLevel) ?? Number.NaN
+
+      if (upgrade.currency === 'module') {
+        // The table is keyed by the level being left, not the one bought.
+        return moduleUpgradeCoinCost(nextLevel - 1, {
+          discountLabLevel: options.moduleDiscountPercent,
+        }) ?? Number.NaN
+      }
 
       if (variant === 'coin' && upgrade.currency === 'enhancement') {
         // Keyed by the level being left, not the one bought.

@@ -2,14 +2,14 @@ import { CARD_TEMPLATES, type CardTemplate } from '../data/index'
 import { MAX_CAMPAIGN_TIER } from '../data/index'
 import { findLabResearchBySlug } from '../data/index'
 import {
-  getSharedToolLabs,
   computeLabValueAtLevel,
+  getSharedToolLabs,
   type ToolLabRecord,
 } from '../data/index'
 import {
   buildUwStatLevelEntries,
-  parseUwStatNumericValue,
   findUwStatSpec,
+  parseUwStatNumericValue,
 } from '../internal/game-input-data/uw-stat-dropdown-math'
 import { BOT_UPGRADES_DATA } from '../data/index'
 import { WORKSHOP_DATA } from '../data/index'
@@ -22,9 +22,9 @@ import {
 } from './enemy-drops-simulation'
 import { clamp } from './math'
 import {
-  computeUptimeRatio,
   computeDurations,
   computeEffectiveCooldowns,
+  computeUptimeRatio,
   type UptimeCoreState,
 } from '../internal/uptime-core'
 import {

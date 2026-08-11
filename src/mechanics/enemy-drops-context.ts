@@ -19,8 +19,8 @@ import {
   computeUptimePerWaveDurationSeconds,
 } from '../internal/uptime-core'
 import {
-  type EnemyDropsSimulationInput,
   computeBossWaveIntervalFromTier,
+  type EnemyDropsSimulationInput,
 } from './enemy-drops-simulation'
 
 export function computeTierNumber(tierSelection: number | string): number {

@@ -3,10 +3,10 @@ import { describe, expect, it } from 'vitest'
 import {
   blackHoleDigestorCpkBonusPct,
   compressorRarityFromGeneratorUnique,
+  computeGeneratorUniqueRarityBonus,
   expectedFreeUpgradesPerWave,
   generatorUniqueTemplateFromEffectId,
   goldenBotCoverageWithSingularityHarness,
-  computeGeneratorUniqueRarityBonus,
   singularityHarnessRangeBonusMeters,
 } from './resource-drops-coin-generator-modules'
 import { estimateFetchCoinsFromRunCpm } from './resource-drops-coin-fetch'

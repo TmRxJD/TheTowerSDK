@@ -6,11 +6,11 @@ import { clampCampaignTier } from '../data/index'
 import type { TournamentLeague } from '../data/index'
 import type { BattleConditionSelection } from './battle-condition-config'
 import {
+  computeWaveInfoBossWaveInterval,
   isBossSpawnWave,
   isEliteEnemyType,
   isFleetEnemyType,
   isFleetSpawnWave,
-  computeWaveInfoBossWaveInterval,
   waveInfoBossSpawnColumn,
   waveInfoEliteEffectiveDoubleSpawnPct,
   waveInfoEliteSpawnChancePct,

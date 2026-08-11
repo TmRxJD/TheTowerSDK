@@ -3,7 +3,7 @@ import { buildStandardTierBattleConditions } from './battle-condition-config'
 import { bcCounterLabBenefitIncreaseAtLevel, computeEnemyStatLevelWithBcLabs } from './bc-counter-labs'
 import { getBasicEnemyWaveStats } from '../internal/enemy-wave-stats'
 import { getWaveInfoEnemyStatsUnfloored, WAVE_INFO_ENEMY_RULES } from './wave-info-enemy-stats'
-import { getSharedToolLabs, computeLabValueAtLevel } from '../data/index'
+import { computeLabValueAtLevel, getSharedToolLabs } from '../data/index'
 
 describe('Boss hpFixedMult path', () => {
   it('Boss wave base × 20 uses boss_health lab, not common_enemy_health', () => {

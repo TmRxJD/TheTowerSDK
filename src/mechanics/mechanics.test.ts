@@ -41,9 +41,9 @@ import {
   GUARANTEED_ELS_REDUCTION_MAX,
 } from './tournament-heat-bc'
 import {
+  getTierSelection,
   getTournamentLeagueTierBase,
   normalizeTierSelection,
-  getTierSelection,
 } from '../data/index'
 import { getBasicEnemyWaveStats } from '../internal/enemy-wave-stats'
 import { getEnemyWaveStats, getWaveBaseStats } from './enemy-wave-stats'

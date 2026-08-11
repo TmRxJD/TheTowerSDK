@@ -1,19 +1,19 @@
 import { describe, expect, it } from 'vitest'
 import {
   EFFECTIVE_PATHS_ALIASES,
-  getEffectivePathsAliasesByDomain,
   findEffectivePathsAlias,
+  getEffectivePathsAliasesByDomain,
 } from './effective-paths-aliases'
 import {
-  EffectivePathsInputError,
   collectDocumentInputs,
   collectExprInputs,
+  type EffectivePathsExpr,
+  EffectivePathsInputError,
+  type EffectivePathsStat,
   evaluateExpr,
   evaluateStat,
   findAliasBySheetName,
   parseEffectivePathsDocument,
-  type EffectivePathsExpr,
-  type EffectivePathsStat,
 } from './effective-paths-schema'
 
 const input = (ref: string): EffectivePathsExpr => ({ kind: 'input', ref })

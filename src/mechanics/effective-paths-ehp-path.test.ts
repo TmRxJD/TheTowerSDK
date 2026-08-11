@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import fixture from './effective-paths-ehp-path.fixtures.json'
 import { composeEffectiveHealth, effectiveHealth } from './effective-paths-hp'
-import { planPath, type PathUpgrade } from './effective-paths-planner'
-import { labDurationDaysToReachLevel, findEffectivePathsLabKey } from './effective-paths-lab-costs'
+import { type PathUpgrade, planPath } from './effective-paths-planner'
+import { findEffectivePathsLabKey, labDurationDaysToReachLevel } from './effective-paths-lab-costs'
 
 /**
  * Replay the sheet's own eHP path and check we land on its numbers.

@@ -1,5 +1,5 @@
 import { normalizeSharedCardsProgressInputs, type SharedCardsProgressInputs } from '../internal/cards-progress-inputs'
-import { findLabResearchBySlug, computeResearchLabLevel } from '../data/index'
+import { computeResearchLabLevel, findLabResearchBySlug } from '../data/index'
 import type {
   SharedBotMedalSplitterPlanner,
   SharedLabsCalcByLab,
@@ -9,8 +9,8 @@ import type {
 } from '../internal/shared-tool-inputs-extended'
 import type { SharedModuleEfficiencyLabs } from '../internal/shared-tool-inputs'
 import {
-  mergeSharedUptimeInputs,
   getUptimeCoreStateFromSharedInputs,
+  mergeSharedUptimeInputs,
   type SharedUptimeInputs,
   syncUptimeFromUwProgressLevels,
   type UwProgressLevels,
@@ -23,10 +23,10 @@ import { computeModuleCoinsKillBonusFromHub } from './resource-drops-coin-module
 import {
   blackHoleDigestorCpkBonusPct,
   compressorRarityFromGeneratorUnique,
-  expectedFreeUpgradesPerWave,
-  goldenBotCoverageWithSingularityHarness,
-  findEquippedGeneratorUnique,
   computeGeneratorUniqueRarityBonus,
+  expectedFreeUpgradesPerWave,
+  findEquippedGeneratorUnique,
+  goldenBotCoverageWithSingularityHarness,
   singularityHarnessRangeBonusMeters,
 } from './resource-drops-coin-generator-modules'
 import { introSprintZeroCoinWaveCap } from './resource-drops-coin-intro-sprint'

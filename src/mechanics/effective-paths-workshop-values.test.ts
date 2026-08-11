@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest'
 import fixtures from './effective-paths-workshop-values.fixtures.json'
 import {
   EFFECTIVE_HEALTH_WORKSHOP_STATS,
+  WORKSHOP_STAT_MAPPINGS,
   WORKSHOP_STATS_ABSENT_FROM_SHEET,
   WORKSHOP_STATS_DIVERGING_FROM_SHEET,
-  WORKSHOP_STAT_MAPPINGS,
   workshopStatMaxLevel,
-  workshopStatValue,
   workshopStatsWithSheetMapping,
+  workshopStatValue,
 } from './effective-paths-workshop-values'
 
 /**

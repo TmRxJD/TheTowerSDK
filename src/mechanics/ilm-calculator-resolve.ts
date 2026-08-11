@@ -1,18 +1,18 @@
 import { clampAssistMultiplierEfficiencyPct } from '../internal/assist-module-efficiency'
 import { computeModuleStat, type ModuleCalcType } from '../data/module-bonus'
-import { getSharedToolLabs, computeLabValueAtLevel } from '../data/index'
+import { computeLabValueAtLevel, getSharedToolLabs } from '../data/index'
 import {
   chainLightningShockMultiplier,
   enemyHitMultiplier,
   type EnemyHitMultiplierInput,
 } from './bot-hit-multiplier'
 import {
+  computeAmplifyBotBonusMultiplier,
+  computeIlmUniqueModuleRarityBonus,
   ILM_MODULE_SUBSTAT_NONE,
   ILM_UNIQUE_MODULE_IDS,
   ilmModuleSubstatBonusFromRarity,
   type IlmUniqueModuleRarityChoice,
-  computeAmplifyBotBonusMultiplier,
-  computeIlmUniqueModuleRarityBonus,
 } from './ilm-calculator-options'
 import type {
   IlmCalcsScenarioSettings,
@@ -22,11 +22,11 @@ import type {
   IlmModuleLevelRarity,
 } from './ilm-charge'
 import {
-  DEFAULT_PROTECTOR_DAMAGE_REDUCTION_MULT,
-  PROTECTOR_DAMAGE_REDUCTION_LAB_SLUG,
   computeInnerLandMinesDamageMult,
   computeMineAgeSecondsFromWaves,
   computeTowerDamageFromAttackLevel,
+  DEFAULT_PROTECTOR_DAMAGE_REDUCTION_MULT,
+  PROTECTOR_DAMAGE_REDUCTION_LAB_SLUG,
   SHOCK_MULTIPLIER_LAB_SLUG,
 } from './ilm-charge'
 

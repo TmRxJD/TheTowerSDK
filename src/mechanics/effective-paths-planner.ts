@@ -137,7 +137,7 @@ export function planPath(options: PathPlanOptions): PathStep[] {
       // Strictly greater, so the earliest upgrade wins a tie — the sheet takes
       // the leftmost column of the joint maximum.
       if (best === null || roi > best.roi) {
-        best = { upgrade: upgrade, roi, gain, price, value }
+        best = { upgrade, roi, gain, price, value }
       }
     }
 

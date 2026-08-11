@@ -250,10 +250,7 @@ describe('the candidate list against the sheet', () => {
     ])
   })
 
-  it('offers the coin path ten of its twelve', () => {
-    // Primary Module - Armor and Assist Module - Armor are the two the sheet
-    // has and this does not; they buy module *levels*, which the model has no
-    // level for yet.
+  it('offers the coin path all twelve', () => {
     expect(offered('coin')).toEqual([
       'Health Mastery',
       'Extra Defense Mastery',
@@ -261,6 +258,8 @@ describe('the candidate list against the sheet', () => {
       'Assist Module Substats - Generator',
       'Assist Module Bonus - Armor',
       'Dissonant Echo - Defense',
+      'Primary Module - Armor',
+      'Assist Module - Armor',
       'Health +',
       'Defense Absolute +',
       'Wall Health +',

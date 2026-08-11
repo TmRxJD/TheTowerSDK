@@ -7,9 +7,9 @@ import {
   dissonantBoost,
   type EffectiveHealthConfig,
   type EffectiveHealthLevels,
+  effectiveHealthPerks,
   tradeOffReduction,
   ZERO_EFFECTIVE_HEALTH_LEVELS,
-  effectiveHealthPerks,
 } from './effective-paths-ehp-model'
 
 /**
@@ -199,15 +199,15 @@ describe('what the model does with an empty account', () => {
     recovery: { has: false },
     perks: effectiveHealthPerks({
       apply: true,
-    health: true,
-    healthRegen: true,
-    extraDefense: true,
-    absoluteDefense: true,
-    enemyDamageTradeOff: true,
-    // A fresh account in the sheet has both health trade-off perks taken.
-    coinTradeOff: true,
-    regenTradeOff: true,
-  }),
+      health: true,
+      healthRegen: true,
+      extraDefense: true,
+      absoluteDefense: true,
+      enemyDamageTradeOff: true,
+      // A fresh account in the sheet has both health trade-off perks taken.
+      coinTradeOff: true,
+      regenTradeOff: true,
+    }),
     chronoField: { unlocked: false },
     chainThunder: { has: false, damageShare: 0 },
     deathWave: { hasHealth: false },

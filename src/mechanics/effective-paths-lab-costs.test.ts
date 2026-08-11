@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest'
 import fixtures from './effective-paths-lab-costs.fixtures.json'
 import {
   EFFECTIVE_PATHS_LAB_KEYS,
+  findEffectivePathsLabKey,
   labCoinCostToReachLevel,
   labCoinDiscount,
   labDurationDaysToReachLevel,
   labMaxCatalogLevel,
   labSpeedTotal,
-  findEffectivePathsLabKey,
 } from './effective-paths-lab-costs'
 
 describe('lab costs against the sheet', () => {

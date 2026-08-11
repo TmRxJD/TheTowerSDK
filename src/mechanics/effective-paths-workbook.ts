@@ -13,14 +13,14 @@
  */
 
 import {
-  parseSheetFunction,
   EffectivePathsFormulaError,
+  parseSheetFunction,
 } from './effective-paths-formula'
 import {
-  parseEffectivePathsDocument,
   type EffectivePathsAlias,
   type EffectivePathsDocument,
   type EffectivePathsStat,
+  parseEffectivePathsDocument,
 } from './effective-paths-schema'
 
 const XML_ENTITIES: Record<string, string> = {
