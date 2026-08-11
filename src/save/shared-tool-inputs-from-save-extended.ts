@@ -642,6 +642,14 @@ export function deriveShardSplitterInputsFromSaveRoot(
   return { splitterByType, costsAssistEffPctByType }
 }
 
+/** A research lab's level straight off the save, by catalog slug. */
+function readResearchLevelBySlug(root: Record<string, unknown>, slug: string): number {
+  const record = LAB_RESEARCH_BY_INDEX.find(entry => entry.slug === slug)
+  if (!record) return 0
+  const levels = readIndexedNumberArray(root.researchLevel, LAB_RESEARCH_BY_INDEX.length)
+  return Math.max(0, Math.floor(levels[record.index] ?? 0))
+}
+
 /**
  * A card's mastery level, which is a lab, not a flag.
  *
@@ -686,6 +694,12 @@ export function deriveThornsCalculatorSettingsFromSaveRoot(
   if (currentTier != null) partial.tier = Math.max(1, Math.floor(currentTier))
   if (pcLevel > 0) partial.pcLevel = clampInt(pcLevel, 0, 7)
   if (pcMasteryUnlocked) partial.pcMasteryLevel = readCardMasteryLevelBySlug(root, 'pc')
+
+  // Wall Thorns is a lab, and the calculator's field takes the lab's level
+  // directly -- both run 1..20. Nothing derived it, so a player with it maxed
+  // still started at 1.
+  const wallThorns = readResearchLevelBySlug(root, 'wall_thorns')
+  if (wallThorns > 0) partial.startWallThorns = clampInt(wallThorns, 1, 20)
 
   if (tournamentJoined && tierBeforeTournament != null) {
     const tier = Math.floor(tierBeforeTournament)

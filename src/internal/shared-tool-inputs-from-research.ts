@@ -222,9 +222,13 @@ export function deriveNamedCalculatorLabsFromResearchLevels(
       existing.improveTradeOffLabLevel,
       resolveResearchLabLevel(researchLabLevels, 'improve_trade_off_perks', 10),
     ),
+    // The thorns calculator labels this "BC Reduction Lab Level" and clamps it
+    // 0..10, which is exactly Battle Condition Reduction's range. It was reading
+    // Ultimate Weapon Durations, an unrelated lab, so a player with BC Reduction
+    // maxed at 10 saw whatever their UW durations happened to be.
     bcLabLevel: maxDefinedInt(
       existing.bcLabLevel,
-      resolveResearchLabLevel(researchLabLevels, 'ultimate_weapon_durations', 10),
+      resolveResearchLabLevel(researchLabLevels, 'battle_condition_reduction', 10),
     ),
     bcReductionLabLevel: maxDefinedInt(
       existing.bcReductionLabLevel,

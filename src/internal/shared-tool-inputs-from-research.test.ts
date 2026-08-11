@@ -140,7 +140,12 @@ describe('enrichSharedToolInputsFromResearchLevels', () => {
     expect(enriched.labsEconomy.labDiscount).toBe(9)
     expect(enriched.namedCalculatorLabs.improveTradeOffLabLevel).toBe(4)
     expect(enriched.namedCalculatorLabs.bcReductionLabLevel).toBe(7)
-    expect(enriched.namedCalculatorLabs.bcLabLevel).toBe(8)
+    // The thorns calculator's "BC Reduction Lab Level" is Battle Condition
+    // Reduction. It used to read Ultimate Weapon Durations, so a player with BC
+    // Reduction maxed saw their UW durations instead.
+    expect(enriched.namedCalculatorLabs.bcLabLevel).toBe(7)
+    // Uptime derives its own bcLabLevel and still reads Ultimate Weapon
+    // Durations -- a different field that happens to share a name.
     expect(enriched.uptimeInputs.bcLabLevel).toBe(8)
   })
 })
