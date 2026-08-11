@@ -15,6 +15,10 @@
  */
 
 import {
+  CARD_MASTERY_MAX_LEVEL,
+  cardMasteryCoinCost,
+} from './effective-paths-coin-costs'
+import {
   enhancementCoinCost,
   enhancementMaxLevel,
   type WorkshopEnhancementDiscounts,
@@ -48,7 +52,7 @@ export type EffectiveHealthPathVariant = 'lab-time' | 'lab-coins' | 'stone' | 'c
  * model can value them and so a plan can say why it left them out, not because
  * a path can recommend them.
  */
-export type EffectiveHealthCurrency = 'lab' | 'stone' | 'enhancement' | 'other'
+export type EffectiveHealthCurrency = 'lab' | 'stone' | 'enhancement' | 'mastery' | 'other'
 
 /** One eHP upgrade: how it is named, keyed, and where its levels live. */
 export interface EffectiveHealthUpgradeDefinition {
@@ -134,8 +138,8 @@ export const EFFECTIVE_HEALTH_UPGRADES: readonly EffectiveHealthUpgradeDefinitio
   // Feed eHP, but no path buys them here: shards and relics, not stones,
   // labs or coins. The sheet's coin path also buys card masteries and module
   // levels; those need their own cost sources and are not wired yet.
-  { key: 'healthMastery', sheetName: 'Health Mastery', currency: 'other', maxLevel: 9 },
-  { key: 'extraDefenseMastery', sheetName: 'Extra Defense Mastery', currency: 'other', maxLevel: 9 },
+  { key: 'healthMastery', sheetName: 'Health Mastery', currency: 'mastery', maxLevel: CARD_MASTERY_MAX_LEVEL },
+  { key: 'extraDefenseMastery', sheetName: 'Extra Defense Mastery', currency: 'mastery', maxLevel: CARD_MASTERY_MAX_LEVEL },
   { key: 'dissonantEchoDefense', sheetName: 'Dissonant Echo - Defense', currency: 'other', maxLevel: 20 },
 ]
 
@@ -171,11 +175,15 @@ export interface EffectiveHealthPlan {
 }
 
 /** The currency each variant spends. */
-const VARIANT_CURRENCY: Record<EffectiveHealthPathVariant, EffectiveHealthCurrency> = {
-  'lab-time': 'lab',
-  'lab-coins': 'lab',
-  stone: 'stone',
-  coin: 'enhancement',
+/**
+ * What each variant may spend on. The coin path buys two different kinds of
+ * upgrade, which is why this is a list rather than one currency.
+ */
+const VARIANT_CURRENCIES: Record<EffectiveHealthPathVariant, readonly EffectiveHealthCurrency[]> = {
+  'lab-time': ['lab'],
+  'lab-coins': ['lab'],
+  stone: ['stone'],
+  coin: ['enhancement', 'mastery'],
 }
 
 /** The upgrades a variant is allowed to buy. */
@@ -183,7 +191,7 @@ function isEligible(
   upgrade: EffectiveHealthUpgradeDefinition,
   variant: EffectiveHealthPathVariant,
 ): boolean {
-  return upgrade.currency === VARIANT_CURRENCY[variant]
+  return VARIANT_CURRENCIES[variant].includes(upgrade.currency)
 }
 
 /**
@@ -248,6 +256,10 @@ export function planEffectiveHealthPath(options: EffectiveHealthPlanOptions): Ef
       if (variant === 'stone') return assistUpgradeStoneCost(nextLevel) ?? Number.NaN
 
       if (variant === 'coin') {
+        // Both tables are keyed by the level being left, not the one bought.
+        if (upgrade.currency === 'mastery') {
+          return cardMasteryCoinCost(nextLevel - 1) ?? Number.NaN
+        }
         if (!upgrade.enhancementStat) return Number.NaN
         return enhancementCoinCost(
           upgrade.enhancementStat, nextLevel, options.enhancementDiscounts,
