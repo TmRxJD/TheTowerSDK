@@ -85,7 +85,7 @@ const DISSONANCE_ECHO_LAB_TYPE_LABELS: Record<DissonanceTypeKey, string> = {
 }
 
 /** Canonical field label shared by every dissonance echo lab dropdown. */
-export function buildDissonanceEchoLabFieldLabel(dataKey: DissonanceEchoLabDataKey): string {
+export function formatDissonanceEchoLabFieldLabel(dataKey: DissonanceEchoLabDataKey): string {
   const spec = DISSONANCE_ECHO_LAB_SPEC_BY_KEY[dataKey]
   const typeLabel = DISSONANCE_ECHO_LAB_TYPE_LABELS[spec.type] ?? spec.type
   return `${typeLabel} Echo Lab`

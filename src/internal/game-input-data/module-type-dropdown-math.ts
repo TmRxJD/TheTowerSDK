@@ -10,7 +10,7 @@ export function buildModuleTypeCategoryEntries(): readonly GameDropdownOptionEnt
   }))
 }
 
-export function buildModuleTypeCategoryOptionLabel(index: number): string {
+export function formatModuleTypeCategoryOptionLabel(index: number): string {
   const clamped = Math.max(0, Math.min(moduleTypeItems.length - 1, Math.floor(Number(index) || 0)))
   return moduleTypeItems[clamped]?.title ?? String(index)
 }
@@ -29,7 +29,7 @@ export function buildModuleLabEfficiencyEntries(): readonly GameDropdownOptionEn
   return Array.from({ length: 31 }, (_, value) => ({ value, baseValue: value }))
 }
 
-export function buildModuleLabEfficiencyOptionLabel(level: number): string {
+export function formatModuleLabEfficiencyOptionLabel(level: number): string {
   return `${Math.max(0, Math.min(30, Math.floor(Number(level) || 0)))}%`
 }
 

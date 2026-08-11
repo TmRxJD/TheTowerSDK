@@ -31,7 +31,7 @@ import {
 } from './research-lab-dropdown-math'
 import {
   buildWorkshopEnhancementLevelEntries,
-  buildWorkshopEnhancementOptionLabel,
+  formatWorkshopEnhancementOptionLabel,
 } from './workshop-enhancement-dropdown-math'
 import {
   buildGuardianStatLevelEntries,
@@ -49,27 +49,27 @@ import {
 } from './workshop-stat-dropdown-math'
 import {
   buildModuleLevelEntries,
-  buildModuleLevelOptionLabel,
+  formatModuleLevelOptionLabel,
   buildModuleQuantityEntries,
-  buildModuleQuantityOptionLabel,
+  formatModuleQuantityOptionLabel,
   buildModuleRarityLevelEntries,
-  buildModuleRarityOptionLabel,
+  formatModuleRarityOptionLabel,
   buildModuleSubstatRarityEntries,
-  buildModuleSubstatRarityOptionLabel,
+  formatModuleSubstatRarityOptionLabel,
 } from './module-dropdown-math'
 import {
   buildModuleDiscountEntries,
-  buildModuleDiscountOptionLabel,
+  formatModuleDiscountOptionLabel,
 } from './module-calculator-dropdown-math'
 import {
   buildModuleAssistEfficiencyEntries,
   buildModuleAssistEfficiencyOptionLabel,
   buildUptimeCompressorEntries,
-  buildUptimeCompressorOptionLabel,
+  formatUptimeCompressorOptionLabel,
   buildUptimeMvnModeEntries,
-  buildUptimeMvnModeOptionLabel,
+  formatUptimeMvnModeOptionLabel,
   buildUptimeWavesPerBossEntries,
-  buildUptimeWavesPerBossOptionLabel,
+  formatUptimeWavesPerBossOptionLabel,
 } from './uptime-relic-dropdown-math'
 import {
   buildUptimeSubstatPickEntries,
@@ -79,17 +79,17 @@ import {
 } from './uptime-substat-dropdown-math'
 import {
   buildElsAssistSubstatEfficiencyEntries,
-  buildElsAssistSubstatEfficiencyOptionLabel,
+  formatElsAssistSubstatEfficiencyOptionLabel,
   buildElsModuleSubstatRarityEntries,
   buildElsModuleSubstatRarityOptionLabel,
   buildElsVaultStarEntries,
-  buildElsVaultStarOptionLabel,
+  formatElsVaultStarOptionLabel,
   buildElsWorkshopEnhancementDiscountEntries,
-  buildElsWorkshopEnhancementDiscountOptionLabel,
+  formatElsWorkshopEnhancementDiscountOptionLabel,
   buildElsWorkshopUtilityDiscountEntries,
-  buildElsWorkshopUtilityDiscountOptionLabel,
+  formatElsWorkshopUtilityDiscountOptionLabel,
   buildElsWorkshopVaultDiscountEntries,
-  buildElsWorkshopVaultDiscountOptionLabel,
+  formatElsWorkshopVaultDiscountOptionLabel,
   type ElsModuleSubstatLabel,
 } from './els-dropdown-math'
 import { evaluateExtendedDropdownOptions, isExtendedDropdownKey } from './extended-dropdown-evaluators'
@@ -97,7 +97,7 @@ import {
   buildBotLevelOptionLabel,
 } from './bot-dropdown-math'
 import {
-  buildGuardianLevelOptionLabel,
+  formatGuardianLevelOptionLabel,
   readGuardianUpgradeDisplayAtSourceLevel,
 } from './guardian-dropdown-math'
 import {
@@ -185,7 +185,7 @@ function evaluateGuardianGameInputOptions(key: GuardianGameDataKey): StandardDro
 
   return registryItem.data.map((entry: { value: number; baseValue: number }) => ({
     value: entry.value,
-    label: buildGuardianLevelOptionLabel(
+    label: formatGuardianLevelOptionLabel(
       readGuardianUpgradeDisplayAtSourceLevel(spec.mapping, spec.kind, entry.value),
     ),
   }))
@@ -207,7 +207,7 @@ function evaluateWorkshopEnhancementLevelOptions(context: GameDropdownHubContext
 
   return buildWorkshopEnhancementLevelEntries(enhancementKey).map(entry => ({
     value: entry.value,
-    label: buildWorkshopEnhancementOptionLabel(entry.value),
+    label: formatWorkshopEnhancementOptionLabel(entry.value),
   }))
 }
 
@@ -261,7 +261,7 @@ function evaluateWorkshopTierLevelOptions(context: GameDropdownHubContext): Stan
 function evaluateModuleRarityOptions(context: GameDropdownHubContext): StandardDropdownOption[] {
   return buildModuleRarityLevelEntries(context.moduleTemplateId).map(entry => ({
     value: entry.value,
-    label: buildModuleRarityOptionLabel(entry.value),
+    label: formatModuleRarityOptionLabel(entry.value),
   }))
 }
 
@@ -271,28 +271,28 @@ function evaluateModuleLevelOptions(context: GameDropdownHubContext): StandardDr
 
   return buildModuleLevelEntries(moduleRarity).map(entry => ({
     value: entry.value,
-    label: buildModuleLevelOptionLabel(entry.value),
+    label: formatModuleLevelOptionLabel(entry.value),
   }))
 }
 
 function evaluateModuleQuantityOptions(): StandardDropdownOption[] {
   return buildModuleQuantityEntries().map(entry => ({
     value: entry.value,
-    label: buildModuleQuantityOptionLabel(entry.value),
+    label: formatModuleQuantityOptionLabel(entry.value),
   }))
 }
 
 function evaluateModuleSubstatRarityOptions(context: GameDropdownHubContext): StandardDropdownOption[] {
   return buildModuleSubstatRarityEntries(context.moduleMaxRarity).map(entry => ({
     value: entry.value,
-    label: buildModuleSubstatRarityOptionLabel(entry.value),
+    label: formatModuleSubstatRarityOptionLabel(entry.value),
   }))
 }
 
 function evaluateModuleDiscountOptions(): StandardDropdownOption[] {
   return buildModuleDiscountEntries().map(entry => ({
     value: entry.value,
-    label: buildModuleDiscountOptionLabel(entry.value),
+    label: formatModuleDiscountOptionLabel(entry.value),
   }))
 }
 
@@ -320,21 +320,21 @@ function evaluateUptimeSubstatPickOptions(context: GameDropdownHubContext): Stan
 function evaluateUptimeMvnModeOptions(): StandardDropdownOption[] {
   return buildUptimeMvnModeEntries().map(entry => ({
     value: entry.value,
-    label: buildUptimeMvnModeOptionLabel(entry.value),
+    label: formatUptimeMvnModeOptionLabel(entry.value),
   }))
 }
 
 function evaluateUptimeCompressorOptions(): StandardDropdownOption[] {
   return buildUptimeCompressorEntries().map(entry => ({
     value: entry.value,
-    label: buildUptimeCompressorOptionLabel(entry.value),
+    label: formatUptimeCompressorOptionLabel(entry.value),
   }))
 }
 
 function evaluateUptimeWavesPerBossOptions(): StandardDropdownOption[] {
   return buildUptimeWavesPerBossEntries().map(entry => ({
     value: entry.value,
-    label: buildUptimeWavesPerBossOptionLabel(entry.value),
+    label: formatUptimeWavesPerBossOptionLabel(entry.value),
   }))
 }
 
@@ -359,35 +359,35 @@ function evaluateElsModuleSubstatRarityOptions(context: GameDropdownHubContext):
 function evaluateElsWorkshopUtilityDiscountOptions(): StandardDropdownOption[] {
   return buildElsWorkshopUtilityDiscountEntries().map(entry => ({
     value: entry.value,
-    label: buildElsWorkshopUtilityDiscountOptionLabel(entry.value),
+    label: formatElsWorkshopUtilityDiscountOptionLabel(entry.value),
   }))
 }
 
 function evaluateElsWorkshopEnhancementDiscountOptions(): StandardDropdownOption[] {
   return buildElsWorkshopEnhancementDiscountEntries().map(entry => ({
     value: entry.value,
-    label: buildElsWorkshopEnhancementDiscountOptionLabel(entry.value),
+    label: formatElsWorkshopEnhancementDiscountOptionLabel(entry.value),
   }))
 }
 
 function evaluateElsWorkshopVaultDiscountOptions(): StandardDropdownOption[] {
   return buildElsWorkshopVaultDiscountEntries().map(entry => ({
     value: entry.value,
-    label: buildElsWorkshopVaultDiscountOptionLabel(entry.value),
+    label: formatElsWorkshopVaultDiscountOptionLabel(entry.value),
   }))
 }
 
 function evaluateElsVaultStarOptions(): StandardDropdownOption[] {
   return buildElsVaultStarEntries().map(entry => ({
     value: entry.value,
-    label: buildElsVaultStarOptionLabel(entry.value),
+    label: formatElsVaultStarOptionLabel(entry.value),
   }))
 }
 
 function evaluateElsAssistSubstatEfficiencyOptions(): StandardDropdownOption[] {
   return buildElsAssistSubstatEfficiencyEntries().map(entry => ({
     value: entry.value,
-    label: buildElsAssistSubstatEfficiencyOptionLabel(entry.value),
+    label: formatElsAssistSubstatEfficiencyOptionLabel(entry.value),
   }))
 }
 

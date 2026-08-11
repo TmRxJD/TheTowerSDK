@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.1
+
+58 label builders became formatters: `buildWorkshopStatFieldLabel` is now
+`formatWorkshopStatFieldLabel`, and so on for every `build*Label` that takes one
+argument and returns a string. Turning one value into words for a human to read
+is formatting, not assembly.
+
+Scoped deliberately. 64 exported `build*` take one argument and return a string,
+but six of them build keys -- `buildTrackerRunFingerprint`,
+`buildBattleRunDeduplicationKey` -- and a key is assembled, not formatted. Those
+kept `build`.
+
 ## 0.3.0
 
 Breaking. Every lab table moved, and 562 exported functions were renamed. If you

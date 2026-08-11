@@ -75,7 +75,7 @@ export function findUptimeResearchLabGameDataKeyByField(
 }
 
 /** Canonical field label shared by every uptime research-lab dropdown. */
-export function buildUptimeResearchLabFieldLabel(dataKey: UptimeResearchLabDataKey): string {
+export function formatUptimeResearchLabFieldLabel(dataKey: UptimeResearchLabDataKey): string {
   const spec = UPTIME_RESEARCH_LAB_SPEC_BY_KEY[dataKey]
   if (spec.researchSlug) return getResearchLabDisplayName(spec.researchSlug)
   if (dataKey === 'dw_base_waves_level') return 'Death Wave Quantity'

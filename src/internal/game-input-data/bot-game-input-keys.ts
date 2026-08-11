@@ -107,7 +107,7 @@ export function findBotGameInputDropdownBinding(
 }
 
 /** Canonical field label shared by every bot game-input dropdown (tracker, calculators, uptime). */
-export function buildBotGameInputFieldLabel(dataKey: BotGameDataKey): string {
+export function formatBotGameInputFieldLabel(dataKey: BotGameDataKey): string {
   const spec = BOT_GAME_INPUT_SPEC_BY_KEY[dataKey]
   if (!spec) return dataKey
   const statOrLab = findBotLabStatName(spec.mapping, spec.kind)

@@ -21,7 +21,7 @@ export function buildThornsTierEntries(): readonly GameDropdownOptionEntry[] {
   }))
 }
 
-export function buildThornsTierOptionLabel(index: number): string {
+export function formatThornsTierOptionLabel(index: number): string {
   const clamped = Math.max(0, Math.min(THORNS_TIER_VALUES.length - 1, Math.floor(Number(index) || 0)))
   const tier = THORNS_TIER_VALUES[clamped]
   if (typeof tier === 'number') {
@@ -47,7 +47,7 @@ export function buildThornsPlasmaCannonLevelEntries(): readonly GameDropdownOpti
   return Array.from({ length: 8 }, (_, level) => ({ value: level, baseValue: level }))
 }
 
-export function buildThornsPlasmaCannonLevelOptionLabel(level: number): string {
+export function formatThornsPlasmaCannonLevelOptionLabel(level: number): string {
   const clamped = Math.max(0, Math.min(7, Math.floor(Number(level) || 0)))
   const pct = clamped === 0 ? 0 : 30 + (clamped - 1) * 4
   return `${clamped} - ${pct}%`
@@ -57,7 +57,7 @@ export function buildThornsPlasmaCannonMasteryEntries(): readonly GameDropdownOp
   return Array.from({ length: 10 }, (_, level) => ({ value: level, baseValue: level }))
 }
 
-export function buildThornsPlasmaCannonMasteryOptionLabel(level: number): string {
+export function formatThornsPlasmaCannonMasteryOptionLabel(level: number): string {
   const clamped = Math.max(0, Math.min(9, Math.floor(Number(level) || 0)))
   return `${clamped} - ${clamped * 5}%`
 }
@@ -66,7 +66,7 @@ export function buildThornsBcGlobalLabEntries(): readonly GameDropdownOptionEntr
   return Array.from({ length: 11 }, (_, level) => ({ value: level, baseValue: level }))
 }
 
-export function buildThornsBcGlobalLabOptionLabel(level: number): string {
+export function formatThornsBcGlobalLabOptionLabel(level: number): string {
   const clamped = Math.max(0, Math.min(10, Math.floor(Number(level) || 0)))
   return `${clamped} - ${clamped * 2}%`
 }
@@ -75,7 +75,7 @@ export function buildThornsBcReductionLabEntries(): readonly GameDropdownOptionE
   return Array.from({ length: 21 }, (_, level) => ({ value: level, baseValue: level }))
 }
 
-export function buildThornsBcReductionLabOptionLabel(level: number): string {
+export function formatThornsBcReductionLabOptionLabel(level: number): string {
   const clamped = Math.max(0, Math.min(20, Math.floor(Number(level) || 0)))
   return `${clamped} - ${clamped}%`
 }
@@ -87,7 +87,7 @@ export function buildThornsWallThornsEntries(): readonly GameDropdownOptionEntry
   })
 }
 
-export function buildThornsWallThornsOptionLabel(level: number): string {
+export function formatThornsWallThornsOptionLabel(level: number): string {
   const clamped = Math.max(1, Math.min(20, Math.floor(Number(level) || 1)))
   return `${clamped} - ${clamped}%`
 }

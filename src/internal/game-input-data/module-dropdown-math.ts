@@ -99,7 +99,7 @@ export function buildModuleRarityLevelEntries(moduleTemplateId?: string | null):
   }))
 }
 
-export function buildModuleRarityOptionLabel(rarityIndex: number): string {
+export function formatModuleRarityOptionLabel(rarityIndex: number): string {
   const rarity = getModuleRarityByIndex(rarityIndex)
   return rarity.startsWith('Ancestral ') && rarity !== 'Ancestral' ? `${rarity}★` : rarity
 }
@@ -109,7 +109,7 @@ export function buildModuleLevelEntries(moduleRarity: string): readonly GameDrop
   return buildLevelOptions(cap, 1).map(level => ({ value: level, baseValue: level }))
 }
 
-export function buildModuleLevelOptionLabel(level: number): string {
+export function formatModuleLevelOptionLabel(level: number): string {
   return String(level)
 }
 
@@ -120,7 +120,7 @@ export function buildModuleQuantityEntries(): readonly GameDropdownOptionEntry[]
   })
 }
 
-export function buildModuleQuantityOptionLabel(quantity: number): string {
+export function formatModuleQuantityOptionLabel(quantity: number): string {
   return String(quantity)
 }
 
@@ -133,7 +133,7 @@ export function buildModuleSubstatRarityEntries(
     .map((rarity, index) => ({ value: index, baseValue: index }))
 }
 
-export function buildModuleSubstatRarityOptionLabel(rarityIndex: number): string {
+export function formatModuleSubstatRarityOptionLabel(rarityIndex: number): string {
   return MODULE_SUBSTAT_BASE_RARITIES[rarityIndex] ?? String(rarityIndex)
 }
 

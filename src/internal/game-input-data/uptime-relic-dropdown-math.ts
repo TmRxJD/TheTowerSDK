@@ -38,7 +38,7 @@ export function buildUptimeMvnModeEntries(): readonly GameDropdownOptionEntry[] 
   return UPTIME_MVN_MODES.map((mode, index) => ({ value: index, baseValue: index, meta: { mode } }))
 }
 
-export function buildUptimeMvnModeOptionLabel(index: number): string {
+export function formatUptimeMvnModeOptionLabel(index: number): string {
   const mode = UPTIME_MVN_MODES[Math.max(0, Math.min(UPTIME_MVN_MODES.length - 1, Math.floor(Number(index) || 0)))] ?? 'Disabled'
   return MVN_MODE_LABELS[mode]
 }
@@ -57,7 +57,7 @@ export function buildUptimeCompressorEntries(): readonly GameDropdownOptionEntry
   return UPTIME_COMPRESSOR_MODES.map((mode, index) => ({ value: index, baseValue: index, meta: { mode } }))
 }
 
-export function buildUptimeCompressorOptionLabel(index: number): string {
+export function formatUptimeCompressorOptionLabel(index: number): string {
   const mode = UPTIME_COMPRESSOR_MODES[Math.max(0, Math.min(UPTIME_COMPRESSOR_MODES.length - 1, Math.floor(Number(index) || 0)))] ?? 'Disabled'
   return COMPRESSOR_MODE_LABELS[mode]
 }
@@ -79,7 +79,7 @@ export function buildUptimeWavesPerBossEntries(): readonly GameDropdownOptionEnt
   })
 }
 
-export function buildUptimeWavesPerBossOptionLabel(waves: number): string {
+export function formatUptimeWavesPerBossOptionLabel(waves: number): string {
   return String(waves)
 }
 

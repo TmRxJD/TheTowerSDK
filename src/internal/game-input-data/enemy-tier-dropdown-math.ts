@@ -10,7 +10,7 @@ export function buildEnemyTierSelectionEntries(): readonly GameDropdownOptionEnt
   }))
 }
 
-export function buildEnemyTierSelectionOptionLabel(index: number): string {
+export function formatEnemyTierSelectionOptionLabel(index: number): string {
   const options = buildTierSelectItems()
   const clamped = Math.max(0, Math.min(options.length - 1, Math.floor(Number(index) || 0)))
   return options[clamped]?.title ?? String(index)
@@ -44,7 +44,7 @@ export function buildElsFocusEntries(): readonly GameDropdownOptionEntry[] {
   }))
 }
 
-export function buildElsFocusOptionLabel(index: number): string {
+export function formatElsFocusOptionLabel(index: number): string {
   const clamped = Math.max(0, Math.min(ELS_FOCUS_OPTIONS.length - 1, Math.floor(Number(index) || 0)))
   return ELS_FOCUS_OPTIONS[clamped]?.title ?? String(index)
 }

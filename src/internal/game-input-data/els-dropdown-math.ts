@@ -57,7 +57,7 @@ export function buildElsWorkshopUtilityDiscountEntries(): readonly GameDropdownO
   }))
 }
 
-export function buildElsWorkshopUtilityDiscountOptionLabel(pct: number): string {
+export function formatElsWorkshopUtilityDiscountOptionLabel(pct: number): string {
   const value = Number(pct)
   return `${value.toFixed(1)}%`
 }
@@ -69,7 +69,7 @@ export function buildElsWorkshopEnhancementDiscountEntries(): readonly GameDropd
   }))
 }
 
-export function buildElsWorkshopEnhancementDiscountOptionLabel(pct: number): string {
+export function formatElsWorkshopEnhancementDiscountOptionLabel(pct: number): string {
   const value = Number(pct)
   return `${value.toFixed(1)}%`
 }
@@ -81,7 +81,7 @@ export function buildElsWorkshopVaultDiscountEntries(): readonly GameDropdownOpt
   }))
 }
 
-export function buildElsWorkshopVaultDiscountOptionLabel(pct: number): string {
+export function formatElsWorkshopVaultDiscountOptionLabel(pct: number): string {
   const value = Number(pct)
   return `${value.toFixed(1)}%`
 }
@@ -93,7 +93,7 @@ export function buildElsVaultStarEntries(): readonly GameDropdownOptionEntry[] {
   }))
 }
 
-export function buildElsVaultStarOptionLabel(stars: number): string {
+export function formatElsVaultStarOptionLabel(stars: number): string {
   const options = buildVaultElsStarOptions()
   const match = options.find(option => option.value === Math.floor(Number(stars) || 0))
   return match?.title ?? `${stars} stars`
@@ -106,6 +106,6 @@ export function buildElsAssistSubstatEfficiencyEntries(): readonly GameDropdownO
   }))
 }
 
-export function buildElsAssistSubstatEfficiencyOptionLabel(pct: number): string {
+export function formatElsAssistSubstatEfficiencyOptionLabel(pct: number): string {
   return `${Math.max(1, Math.min(100, Math.floor(Number(pct) || 1)))}%`
 }

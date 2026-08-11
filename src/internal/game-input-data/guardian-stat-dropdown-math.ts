@@ -1,6 +1,6 @@
 import { guardianUpgrades } from '../../data/index'
 import { UPTIME_GUARDIAN_FIELD_MAP } from '../shared-uptime-inputs'
-import { buildGuardianLevelOptionLabel } from './guardian-dropdown-math'
+import { formatGuardianLevelOptionLabel } from './guardian-dropdown-math'
 import type { GameDropdownOptionEntry } from './types'
 
 export interface GuardianStatSpec {
@@ -49,5 +49,5 @@ export function buildGuardianStatOptionLabel(spec: GuardianStatSpec, sourceLevel
   const upgrades = guardianUpgrades[spec.guardianKey as keyof typeof guardianUpgrades] as unknown as Array<Record<string, unknown>>
   const row = upgrades.find(entry => Number(entry.level) === sourceLevel)
   const display = row?.[spec.statField]
-  return buildGuardianLevelOptionLabel(display as string | number | null | undefined)
+  return formatGuardianLevelOptionLabel(display as string | number | null | undefined)
 }

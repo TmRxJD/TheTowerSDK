@@ -93,7 +93,7 @@ export function buildGuardianGameInputLevelEntries(
   })
 }
 
-export function buildGuardianLevelOptionLabel(displayValue: string | number | null | undefined): string {
+export function formatGuardianLevelOptionLabel(displayValue: string | number | null | undefined): string {
   const text = String(displayValue ?? '').trim()
   return text.length > 0 ? text : '—'
 }

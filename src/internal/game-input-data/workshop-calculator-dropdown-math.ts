@@ -20,7 +20,7 @@ export function buildWorkshopCalcSectionEntries(): readonly GameDropdownOptionEn
   }))
 }
 
-export function buildWorkshopCalcSectionOptionLabel(index: number): string {
+export function formatWorkshopCalcSectionOptionLabel(index: number): string {
   const clamped = Math.max(0, Math.min(WORKSHOP_CALC_SECTIONS.length - 1, Math.floor(Number(index) || 0)))
   return WORKSHOP_CALC_SECTIONS[clamped]?.label ?? String(index)
 }
@@ -117,6 +117,6 @@ export function buildWorkshopCalcDiscountEntries(profile: WorkshopDiscountProfil
   ]
 }
 
-export function buildWorkshopCalcDiscountOptionLabel(pct: number): string {
+export function formatWorkshopCalcDiscountOptionLabel(pct: number): string {
   return `${Number(pct).toFixed(1)}%`
 }

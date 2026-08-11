@@ -25,12 +25,12 @@ export function buildWorkshopEnhancementLevelEntries(
   return Array.from({ length: maxLevel + 1 }, (_, value) => ({ value, baseValue: value }))
 }
 
-export function buildWorkshopEnhancementOptionLabel(level: number): string {
+export function formatWorkshopEnhancementOptionLabel(level: number): string {
   return String(level)
 }
 
 /** Canonical field label shared by every workshop enhancement level dropdown. */
-export function buildWorkshopEnhancementFieldLabel(enhancementKey: string): string {
+export function formatWorkshopEnhancementFieldLabel(enhancementKey: string): string {
   const dataKey = getWorkshopEnhancementDataKey(enhancementKey)
   const match = getWorkshopEnhancementDefinitions().find(stat => stat.key === dataKey)
   return match?.label ?? enhancementKey

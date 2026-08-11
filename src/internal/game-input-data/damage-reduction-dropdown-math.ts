@@ -166,7 +166,7 @@ export function buildDamageReductionBotBonusEntries(): readonly GameDropdownOpti
   return botBonusEntriesCache
 }
 
-export function buildDamageReductionBotBonusOptionLabel(value: number): string {
+export function formatDamageReductionBotBonusOptionLabel(value: number): string {
   const match = getBotBotBonusCatalog().find(entry => entry.value === value)
   if (!match || match.value <= 0) return 'Disabled'
   return match.rawLabel ?? String(match.value)
@@ -179,7 +179,7 @@ export function buildDamageReductionNmpReductionEntries(): readonly GameDropdown
   return nmpEntriesCache
 }
 
-export function buildDamageReductionNmpReductionOptionLabel(pct: number): string {
+export function formatDamageReductionNmpReductionOptionLabel(pct: number): string {
   return `${Number(pct)}%`
 }
 
@@ -190,7 +190,7 @@ export function buildDamageReductionNmpOrbHitsEntries(): readonly GameDropdownOp
   })
 }
 
-export function buildDamageReductionNmpOrbHitsOptionLabel(hits: number): string {
+export function formatDamageReductionNmpOrbHitsOptionLabel(hits: number): string {
   return String(Math.max(1, Math.min(50, Math.floor(Number(hits) || 1))))
 }
 
@@ -201,7 +201,7 @@ export function buildDamageReductionPrimordialCollapseEntries(): readonly GameDr
   return pcEntriesCache
 }
 
-export function buildDamageReductionPrimordialCollapseOptionLabel(pct: number): string {
+export function formatDamageReductionPrimordialCollapseOptionLabel(pct: number): string {
   return `${Number(pct)}%`
 }
 
@@ -215,7 +215,7 @@ export function buildDamageReductionCtLevelEntries(): readonly GameDropdownOptio
   return ctLevelEntriesCache
 }
 
-export function buildDamageReductionCtLevelOptionLabel(level: number): string {
+export function formatDamageReductionCtLevelOptionLabel(level: number): string {
   const clamped = Math.max(1, Math.min(CHAIN_THUNDER_MAX_LEVEL, Math.floor(Number(level) || 1)))
   const maxPct = computeChainThunderMaxReductionPct(clamped)
   const formatted = Number.isInteger(maxPct) ? String(maxPct) : maxPct.toFixed(1)
@@ -232,7 +232,7 @@ export function buildDamageReductionClPlusLevelEntries(): readonly GameDropdownO
   return clPlusEntriesCache
 }
 
-export function buildDamageReductionClPlusLevelOptionLabel(level: number): string {
+export function formatDamageReductionClPlusLevelOptionLabel(level: number): string {
   const maxLevel = SMITE_DAMAGE_BY_CL_PLUS_LEVEL.length - 1
   const clamped = Math.max(0, Math.min(maxLevel, Math.floor(Number(level) || 0)))
   const pct = chainLightningPlusDamageFraction(clamped) * 100
@@ -246,6 +246,6 @@ export function buildDamageReductionAvgClHitsEntries(): readonly GameDropdownOpt
   })
 }
 
-export function buildDamageReductionAvgClHitsOptionLabel(hits: number): string {
+export function formatDamageReductionAvgClHitsOptionLabel(hits: number): string {
   return String(Math.max(1, Math.min(100, Math.floor(Number(hits) || 1))))
 }

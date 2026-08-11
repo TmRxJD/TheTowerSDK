@@ -201,23 +201,23 @@ export function getLabsTrackerSortByIndex(index: number): LabsTrackerSortKey {
   return resolveStringByIndex(LABS_TRACKER_SORT_VALUES, index, 'order')
 }
 
-export function buildModuleTrackerTypeFilterOptionLabel(index: number): string {
+export function formatModuleTrackerTypeFilterOptionLabel(index: number): string {
   return MODULE_TRACKER_TYPE_FILTER_LABELS[getModuleTrackerTypeFilterByIndex(index)]
 }
 
-export function buildModuleTrackerRarityFilterOptionLabel(index: number): string {
+export function formatModuleTrackerRarityFilterOptionLabel(index: number): string {
   return getModuleTrackerRarityFilterByIndex(index)
 }
 
-export function buildModuleTrackerSortOptionLabel(index: number): string {
+export function formatModuleTrackerSortOptionLabel(index: number): string {
   return MODULE_TRACKER_SORT_LABELS[getModuleTrackerSortByIndex(index)]
 }
 
-export function buildCardTrackerSortOptionLabel(index: number): string {
+export function formatCardTrackerSortOptionLabel(index: number): string {
   return CARD_TRACKER_SORT_LABELS[getCardTrackerSortByIndex(index)]
 }
 
-export function buildLabsTrackerSortOptionLabel(index: number): string {
+export function formatLabsTrackerSortOptionLabel(index: number): string {
   return LABS_TRACKER_SORT_LABELS[getLabsTrackerSortByIndex(index)]
 }
 
@@ -510,11 +510,11 @@ export function getLabsTypeFilterByIndex(index: number, typeOptions: readonly st
   return resolveStringByIndex(values, index, 'All')
 }
 
-export function buildWorkshopTrackerCategoryFilterOptionLabel(index: number): string {
+export function formatWorkshopTrackerCategoryFilterOptionLabel(index: number): string {
   return WORKSHOP_CATEGORY_LABELS[getWorkshopTrackerCategoryFilterByIndex(index)]
 }
 
-export function buildWorkshopOverviewLayoutOptionLabel(index: number): string {
+export function formatWorkshopOverviewLayoutOptionLabel(index: number): string {
   return WORKSHOP_OVERVIEW_LAYOUT_LABELS[resolveStringByIndex(WORKSHOP_OVERVIEW_LAYOUT_VALUES, index, 'auto')]
 }
 
@@ -536,11 +536,11 @@ export function buildUwTrackerSortOptionLabel(index: number, includeCustom: bool
   return UW_SORT_LABELS[getUwTrackerSortByIndex(index, includeCustom)] ?? String(index)
 }
 
-export function buildRelicsBonusSortOptionLabel(index: number): string {
+export function formatRelicsBonusSortOptionLabel(index: number): string {
   return RELICS_BONUS_SORT_LABELS[getRelicsBonusSortByIndex(index)]
 }
 
-export function buildRelicsThemesSortOptionLabel(index: number): string {
+export function formatRelicsThemesSortOptionLabel(index: number): string {
   return RELICS_THEMES_SORT_LABELS[getRelicsThemesSortByIndex(index)]
 }
 
@@ -549,7 +549,7 @@ export function buildBotsTrackerPresetOptionLabel(index: number, labels?: readon
   return labels?.[clamped] ?? `Preset ${clamped + 1}`
 }
 
-export function buildLabsSpeedupOptionLabel(index: number): string {
+export function formatLabsSpeedupOptionLabel(index: number): string {
   return `${computeLabsSpeedupByIndex(index)}x`
 }
 
@@ -557,7 +557,7 @@ export function buildLabsTypeFilterOptionLabel(index: number, typeOptions: reado
   return getLabsTypeFilterByIndex(index, typeOptions)
 }
 
-export function buildUwOverviewViewOptionLabel(index: number): string {
+export function formatUwOverviewViewOptionLabel(index: number): string {
   return UW_OVERVIEW_VIEW_LABELS[getUwOverviewViewByIndex(index)]
 }
 
@@ -631,10 +631,10 @@ export function getLifetimeChartLineTypeByIndex(index: number): LifetimeChartLin
   return resolveStringByIndex(LIFETIME_CHART_LINE_TYPE_VALUES, index, 'solid')
 }
 
-export function buildLifetimeAveragePeriodOptionLabel(index: number): string {
+export function formatLifetimeAveragePeriodOptionLabel(index: number): string {
   return LIFETIME_AVERAGE_PERIOD_LABELS[getLifetimeAveragePeriodByIndex(index)]
 }
 
-export function buildLifetimeChartLineTypeOptionLabel(index: number): string {
+export function formatLifetimeChartLineTypeOptionLabel(index: number): string {
   return LIFETIME_CHART_LINE_TYPE_LABELS[getLifetimeChartLineTypeByIndex(index)]
 }

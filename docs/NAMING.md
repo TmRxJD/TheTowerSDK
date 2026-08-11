@@ -40,7 +40,7 @@ Retired, and what replaced them:
 verb + subject + qualifier?
 ```
 
-- **Say the subject once.** `buildWorkshopTrackerCategoryFilterOptionLabel` says four kinds of thing
+- **Say the subject once.** `formatWorkshopTrackerCategoryFilterOptionLabel` says four kinds of thing
   and returns one string; `buildWorkshopFilterLabel` is the same function.
 - **Drop the preposition tail.** `FromSaveRoot`, `FromSettings`, `FromAccumulated` describe the
   parameter, and the parameter is right there in the signature. Keep it only where two functions

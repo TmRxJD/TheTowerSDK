@@ -198,6 +198,6 @@ export function buildLabsTrackerLevelEntries(
   })
 }
 
-export function buildLabsTrackerLevelOptionLabel(level: number): string {
+export function formatLabsTrackerLevelOptionLabel(level: number): string {
   return String(Math.max(0, Math.floor(Number(level) || 0)))
 }

@@ -7,6 +7,6 @@ export function buildModuleDiscountEntries(): readonly GameDropdownOptionEntry[]
   }))
 }
 
-export function buildModuleDiscountOptionLabel(pct: number): string {
+export function formatModuleDiscountOptionLabel(pct: number): string {
   return `${Math.max(0, Math.min(30, Math.floor(Number(pct) || 0)))}%`
 }

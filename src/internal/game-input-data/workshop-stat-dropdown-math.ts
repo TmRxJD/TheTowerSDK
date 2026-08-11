@@ -59,7 +59,7 @@ export function buildWorkshopStatOptionLabel(statKey: string, level: number): st
 }
 
 /** Canonical field label shared by every workshop stat level dropdown. */
-export function buildWorkshopStatFieldLabel(statKey: string): string {
+export function formatWorkshopStatFieldLabel(statKey: string): string {
   const stat = getWorkshopStatDefinition(statKey)
   return stat?.label ?? statKey
 }
