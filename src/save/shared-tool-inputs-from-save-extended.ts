@@ -32,7 +32,7 @@ import {
 import { ELS_ATTACK_WORKSHOP_KEY, ELS_HEALTH_WORKSHOP_KEY } from '../mechanics/els-upgrade-path'
 import { computeResearchLabLevel } from '../internal/shared-tool-inputs-from-research'
 import {
-  createDefaultShardSplitterSnapshot,
+  buildDefaultShardSplitterSnapshot,
   type ModuleType,
 } from '../internal/shard-splitter-schema'
 import {
@@ -601,7 +601,7 @@ export function readShardSplitterInputsFromSaveRoot(
     core: 'moduleCoreShards',
   } as const
 
-  const splitterByType = createDefaultShardSplitterSnapshot().splitterByType
+  const splitterByType = buildDefaultShardSplitterSnapshot().splitterByType
   let hasShardData = false
 
   for (const moduleType of ['cannon', 'defense', 'generator', 'core'] as const) {
@@ -634,7 +634,7 @@ export function readShardSplitterInputsFromSaveRoot(
 
   if (!hasShardData) return {}
 
-  const costsAssistEffPctByType = createDefaultShardSplitterSnapshot().costsAssistEffPctByType
+  const costsAssistEffPctByType = buildDefaultShardSplitterSnapshot().costsAssistEffPctByType
   for (const moduleType of ['cannon', 'defense', 'generator', 'core'] as const) {
     costsAssistEffPctByType[moduleType] = splitterByType[moduleType].assistEffPct
   }

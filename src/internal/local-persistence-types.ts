@@ -7,7 +7,7 @@ export type LocalPersistenceSchemaLike<T = unknown> = {
     | { success: false; error: { issues: unknown } }
 }
 
-export function createNormalizerPersistenceSchema<T>(
+export function buildNormalizerPersistenceSchema<T>(
   normalize: (input: unknown) => T,
 ): LocalPersistenceSchemaLike<T> {
   return {

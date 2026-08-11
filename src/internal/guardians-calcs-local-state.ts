@@ -1,4 +1,4 @@
-import { createNormalizerPersistenceSchema } from './local-persistence-types'
+import { buildNormalizerPersistenceSchema } from './local-persistence-types'
 
 export type GuardiansCalcsMainTab = 'Chips' | 'Effective Paths'
 
@@ -71,4 +71,4 @@ export function normalizeGuardiansCalcsLocalState(
   }
 }
 
-export const guardiansCalcsLocalPersistenceSchema = createNormalizerPersistenceSchema(normalizeGuardiansCalcsLocalState)
+export const guardiansCalcsLocalPersistenceSchema = buildNormalizerPersistenceSchema(normalizeGuardiansCalcsLocalState)

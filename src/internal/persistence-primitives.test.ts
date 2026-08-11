@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   advanceRetryScheduleState,
   applyRetryFailureState,
-  createRetryScheduleState,
+  buildRetryScheduleState,
   enqueueUniqueItemsByKey,
   hasReachedRetryLimit,
   isRetryScheduleReady,
@@ -17,7 +17,7 @@ import {
 
 describe('persistence primitives retry schedule', () => {
   it('creates an immediately-ready retry schedule', () => {
-    expect(createRetryScheduleState(1_000)).toEqual({
+    expect(buildRetryScheduleState(1_000)).toEqual({
       attemptCount: 0,
       nextRetryAt: 1_000,
     })

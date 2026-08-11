@@ -11,7 +11,7 @@ import {
   type BotMedalPlannerFocusGoal,
   normalizeBotMedalPlannerFocusOrder,
 } from './bot-medal-planner-focus'
-import { createNormalizerPersistenceSchema } from './local-persistence-types'
+import { buildNormalizerPersistenceSchema } from './local-persistence-types'
 
 export const BOT_MEDAL_SPLITTER_PRESET_COUNT = 3
 export const DEFAULT_BOT_MEDAL_SPLITTER_TOWER_RANGE = 60
@@ -73,7 +73,7 @@ export function normalizeBotMedalSplitterShRarity(value: unknown): BotMedalSplit
   }
 }
 
-export function createBotMedalSplitterBaseLocks(botLabel: string): Record<string, boolean> {
+export function buildBotMedalSplitterBaseLocks(botLabel: string): Record<string, boolean> {
   const bot = bots.find(entry => entry.label === botLabel)
   if (!bot) return {}
 
@@ -82,7 +82,7 @@ export function createBotMedalSplitterBaseLocks(botLabel: string): Record<string
   ) as Record<string, boolean>
 }
 
-export function createBotMedalSplitterPlusLocks(botLabel: string): Record<string, boolean> {
+export function buildBotMedalSplitterPlusLocks(botLabel: string): Record<string, boolean> {
   const bot = bots.find(entry => entry.label === botLabel)
   if (!bot) return {}
 
@@ -91,13 +91,13 @@ export function createBotMedalSplitterPlusLocks(botLabel: string): Record<string
   ) as Record<string, boolean>
 }
 
-export function createDefaultBotMedalSplitterLevels(): Record<string, number[]> {
+export function buildDefaultBotMedalSplitterLevels(): Record<string, number[]> {
   return Object.fromEntries(
     bots.map(bot => [bot.label, normalizeBotStats(bot).map((_, statIndex) => getBotStatBoundsByIndex(bot, statIndex).min)]),
   ) as Record<string, number[]>
 }
 
-export function createDefaultBotMedalSplitterPlusLevels(): Record<string, number[]> {
+export function buildDefaultBotMedalSplitterPlusLevels(): Record<string, number[]> {
   return Object.fromEntries(
     bots.map(bot => [bot.label, normalizeBotPlusStats(bot).map((_, statIndex) => getBotPlusStatBoundsByIndex(bot, statIndex).min)]),
   ) as Record<string, number[]>
@@ -119,8 +119,8 @@ function createDefaultTargetConfigs(enabledLabel?: string): Record<string, BotMe
     targetBotMedalSplitterBotLabels().map(label => [label, {
       enabled: label === defaultEnabledLabel,
       synced: false,
-      baseLocks: createBotMedalSplitterBaseLocks(label),
-      plusLocks: createBotMedalSplitterPlusLocks(label),
+      baseLocks: buildBotMedalSplitterBaseLocks(label),
+      plusLocks: buildBotMedalSplitterPlusLocks(label),
     }]),
   ) as Record<string, BotMedalSplitterTargetConfig>
 }
@@ -129,7 +129,7 @@ function createDefaultTargetOrder(): string[] {
   return [...targetBotMedalSplitterBotLabels()]
 }
 
-export function createDefaultBotMedalSplitterPreset(index: number): BotMedalSplitterPreset {
+export function buildDefaultBotMedalSplitterPreset(index: number): BotMedalSplitterPreset {
   return {
     name: `Preset ${index + 1}`,
     budget: 0,
@@ -139,19 +139,19 @@ export function createDefaultBotMedalSplitterPreset(index: number): BotMedalSpli
     useBotBotPlus: true,
     botBotEnabled: true,
     botBotSynced: false,
-    levels: createDefaultBotMedalSplitterLevels(),
-    plusLevels: createDefaultBotMedalSplitterPlusLevels(),
+    levels: buildDefaultBotMedalSplitterLevels(),
+    plusLevels: buildDefaultBotMedalSplitterPlusLevels(),
     labLevels: createDefaultLabLevels(),
     targetConfigs: createDefaultTargetConfigs(),
     targetOrder: createDefaultTargetOrder(),
     plannerFocusOrder: normalizeBotMedalPlannerFocusOrder(undefined),
-    botBotBaseLocks: createBotMedalSplitterBaseLocks('Bot Bot'),
-    botBotPlusLocks: createBotMedalSplitterPlusLocks('Bot Bot'),
+    botBotBaseLocks: buildBotMedalSplitterBaseLocks('Bot Bot'),
+    botBotPlusLocks: buildBotMedalSplitterPlusLocks('Bot Bot'),
   }
 }
 
-export function createDefaultBotMedalSplitterPresets(): BotMedalSplitterPreset[] {
-  return Array.from({ length: BOT_MEDAL_SPLITTER_PRESET_COUNT }, (_, index) => createDefaultBotMedalSplitterPreset(index))
+export function buildDefaultBotMedalSplitterPresets(): BotMedalSplitterPreset[] {
+  return Array.from({ length: BOT_MEDAL_SPLITTER_PRESET_COUNT }, (_, index) => buildDefaultBotMedalSplitterPreset(index))
 }
 
 export function clampBotMedalSplitterBudget(value: unknown): number {
@@ -359,14 +359,14 @@ export const defaultBotMedalSplitterLocalState = (): BotMedalSplitterLocalState 
   activePreset: 0,
   plannerTab: 'allocation',
   editorBotLabel: bots[0]?.label || '',
-  presets: createDefaultBotMedalSplitterPresets(),
+  presets: buildDefaultBotMedalSplitterPresets(),
 })
 
 export function normalizeBotMedalSplitterLocalState(
   input: unknown,
   base: BotMedalSplitterLocalState = defaultBotMedalSplitterLocalState(),
 ): BotMedalSplitterLocalState {
-  const defaults = createDefaultBotMedalSplitterPresets()
+  const defaults = buildDefaultBotMedalSplitterPresets()
   const data = input && typeof input === 'object' ? input as Record<string, unknown> : {}
   const activePreset = Math.max(0, Math.min(BOT_MEDAL_SPLITTER_PRESET_COUNT - 1, Math.floor(Number(data.activePreset) || 0)))
   const rawPresets = Array.isArray(data.presets) ? data.presets : []
@@ -381,4 +381,4 @@ export function normalizeBotMedalSplitterLocalState(
   }
 }
 
-export const botMedalSplitterLocalPersistenceSchema = createNormalizerPersistenceSchema(normalizeBotMedalSplitterLocalState)
+export const botMedalSplitterLocalPersistenceSchema = buildNormalizerPersistenceSchema(normalizeBotMedalSplitterLocalState)

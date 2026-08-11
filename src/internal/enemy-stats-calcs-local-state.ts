@@ -20,7 +20,7 @@ import {
   getTierSelection,
   type TierSelectionInput,
 } from '../data/tournaments'
-import { createNormalizerPersistenceSchema } from './local-persistence-types'
+import { buildNormalizerPersistenceSchema } from './local-persistence-types'
 
 export type EnemyStatsCalcsMode = 'wave' | 'hp' | 'damage' | 'els-path'
 export type EnemyStatsCalcsElsFocus = 'combined' | 'attack' | 'health'
@@ -380,4 +380,4 @@ export function normalizeEnemyStatsCalcsLocalState(
   }
 }
 
-export const enemyStatsCalcsLocalPersistenceSchema = createNormalizerPersistenceSchema(normalizeEnemyStatsCalcsLocalState)
+export const enemyStatsCalcsLocalPersistenceSchema = buildNormalizerPersistenceSchema(normalizeEnemyStatsCalcsLocalState)

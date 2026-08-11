@@ -73,7 +73,7 @@ function clampInt(value: unknown, min: number, max: number): number {
   return Math.max(min, Math.min(max, numeric))
 }
 
-export function createDefaultShardSplitterSnapshot(): ShardSplitterSnapshot {
+export function buildDefaultShardSplitterSnapshot(): ShardSplitterSnapshot {
   return {
     selectedModuleType: 'cannon',
     splitterByType: {
@@ -93,7 +93,7 @@ export function createDefaultShardSplitterSnapshot(): ShardSplitterSnapshot {
 }
 
 export function normalizeShardSplitterSnapshot(input: Record<string, unknown>): ShardSplitterSnapshot {
-  const defaults = createDefaultShardSplitterSnapshot()
+  const defaults = buildDefaultShardSplitterSnapshot()
 
   const selectedModuleType = typeof input.selectedModuleType === 'string' && moduleTypes.includes(input.selectedModuleType as ModuleType)
     ? input.selectedModuleType as ModuleType

@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { createNormalizerPersistenceSchema } from './local-persistence-types'
+import { buildNormalizerPersistenceSchema } from './local-persistence-types'
 import { iapTogglesFromLegacyMults } from '../mechanics/resource-drops-coin-iap'
 
 /** Top-level Resource Drops page tab. */
@@ -176,6 +176,6 @@ export function normalizeEnemyDropsCalcsLocalState(
   }
 }
 
-export const enemyDropsCalcsLocalPersistenceSchema = createNormalizerPersistenceSchema(
+export const enemyDropsCalcsLocalPersistenceSchema = buildNormalizerPersistenceSchema(
   normalizeEnemyDropsCalcsLocalState,
 )

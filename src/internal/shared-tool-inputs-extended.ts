@@ -38,7 +38,7 @@ import {
   type ThornsCalcsSettings,
 } from './calculator-local-state-schemas'
 import {
-  createDefaultShardSplitterSnapshot,
+  buildDefaultShardSplitterSnapshot,
   type SplitterByType,
   splitterByTypeSchema,
   type SplitterData,
@@ -213,8 +213,8 @@ export const sharedShardSplitterInputsSchema = z.object({
 export type SharedShardSplitterInputs = z.infer<typeof sharedShardSplitterInputsSchema>
 
 export const defaultSharedShardSplitterInputs: Readonly<SharedShardSplitterInputs> = {
-  splitterByType: createDefaultShardSplitterSnapshot().splitterByType,
-  costsAssistEffPctByType: createDefaultShardSplitterSnapshot().costsAssistEffPctByType,
+  splitterByType: buildDefaultShardSplitterSnapshot().splitterByType,
+  costsAssistEffPctByType: buildDefaultShardSplitterSnapshot().costsAssistEffPctByType,
 }
 
 export const sharedLabsCalcByLabSchema = z.record(z.string(), labCalcRangeSchema)
@@ -751,8 +751,8 @@ export function normalizeExtendedSharedToolInputs(value: unknown): SharedToolInp
         : {}),
     },
     shardSplitterInputs: {
-      splitterByType: createDefaultShardSplitterSnapshot().splitterByType,
-      costsAssistEffPctByType: createDefaultShardSplitterSnapshot().costsAssistEffPctByType,
+      splitterByType: buildDefaultShardSplitterSnapshot().splitterByType,
+      costsAssistEffPctByType: buildDefaultShardSplitterSnapshot().costsAssistEffPctByType,
     },
     uwCalcProgress: normalizeNestedNumberRecord(source.uwCalcProgress),
     labsCalcByLab: sharedLabsCalcByLabSchema.catch({}).parse(source.labsCalcByLab ?? {}),

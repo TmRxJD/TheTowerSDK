@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { createNormalizerPersistenceSchema } from './local-persistence-types'
+import { buildNormalizerPersistenceSchema } from './local-persistence-types'
 
 const defaultTableSettings = {
   gtEnabled: true,
@@ -80,4 +80,4 @@ export function normalizeUptimePersistedPayload(value: unknown): UptimePersisted
   return uptimePersistedPayloadSchema.parse({})
 }
 
-export const uptimeLocalPersistenceSchema = createNormalizerPersistenceSchema(normalizeUptimePersistedPayload)
+export const uptimeLocalPersistenceSchema = buildNormalizerPersistenceSchema(normalizeUptimePersistedPayload)
