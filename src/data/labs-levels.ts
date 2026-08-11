@@ -6,10 +6,16 @@ export type GeneratedLabRecord = {
   levels?: Array<{ level: number; duration: string | number; cost?: number }>
 }
 
-// LOCAL lab level/cost/time dataset — batch-downloaded from the tracker API and committed
-// to the repo. The live API endpoint is NOT used at runtime; this file IS the calculator source.
-// Regenerate only when intentionally refreshing data: node scripts/sync-labs-from-api.mjs
-// Do not delete this file when removing API calls.
+// THE lab level/cost/time dataset. Hand-owned, front-end only.
+//
+// There is NO lab API. There was one, years ago, before this data moved into the
+// front end; it is gone, and the script that used to sync from it has been
+// deleted. Do not go looking for an endpoint to refresh this from, and do not
+// reintroduce one -- an agent read the old sync script, assumed the API was
+// live, and proposed regenerating this file from it.
+//
+// To change lab costs or times, edit this file, or extend it from the game dump
+// under extraction-core/. Nothing fetches it at build time or at runtime.
 export const generatedLabs: GeneratedLabRecord[] = [
   {
     'name': 'amp_bot_cooldown',

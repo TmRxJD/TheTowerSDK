@@ -1,5 +1,6 @@
 import { parseDurationToHours } from '../formatting/index'
-// Local batch dataset (lab-data-api.ts) — not a live game/dev API.
+// Local dataset, front-end owned. There is no lab API and no lab-data-api.ts;
+// both were removed when this data moved into the front end.
 import { generatedLabs } from './labs-levels'
 import {
   displayNameToLabSlug,
