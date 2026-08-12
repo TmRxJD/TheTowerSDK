@@ -26,7 +26,7 @@ describeServer('mcp server', () => {
   let child: ChildProcessWithoutNullStreams
   let buffer = ''
   let nextId = 1
-  const pending = new Map<number, (msg: Record<string, any>) => void>()
+  const pending = new Map<number, (msg: Record<string, unknown>) => void>()
 
   beforeAll(() => {
     child = spawn('node', [SERVER], { stdio: ['pipe', 'pipe', 'inherit'] })
@@ -47,7 +47,7 @@ describeServer('mcp server', () => {
   afterAll(() => child?.kill())
 
   const rpc = (method: string, params?: unknown) =>
-    new Promise<Record<string, any>>((resolve, reject) => {
+    new Promise<Record<string, unknown>>((resolve, reject) => {
       const id = nextId++
       pending.set(id, resolve)
       child.stdin.write(`${JSON.stringify({ jsonrpc: '2.0', id, method, params })}\n`)
