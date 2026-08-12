@@ -143,7 +143,6 @@ function computeWaveInfoTypeRules(input: WaveInfoEnemyStatsInput): { hp: number,
   const {
     waveBaseHp,
     waveBaseDamage,
-    waveOneBaseDamage,
     enemyType,
     battleConditions,
     bcLabLevels,
@@ -151,7 +150,6 @@ function computeWaveInfoTypeRules(input: WaveInfoEnemyStatsInput): { hp: number,
     enemyLabLevels,
     enemyLabBenefitAtLevel,
     bossHealthLabValuePerLevel = 0.3,
-    towerMaxHealth = null,
   } = input
 
   const ctx: RowContext = {
@@ -171,12 +169,22 @@ function computeWaveInfoTypeRules(input: WaveInfoEnemyStatsInput): { hp: number,
     }
   }
 
-  let hp = waveBaseHp
-  let damage = waveBaseDamage
-
-  if ('damageZero' in rules && rules.damageZero) {
-    damage = 0
+  return {
+    hp: resolveWaveInfoHp(rules, input, ctx),
+    damage: 'damageZero' in rules && rules.damageZero
+      ? 0
+      : resolveWaveInfoDamage(rules, input, ctx),
   }
+}
+
+/** The health half of {@link computeWaveInfoTypeRules} — one branch per rule. */
+function resolveWaveInfoHp(
+  rules: (typeof WAVE_INFO_ENEMY_RULES)[keyof typeof WAVE_INFO_ENEMY_RULES],
+  input: WaveInfoEnemyStatsInput,
+  ctx: RowContext,
+): number {
+  const { waveBaseHp, enemyType } = input
+  let hp = waveBaseHp
 
   if ('hpDoubleWaveBase' in rules && rules.hpDoubleWaveBase) {
     hp = waveBaseHp * 2 * rowDisplayMult(enemyType, 'hp', ctx)
@@ -205,6 +213,18 @@ function computeWaveInfoTypeRules(input: WaveInfoEnemyStatsInput): { hp: number,
     hp = waveBaseHp * rowDisplayMult(enemyType, 'hp', ctx)
   }
 
+  return hp
+}
+
+/** The damage half, split for the same reason. */
+function resolveWaveInfoDamage(
+  rules: (typeof WAVE_INFO_ENEMY_RULES)[keyof typeof WAVE_INFO_ENEMY_RULES],
+  input: WaveInfoEnemyStatsInput,
+  ctx: RowContext,
+): number {
+  const { waveBaseDamage, waveOneBaseDamage, enemyType, towerMaxHealth = null } = input
+  let damage = waveBaseDamage
+
   if ('damageWaveBaseMult' in rules && rules.damageWaveBaseMult === 'overchargeWaveDamageMult') {
     // Pinned to wave 1 — Overcharge's attack damage no longer tracks the wave.
     damage = (waveOneBaseDamage ?? waveBaseDamage) * WAVE_INFO_OVERCHARGE_DAMAGE_MULT
@@ -223,10 +243,7 @@ function computeWaveInfoTypeRules(input: WaveInfoEnemyStatsInput): { hp: number,
     damage = waveBaseDamage * rowDisplayMult(enemyType, 'damage', ctx)
   }
 
-  return {
-    hp,
-    damage,
-  }
+  return damage
 }
 
 export {

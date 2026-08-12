@@ -269,45 +269,11 @@ export class NRBFReader {
 
     switch (recordType) {
       case RecordType.ClassWithId:
-        {
-          const oid = this.reader.readInt32()
-          const ref = this.objectTracker.get(this.reader.readInt32()) as ClassSerializationRecord
-          const o = Object.assign(new BinaryObject(), { typeName: ref.value!.typeName })
-          if (oid !== 0) this.objectTracker.set(oid, o)
-          currentObject = o
-          if (ref.memberTypeInfo) {
-            this.readMembers(o, ref.classInfo!.memberNames, ref.memberTypeInfo)
-          } else {
-            this.readUntypedMembers(o, o.typeName, ref.classInfo!.memberNames)
-          }
-        }
-        break
-
       case RecordType.SystemClassWithMembers:
       case RecordType.ClassWithMembers:
-        {
-          const ci = readClassInfo(this.reader)
-          if (recordType === RecordType.ClassWithMembers) this.reader.readInt32()
-          const v = Object.assign(new BinaryObject(), { typeName: ci.name })
-          const res: ClassSerializationRecord = { classInfo: ci, value: v }
-          if (ci.objectId !== 0) this.objectTracker.set(ci.objectId, res)
-          currentObject = v
-          this.readUntypedMembers(v, ci.name, ci.memberNames)
-        }
-        break
-
       case RecordType.SystemClassWithMembersAndTypes:
       case RecordType.ClassWithMembersAndTypes:
-        {
-          const ci = readClassInfo(this.reader)
-          const mti = readMemberTypeInfo(ci.memberCount, this.reader)
-          if (recordType === RecordType.ClassWithMembersAndTypes) this.reader.readInt32()
-          const v = Object.assign(new BinaryObject(), { typeName: ci.name })
-          const res: ClassSerializationRecord = { classInfo: ci, memberTypeInfo: mti, value: v }
-          if (ci.objectId !== 0) this.objectTracker.set(ci.objectId, res)
-          currentObject = v
-          this.readMembers(v, ci.memberNames, mti)
-        }
+        currentObject = this.readClassRecord(recordType)
         break
 
       case RecordType.BinaryObjectString:
@@ -357,27 +323,9 @@ export class NRBFReader {
         break
 
       case RecordType.ArraySinglePrimitive:
-        {
-          const ai = readArrayInfo(this.reader)
-          currentObject = this.readPrimitiveArray(ai, this.reader.readByte() as PrimitiveType)
-          if (ai.objectId !== 0) this.objectTracker.set(ai.objectId, currentObject)
-        }
-        break
-
       case RecordType.ArraySingleObject:
-        {
-          const ai = readArrayInfo(this.reader)
-          currentObject = this.readObjectArray(ai)
-          if (ai.objectId !== 0) this.objectTracker.set(ai.objectId, currentObject)
-        }
-        break
-
       case RecordType.ArraySingleString:
-        {
-          const ai = readArrayInfo(this.reader)
-          currentObject = this.readStringArray(ai)
-          if (ai.objectId !== 0) this.objectTracker.set(ai.objectId, currentObject)
-        }
+        currentObject = this.readSingleArrayRecord(recordType)
         break
 
       case RecordType.MethodCall:
@@ -414,6 +362,80 @@ export class NRBFReader {
     }
     if (mns.length === 1 && mns[0] === 'value__') { o.addMember(mns[0], this.reader.readInt32()); return }
     throw new Error('Unsupported untyped member: ' + cn)
+  }
+
+  /**
+   * The three single-dimension array records, which differ only in how their
+   * elements are read and otherwise share the header and the tracking.
+   */
+  /**
+   * The five class records.
+   *
+   * They differ in whether the type info is inline, referenced from an
+   * earlier record, or absent — and in whether a library id follows — but
+   * all five produce a `BinaryObject` and register it for later references.
+   */
+  private readClassRecord(recordType: RecordType): NrbfValue {
+    let value: NrbfValue = null
+    switch (recordType) {
+      case RecordType.ClassWithId:
+        {
+          const oid = this.reader.readInt32()
+          const ref = this.objectTracker.get(this.reader.readInt32()) as ClassSerializationRecord
+          const o = Object.assign(new BinaryObject(), { typeName: ref.value!.typeName })
+          if (oid !== 0) this.objectTracker.set(oid, o)
+          value = o
+          if (ref.memberTypeInfo) {
+            this.readMembers(o, ref.classInfo!.memberNames, ref.memberTypeInfo)
+          } else {
+            this.readUntypedMembers(o, o.typeName, ref.classInfo!.memberNames)
+          }
+        }
+        break
+
+      case RecordType.SystemClassWithMembers:
+      case RecordType.ClassWithMembers:
+        {
+          const ci = readClassInfo(this.reader)
+          if (recordType === RecordType.ClassWithMembers) this.reader.readInt32()
+          const v = Object.assign(new BinaryObject(), { typeName: ci.name })
+          const res: ClassSerializationRecord = { classInfo: ci, value: v }
+          if (ci.objectId !== 0) this.objectTracker.set(ci.objectId, res)
+          value = v
+          this.readUntypedMembers(v, ci.name, ci.memberNames)
+        }
+        break
+
+      case RecordType.SystemClassWithMembersAndTypes:
+      case RecordType.ClassWithMembersAndTypes:
+        {
+          const ci = readClassInfo(this.reader)
+          const mti = readMemberTypeInfo(ci.memberCount, this.reader)
+          if (recordType === RecordType.ClassWithMembersAndTypes) this.reader.readInt32()
+          const v = Object.assign(new BinaryObject(), { typeName: ci.name })
+          const res: ClassSerializationRecord = { classInfo: ci, memberTypeInfo: mti, value: v }
+          if (ci.objectId !== 0) this.objectTracker.set(ci.objectId, res)
+          value = v
+          this.readMembers(v, ci.memberNames, mti)
+        }
+        break
+
+      default:
+        throw new Error('RecordType not supported: ' + RecordType[recordType])
+    }
+    return value
+  }
+
+  private readSingleArrayRecord(recordType: RecordType): NrbfValue {
+    const info = readArrayInfo(this.reader)
+    const value = recordType === RecordType.ArraySinglePrimitive
+      ? this.readPrimitiveArray(info, this.reader.readByte() as PrimitiveType)
+      : recordType === RecordType.ArraySingleObject
+        ? this.readObjectArray(info)
+        : this.readStringArray(info)
+
+    if (info.objectId !== 0) this.objectTracker.set(info.objectId, value)
+    return value
   }
 
   private readPrimitiveArray(info: ArrayInfo, type: PrimitiveType): NrbfValue[] {
