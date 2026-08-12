@@ -363,3 +363,112 @@ export function areaOfEffectCardBoost(hasCard: boolean, cardLevel: number): numb
   const bonus = AOE_CARD_LEVELS[Math.floor(cardLevel) - 1]
   return bonus === undefined ? 1 : 1 + bonus
 }
+
+// ---------------------------------------------------------------------------
+// Super Tower and the shockwave
+// ---------------------------------------------------------------------------
+
+/**
+ * `EPD_SUPERTOWER_BONUS` — what the Super Tower card is worth.
+ *
+ * `2.1 + 0.4 × level`, and then a tenth more at level 7 — the sheet writes
+ * that as a string comparison against the card's own `"Lvl 7"` label, and it
+ * does fire: level 6 gives 4.5 and level 7 gives 5, not 4.9.
+ */
+export function superTowerBonus(cardLevel: number, labLevel: number): number {
+  const card = 2.1 + cardLevel * 0.4 + (cardLevel === 7 ? 0.1 : 0)
+  return card * (1 + 0.03 * labLevel)
+}
+
+/** `EPD_SUPERTOWER_COOLDOWN` — seconds between Super Towers, from 45 down. */
+export function superTowerCooldown(hasMastery: boolean, masteryLevel: number): number {
+  return 45 - 3 * (hasMastery ? 1 + masteryLevel : 0)
+}
+
+/**
+ * `EP_UW_SL_COVERAGE` — the share of the field Spotlight covers.
+ *
+ * Each spotlight covers its own angle plus the width of the smallest enemy,
+ * out of a full 360°, and the total cannot pass 100%.
+ */
+export function spotlightCoverage(quantity: number, angleDegrees: number): number {
+  const ENEMY_MIN_SIZE_DEGREES = 4
+  return Math.min(1, quantity * (angleDegrees + ENEMY_MIN_SIZE_DEGREES) / 360)
+}
+
+/**
+ * `EPD_SUPERTOWER_EFFECTIVE_BONUS` — the Super Tower card's damage multiplier.
+ *
+ * The card fires for 15 seconds out of every cooldown, so its bonus is
+ * pro-rated by how much of the time it is up. The mastery adds 35% of the
+ * bonus again, but only over the part of the field Spotlight lights.
+ *
+ * The sheet's own version takes a `has_sl` parameter and then ignores it,
+ * reading `eDamage!$BH$33` instead — so passing `has_sl` false while that cell
+ * is true still applies the coverage. This takes the parameter and means it.
+ */
+export function superTowerEffectiveBonus(input: {
+  hasCard: boolean
+  hasMastery: boolean
+  bonus: number
+  cooldownSeconds: number
+  hasSpotlight: boolean
+  spotlightQuantity: number
+  spotlightAngleDegrees: number
+}): number {
+  if (!input.hasCard) return 1
+
+  const masteryBonus = input.hasMastery ? 1 + 0.35 * (input.bonus - 1) : 1
+  const coverage = input.hasSpotlight
+    ? spotlightCoverage(input.spotlightQuantity, input.spotlightAngleDegrees)
+    : 0
+  const withSpotlight = input.bonus * (1 + (masteryBonus - 1) * coverage)
+
+  return 1 + (15 * (withSpotlight - 1)) / input.cooldownSeconds
+}
+
+/**
+ * `EPD_SUPERTOWER_EFFECTIVE_UWBONUS` — what Super Tower does for ultimate
+ * weapons, which is only the mastery's 35% and only when both are owned.
+ */
+export function superTowerEffectiveUltimateBonus(input: {
+  hasCard: boolean
+  hasMastery: boolean
+  bonus: number
+  cooldownSeconds: number
+}): number {
+  if (!input.hasCard || !input.hasMastery) return 1
+  return 1 + (15 * (0.35 * input.bonus - 1)) / input.cooldownSeconds
+}
+
+/**
+ * `EPD_SHOCKWAVE_DAMAGE` — what the shockwave adds to the cannon's damage.
+ *
+ * The shockwave repeats on a frequency the workshop shortens and the vault and
+ * substats shorten further, floored at 7 seconds before the wave's own size is
+ * added back. Faster shockwaves mean more of the cannon's bonus lands, hence
+ * the `7 / frequency` ratio.
+ *
+ * With no cannon bonus at all there is nothing to spread, and the sheet
+ * returns 1 rather than dividing.
+ */
+export function shockwaveDamage(input: {
+  /** The cannon assist bonus this spreads — the sheet's `acp`. */
+  cannonBonus: number
+  sizeWorkshopLevel: number
+  sizeLabLevel: number
+  frequencyWorkshopLevel: number
+  /** Vault and substat both shorten the frequency, so both arrive negative. */
+  frequencyVault: number
+  frequencySubstat: number
+}): number {
+  if (input.cannonBonus === 0) return 1
+
+  const size = (0.6 + 0.05 * input.sizeWorkshopLevel) + input.sizeLabLevel / 20
+  const workshopFrequency = 20 - 0.15 * input.frequencyWorkshopLevel
+  const frequency = Math.max(
+    7, workshopFrequency + input.frequencyVault + input.frequencySubstat,
+  ) + size / 2
+
+  return 1 + (input.cannonBonus - 1) * (7 / frequency)
+}
