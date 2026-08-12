@@ -63,7 +63,7 @@ const workshop = (cells: Cells, row: number) => ({
   vaultPct: reader(cells).cell(`BO${row}`),
 })
 
-function configFromSheet(
+export function configFromSheet(
   cells: Cells,
   outputs: Record<string, number> = {},
 ): EffectiveEconomyConfig {
@@ -177,7 +177,7 @@ function configFromSheet(
 }
 
 /** Row 5 is the current-levels row, so the levels are the player's own. */
-function levelsFromSheet(cells: Cells): EffectiveEconomyLevels {
+export function levelsFromSheet(cells: Cells): EffectiveEconomyLevels {
   const { cell } = reader(cells)
   const base = ZERO_EFFECTIVE_ECONOMY_LEVELS
 
