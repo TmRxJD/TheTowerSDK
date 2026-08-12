@@ -30,6 +30,8 @@ import type {
   EffectiveDamageStoneLevels,
 } from './effective-paths-edamage-levels'
 import { computeEffectiveDamage } from './effective-paths-edamage-compute'
+import { checkEffectiveDamageInputs } from './effective-paths-edamage-schema'
+import type { EffectiveDamageInputIssue } from './effective-paths-edamage-schema'
 import type { EffectiveDamageConfig } from './effective-paths-edamage-config'
 import {
   keysCandidateCost,
@@ -179,6 +181,14 @@ export interface EffectiveDamagePlan {
   finalEffectiveDamage: number
   /** Candidates left out, and why. A path that silently drops half the game is worse than one that says so. */
   excluded: Array<{ sheetName: string, reason: string }>
+  /**
+   * Why the inputs could not be planned against, when they could not.
+   *
+   * Empty on every normal call. Non-empty means something upstream handed over
+   * a `NaN`, a level that is not a number, or a record missing keys — and the
+   * plan is empty rather than a confident ranking built on it.
+   */
+  issues: EffectiveDamageInputIssue[]
 }
 
 /** The catalog name for a lab candidate. */
@@ -234,6 +244,24 @@ export function planEffectiveDamagePath(
   const { config, levels, variant } = options
   const steps = options.steps ?? 145
   const skipped = new Set(options.excludeIds ?? [])
+
+  /**
+   * The boundary check, run once here rather than inside `evaluate`.
+   *
+   * `evaluate` runs once per candidate per step — thousands of times for a
+   * long path — and the inputs do not change between those calls. Checking
+   * here costs one parse and catches the same thing.
+   */
+  const check = checkEffectiveDamageInputs(config, levels)
+  if (!check.ok) {
+    return {
+      steps: [],
+      startingEffectiveDamage: 0,
+      finalEffectiveDamage: 0,
+      excluded: [],
+      issues: check.issues,
+    }
+  }
 
   const upgrades: PathUpgrade[] = []
   const excluded: EffectiveDamagePlan['excluded'] = []
@@ -297,6 +325,7 @@ export function planEffectiveDamagePath(
       ? planned[planned.length - 1].value
       : startingEffectiveDamage,
     excluded,
+    issues: [],
   }
 }
 
