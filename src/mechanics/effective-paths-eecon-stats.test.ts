@@ -19,6 +19,12 @@ import {
   spotlightQuantity,
   UNPORTED_ECONOMY_FUNCTIONS,
 } from './effective-paths-eecon-stats'
+import {
+  deathWaveCooldownFromStones,
+  deathWaveQuantityFromStones,
+  ECONOMY_FUNCTIONS_PORTED,
+} from './effective-paths-eecon-stats'
+import { ultimateWeaponStatValue } from './effective-paths-edamage-costs'
 import fixtures from './effective-paths-eecon-stats.fixtures.json'
 
 /**
@@ -244,14 +250,66 @@ describe('the assist share every one of them uses', () => {
   })
 })
 
-describe('what is not ported', () => {
-  it('says which seven and why', () => {
-    // Listed rather than left to be rediscovered: each needs something beyond
-    // arithmetic, and guessing at any would produce a plausible number.
-    expect(UNPORTED_ECONOMY_FUNCTIONS).toHaveLength(7)
-    for (const entry of UNPORTED_ECONOMY_FUNCTIONS) {
-      expect(entry.name).toMatch(/^EPC_/)
-      expect(entry.reason.length).toBeGreaterThan(20)
+describe('EPU_DWCD and EPU_DWQ', () => {
+  for (const [index, c] of fixtures.deathWaveCooldown.entries()) {
+    it(`matches cooldown case ${index}`, () => {
+      close(deathWaveCooldownFromStones({
+        hasDeathWave: c.has, stoneLevel: c.stoneLvl,
+        stoneCap: c.stoneCap, labCap: c.labCap,
+        primarySubstat: c.prim, assistSubstat: c.ass,
+      }), c.sheet, `cooldown ${index}`)
+    })
+  }
+
+  for (const [index, c] of fixtures.deathWaveQuantity.entries()) {
+    it(`matches quantity case ${index}`, () => {
+      close(deathWaveQuantityFromStones({
+        stoneLevel: c.stoneLvl, hasPerk: c.hasPerk,
+        stoneCap: c.stoneCap, labCap: c.labCap,
+        primarySubstat: c.prim, assistSubstat: c.ass,
+      }), c.sheet, `quantity ${index}`)
+    })
+  }
+
+  it('floors the assist half on its own, not the sum', () => {
+    // `prim + FLOOR(ass × SAC)`. Flooring the sum would be a different number
+    // whenever the primary has a fractional part, and nothing else in either
+    // family floors anything.
+    const shared = { stoneLevel: 0, hasPerk: false, stoneCap: 99, labCap: 0 }
+    // SAC is 1.0 at a stone cap of 99, so the assist half is 1.7 → 1.
+    expect(deathWaveQuantityFromStones({ ...shared, primarySubstat: 0.6, assistSubstat: 1.7 }))
+      .toBeCloseTo(1 + 0.6 + 1, 9)
+  })
+
+  it('agrees with the stone chart about Death Wave’s cooldown', () => {
+    /**
+     * The two halves of the port derive the same stat differently — the damage
+     * side reads the chart, the econ side computes `300 - 10 × level`. If those
+     * ever disagree, one of the two domains is wrong about the same weapon.
+     */
+    for (const level of [0, 1, 5, 10, 15, 20]) {
+      const chart = ultimateWeaponStatValue('Death Wave', 'Cooldown', level)
+      if (chart === null) continue
+      expect(chart, `level ${level}`).toBeCloseTo(300 - 10 * level, 9)
     }
+  })
+})
+
+describe('the function inventory', () => {
+  it('accounts for all twenty-six, ported or not', () => {
+    // Enumerating `EPC_*` alone misses the two `EPU_*` the tab also calls,
+    // which is how the first pass came to claim "17 of 24".
+    expect(ECONOMY_FUNCTIONS_PORTED).toHaveLength(19)
+    expect(UNPORTED_ECONOMY_FUNCTIONS).toHaveLength(7)
+
+    const all = [...ECONOMY_FUNCTIONS_PORTED, ...UNPORTED_ECONOMY_FUNCTIONS.map(e => e.name)]
+    expect(new Set(all).size, 'a name is listed twice').toBe(all.length)
+    expect(all.filter(name => name.startsWith('EPC_'))).toHaveLength(24)
+    expect(all.filter(name => name.startsWith('EPU_'))).toHaveLength(2)
+  })
+
+  it('says why each unported one needs more than arithmetic', () => {
+    for (const entry of UNPORTED_ECONOMY_FUNCTIONS)
+      expect(entry.reason.length, entry.name).toBeGreaterThan(20)
   })
 })

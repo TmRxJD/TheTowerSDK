@@ -94,3 +94,44 @@ export function moduleLevelLimit(text: string | number | null | undefined): numb
   const value = Number(raw)
   return Number.isFinite(value) ? value : 0
 }
+
+/**
+ * What recovery packages do to the length of a wave.
+ *
+ * The eDamage and eEcon tabs both compute this, in different columns and from
+ * differently-shaped inputs, and arrive at the same four lines:
+ *
+ * ```text
+ * RPCB, IF(afterBoss, (chance * (interval - 1) + 1) / interval, chance)
+ * PTG,  -IF(compressor = 0, 0, compressor * RPCB)
+ *       1 - PTG / (waveDuration + PTG)
+ * ```
+ *
+ * `eDamage!EC5` writes the boss clause as `EQ($BC$27, 1)` and the econ side as
+ * `pab_lvl = 1`; `100%` against `1`. Same function, and one copy of it here
+ * rather than two that can drift.
+ *
+ * A shorter wave means every cooldown fires proportionally more often, so this
+ * multiplies into weapon cooldowns rather than into damage or coins.
+ */
+export function recoveryPackageTimeBoost(input: {
+  /** The chance of a recovery package on an ordinary wave, as a fraction. */
+  chance: number
+  /** Whether the Package After Boss upgrade is owned. */
+  afterBoss: boolean
+  /** How many waves apart bosses spawn. Only read when `afterBoss`. */
+  bossWaveInterval: number
+  /** The Galaxy Compressor's time saving. Zero without the module. */
+  galaxyCompressorValue: number
+  waveDurationSeconds: number
+}): number {
+  const perWave = input.afterBoss
+    ? (input.chance * (input.bossWaveInterval - 1) + 1) / input.bossWaveInterval
+    : input.chance
+
+  const gain = -(input.galaxyCompressorValue === 0
+    ? 0
+    : input.galaxyCompressorValue * perWave)
+
+  return 1 - gain / (input.waveDurationSeconds + gain)
+}

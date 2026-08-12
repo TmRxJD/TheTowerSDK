@@ -1121,76 +1121,224 @@
  ],
  "maxValueNuke": [
   {
-   "mvn": 0,
+   "mvn": 20,
    "assMvn": 0,
-   "gt": 11,
+   "gt": 7,
    "bh": 0,
    "dw": 0,
    "count": 2,
-   "sheet": 0
+   "sheet": 24
   },
   {
-   "mvn": 24.7036,
-   "assMvn": 13.9914,
-   "gt": 53.9187,
-   "bh": 56.1205,
-   "dw": 140.1249,
-   "count": 1,
-   "sheet": 275
+   "mvn": 6.5595,
+   "assMvn": 24.7036,
+   "gt": 104.9355,
+   "bh": 35.9458,
+   "dw": 84.1808,
+   "count": 2,
+   "sheet": 119
   },
   {
-   "mvn": 0,
+   "mvn": 20,
    "assMvn": 0,
-   "gt": 19,
+   "gt": 9,
    "bh": 0,
    "dw": 0,
    "count": 2,
-   "sheet": 0
+   "sheet": 24
   },
   {
-   "mvn": 37.5828,
-   "assMvn": 0.2919,
-   "gt": 185.4255,
-   "bh": 188.4193,
-   "dw": 292.697,
-   "count": 1,
-   "sheet": 704
-  },
-  {
-   "mvn": 0,
-   "assMvn": 0,
-   "gt": 15,
-   "bh": 0,
-   "dw": 0,
-   "count": 2,
-   "sheet": 0
-  },
-  {
-   "mvn": 3.2222,
-   "assMvn": 11.806,
-   "gt": 49.257,
-   "bh": 165.0669,
-   "dw": 31.3284,
+   "mvn": 8.328,
+   "assMvn": 11.5977,
+   "gt": 281.871,
+   "bh": 1.4593,
+   "dw": 185.4255,
    "count": 4,
-   "sheet": 65
+   "sheet": 126
   },
   {
-   "mvn": 0,
+   "mvn": 20,
    "assMvn": 0,
-   "gt": 15,
+   "gt": 61,
    "bh": 0,
    "dw": 0,
    "count": 2,
+   "sheet": 50
+  },
+  {
+   "mvn": 1.2241,
+   "assMvn": 13.6419,
+   "gt": 69.8367,
+   "bh": 16.1108,
+   "dw": 88.5454,
+   "count": 1,
+   "sheet": 176
+  },
+  {
+   "mvn": 20,
+   "assMvn": 0,
+   "gt": 51,
+   "bh": 0,
+   "dw": 0,
+   "count": 2,
+   "sheet": 46
+  },
+  {
+   "mvn": 5.0727,
+   "assMvn": 33.3602,
+   "gt": 3.6361,
+   "bh": 42.6405,
+   "dw": 260.2587,
+   "count": 3,
+   "sheet": 107
+  }
+ ],
+ "deathWaveCooldown": [
+  {
+   "has": true,
+   "stoneLvl": 17,
+   "stoneCap": 36,
+   "labCap": 15,
+   "prim": -2.3592,
+   "ass": -2.4732,
+   "sheet": 126.354736
+  },
+  {
+   "has": false,
+   "stoneLvl": 14,
+   "stoneCap": 21,
+   "labCap": 28,
+   "prim": -2.4377,
+   "ass": -0.911,
    "sheet": 0
   },
   {
-   "mvn": 34.7012,
-   "assMvn": 25.1216,
-   "gt": 199.6153,
-   "bh": 134.0897,
-   "dw": 177.1769,
-   "count": 3,
-   "sheet": 205
+   "has": true,
+   "stoneLvl": 20,
+   "stoneCap": 29,
+   "labCap": 17,
+   "prim": -0.9573,
+   "ass": -0.8824,
+   "sheet": 98.627972
+  },
+  {
+   "has": false,
+   "stoneLvl": 16,
+   "stoneCap": 20,
+   "labCap": 10,
+   "prim": -0.2656,
+   "ass": -1.1218,
+   "sheet": 0
+  },
+  {
+   "has": false,
+   "stoneLvl": 24,
+   "stoneCap": 48,
+   "labCap": 10,
+   "prim": -2.8503,
+   "ass": -0.3366,
+   "sheet": 0
+  },
+  {
+   "has": true,
+   "stoneLvl": 15,
+   "stoneCap": 33,
+   "labCap": 4,
+   "prim": -4.9623,
+   "ass": -2.4625,
+   "sheet": 144.10195
+  },
+  {
+   "has": false,
+   "stoneLvl": 9,
+   "stoneCap": 8,
+   "labCap": 15,
+   "prim": -0.0967,
+   "ass": -4.8195,
+   "sheet": 0
+  },
+  {
+   "has": true,
+   "stoneLvl": 22,
+   "stoneCap": 15,
+   "labCap": 17,
+   "prim": -4.5246,
+   "ass": -0.2144,
+   "sheet": 75.404648
+  }
+ ],
+ "deathWaveQuantity": [
+  {
+   "stoneLvl": 2,
+   "hasPerk": true,
+   "stoneCap": 43,
+   "labCap": 6,
+   "prim": 0.3065,
+   "ass": 12.408,
+   "sheet": 10.3065
+  },
+  {
+   "stoneLvl": 8,
+   "hasPerk": true,
+   "stoneCap": 12,
+   "labCap": 12,
+   "prim": 0.0329,
+   "ass": 13.651,
+   "sheet": 13.0329
+  },
+  {
+   "stoneLvl": 5,
+   "hasPerk": false,
+   "stoneCap": 44,
+   "labCap": 16,
+   "prim": 0.0747,
+   "ass": 8.7986,
+   "sheet": 11.0747
+  },
+  {
+   "stoneLvl": 8,
+   "hasPerk": false,
+   "stoneCap": 44,
+   "labCap": 30,
+   "prim": 2.6315,
+   "ass": 37.9988,
+   "sheet": 39.6315
+  },
+  {
+   "stoneLvl": 7,
+   "hasPerk": false,
+   "stoneCap": 47,
+   "labCap": 8,
+   "prim": 1.1057,
+   "ass": 29.2641,
+   "sheet": 25.1057
+  },
+  {
+   "stoneLvl": 0,
+   "hasPerk": true,
+   "stoneCap": 9,
+   "labCap": 14,
+   "prim": 1.2142,
+   "ass": 33.2229,
+   "sheet": 10.2142
+  },
+  {
+   "stoneLvl": 8,
+   "hasPerk": true,
+   "stoneCap": 50,
+   "labCap": 0,
+   "prim": 0.9349,
+   "ass": 11.9825,
+   "sheet": 16.9349
+  },
+  {
+   "stoneLvl": 4,
+   "hasPerk": false,
+   "stoneCap": 21,
+   "labCap": 21,
+   "prim": 2.6133,
+   "ass": 31.6084,
+   "sheet": 20.613300000000002
   }
  ]
 }

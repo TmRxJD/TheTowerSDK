@@ -51,7 +51,11 @@ import {
 } from './effective-paths-damage-stats'
 import { bulletsPerSecond } from './effective-paths-damage-substats'
 import { bulletDamageMultiplier, composeEffectiveDamage } from './effective-paths-edamage-model'
-import { assistSubstatCap, moduleBonus } from './effective-paths-generics'
+import {
+  assistSubstatCap,
+  moduleBonus,
+  recoveryPackageTimeBoost,
+} from './effective-paths-generics'
 import {
   chainLightningChance,
   chainLightningDamage,
@@ -943,17 +947,16 @@ function weaponOf(
 /**
  * `eDamage!EC5` — what recovery packages do to the length of a wave.
  *
- * A shorter wave means every cooldown fires proportionally more often, so this
- * multiplies into Death Wave's and Smart Missiles' cooldowns rather than into
- * their damage.
+ * The econ tab computes the same thing in `EPC_GCOMP`, so the arithmetic lives
+ * in {@link recoveryPackageTimeBoost} and this only assembles the inputs.
  */
 function waveTimeBoost(config: EffectiveDamageConfig): number {
-  const recovery = config.waveAcceleratorRecovery + config.recovery.durationBonus
-  const perWave = config.recovery.bossWave
-    ? (recovery * (config.recovery.bossWaveDivisor - 1) + 1) / config.recovery.bossWaveDivisor
-    : recovery
-
   const compressor = config.uniques['Galaxy Compressor']
-  const gain = -((compressor.primary + compressor.assist) * perWave)
-  return 1 - gain / (config.waveDurationSeconds + gain)
+  return recoveryPackageTimeBoost({
+    chance: config.waveAcceleratorRecovery + config.recovery.durationBonus,
+    afterBoss: config.recovery.bossWave,
+    bossWaveInterval: config.recovery.bossWaveDivisor,
+    galaxyCompressorValue: compressor.primary + compressor.assist,
+    waveDurationSeconds: config.waveDurationSeconds,
+  })
 }

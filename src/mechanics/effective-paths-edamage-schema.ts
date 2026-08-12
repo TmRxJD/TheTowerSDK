@@ -75,7 +75,7 @@ const substatPairSchema = z.object({ primary: finite, assist: finite })
 
 const cardSourceSchema = z.object({
   active: z.boolean(),
-  level: level,
+  level,
   value: finite,
 })
 

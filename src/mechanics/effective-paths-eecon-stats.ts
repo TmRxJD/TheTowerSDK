@@ -1,9 +1,11 @@
 /**
  * Effective Paths — the economy stats, `EPC_*`.
  *
- * Coins per kill and the things that multiply it. Seventeen of the sheet's
- * twenty-four `EPC_*` functions are closed forms and are ported here; the rest
- * read tables or simulate cooldown overlap and are listed at the bottom.
+ * Coins per kill and the things that multiply it. The tab's own family is
+ * `EPC_*`, twenty-four of them — but it also calls two `EPU_*` functions for
+ * Death Wave, so the layer is twenty-six. Nineteen are closed forms and are
+ * ported here; the seven that read tables or simulate cooldown overlap are
+ * named at the bottom with the reason.
  *
  * One idiom repeats in nearly every one of them and is worth naming once. The
  * sheet writes
@@ -22,7 +24,7 @@
  */
 
 import { combinedSubstat } from './effective-paths-damage-substats'
-import { assistSubstatCap } from './effective-paths-generics'
+import { assistSubstatCap, recoveryPackageTimeBoost } from './effective-paths-generics'
 
 /**
  * `prim + ass × SAC` — a substat pair with the assist half weighted.
@@ -51,9 +53,13 @@ export interface CoinsPerKillInput {
   /**
    * The Coin Bonus workshop enhancement.
    *
-   * **Squared.** The sheet writes `(1 + 0.01 × level)^2`, and it is the only
-   * enhancement in any of the three domains that is — coins earn it twice,
-   * once per kill and once per wave.
+   * **Squared** — the sheet writes `(1 + 0.01 × level)^2`, where every other
+   * enhancement in all three domains is applied once. It is applied nowhere
+   * else on the tab: `CJ5` reads the level straight off the workshop block and
+   * `CR5` is its only consumer, so the square is the whole of its effect.
+   *
+   * Why it is squared is not stated anywhere on the sheet. Reproduced rather
+   * than explained.
    */
   enhancementLevel: number
   hasCoinPerk: boolean
@@ -106,8 +112,9 @@ export function coinsCard(
 /**
  * `EPC_CARD_EOM` — the Extra Orb mastery.
  *
- * Worth 4% a level, but only over the share of enemies an orb actually reaches,
- * which the player estimates. The share is capped at 1 before it scales.
+ * Worth 4% a level, over the share of enemies an orb tags — `AZ26`, "Extra Orb
+ * % enemies tagged", which the player estimates. The share is capped at 1
+ * before it scales, so an estimate above 100% is treated as 100%.
  */
 export function extraOrbMastery(
   hasExtraOrb: boolean,
@@ -179,9 +186,9 @@ export interface GalaxyCompressorInput {
 /**
  * `EPC_GCOMP` — what recovery packages do to the length of a wave.
  *
- * Shorter waves mean every cooldown fires more often, so this multiplies into
- * the weapons rather than into coins. The eDamage side has the same term under
- * its own name.
+ * Builds the package chance out of its four parts and hands it to
+ * {@link recoveryPackageTimeBoost}, which the eDamage tab's `EC5` computes too
+ * — same four lines, differently-shaped inputs.
  */
 export function galaxyCompressorTimeBoost(input: GalaxyCompressorInput): number {
   const card = input.hasRecoveryCard ? input.cardValue : 0
@@ -190,12 +197,13 @@ export function galaxyCompressorTimeBoost(input: GalaxyCompressorInput): number 
   )
   const chance = input.workshopValue + 0.002 * input.labLevel + card + substat
 
-  const perWave = input.packageAfterBossLevel === 1
-    ? (chance * (input.bossWave - 1) + 1) / input.bossWave
-    : chance
-
-  const gain = -(input.galaxyCompressorValue === 0 ? 0 : input.galaxyCompressorValue * perWave)
-  return 1 - gain / (input.waveDurationSeconds + gain)
+  return recoveryPackageTimeBoost({
+    chance,
+    afterBoss: input.packageAfterBossLevel === 1,
+    bossWaveInterval: input.bossWave,
+    galaxyCompressorValue: input.galaxyCompressorValue,
+    waveDurationSeconds: input.waveDurationSeconds,
+  })
 }
 
 // ---------------------------------------------------------------------------
@@ -236,8 +244,10 @@ export function goldenTowerDuration(input: {
 /**
  * `EPC_GTCD` — Golden Tower's cooldown.
  *
- * Zero without the weapon, not the 300-second base: the caller divides by it,
- * and a locked weapon has no cycle at all.
+ * Zero without the weapon rather than its 300-second base, and the reason is
+ * `EPC_MVN`: it averages the three cooldowns over `COUNTIF` of the *unlocked*
+ * weapons. A locked weapon is missing from the divisor, so it has to be missing
+ * from the sum too or the average comes out too high.
  */
 export function goldenTowerCooldown(input: {
   hasGoldenTower: boolean
@@ -263,6 +273,7 @@ export function goldenTowerCooldown(input: {
 export function goldenCombo(
   hasGoldenCombo: boolean,
   stoneLevel: number,
+  /** `AZ20` — a player estimate, and the sheet notes it needs Golden Tower+. */
   killsPerSecond: number,
   goldenTowerDurationSeconds: number,
 ): number {
@@ -270,7 +281,12 @@ export function goldenCombo(
   return (1 + 0.0003 * (1 + stoneLevel)) ** (killsPerSecond * goldenTowerDurationSeconds)
 }
 
-/** `EPC_BHCB` — Black Hole's coin bonus, over the share of kills it takes. */
+/**
+ * `EPC_BHCB` — Black Hole's coin bonus.
+ *
+ * `killShare` is `AZ19`, "% of Enemies that die in Black Hole" — a player
+ * estimate, because the bonus only applies to what dies inside it.
+ */
 export function blackHoleCoinBonus(labLevel: number, killShare: number): number {
   return ((1 + 0.5 * labLevel) - 1) * killShare + 1
 }
@@ -289,7 +305,7 @@ export function blackHoleDuration(input: {
   )
 }
 
-/** `EPC_BHCD` — Black Hole's cooldown, or zero when it is not unlocked. */
+/** `EPC_BHCD` — Black Hole's cooldown. Zero when locked, for the same reason. */
 export function blackHoleCooldown(input: {
   hasBlackHole: boolean
   stoneLevel: number
@@ -304,6 +320,56 @@ export function blackHoleCooldown(input: {
   )
 }
 
+/**
+ * `EPU_DWCD` — Death Wave's cooldown. Zero when locked, as the other two.
+ *
+ * An `EPU_` rather than an `EPC_`: the econ tab borrows Death Wave's cooldown
+ * and quantity from the shared ultimate weapon family instead of defining its
+ * own, which is why enumerating `EPC_*` alone misses them.
+ *
+ * Named apart from `deathWaveCooldown` because the two take different inputs
+ * for the same game stat. The damage side's takes the value the stone chart
+ * already resolved; this derives it from the stone level with `300 - 10 × L`.
+ * A test asserts the chart agrees with that line, since the moment it does not
+ * the two halves of the port disagree about the same weapon.
+ */
+export function deathWaveCooldownFromStones(input: {
+  hasDeathWave: boolean
+  stoneLevel: number
+  stoneCap: number
+  labCap: number
+  primarySubstat: number
+  assistSubstat: number
+}): number {
+  if (!input.hasDeathWave) return 0
+  return 300 - 10 * input.stoneLevel + econSubstat(
+    input.primarySubstat, input.assistSubstat, input.stoneCap, input.labCap,
+  )
+}
+
+/**
+ * `EPU_DWQ` — how many Death Waves fire.
+ *
+ * The assist half of the substat is **floored on its own**, before the primary
+ * is added — `prim_sub + FLOOR(ass_sub * SAC)`. Nothing else in either family
+ * floors anything, and flooring the sum instead would be a different number
+ * whenever the primary has a fractional part. Waves are whole things, so the
+ * assist can only ever contribute a whole one.
+ */
+export function deathWaveQuantityFromStones(input: {
+  stoneLevel: number
+  hasPerk: boolean
+  stoneCap: number
+  labCap: number
+  primarySubstat: number
+  assistSubstat: number
+}): number {
+  const assist = Math.floor(
+    input.assistSubstat * assistSubstatCap(true, input.stoneCap, input.labCap),
+  )
+  return 1 + input.stoneLevel + (input.hasPerk ? 1 : 0) + input.primarySubstat + assist
+}
+
 /** `EPC_DWCB` — Death Wave's coin bonus. */
 export function deathWaveCoinBonus(labLevel: number): number {
   return 1.5 + 0.05 * labLevel
@@ -315,10 +381,14 @@ export function spotlightCoinBonus(labLevel: number): number {
 }
 
 /**
- * `EPC_SLA` — Spotlight's angle, with the enemy's own width added.
+ * `EPC_SLA` — Spotlight's angle, with the enemy's own width already added.
  *
- * The four degrees are how wide an enemy is, so a spotlight covers a little
- * more than its stated arc. `EP_UW_SL_COVERAGE` adds the same four.
+ * The four degrees are how wide an enemy is, so a spotlight lights a little
+ * more than its stated arc. The damage side keeps the two apart —
+ * `STAT_UW_SL_FINAL_ANGLE` returns the bare angle and `EP_UW_SL_COVERAGE` adds
+ * the four — but the econ tab folds them together here and then computes
+ * coverage inline as `MIN(1, angle × quantity / 360)`. Adding four again on top
+ * of this would count an enemy's width twice.
  */
 export function spotlightCoverageAngle(input: {
   stoneLevel: number
@@ -341,9 +411,14 @@ export function spotlightQuantity(stoneLevel: number): number {
 /**
  * `EPC_MVN` — the Max Value Nuke cooldown.
  *
- * The average of the three weapon cooldowns plus the module's own, rounded to
- * the nearest whole second — and **half rounds to even**, which the sheet
- * writes out longhand rather than using `ROUND`. Zero without the module.
+ * The three weapon cooldowns averaged over how many are *unlocked* — the call
+ * site passes `COUNTIF($BK$15:$BK$17, TRUE)` — plus the module's own value, and
+ * then rounded to a whole second with **half going to even**. The sheet writes
+ * that rounding out longhand rather than calling `ROUND`, which rounds half
+ * away from zero.
+ *
+ * Zero without the module, and the primary is preferred over the assist when
+ * both carry one.
  */
 export function maxValueNukeCooldown(input: {
   primaryModuleValue: number
@@ -372,6 +447,14 @@ export function maxValueNukeCooldown(input: {
  * Recorded rather than left to be rediscovered: each needs something beyond
  * arithmetic, and guessing at any of them would produce a plausible number.
  */
+export const ECONOMY_FUNCTIONS_PORTED = [
+  'EPC_CPK', 'EPC_CARD_COINS', 'EPC_CARD_EOM', 'EPC_FUP', 'EPC_GCOMP',
+  'EPC_GTB', 'EPC_GTD', 'EPC_GTCD', 'EPC_GTGC',
+  'EPC_BHCB', 'EPC_BHD', 'EPC_BHCD',
+  'EPC_DWCB', 'EPC_SLCB', 'EPC_SLA', 'EPC_SLQ', 'EPC_MVN',
+  'EPU_DWCD', 'EPU_DWQ',
+] as const
+
 export const UNPORTED_ECONOMY_FUNCTIONS = [
   {
     name: 'EPC_SYNC',
