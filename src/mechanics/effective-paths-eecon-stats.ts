@@ -501,9 +501,15 @@ const gcd = (a: number, b: number): number => (b === 0 ? a : gcd(b, a % b))
  */
 function cycleValues(cycle: SyncWeaponCycle): number[] {
   const length = Math.max(1, Math.floor(cycle.cooldown))
-  const up = Math.floor(cycle.duration)
+  /**
+   * The threshold keeps the fractional cooldown and duration.
+   *
+   * `MAKEARRAY(n, 1, LAMBDA(r, …, IF(r <= n - d, 1, m)))` builds `floor(n)`
+   * rows but compares against `n - d` as given, so a cooldown of 87.3 with a
+   * duration of 20 switches over at 67.3 — between rows 67 and 68 — not at 67.
+   */
   return Array.from({ length }, (_, index) =>
-    (index + 1 <= length - up ? 1 : cycle.multiplier))
+    (index + 1 <= cycle.cooldown - cycle.duration ? 1 : cycle.multiplier))
 }
 
 /**
