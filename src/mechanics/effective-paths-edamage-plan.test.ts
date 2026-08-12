@@ -290,7 +290,7 @@ describe('lab candidates whose prerequisite is unmet', () => {
     const reasons = new Map(plan.excluded.map(entry => [entry.sheetName, entry.reason]))
     for (const name of [
       'Damage Mastery', 'Standard Perks Bonus', 'Improve Trade-off Perks',
-      'Demon Mode Mastery',
+      'Demon Mode Mastery', 'Shock Multiplier',
     ]) {
       expect(reasons.get(name), name).toMatch(/not taken yet/)
     }
@@ -312,6 +312,10 @@ describe('lab candidates whose prerequisite is unmet', () => {
       },
       perksEquipped: true,
       perks: { ...bare().perks, 'Damage': true, 'Boss Health Trade-off': true },
+      ultimateWeapons: {
+        ...bare().ultimateWeapons,
+        'Chain Lightning': { ...bare().ultimateWeapons['Chain Lightning'], unlocked: true },
+      },
     }
     const plan = planEffectiveDamagePath({
       config, levels: ZERO_EFFECTIVE_DAMAGE_LEVELS, variant: 'lab-time', steps: 5,

@@ -138,6 +138,23 @@ const LAB_PREREQUISITES: Readonly<Record<string, (config: EffectiveDamageConfig)
   // 58, which `AT58` names "Demon Mode Mastery ⚠️".
   'Demon Mode Mastery': config =>
     config.cardsEquipped && card(config, 'Demon Mode Mastery'),
+  /*
+   * `NOT(AND($BH$31, $AL$75))`.
+   *
+   * `BH31` is Chain Lightning: the ultimate weapon flags run down rows 30 to 37
+   * in `DAMAGE_ULTIMATE_WEAPONS` order, and three of those rows are confirmed
+   * independently — 33 is Spotlight in this model's own notes, 35 and 37 are
+   * Poison Swamp and Inner Land Mines in the stone tab's hide row, and `BG34`
+   * is literally labelled `SLM`.
+   *
+   * `AL75` is the Shock Multiplier lab's own unlocked flag — `AK75` names it
+   * "Shock Mult ⚠️". That half is **not** checked here: the planner has no lab
+   * unlock state of its own, and the sheet's other unlock clause runs through
+   * `IDS_LAB_HAS_UNLOCKED`, which `isLabUnlockedAt` only approximates. The
+   * weapon half is the one that stops a wrong recommendation.
+   */
+  'Shock Multiplier': config =>
+    Boolean(config.ultimateWeapons['Chain Lightning']?.unlocked),
 }
 
 /** Whether a card is equipped and switched on, as the cards block reads it. */
