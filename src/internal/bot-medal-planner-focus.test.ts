@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import {
   allBotPlusUnlockedForSync,
   BOT_PLUS_LEVEL_LOCKED,
-  normalizeBotMedalPlannerFocusOrder,
   getBotMedalPlannerFocusWeights,
+  normalizeBotMedalPlannerFocusOrder,
 } from './bot-medal-planner-focus'
 
 describe('bot medal planner focus', () => {

@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
+  computeResearchLabLevel,
+  enrichSharedToolInputs,
   readLabsEconomyFromResearchLevels,
   readModuleEconomyFromResearchLevels,
   readNamedCalculatorLabs,
   readWorkshopDiscounts,
-  enrichSharedToolInputs,
-  computeResearchLabLevel,
   syncUptimeResearchLabsFromTracker,
 } from './shared-tool-inputs-from-research'
 import { defaultSharedToolInputs } from './shared-tool-inputs'

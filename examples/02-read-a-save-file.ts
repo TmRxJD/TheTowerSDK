@@ -15,9 +15,9 @@ import { readFile } from 'node:fs/promises'
 import { decodePlayerInfoSaveBytes } from 'thetowersdk/node'
 import {
   discoverSaveImportTrackers,
+  readCardsFromSaveRoot,
   readLabsFromSaveRoot,
   readWorkshopFromSaveRoot,
-  readCardsFromSaveRoot,
 } from 'thetowersdk/save'
 
 async function main(): Promise<void> {

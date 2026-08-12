@@ -20,8 +20,8 @@ import {
 } from './shared-tool-inputs-extended'
 import {
   defaultSharedUptimeInputs,
-  readSharedUptimeInputs,
   migrateLegacyUptimeLabLevels,
+  readSharedUptimeInputs,
   type SharedUptimeInputs,
   sharedUptimeInputsSchema,
   type UwProgressLevels,

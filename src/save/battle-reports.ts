@@ -1,4 +1,4 @@
-import { readDurationSecondsFromSave, formatBattleDurationFromSaveSeconds } from './battle-duration'
+import { formatBattleDurationFromSaveSeconds, readDurationSecondsFromSave } from './battle-duration'
 import { buildBattleReportStatFields } from './battle-report-fields'
 import { normalizeBattleHistorySaveEntry } from './battle-history-normalize'
 import { parseDurationToHours, parseSaveDateTimeToMs } from '../formatting/index'

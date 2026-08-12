@@ -24,7 +24,7 @@ import {
   findBotLabStatName,
   findUptimeLabFieldName,
 } from './bot-dropdown-math'
-import { type GameDataKey, findRegistryGameDataKey } from './game-data-registry'
+import { findRegistryGameDataKey, type GameDataKey } from './game-data-registry'
 
 export interface GameDropdownHubContext {
   uptimeInputs?: Partial<SharedUptimeInputs>

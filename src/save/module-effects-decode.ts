@@ -1,11 +1,11 @@
 import { formatModuleSaveEffectDisplayValue } from './module-effects-display'
-import { type ResolvedModuleEffect, findModuleEffect } from '../data/module-effect-resolver'
+import { findModuleEffect, type ResolvedModuleEffect } from '../data/module-effect-resolver'
 import {
-  isKnownModuleSaveEffectId,
-  type ModuleSaveSlotCategory,
   findModuleSaveEffectCategory,
   findModuleSaveEffectLabel,
   getModuleSaveEffectTier,
+  isKnownModuleSaveEffectId,
+  type ModuleSaveSlotCategory,
 } from './module-effects-registry'
 import type { ModuleSubstatCanonicalRarity } from '../data/module-substats'
 

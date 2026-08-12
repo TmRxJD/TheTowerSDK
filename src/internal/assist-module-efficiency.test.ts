@@ -3,9 +3,9 @@ import {
   assistMultiplierEfficiencyFactor,
   clampAssistModuleSlotEfficiencyPct,
   clampAssistMultiplierEfficiencyPct,
+  computeAssistMultiplierEfficiencyPct,
   MAX_ASSIST_MODULE_SLOT_EFFICIENCY_PCT,
   MAX_ASSIST_MULTIPLIER_EFFICIENCY_PCT,
-  computeAssistMultiplierEfficiencyPct,
 } from './assist-module-efficiency'
 
 describe('assist-module-efficiency', () => {

@@ -5,13 +5,13 @@ import {
   applyRetryFailureState,
   buildRetryScheduleState,
   enqueueUniqueItemsByKey,
+  getRetryQueueDisposition,
   hasReachedRetryLimit,
   isRetryScheduleReady,
   normalizeRetryAttemptCount,
   parseRetryScheduleState,
   partitionRetryQueueItems,
   replaceOrInsertMatchingItem,
-  getRetryQueueDisposition,
   settleRetryQueueItems,
 } from './persistence-primitives'
 

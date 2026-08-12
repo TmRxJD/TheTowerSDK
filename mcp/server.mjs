@@ -22,7 +22,7 @@ const require = createRequire(import.meta.url)
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 
 /** Prefer the built package; fall back to a sibling install. */
-function loadSdk () {
+function loadSdk() {
   const candidates = [path.join(HERE, '..', 'dist'), path.join(HERE, '..', '..', 'thetowersdk', 'dist')]
   for (const base of candidates) {
     if (!fs.existsSync(path.join(base, 'index.js'))) continue
@@ -53,7 +53,7 @@ const preview = (value, limit = 40) => {
       kind: 'object',
       keyCount: keys.length,
       keys: keys.slice(0, limit),
-      sample: Object.fromEntries(keys.slice(0, 5).map((k) => [k, value[k]])),
+      sample: Object.fromEntries(keys.slice(0, 5).map(k => [k, value[k]])),
     }
   }
   return { kind: typeof value, value }
@@ -76,12 +76,12 @@ const TOOLS = {
       const mod = sdk[entry]
       if (!mod) return { error: `no entry point "${entry}"`, entries: ENTRIES }
       let names = Object.keys(mod).sort()
-      if (filter) names = names.filter((n) => n.toLowerCase().includes(String(filter).toLowerCase()))
+      if (filter) names = names.filter(n => n.toLowerCase().includes(String(filter).toLowerCase()))
       return {
         entry,
         total: Object.keys(mod).length,
         matched: names.length,
-        exports: names.slice(0, 300).map((name) => ({
+        exports: names.slice(0, 300).map(name => ({
           name,
           type: Array.isArray(mod[name]) ? `array(${mod[name].length})` : typeof mod[name],
         })),
@@ -128,7 +128,7 @@ const TOOLS = {
         gzip: wasGzip,
         rootKeys: Object.keys(parsedRoot).length,
         battleRuns: battleRunCount,
-        trackers: discovered.trackers.map((t) => ({ label: t.label, count: t.count, summary: t.summary })),
+        trackers: discovered.trackers.map(t => ({ label: t.label, count: t.count, summary: t.summary })),
       }
     },
   },
@@ -176,7 +176,7 @@ const TOOLS = {
     },
     run: ({ term, domain }) => {
       const matches = sdk.data.lookupGlossary?.(term) ?? []
-      const filtered = domain ? matches.filter((entry) => entry.domain === domain) : matches
+      const filtered = domain ? matches.filter(entry => entry.domain === domain) : matches
       if (!filtered.length) {
         return {
           term,
@@ -207,14 +207,14 @@ const TOOLS = {
 }
 
 /** Zod internals are circular; keep only what is readable. */
-function replacer (key, value) {
+function replacer(key, value) {
   if (key === '_def' || key === 'parent') return undefined
   return value
 }
 
 // ---- stdio JSON-RPC --------------------------------------------------------
 
-const send = (msg) => process.stdout.write(`${JSON.stringify(msg)}\n`)
+const send = msg => process.stdout.write(`${JSON.stringify(msg)}\n`)
 
 const handlers = {
   initialize: () => ({
@@ -241,7 +241,7 @@ const handlers = {
 }
 
 let buffer = ''
-process.stdin.on('data', (chunk) => {
+process.stdin.on('data', chunk => {
   buffer += chunk
   let newline
   while ((newline = buffer.indexOf('\n')) !== -1) {

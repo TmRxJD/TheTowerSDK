@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
   enemyDisplayNameFromSaveEnumIndex,
-  readKilledByEnumIndex,
-  normalizeKilledByDisplayLabel,
   getKilledByFromSave,
+  normalizeKilledByDisplayLabel,
+  readKilledByEnumIndex,
 } from './killed-by'
 
 describe('killed-by-from-save', () => {

@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const SRC = path.join(ROOT, 'src')
-const norm = (p) => p.split(path.sep).join('/')
+const norm = p => p.split(path.sep).join('/')
 
 /** Areas with a public barrel. Everything else is internal. */
 const PUBLIC_AREAS = ['data', 'save', 'node', 'formatting', 'mechanics']
@@ -26,7 +26,7 @@ const GENERATED = /(generated|catalog|-tables|-data|player-stats|labs-research|l
 
 const problems = []
 const files = []
-const walk = (dir) => {
+const walk = dir => {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const p = norm(path.join(dir, entry.name))
     if (entry.isDirectory()) walk(p)
@@ -96,8 +96,8 @@ for (const area of PUBLIC_AREAS) {
   const barrel = fs.readFileSync(barrelPath, 'utf8')
   const modules = fs
     .readdirSync(path.join(SRC, area), { withFileTypes: true })
-    .filter((e) => e.isFile() && e.name.endsWith('.ts') && !e.name.endsWith('.test.ts') && e.name !== 'index.ts')
-    .map((e) => e.name.replace(/\.ts$/, ''))
+    .filter(e => e.isFile() && e.name.endsWith('.ts') && !e.name.endsWith('.test.ts') && e.name !== 'index.ts')
+    .map(e => e.name.replace(/\.ts$/, ''))
 
   /**
    * A module also counts as reachable when a module the barrel *does* export

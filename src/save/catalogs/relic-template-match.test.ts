@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { RELIC_TEMPLATES } from '../../data/relics'
 import {
   buildRelicTemplateIdLookup,
-  normalizeRelicMatchKey,
   findRelicTemplateIdFromSaveIndex,
+  normalizeRelicMatchKey,
 } from './relic-template-match'
 
 describe('relic-template-match', () => {

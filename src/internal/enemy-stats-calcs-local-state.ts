@@ -16,8 +16,8 @@ import {
 } from '../mechanics/els-calculator-options'
 import type { EnemyWaveEnemyType } from './enemy-wave-stats'
 import {
-  normalizeTierSelection,
   getTierSelection,
+  normalizeTierSelection,
   type TierSelectionInput,
 } from '../data/tournaments'
 import { buildNormalizerPersistenceSchema } from './local-persistence-types'

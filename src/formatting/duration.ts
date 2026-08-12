@@ -22,7 +22,7 @@ export const YEAR = DAY * 365
  * formatDuration(3661)      // "1h, 1m, 1s"
  * formatDuration(90061)     // "1 days, 1h, 1m, 1s"
  */
-export function formatDuration (seconds: number): string {
+export function formatDuration(seconds: number): string {
   const years = Math.floor(seconds / YEAR)
   const afterYears = seconds % YEAR
   const days = Math.floor(afterYears / DAY)

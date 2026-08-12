@@ -2,7 +2,7 @@ import { normalizeSharedCardsProgressInputs, type SharedCardsProgressInputs } fr
 import { computeWaveTimeSecondsFromWaCard } from '../../mechanics/enemy-drops-context'
 import { syncUptimeBotsFromTracker, syncUptimeGuardiansFromTracker } from '../shared-uptime-inputs'
 import { syncUptimeResearchLabsFromTracker } from '../shared-tool-inputs-from-research'
-import { GAME_DATA_REGISTRY, type GameDataKey, findRegistryGameDataKey } from './game-data-registry'
+import { findRegistryGameDataKey, GAME_DATA_REGISTRY, type GameDataKey } from './game-data-registry'
 import {
   BOT_GAME_INPUT_SPEC_BY_KEY,
   type BotGameDataKey,
@@ -49,12 +49,12 @@ import {
 } from './workshop-stat-dropdown-math'
 import {
   buildModuleLevelEntries,
-  formatModuleLevelOptionLabel,
   buildModuleQuantityEntries,
-  formatModuleQuantityOptionLabel,
   buildModuleRarityLevelEntries,
-  formatModuleRarityOptionLabel,
   buildModuleSubstatRarityEntries,
+  formatModuleLevelOptionLabel,
+  formatModuleQuantityOptionLabel,
+  formatModuleRarityOptionLabel,
   formatModuleSubstatRarityOptionLabel,
 } from './module-dropdown-math'
 import {
@@ -65,10 +65,10 @@ import {
   buildModuleAssistEfficiencyEntries,
   buildModuleAssistEfficiencyOptionLabel,
   buildUptimeCompressorEntries,
-  formatUptimeCompressorOptionLabel,
   buildUptimeMvnModeEntries,
-  formatUptimeMvnModeOptionLabel,
   buildUptimeWavesPerBossEntries,
+  formatUptimeCompressorOptionLabel,
+  formatUptimeMvnModeOptionLabel,
   formatUptimeWavesPerBossOptionLabel,
 } from './uptime-relic-dropdown-math'
 import {
@@ -79,18 +79,18 @@ import {
 } from './uptime-substat-dropdown-math'
 import {
   buildElsAssistSubstatEfficiencyEntries,
-  formatElsAssistSubstatEfficiencyOptionLabel,
   buildElsModuleSubstatRarityEntries,
   buildElsModuleSubstatRarityOptionLabel,
   buildElsVaultStarEntries,
-  formatElsVaultStarOptionLabel,
   buildElsWorkshopEnhancementDiscountEntries,
-  formatElsWorkshopEnhancementDiscountOptionLabel,
   buildElsWorkshopUtilityDiscountEntries,
-  formatElsWorkshopUtilityDiscountOptionLabel,
   buildElsWorkshopVaultDiscountEntries,
-  formatElsWorkshopVaultDiscountOptionLabel,
   type ElsModuleSubstatLabel,
+  formatElsAssistSubstatEfficiencyOptionLabel,
+  formatElsVaultStarOptionLabel,
+  formatElsWorkshopEnhancementDiscountOptionLabel,
+  formatElsWorkshopUtilityDiscountOptionLabel,
+  formatElsWorkshopVaultDiscountOptionLabel,
 } from './els-dropdown-math'
 import { evaluateExtendedDropdownOptions, isExtendedDropdownKey } from './extended-dropdown-evaluators'
 import {
@@ -102,8 +102,8 @@ import {
 } from './guardian-dropdown-math'
 import {
   buildGameDropdownHubContext,
-  type GameDropdownHubContext,
   computeBotGameInputLab,
+  type GameDropdownHubContext,
 } from './hub-context'
 import type { StandardDropdownOption } from './types'
 import type { SharedToolInputs } from '../shared-tool-inputs'

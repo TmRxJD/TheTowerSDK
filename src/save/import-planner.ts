@@ -22,8 +22,8 @@ import {
 import {
   buildUltimateWeaponsTrackerImportPayload,
   canImportUltimateWeaponsToTracker,
-  readUltimateWeaponsFromSaveRoot,
   getUltimateWeaponCatalogForHubSync,
+  readUltimateWeaponsFromSaveRoot,
 } from './ultimate-weapons'
 import { buildVaultTrackerImportPayload, readVaultFromSaveRoot } from './vault'
 import {

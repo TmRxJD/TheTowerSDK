@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
-  DISSONANCE_ECHO_LAB_SLUG_BY_TYPE,
   computeEffectiveEchoLabLevel,
+  DISSONANCE_ECHO_LAB_SLUG_BY_TYPE,
   getEffectiveEchoLabLevels,
 } from './dissonance-echo-lab-keys'
 import {

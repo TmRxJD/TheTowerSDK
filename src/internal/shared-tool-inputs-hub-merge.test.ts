@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { mergeEnemyStatsCoreHub, mergeSharedUptimeInputsHub, getSharedToolInputs } from './shared-tool-inputs'
+import { getSharedToolInputs, mergeEnemyStatsCoreHub, mergeSharedUptimeInputsHub } from './shared-tool-inputs'
 import { compactSharedToolInputsForStorage } from './shared-tool-inputs-storage'
 import { defaultSharedEnemyStatsCore } from './shared-tool-inputs-extended'
 

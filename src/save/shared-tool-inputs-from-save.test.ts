@@ -3,11 +3,11 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import {
+  mergeSaveDerivedSharedToolInputs,
   readGemDiscountMultiplier,
   readLabRelicPctFromSaveRoot,
-  readTradeOffPerksFromSaveRoot,
   readSharedToolInputsFromSaveRoot,
-  mergeSaveDerivedSharedToolInputs,
+  readTradeOffPerksFromSaveRoot,
 } from './shared-tool-inputs-from-save'
 import { defaultSharedToolInputs } from '../internal/shared-tool-inputs'
 

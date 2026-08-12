@@ -143,6 +143,51 @@ export class EffectivePathsInputError extends Error {
 const toNumber = (value: number | boolean): number =>
   typeof value === 'boolean' ? (value ? 1 : 0) : value
 
+type Evaluate = (part: EffectivePathsExpr) => number
+
+/**
+ * `ROUND`, `FLOOR` and `CEILING`, which read their second argument differently.
+ *
+ * `ROUND` takes decimal places; the other two take a multiple to snap to. Both
+ * default to leaving the value alone.
+ */
+function evaluateRound(
+  expr: Extract<EffectivePathsExpr, { kind: 'round' }>,
+  evaluate: Evaluate,
+): number {
+  const value = evaluate(expr.value)
+
+  if (expr.mode === 'nearest') {
+    const places = expr.modifier === undefined ? 0 : evaluate(expr.modifier)
+    const scale = Math.pow(10, places)
+    return Math.round(value * scale) / scale
+  }
+
+  const multiple = expr.modifier === undefined ? 1 : evaluate(expr.modifier)
+  if (multiple === 0) return 0
+  return (expr.mode === 'down' ? Math.floor(value / multiple) : Math.ceil(value / multiple))
+    * multiple
+}
+
+/** The six comparisons, as the sheet's 1-or-0 arithmetic rather than booleans. */
+function evaluateCompare(
+  expr: Extract<EffectivePathsExpr, { kind: 'compare' }>,
+  evaluate: Evaluate,
+): number {
+  const left = evaluate(expr.left)
+  const right = evaluate(expr.right)
+
+  switch (expr.op) {
+    case 'eq': return left === right ? 1 : 0
+    case 'neq': return left !== right ? 1 : 0
+    case 'gt': return left > right ? 1 : 0
+    case 'gte': return left >= right ? 1 : 0
+    case 'lt': return left < right ? 1 : 0
+    case 'lte': return left <= right ? 1 : 0
+  }
+  return 0
+}
+
 /**
  * Evaluate an expression.
  *
@@ -188,32 +233,10 @@ export function evaluateExpr(
       return Math.pow(evaluate(expr.base), evaluate(expr.exponent))
     case 'abs':
       return Math.abs(evaluate(expr.of))
-    case 'round': {
-      const value = evaluate(expr.value)
-      if (expr.mode === 'nearest') {
-        const places = expr.modifier === undefined ? 0 : evaluate(expr.modifier)
-        const scale = Math.pow(10, places)
-        return Math.round(value * scale) / scale
-      }
-      // FLOOR and CEILING snap to a multiple, which defaults to 1.
-      const multiple = expr.modifier === undefined ? 1 : evaluate(expr.modifier)
-      if (multiple === 0) return 0
-      return (expr.mode === 'down' ? Math.floor(value / multiple) : Math.ceil(value / multiple))
-        * multiple
-    }
-    case 'compare': {
-      const left = evaluate(expr.left)
-      const right = evaluate(expr.right)
-      switch (expr.op) {
-        case 'eq': return left === right ? 1 : 0
-        case 'neq': return left !== right ? 1 : 0
-        case 'gt': return left > right ? 1 : 0
-        case 'gte': return left >= right ? 1 : 0
-        case 'lt': return left < right ? 1 : 0
-        case 'lte': return left <= right ? 1 : 0
-      }
-      return 0
-    }
+    case 'round':
+      return evaluateRound(expr, evaluate)
+    case 'compare':
+      return evaluateCompare(expr, evaluate)
     case 'gated':
       return evaluate(expr.when) !== 0 ? evaluate(expr.then) : evaluate(expr.otherwise)
     case 'min':

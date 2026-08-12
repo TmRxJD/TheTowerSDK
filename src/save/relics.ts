@@ -1,6 +1,6 @@
 import { RELIC_TEMPLATES } from '../data/relics'
 import { IMPORT_CATALOG_META, RELIC_IMPORT_CATALOG } from './catalogs/indexes'
-import { listRelicCatalogRows, findRelicLabel } from './catalogs/relics'
+import { findRelicLabel, listRelicCatalogRows } from './catalogs/relics'
 import {
   buildRelicTemplateIdLookup,
   findRelicTemplateIdFromSaveIndex,

@@ -321,6 +321,91 @@ const COMPARE_OPS: Record<string, EffectivePathsExpr extends never ? never : 'eq
   '=': 'eq', '<>': 'neq', '>': 'gt', '>=': 'gte', '<': 'lt', '<=': 'lte',
 }
 
+/**
+ * The `call` half of {@link lower}, which is every function the sheet uses.
+ *
+ * Split out because it is a long chain of one-function-per-branch and adds
+ * nothing to the shape of the switch it came from.
+ */
+function lowerCall(
+  node: Extract<Node, { kind: 'call' }>,
+  recurse: (child: Node) => EffectivePathsExpr,
+  functionName: string,
+): EffectivePathsExpr {
+  const name = node.name.toUpperCase()
+  if (name === 'IF') {
+    if (node.args.length !== 3) {
+      throw new EffectivePathsFormulaError('IF needs all three arguments', functionName)
+    }
+    return {
+      kind: 'gated',
+      when: recurse(node.args[0]),
+      then: recurse(node.args[1]),
+      otherwise: recurse(node.args[2]),
+    }
+  }
+  if (name === 'SUM') {
+    return foldConstant({ kind: 'sum', of: node.args.map(recurse) })
+  }
+  if (name === 'POW' || name === 'POWER') {
+    if (node.args.length !== 2) {
+      throw new EffectivePathsFormulaError(`${name} needs two arguments`, functionName)
+    }
+    return foldConstant({
+      kind: 'power', base: recurse(node.args[0]), exponent: recurse(node.args[1]),
+    })
+  }
+  if (name === 'ABS') {
+    return foldConstant({ kind: 'abs', of: recurse(node.args[0]) })
+  }
+  if (name === 'ROUND' || name === 'FLOOR' || name === 'CEILING') {
+    // The sheet's second argument is decimal places for ROUND and a
+    // multiple for FLOOR and CEILING; both default to 1 / 0 places.
+    const value = recurse(node.args[0])
+    const modifier = node.args.length > 1 ? recurse(node.args[1]) : undefined
+    return {
+      kind: 'round',
+      mode: name === 'ROUND' ? 'nearest' : name === 'FLOOR' ? 'down' : 'up',
+      value,
+      ...(modifier === undefined ? {} : { modifier }),
+    }
+  }
+  if (name === 'IFS') {
+    // IFS(c1, v1, c2, v2, ...) is a chain of gates; the sheet errors when
+    // nothing matches, and 0 is the closest honest fallback here.
+    if (node.args.length < 2 || node.args.length % 2 !== 0) {
+      throw new EffectivePathsFormulaError('IFS needs condition/value pairs', functionName)
+    }
+    let result: EffectivePathsExpr = { kind: 'const', value: 0 }
+    for (let i = node.args.length - 2; i >= 0; i -= 2) {
+      result = {
+        kind: 'gated',
+        when: recurse(node.args[i]),
+        then: recurse(node.args[i + 1]),
+        otherwise: result,
+      }
+    }
+    return result
+  }
+  if (name === 'MIN' || name === 'MAX') {
+    return foldConstant({
+      kind: name === 'MIN' ? 'min' : 'max',
+      of: node.args.map(recurse),
+    })
+  }
+  if (name === 'AND' || name === 'OR') {
+    // Both read as products/sums of truthiness in the sheet's arithmetic.
+    const of = node.args.map(recurse)
+    return name === 'AND'
+      ? { kind: 'min', of }
+      : { kind: 'max', of }
+  }
+  throw new EffectivePathsFormulaError(
+    `function ${name} is not supported — this formula needs a release, not a sync`,
+    functionName,
+  )
+}
+
 function lower(node: Node, scope: Scope, functionName: string): EffectivePathsExpr {
   const recurse = (child: Node) => lower(child, scope, functionName)
 
@@ -365,80 +450,8 @@ function lower(node: Node, scope: Scope, functionName: string): EffectivePathsEx
       }
     }
 
-    case 'call': {
-      const name = node.name.toUpperCase()
-      if (name === 'IF') {
-        if (node.args.length !== 3) {
-          throw new EffectivePathsFormulaError('IF needs all three arguments', functionName)
-        }
-        return {
-          kind: 'gated',
-          when: recurse(node.args[0]),
-          then: recurse(node.args[1]),
-          otherwise: recurse(node.args[2]),
-        }
-      }
-      if (name === 'SUM') {
-        return foldConstant({ kind: 'sum', of: node.args.map(recurse) })
-      }
-      if (name === 'POW' || name === 'POWER') {
-        if (node.args.length !== 2) {
-          throw new EffectivePathsFormulaError(`${name} needs two arguments`, functionName)
-        }
-        return foldConstant({
-          kind: 'power', base: recurse(node.args[0]), exponent: recurse(node.args[1]),
-        })
-      }
-      if (name === 'ABS') {
-        return foldConstant({ kind: 'abs', of: recurse(node.args[0]) })
-      }
-      if (name === 'ROUND' || name === 'FLOOR' || name === 'CEILING') {
-        // The sheet's second argument is decimal places for ROUND and a
-        // multiple for FLOOR and CEILING; both default to 1 / 0 places.
-        const value = recurse(node.args[0])
-        const modifier = node.args.length > 1 ? recurse(node.args[1]) : undefined
-        return {
-          kind: 'round',
-          mode: name === 'ROUND' ? 'nearest' : name === 'FLOOR' ? 'down' : 'up',
-          value,
-          ...(modifier === undefined ? {} : { modifier }),
-        }
-      }
-      if (name === 'IFS') {
-        // IFS(c1, v1, c2, v2, ...) is a chain of gates; the sheet errors when
-        // nothing matches, and 0 is the closest honest fallback here.
-        if (node.args.length < 2 || node.args.length % 2 !== 0) {
-          throw new EffectivePathsFormulaError('IFS needs condition/value pairs', functionName)
-        }
-        let result: EffectivePathsExpr = { kind: 'const', value: 0 }
-        for (let i = node.args.length - 2; i >= 0; i -= 2) {
-          result = {
-            kind: 'gated',
-            when: recurse(node.args[i]),
-            then: recurse(node.args[i + 1]),
-            otherwise: result,
-          }
-        }
-        return result
-      }
-      if (name === 'MIN' || name === 'MAX') {
-        return foldConstant({
-          kind: name === 'MIN' ? 'min' : 'max',
-          of: node.args.map(recurse),
-        })
-      }
-      if (name === 'AND' || name === 'OR') {
-        // Both read as products/sums of truthiness in the sheet's arithmetic.
-        const of = node.args.map(recurse)
-        return name === 'AND'
-          ? { kind: 'min', of }
-          : { kind: 'max', of }
-      }
-      throw new EffectivePathsFormulaError(
-        `function ${name} is not supported — this formula needs a release, not a sync`,
-        functionName,
-      )
-    }
+    case 'call':
+      return lowerCall(node, recurse, functionName)
   }
 }
 

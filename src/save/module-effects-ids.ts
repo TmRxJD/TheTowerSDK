@@ -1,8 +1,8 @@
 import type { ModuleCategory } from '../data/modules'
 import { decodeModuleSaveEffect } from './module-effects-decode'
 import {
-  MODULE_SAVE_EFFECT_ID_LABELS,
   findModuleSaveEffectLabel,
+  MODULE_SAVE_EFFECT_ID_LABELS,
 } from './module-effects-registry'
 import {
   MODULE_SUBSTAT_BASE_RARITIES,

@@ -1,8 +1,8 @@
 import { z } from 'zod'
 import {
-  listActivePerkIndices,
   findPerkCatalogRow,
   findPerkNameByIndex,
+  listActivePerkIndices,
 } from './catalogs/perks'
 import {
   coerceSaveNumber,

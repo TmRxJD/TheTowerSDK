@@ -1,12 +1,12 @@
 import { IMPORT_CATALOG_META } from './catalogs/indexes'
 import {
+  findGuardianChipCatalogRowBySlotIndex,
+  findGuardianChipTrackerKeyBySlotIndex,
+  getGuardianChipSlotLabel,
+  getGuardianSkinLabel,
   listGuardianChipCatalogRows,
   listGuardianChipSlotCatalogRows,
   listGuardianSkinCatalogRows,
-  findGuardianChipCatalogRowBySlotIndex,
-  getGuardianChipSlotLabel,
-  findGuardianChipTrackerKeyBySlotIndex,
-  getGuardianSkinLabel,
 } from './catalogs/guardians'
 import {
   buildGuardianDefinitions,

@@ -1,9 +1,9 @@
 import {
   buildLevelOptions,
+  findRarityLabel,
   getLevelCapForRarity,
   MODULE_RARITIES,
   type ModuleRarity,
-  findRarityLabel,
 } from '../../data/index'
 import { getModuleTemplate, type ModuleTemplate } from '../../data/index'
 import { MODULE_SUBSTAT_BASE_RARITIES, type ModuleSubstatCanonicalRarity } from '../../data/index'

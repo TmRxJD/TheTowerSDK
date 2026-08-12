@@ -6,14 +6,14 @@ import {
 
   buildGuardianGameInputLevelEntries,
 
-  type GuardianGameInputKind,
-
   getGuardianGameInputPrefix,
+
+  type GuardianGameInputKind,
 
 } from './guardian-dropdown-math'
 import {
-  type GuardianStatSpec,
   findGuardianParametricStatSpec,
+  type GuardianStatSpec,
 } from './guardian-stat-dropdown-math'
 
 export type GuardianTrackerDropdownBinding =

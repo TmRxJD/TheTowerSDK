@@ -29,7 +29,7 @@ const catalog = { ...data, ...save }
 
 /** @type {Array<{term: string, kind: string, domain: string, definition: string, expansion?: string}>} */
 const entries = []
-const add = (entry) => {
+const add = entry => {
   if (!entry.term || typeof entry.term !== 'string') return
   entries.push(entry)
 }

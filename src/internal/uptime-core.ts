@@ -1,6 +1,6 @@
 import { clampAssistMultiplierEfficiencyPct } from './assist-module-efficiency'
 import { guardianUpgrades } from '../data/guardian-upgrades'
-import { findUwStatSpec, computeUwStatStoredValue } from './game-input-data/uw-stat-dropdown-math'
+import { computeUwStatStoredValue, findUwStatSpec } from './game-input-data/uw-stat-dropdown-math'
 import { UPTIME_UW_FIELD_MAP } from './shared-uptime-inputs'
 
 export type Compressor = 'Disabled' | 'Epic' | 'Legendary' | 'Mythic' | 'Ancestral'

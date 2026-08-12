@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import { evaluateDropdownOptions } from './dropdown-evaluator'
 import {
   buildDamageReductionBotBonusEntries,
-  formatDamageReductionBotBonusOptionLabel,
   buildDamageReductionCfReductionEntries,
   buildDamageReductionCfReductionOptionLabel,
   buildDamageReductionClPlusLevelEntries,
@@ -11,6 +10,7 @@ import {
   buildDamageReductionFlameBotOptionLabel,
   buildDamageReductionNmpReductionEntries,
   buildDamageReductionPrimordialCollapseEntries,
+  formatDamageReductionBotBonusOptionLabel,
 } from './damage-reduction-dropdown-math'
 
 describe('damage reduction dropdown math', () => {

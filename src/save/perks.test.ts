@@ -4,9 +4,9 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { listActivePerkIndices } from './catalogs/perks'
 import {
-  readPerkPreferencesFromSaveRoot,
   computeUnbannedPerkIndices,
   getOverviewAutopickPerkIndices,
+  readPerkPreferencesFromSaveRoot,
 } from './perks'
 
 /** Synthetic, and inside the package, so a fork can run this without a save of its own. */

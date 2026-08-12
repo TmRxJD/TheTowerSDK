@@ -1,4 +1,3 @@
-import { CARDS_ASSET_TABLE } from '../data/assets'
 import { LAB_RESEARCH_BY_INDEX } from '../data/labs-research'
 import { CARD_TEMPLATES } from '../data/cards'
 import { MAX_CAMPAIGN_TIER } from '../data/campaign-tier'

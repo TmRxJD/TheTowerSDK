@@ -6,7 +6,7 @@
  * to run them. Without it those cases skip and the rest still run, so the server
  * stays covered on a fresh clone where nobody has a save to hand.
  */
-import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process'
+import { type ChildProcessWithoutNullStreams, spawn } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -30,7 +30,7 @@ describeServer('mcp server', () => {
 
   beforeAll(() => {
     child = spawn('node', [SERVER], { stdio: ['pipe', 'pipe', 'inherit'] })
-    child.stdout.on('data', (chunk) => {
+    child.stdout.on('data', chunk => {
       buffer += chunk
       let newline: number
       while ((newline = buffer.indexOf('\n')) !== -1) {

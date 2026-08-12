@@ -1,8 +1,8 @@
 import {
+  computeElsEnhancementLevel,
   ELS_ATTACK_WORKSHOP_KEY,
   ELS_ENHANCEMENT_KEY,
   ELS_HEALTH_WORKSHOP_KEY,
-  computeElsEnhancementLevel,
 } from '../mechanics/els-upgrade-path'
 import {
   VAULT_ELS_ATTACK_NODE_ID,

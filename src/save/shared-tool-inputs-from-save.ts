@@ -3,7 +3,7 @@ import { BOT_UPGRADES_DATA } from '../data/bots'
 import { BOT_IMPORT_CATALOG } from './catalogs/indexes'
 import { listRelicCatalogRows } from './catalogs/relics'
 import { listUltimateWeaponCatalogRows } from './catalogs/ultimate-weapons'
-import { getSharedToolLabs, computeLabValueAtLevel } from '../data/labs'
+import { computeLabValueAtLevel, getSharedToolLabs } from '../data/labs'
 import { decodeModuleSaveEffect, type ModuleSaveSlotCategory } from './module-effects-decode'
 import { MODULE_RARITIES } from '../data/module-levels'
 import {
@@ -15,9 +15,9 @@ import {
 } from './read-values'
 import { readPerkPreferencesFromSaveRoot } from './perks'
 import {
-  readResearchLabLevelsFromSaveRoot,
-  readExtendedSharedToolInputs,
   mergeSaveDerivedExtendedSharedToolInputs,
+  readExtendedSharedToolInputs,
+  readResearchLabLevelsFromSaveRoot,
 } from './shared-tool-inputs-from-save-extended'
 import { enrichSharedToolInputs } from '../internal/shared-tool-inputs-from-research'
 import {

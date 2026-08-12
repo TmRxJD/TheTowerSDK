@@ -4,10 +4,10 @@ import { isDissonanceEchoResearchLabSlug } from './dissonance-echo-lab-keys'
 import { findLabResearchByDisplayName, findLabResearchBySlug } from '../../data/index'
 import { SITE_LAB_SLUG_ALIASES } from '../../data/index'
 import {
+  computeLabValueAtLevel,
   getLabMaxLevel,
   getSharedToolLabs,
   isLabsTrackerResearchLabName,
-  computeLabValueAtLevel,
   type ToolLabRecord,
 } from '../../data/index'
 import type { GameDropdownOptionEntry } from './types'
