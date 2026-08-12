@@ -299,8 +299,8 @@ describe('the function inventory', () => {
   it('accounts for all twenty-six, ported or not', () => {
     // Enumerating `EPC_*` alone misses the two `EPU_*` the tab also calls,
     // which is how the first pass came to claim "17 of 24".
-    expect(ECONOMY_FUNCTIONS_PORTED).toHaveLength(20)
-    expect(UNPORTED_ECONOMY_FUNCTIONS).toHaveLength(6)
+    expect(ECONOMY_FUNCTIONS_PORTED).toHaveLength(23)
+    expect(UNPORTED_ECONOMY_FUNCTIONS).toHaveLength(3)
 
     const all = [...ECONOMY_FUNCTIONS_PORTED, ...UNPORTED_ECONOMY_FUNCTIONS.map(e => e.name)]
     expect(new Set(all).size, 'a name is listed twice').toBe(all.length)

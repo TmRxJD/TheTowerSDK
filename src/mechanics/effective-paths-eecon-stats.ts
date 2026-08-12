@@ -442,7 +442,7 @@ export function maxValueNukeCooldown(input: {
 }
 
 /**
- * The six functions this module does not port yet, and why.
+ * The three functions this module does not port yet, and why.
  *
  * Recorded rather than left to be rediscovered: each needs something beyond
  * arithmetic, and guessing at any of them would produce a plausible number.
@@ -453,7 +453,7 @@ export const ECONOMY_FUNCTIONS_PORTED = [
   'EPC_BHCB', 'EPC_BHD', 'EPC_BHCD',
   'EPC_DWCB', 'EPC_SLCB', 'EPC_SLA', 'EPC_SLQ', 'EPC_MVN',
   'EPU_DWCD', 'EPU_DWQ',
-  'EPC_SYNC',
+  'EPC_SYNC', 'EPC_CARD_WS', 'EPC_WSM', 'EPC_WS_FUP',
 ] as const
 
 export const UNPORTED_ECONOMY_FUNCTIONS = [
@@ -461,13 +461,6 @@ export const UNPORTED_ECONOMY_FUNCTIONS = [
     name: 'EPC_SYNC_OLD',
     reason: 'the previous version of the same, kept on the sheet and unused',
   },
-  {
-    name: 'EPC_CARD_WS',
-    reason: 'looks a wave-skip count up in the EP_HELPER table, which is data '
-      + 'rather than a formula',
-  },
-  { name: 'EPC_WSM', reason: 'sums EPC_CARD_WS over every skip' },
-  { name: 'EPC_WS_FUP', reason: 'the same sum, for free upgrades' },
   {
     name: 'EPC_LAB_DISCOUNT',
     reason: 'totals the cost of every lab in a chosen category from '
@@ -584,4 +577,122 @@ export function syncMultiplier(weapons: {
     total += blocks.reduce((product, block) => product * block[step % block.length], 1)
   }
   return total / period
+}
+
+// ---------------------------------------------------------------------------
+// Wave skips
+// ---------------------------------------------------------------------------
+
+/**
+ * `EP_HELPER!A2:S15` — how often the Wave Skip card skips a given number of
+ * waves.
+ *
+ * Data rather than a formula, which is why the sheet keeps it on a helper tab
+ * and looks it up. Each row is a number of waves skipped and each column a
+ * state of the card: the first is Locked, the next seven are card levels 1 to
+ * 7, and the last ten are mastery levels 0 to 9. A row is a probability
+ * distribution, so a column sums to 1.
+ */
+const WAVE_SKIP_CHANCES: Readonly<Record<number, readonly number[]>> = {
+  0: [1, 0.91, 0.9, 0.89, 0.87, 0.85, 0.83, 0.81, 0.81, 0.81, 0.81, 0.81, 0.81, 0.81, 0.81, 0.81, 0.81, 0.81],
+  1: [0, 0.0819, 0.09, 0.0979, 0.1131, 0.1275, 0.1411, 0.1539, 0.13851, 0.130815, 0.12312, 0.115425, 0.10773, 0.100035, 0.09234, 0.084645, 0.07695, 0.069255],
+  2: [0, 0.007371, 0.009, 0.010769, 0.014703, 0.019125, 0.023987, 0.029241, 0.0390752, 0.0442116, 0.0494942, 0.0549231, 0.0604981, 0.0662193, 0.0720868, 0.0781004, 0.0842603, 0.0905663],
+  3: [0, 0.0006634, 0.0009, 0.0011846, 0.0019114, 0.0028688, 0.0040778, 0.0055558, 0.0093136, 0.0108684, 0.0122017, 0.0133092, 0.0141869, 0.0148304, 0.0152357, 0.0153986, 0.015315, 0.0149806],
+  4: [0, 0.0000597, 0.00009, 0.0001303, 0.0002485, 0.0004303, 0.0006932, 0.0010556, 0.002335, 0.0030153, 0.0037354, 0.0045054, 0.0053352, 0.0062351, 0.0072155, 0.0082867, 0.0094596, 0.010745],
+  5: [0, 0.0000054, 0.000009, 0.0000143, 0.0000323, 0.0000645, 0.0001178, 0.0002006, 0.0005763, 0.0007967, 0.0010315, 0.0012742, 0.0015182, 0.0017563, 0.0019805, 0.0021825, 0.0023536, 0.0024842],
+  6: [0, 5e-7, 9e-7, 0.0000016, 0.0000042, 0.0000097, 0.00002, 0.0000381, 0.0001429, 0.0002146, 0.0002987, 0.0003956, 0.000506, 0.0006315, 0.0007742, 0.0009366, 0.0011223, 0.0013353],
+  7: [0, 0, 1e-7, 2e-7, 5e-7, 0.0000015, 0.0000034, 0.0000072, 0.0000354, 0.0000574, 0.0000846, 0.0001169, 0.0001538, 0.0001948, 0.0002388, 0.0002845, 0.0003302, 0.0003738],
+  8: [0, 0, 0, 0, 1e-7, 2e-7, 6e-7, 0.0000014, 0.0000088, 0.0000154, 0.0000242, 0.0000354, 0.0000493, 0.0000661, 0.0000861, 0.0001098, 0.000138, 0.0001715],
+  9: [0, 0, 0, 0, 0, 0, 1e-7, 3e-7, 0.0000022, 0.0000041, 0.0000069, 0.0000106, 0.0000153, 0.0000211, 0.000028, 0.0000358, 0.0000445, 0.0000537],
+  10: [0, 0, 0, 0, 0, 0, 0, 0, 5e-7, 0.0000011, 0.000002, 0.0000032, 0.0000048, 0.000007, 0.0000097, 0.0000131, 0.0000173, 0.0000225],
+  11: [0, 0, 0, 0, 0, 0, 0, 0, 1e-7, 3e-7, 6e-7, 0.000001, 0.0000015, 0.0000023, 0.0000032, 0.0000044, 0.0000059, 0.0000075],
+  12: [0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-7, 2e-7, 3e-7, 5e-7, 7e-7, 0.0000011, 0.0000016, 0.0000022, 0.000003],
+  13: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-7, 2e-7, 2e-7, 4e-7, 5e-7, 8e-7, 0.000001],
+}
+
+/** Column offsets into {@link WAVE_SKIP_CHANCES}, as `EPC_CARD_WS` picks them. */
+const WAVE_SKIP_LOCKED_COLUMN = 0
+const WAVE_SKIP_CARD_COLUMN_BASE = 0
+const WAVE_SKIP_MASTERY_COLUMN_BASE = 8
+
+/**
+ * `EPC_CARD_WS` — the chance of skipping exactly `skips` waves.
+ *
+ * Without the card there is no skipping, which is the Locked column rather than
+ * a zero: it reads 100% at zero skips.
+ */
+export function waveSkipChance(
+  skips: number,
+  hasWaveSkipCard: boolean,
+  cardLevel: number,
+  hasMastery: boolean,
+  masteryLevel: number,
+): number {
+  const row = WAVE_SKIP_CHANCES[Math.max(0, Math.floor(skips))]
+  if (!row) return 0
+
+  const column = !hasWaveSkipCard
+    ? WAVE_SKIP_LOCKED_COLUMN
+    : hasMastery
+      ? WAVE_SKIP_MASTERY_COLUMN_BASE + Math.max(0, Math.floor(masteryLevel))
+      : WAVE_SKIP_CARD_COLUMN_BASE + Math.max(1, Math.floor(cardLevel))
+
+  return row[Math.min(column, row.length - 1)] ?? 0
+}
+
+/**
+ * The expected number of waves skipped, weighted one of two ways.
+ *
+ * `EPC_WSM` sums `k × chance(k)` and `EPC_WS_FUP` sums `k × chance(k - 1)` —
+ * the sheet writes the second with `SEQUENCE(skips, 1, 0)`, starting the skip
+ * count at zero while the weights still start at one. They are a row apart and
+ * not interchangeable.
+ */
+function weightedSkips(
+  skips: number,
+  offset: 0 | 1,
+  hasWaveSkipCard: boolean,
+  cardLevel: number,
+  hasMastery: boolean,
+  masteryLevel: number,
+): number {
+  let total = 0
+  for (let weight = 1; weight <= Math.floor(skips); weight++) {
+    total += weight * waveSkipChance(
+      weight - offset, hasWaveSkipCard, cardLevel, hasMastery, masteryLevel,
+    )
+  }
+  return total
+}
+
+/** `EPC_WS_FUP` — expected skips as free upgrades count them. */
+export function waveSkipFreeUpgrades(
+  skips: number,
+  hasWaveSkipCard: boolean,
+  cardLevel: number,
+  hasMastery: boolean,
+  masteryLevel: number,
+): number {
+  return weightedSkips(skips, 1, hasWaveSkipCard, cardLevel, hasMastery, masteryLevel)
+}
+
+/**
+ * `EPC_WSM` — the wave time a skip saves.
+ *
+ * Zero without the card, because there is nothing to skip. `waveSeconds` is the
+ * wave's own length and `introSprintSeconds` the part of it Intro Sprint has
+ * already removed.
+ */
+export function waveSkipTimeSaved(
+  skips: number,
+  hasWaveSkipCard: boolean,
+  cardLevel: number,
+  hasMastery: boolean,
+  masteryLevel: number,
+  waveSeconds: number,
+  introSprintSeconds: number,
+): number {
+  if (!hasWaveSkipCard) return 0
+  return weightedSkips(skips, 0, hasWaveSkipCard, cardLevel, hasMastery, masteryLevel)
+    * (waveSeconds - introSprintSeconds)
 }
