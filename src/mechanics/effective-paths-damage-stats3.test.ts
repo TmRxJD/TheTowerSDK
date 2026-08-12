@@ -173,70 +173,41 @@ describe('EPD_SHOCKWAVE_DAMAGE', () => {
   })
 })
 
-describe('the Super Tower ultimate-weapon share, which looks wrong', () => {
+describe('the Super Tower ultimate-weapon share', () => {
   /**
-   * `EPD_SUPERTOWER_EFFECTIVE_UWBONUS` writes `35% × bonus − 1` where its own
-   * sibling writes `1 + 35% × (bonus − 1)`. These pin the consequence so it
-   * stays deliberate: parity with the sheet, not agreement with the card.
+   * The card multiplies bullet damage; its mastery passes 35% of that
+   * multiplier to ultimate weapons. `35% × bonus − 1` is that multiplier
+   * turned into a bonus above 1, the same shape the sibling pro-rates.
+   *
+   * A mastery can only be unlocked on a maxed card, so every state these can
+   * actually be called in has card level 7.
    */
   const at = (bonus: number, cooldown = 45) => superTowerEffectiveUltimateBonus({
     hasCard: true, hasMastery: true, bonus, cooldownSeconds: cooldown,
   })
 
-  it('turns into a penalty below a card bonus of 1 / 0.35', () => {
-    const breakEven = 1 / 0.35
-    expect(at(breakEven)).toBeCloseTo(1, 12)
-    expect(at(breakEven - 0.1)).toBeLessThan(1)
-    expect(at(breakEven + 0.1)).toBeGreaterThan(1)
+  it('is a bonus everywhere the mastery can exist', () => {
+    // Mastery implies a maxed card, so the bonus starts at 5 and only grows.
+    for (const lab of [0, 1, 5, 10, 20, 30]) {
+      expect(at(superTowerBonus(7, lab)), `lab ${lab}`).toBeGreaterThan(1)
+    }
+    expect(superTowerBonus(7, 0)).toBe(5)
+    expect(0.35 * superTowerBonus(7, 0)).toBeCloseTo(1.75, 12)
   })
 
-  it('only reaches that penalty in a narrow, real window', () => {
-    // `EPD_SUPERTOWER_BONUS` cannot return under 2.5, so most of the card's
-    // range is still a bonus — just a smaller one than the sibling's reading.
-    // Checked against the live sheet across every card level: three of the 42
-    // card/lab combinations fall below 1, all at card level 1.
+  it('passes 35% of the card’s multiplier, not 35% of its bonus', () => {
+    // The distinction the two siblings turn on: one takes a share of the
+    // multiplier, the other a share of the part above 1.
+    const bonus = superTowerBonus(7, 0)
     const cooldown = superTowerCooldown(true, 0)
-    const below = []
-    for (let card = 1; card <= 7; card++) {
-      for (const lab of [0, 2, 4, 5, 10, 30]) {
-        const value = superTowerEffectiveUltimateBonus({
-          hasCard: true, hasMastery: true, bonus: superTowerBonus(card, lab), cooldownSeconds: cooldown,
-        })
-        if (value < 1) below.push({ card, lab, value })
-      }
-    }
-    expect(below).toHaveLength(3)
-    expect(below.every(entry => entry.card === 1)).toBe(true)
-    expect(below.every(entry => entry.lab <= 4)).toBe(true)
-    expect(Math.min(...below.map(entry => entry.value))).toBeCloseTo(0.9553571428571429, 12)
+    expect(at(bonus, cooldown)).toBeCloseTo(1 + (15 * (0.35 * bonus - 1)) / cooldown, 12)
   })
 
-  it('is always short of the sibling’s reading by the same amount', () => {
-    // 15 × 0.65 / cooldown, whatever the bonus — the constant the two
-    // expressions differ by, not a scaling error.
-    const cooldown = 42
-    for (const bonus of [2.5, 4, 7.03, 9.5]) {
-      const sibling = 1 + (15 * (0.35 * (bonus - 1))) / cooldown
-      expect(sibling - at(bonus, cooldown)).toBeCloseTo(15 * 0.65 / cooldown, 12)
-    }
-  })
-
-  it('differs from its sibling\u2019s reading by a constant 0.65 of the bonus', () => {
-    for (const bonus of [1.5, 2.5, 5, 7.3]) {
-      const sheetShare = 0.35 * bonus - 1
-      const siblingShare = 0.35 * (bonus - 1)
-      expect(siblingShare - sheetShare).toBeCloseTo(0.65, 12)
-    }
-  })
-
-  it('still matches the sheet, penalty and all', () => {
-    // These fixture bonuses are synthetic — below what EPD_SUPERTOWER_BONUS
-    // can produce — so they prove the function, not the reachable window.
-    // The sub-1 answers are the sheet's own.
-    const penalties = fixtures.superTowerEffectiveUw
-      .filter(e => e.hasCard && e.hasMastery && e.sheet < 1)
-    expect(penalties.length).toBeGreaterThan(0)
-    for (const e of penalties) {
+  it('still matches the sheet, including on states the game cannot reach', () => {
+    // The fixture bonuses are randomised rather than reachable, which is what
+    // makes them a parity check — the function has to agree everywhere, not
+    // only where the game can go.
+    for (const e of fixtures.superTowerEffectiveUw) {
       expect(superTowerEffectiveUltimateBonus({
         hasCard: e.hasCard,
         hasMastery: e.hasMastery,

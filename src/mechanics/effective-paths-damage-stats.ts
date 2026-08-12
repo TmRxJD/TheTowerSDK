@@ -431,26 +431,19 @@ export function superTowerEffectiveBonus(input: {
 }
 
 /**
- * `EPD_SUPERTOWER_EFFECTIVE_UWBONUS` — what Super Tower does for ultimate
- * weapons, when both the card and its mastery are owned.
+ * `EPD_SUPERTOWER_EFFECTIVE_UWBONUS` — what Super Tower's mastery gives
+ * ultimate weapons.
  *
- * **This reproduces a formula that disagrees with its own sibling, on purpose.**
- * The sheet writes the ultimate-weapon share as `35% × bonus − 1`, where
- * {@link superTowerEffectiveBonus} writes the same idea as
- * `1 + 35% × (bonus − 1)`. The numerators differ by a constant 0.65, so this
- * always returns `15 × 0.65 / cooldown` less than the sibling's reading —
- * about 0.23 at a 42-second cooldown.
+ * The card and its mastery hit different things: the **card** multiplies bullet
+ * damage, and the **mastery** passes 35% of that multiplier to ultimate
+ * weapons. So the weapons' multiplier is `35% × bonus` outright, and the `− 1`
+ * turns it into a bonus above 1 for the same `15 / cooldown` pro-rating
+ * {@link superTowerEffectiveBonus} uses. The two look like they disagree and
+ * do not — they are computing different quantities.
  *
- * For most of the card's range that is still a bonus, just a smaller one. It
- * only turns into a penalty where `35% × bonus < 1`, and the reachable range
- * is narrow: `EPD_SUPERTOWER_BONUS` cannot return less than 2.5, so it takes
- * card level 1 with the S.T. Bonus lab at 4 or below. Three of the 42
- * card/lab combinations checked against the live sheet land there, the worst
- * at 0.955.
- *
- * Ported as written because parity with the sheet is the goal, and pinned by
- * tests so the shortfall stays deliberate rather than being quietly "fixed"
- * into a disagreement.
+ * The multiplier cannot land below 1 in practice. A mastery can only be
+ * unlocked on a maxed card, so `hasMastery` implies card level 7, and
+ * {@link superTowerBonus} returns at least 5 there — `35% × 5 = 1.75`.
  */
 export function superTowerEffectiveUltimateBonus(input: {
   hasCard: boolean
