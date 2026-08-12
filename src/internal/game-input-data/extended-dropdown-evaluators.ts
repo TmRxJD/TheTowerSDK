@@ -217,45 +217,15 @@ export function isExtendedDropdownKey(key: string): boolean {
   return EXTENDED_DROPDOWN_KEYS.has(key)
 }
 
-export function evaluateExtendedDropdownOptions(
+/**
+ * The `thorns_*` keys, which belong to one calculator and share nothing
+ * with the rest of the switch they were written in.
+ */
+function evaluateThornsDropdown(
   key: GameDataKey,
   context: GameDropdownHubContext,
 ): StandardDropdownOption[] {
   switch (key) {
-    case 'enemy_tier_selection':
-      return buildEnemyTierSelectionEntries().map(entry => ({
-        value: entry.value,
-        label: formatEnemyTierSelectionOptionLabel(entry.value),
-      }))
-    case 'els_focus':
-      return buildElsFocusEntries().map(entry => ({
-        value: entry.value,
-        label: formatElsFocusOptionLabel(entry.value),
-      }))
-    case 'module_type_category':
-      return buildModuleTypeCategoryEntries().map(entry => ({
-        value: entry.value,
-        label: formatModuleTypeCategoryOptionLabel(entry.value),
-      }))
-    case 'module_lab_efficiency_level':
-      return buildModuleLabEfficiencyEntries().map(entry => ({
-        value: entry.value,
-        label: formatModuleLabEfficiencyOptionLabel(entry.value),
-      }))
-    case 'module_stone_cost_level': {
-      const profile = (context.moduleStoneCostProfile ?? 'current') as ModuleStoneCostProfile
-      return buildModuleStoneCostEntries(profile).map(entry => ({
-        value: entry.value,
-        label: buildModuleStoneCostOptionLabel(entry.value, profile),
-      }))
-    }
-    case 'generic_lab_level': {
-      const maxLevel = context.genericLabLevelMax ?? 0
-      return buildGenericLabLevelEntries(maxLevel).map(entry => ({
-        value: entry.value,
-        label: buildGenericLabLevelOptionLabel(entry.value, maxLevel),
-      }))
-    }
     case 'thorns_tier':
       return buildThornsTierEntries().map(entry => ({
         value: entry.value,
@@ -291,6 +261,20 @@ export function evaluateExtendedDropdownOptions(
         value: entry.value,
         label: buildThornsHeatWaveOptionLabel(entry.value, context.thornsTournamentTier),
       }))
+    default:
+      return []
+  }
+}
+
+/**
+ * The `workshop_calc_*` keys, which belong to one calculator and share nothing
+ * with the rest of the switch they were written in.
+ */
+function evaluateWorkshopCalcDropdown(
+  key: GameDataKey,
+  context: GameDropdownHubContext,
+): StandardDropdownOption[] {
+  switch (key) {
     case 'workshop_calc_section':
       return buildWorkshopCalcSectionEntries().map(entry => ({
         value: entry.value,
@@ -311,6 +295,20 @@ export function evaluateExtendedDropdownOptions(
         label: formatWorkshopCalcDiscountOptionLabel(entry.value),
       }))
     }
+    default:
+      return []
+  }
+}
+
+/**
+ * The `damage_reduction_*` keys, which belong to one calculator and share nothing
+ * with the rest of the switch they were written in.
+ */
+function evaluateDamageReductionDropdown(
+  key: GameDataKey,
+  context: GameDropdownHubContext,
+): StandardDropdownOption[] {
+  switch (key) {
     case 'damage_reduction_cf_reduction':
       return buildDamageReductionCfReductionEntries().map(entry => ({
         value: entry.value,
@@ -358,6 +356,20 @@ export function evaluateExtendedDropdownOptions(
         value: entry.value,
         label: formatDamageReductionAvgClHitsOptionLabel(entry.value),
       }))
+    default:
+      return []
+  }
+}
+
+/**
+ * The `ilm_*` keys, which belong to one calculator and share nothing
+ * with the rest of the switch they were written in.
+ */
+function evaluateInnerLandMineDropdown(
+  key: GameDataKey,
+  context: GameDropdownHubContext,
+): StandardDropdownOption[] {
+  switch (key) {
     case 'ilm_amplify_bot_level':
       return buildIlmAmplifyBotBonusLevelEntries().map(entry => ({
         value: entry.value,
@@ -380,6 +392,31 @@ export function evaluateExtendedDropdownOptions(
         value: entry.value,
         label: formatIlmShockStackOptionLabel(entry.value),
       }))
+    default:
+      return []
+  }
+}
+
+/** Key families with an evaluator of their own, tried before the switch. */
+const EXTENDED_DROPDOWN_FAMILIES: ReadonlyArray<{
+  prefix: string
+  evaluate: (key: GameDataKey, context: GameDropdownHubContext) => StandardDropdownOption[]
+}> = [
+  { prefix: 'thorns_', evaluate: evaluateThornsDropdown },
+  { prefix: 'workshop_calc_', evaluate: evaluateWorkshopCalcDropdown },
+  { prefix: 'damage_reduction_', evaluate: evaluateDamageReductionDropdown },
+  { prefix: 'ilm_', evaluate: evaluateInnerLandMineDropdown },
+]
+
+/**
+ * Tracker table controls — the sorts, filters and pickers a tracker page
+ * shows. They share no prefix, so the dispatcher matches them by name.
+ */
+function evaluateTrackerUiDropdown(
+  key: GameDataKey,
+  context: GameDropdownHubContext,
+): StandardDropdownOption[] {
+  switch (key) {
     case 'card_copies_owned':
       return buildCardCopiesOwnedEntries(context.cardCopiesMax ?? 80).map(entry => ({
         value: entry.value,
@@ -501,6 +538,80 @@ export function evaluateExtendedDropdownOptions(
         value: entry.value,
         label: formatRelicsThemesSortOptionLabel(entry.value),
       }))
+    default:
+      return []
+  }
+}
+
+const TRACKER_UI_DROPDOWN_KEYS: ReadonlySet<string> = new Set([
+  'card_copies_owned',
+  'card_equipped_slots',
+  'module_tracker_type_filter',
+  'module_tracker_rarity_filter',
+  'module_tracker_sort',
+  'card_tracker_sort',
+  'labs_tracker_sort',
+  'module_template_picker',
+  'card_template_picker',
+  'module_equipped_picker',
+  'module_substat_type_picker',
+  'workshop_tracker_category_filter',
+  'workshop_tracker_sort',
+  'workshop_overview_layout',
+  'bots_tracker_sort',
+  'bots_tracker_preset',
+  'guardians_tracker_sort',
+  'uw_tracker_sort',
+  'uw_overview_view',
+  'relics_bonus_sort',
+  'relics_themes_sort',
+])
+
+export function evaluateExtendedDropdownOptions(
+  key: GameDataKey,
+  context: GameDropdownHubContext,
+): StandardDropdownOption[] {
+  for (const family of EXTENDED_DROPDOWN_FAMILIES) {
+    if (key.startsWith(family.prefix)) return family.evaluate(key, context)
+  }
+
+  if (TRACKER_UI_DROPDOWN_KEYS.has(key)) return evaluateTrackerUiDropdown(key, context)
+
+  switch (key) {
+    case 'enemy_tier_selection':
+      return buildEnemyTierSelectionEntries().map(entry => ({
+        value: entry.value,
+        label: formatEnemyTierSelectionOptionLabel(entry.value),
+      }))
+    case 'els_focus':
+      return buildElsFocusEntries().map(entry => ({
+        value: entry.value,
+        label: formatElsFocusOptionLabel(entry.value),
+      }))
+    case 'module_type_category':
+      return buildModuleTypeCategoryEntries().map(entry => ({
+        value: entry.value,
+        label: formatModuleTypeCategoryOptionLabel(entry.value),
+      }))
+    case 'module_lab_efficiency_level':
+      return buildModuleLabEfficiencyEntries().map(entry => ({
+        value: entry.value,
+        label: formatModuleLabEfficiencyOptionLabel(entry.value),
+      }))
+    case 'module_stone_cost_level': {
+      const profile = (context.moduleStoneCostProfile ?? 'current') as ModuleStoneCostProfile
+      return buildModuleStoneCostEntries(profile).map(entry => ({
+        value: entry.value,
+        label: buildModuleStoneCostOptionLabel(entry.value, profile),
+      }))
+    }
+    case 'generic_lab_level': {
+      const maxLevel = context.genericLabLevelMax ?? 0
+      return buildGenericLabLevelEntries(maxLevel).map(entry => ({
+        value: entry.value,
+        label: buildGenericLabLevelOptionLabel(entry.value, maxLevel),
+      }))
+    }
     case 'labs_speedup_multiplier':
       return buildLabsSpeedupEntries().map(entry => ({
         value: entry.value,
