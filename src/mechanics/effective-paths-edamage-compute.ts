@@ -81,6 +81,8 @@ import {
   spotlightMissilesDps,
 } from './effective-paths-uw-dps'
 import { dissonantBoostOfType } from './effective-paths-ehp-model'
+import { computeModuleStat } from '../data/module-bonus'
+import { KEYS_CANDIDATE_NODES } from './effective-paths-edamage-costs'
 import type {
   DamageSubstat,
   EffectiveDamageConfig,
@@ -127,7 +129,23 @@ export function computeEffectiveDamage(
 ): EffectiveDamageBreakdown {
   const run = damageRunEffects(config.runType)
   const lab = levels.lab
-  const stat = (name: Parameters<typeof statOf>[1]) => statOf(config, name)
+
+  /**
+   * A stat's four sources, with the vault share taken from `levels.keys`.
+   *
+   * The vault is the keys path's whole inventory, so its bonus has to move as
+   * the path buys — the sheet reads the relationship the other way round and
+   * *derives* the level from the bonus (`eDamage Keys!BO5 = BM8 / 5%`), which
+   * is the same relationship read backwards. A `vaultPct` on the config would
+   * be a second, stale copy of it, so for these ten stats it is ignored.
+   */
+  const stat = (name: Parameters<typeof statOf>[1]) => {
+    const source = statOf(config, name)
+    const keysKey = KEYS_STAT_LEVELS[name]
+    if (!keysKey) return source
+    const node = KEYS_CANDIDATE_NODES[keysKey.sheetName]
+    return { ...source, vaultPct: levels.keys[keysKey.key] * node.perLevel }
+  }
 
   // --- Assist capacities -------------------------------------------------
   // How much of an assist module's substat counts, per module. The stone half
@@ -212,11 +230,27 @@ export function computeEffectiveDamage(
     dissonance: attackDisco,
   })
 
+  /**
+   * A module's bonus at the level the path has taken it to, when the rarity is
+   * known. The coin path buys module levels, so this has to move with them.
+   */
+  const atLevel = (
+    type: 'cannon' | 'core', rarity: string | undefined, level: number, fallback: number,
+  ): number => (rarity && level > 0
+    ? computeModuleStat({ type, rarityLabel: rarity, level })
+    : fallback)
+
   /** `DE5` — the Cannon module pair. */
   const cannonModule = moduleBonus({
-    primaryBonus: config.modules.cannon.primaryBonus,
+    primaryBonus: atLevel(
+      'cannon', config.modules.cannon.primaryRarity,
+      levels.coin.primaryModuleCannon, config.modules.cannon.primaryBonus,
+    ),
     hasAssist: config.modules.cannon.hasAssist,
-    assistBonus: config.modules.cannon.assistBonus,
+    assistBonus: atLevel(
+      'cannon', config.modules.cannon.assistRarity,
+      levels.coin.assistModuleCannon, config.modules.cannon.assistBonus,
+    ),
     stoneBonusCap: levels.stone.assistBonusCannonStone,
     labBonusCap: lab.assistBonusCannon + levels.coin.assistBonusCannon,
   })
@@ -487,6 +521,10 @@ export function computeEffectiveDamage(
 
   // --- The ultimate weapons, EC5 through EO5 ----------------------------
 
+  /** `BM39`, which the keys path buys four nodes' worth of. */
+  const ultimateWeaponVaultPct = levels.keys.ultimateWeaponDamage
+    * KEYS_CANDIDATE_NODES['UW Damage'].perLevel
+
   /** `EC5` — how much shorter recovery packages make the wave. */
   const timeBoost = waveTimeBoost(config)
 
@@ -572,7 +610,7 @@ export function computeEffectiveDamage(
     lightRange: spotlightLight,
     substat: coreSubstat('Spotlight - Bonus'),
     relicPct: config.ultimateWeaponDamageRelicPct,
-    vaultPct: config.ultimateWeaponDamageVaultPct,
+    vaultPct: ultimateWeaponVaultPct,
     hasPerk: perk('Spotlight Damage Bonus'),
   }) * ultimateDisco
 
@@ -640,9 +678,15 @@ export function computeEffectiveDamage(
 
   /** `EN5` — the Core module pair, which boosts every ultimate weapon. */
   const coreModule = moduleBonus({
-    primaryBonus: config.modules.core.primaryBonus,
+    primaryBonus: atLevel(
+      'core', config.modules.core.primaryRarity,
+      levels.coin.primaryModuleCore, config.modules.core.primaryBonus,
+    ),
     hasAssist: config.modules.core.hasAssist,
-    assistBonus: config.modules.core.assistBonus,
+    assistBonus: atLevel(
+      'core', config.modules.core.assistRarity,
+      levels.coin.assistModuleCore, config.modules.core.assistBonus,
+    ),
     stoneBonusCap: levels.stone.assistBonusCoreStone,
     labBonusCap: lab.assistBonusCore + levels.coin.assistBonusCore,
   })
@@ -712,6 +756,28 @@ export function computeEffectiveDamage(
 // ---------------------------------------------------------------------------
 // Small readers, kept out of the walk above so it stays readable
 // ---------------------------------------------------------------------------
+
+/**
+ * The ten bullet stats the vault raises, and the keys level that raises each.
+ *
+ * The eleventh keys candidate is Ultimate Weapon Damage, which is not a bullet
+ * stat and is applied to Spotlight's damage instead.
+ */
+const KEYS_STAT_LEVELS: Partial<Record<
+  keyof EffectiveDamageConfig['stats'],
+  { sheetName: string, key: keyof EffectiveDamageLevels['keys'] }
+>> = {
+  'Damage': { sheetName: 'Damage', key: 'damage' },
+  'Critical Chance': { sheetName: 'Critical Chance', key: 'criticalChance' },
+  'Critical Factor': { sheetName: 'Critical Factor', key: 'criticalFactor' },
+  'Super Critical Chance': { sheetName: 'Super Crit Chance', key: 'superCritChance' },
+  'Super Critical Mult': { sheetName: 'Super Crit Mult', key: 'superCritMult' },
+  'Attack Speed': { sheetName: 'Attack Speed', key: 'attackSpeed' },
+  'Multishot Chance': { sheetName: 'Multishot Chance', key: 'multishotChance' },
+  'Damage / Meter': { sheetName: 'Damage / Meter', key: 'damagePerMeter' },
+  'Rapid Fire Chance': { sheetName: 'Rapid Fire Chance', key: 'rapidFireChance' },
+  'Bounce Shot Chance': { sheetName: 'Bounce Shot Chance', key: 'bounceShotChance' },
+}
 
 function statOf(
   config: EffectiveDamageConfig,

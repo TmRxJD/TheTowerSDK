@@ -114,6 +114,16 @@ export interface DamageModuleSource {
   bonusStoneLevel: number
   /** `BL42`, `BL44`, `BL46`, `BL48` — the stone-bought substat efficiency. */
   substatStoneLevel: number
+  /**
+   * The primary module's rarity label, e.g. `"Ancestral 5*"`.
+   *
+   * Given it, `primaryBonus` is ignored and recomputed from the level the path
+   * has reached — the coin path buys module levels, so a fixed bonus would
+   * make every one of them look worthless.
+   */
+  primaryRarity?: string
+  /** The assist module's rarity label, for the same reason. */
+  assistRarity?: string
 }
 
 export const ZERO_DAMAGE_MODULE_SOURCE: DamageModuleSource = {

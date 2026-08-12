@@ -316,6 +316,23 @@ function levelsFromSheet(): EffectiveDamageLevels {
       dissonantEchoAttack: cell('CT5'),
       dissonantEchoUltimateWeapons: cell('CU5'),
     },
+    /**
+     * The vault, read the way the sheet reads it — a bonus divided by the
+     * node's per-level percentage, which is `eDamage Keys!BO5 = BM8 / 5%`.
+     */
+    keys: {
+      damage: cell('BM8') / 0.05,
+      criticalChance: cell('BM10') / 0.01,
+      criticalFactor: cell('BM11') / 0.05,
+      superCritChance: cell('BM20') / 0.02,
+      superCritMult: cell('BM21') / 0.05,
+      attackSpeed: cell('BM9') / 0.05,
+      multishotChance: cell('BM14') / 0.04,
+      damagePerMeter: cell('BM13') / 0.05,
+      rapidFireChance: cell('BM16') / 0.04,
+      bounceShotChance: cell('BM18') / 0.04,
+      ultimateWeaponDamage: cell('BM39') / 0.05,
+    },
     stone: {
       ...base.stone,
       assistBonusCannonStone: cell('BL41'),
