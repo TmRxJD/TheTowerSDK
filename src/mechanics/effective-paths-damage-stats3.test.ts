@@ -190,19 +190,35 @@ describe('the Super Tower ultimate-weapon share, which looks wrong', () => {
     expect(at(breakEven + 0.1)).toBeGreaterThan(1)
   })
 
-  it('makes a level 1 Super Tower card weaken every ultimate weapon', () => {
-    // 2.1 + 0.4 × 1 = 2.5, and 0.35 × 2.5 − 1 is negative.
-    expect(at(superTowerBonus(1, 0))).toBeLessThan(1)
-    // Its sibling, given the same bonus, is above 1 as a bonus should be.
-    expect(superTowerEffectiveBonus({
-      hasCard: true,
-      hasMastery: true,
-      bonus: superTowerBonus(1, 0),
-      cooldownSeconds: 45,
-      hasSpotlight: false,
-      spotlightQuantity: 0,
-      spotlightAngleDegrees: 0,
-    })).toBeGreaterThan(1)
+  it('only reaches that penalty in a narrow, real window', () => {
+    // `EPD_SUPERTOWER_BONUS` cannot return under 2.5, so most of the card's
+    // range is still a bonus — just a smaller one than the sibling's reading.
+    // Checked against the live sheet across every card level: three of the 42
+    // card/lab combinations fall below 1, all at card level 1.
+    const cooldown = superTowerCooldown(true, 0)
+    const below = []
+    for (let card = 1; card <= 7; card++) {
+      for (const lab of [0, 2, 4, 5, 10, 30]) {
+        const value = superTowerEffectiveUltimateBonus({
+          hasCard: true, hasMastery: true, bonus: superTowerBonus(card, lab), cooldownSeconds: cooldown,
+        })
+        if (value < 1) below.push({ card, lab, value })
+      }
+    }
+    expect(below).toHaveLength(3)
+    expect(below.every(entry => entry.card === 1)).toBe(true)
+    expect(below.every(entry => entry.lab <= 4)).toBe(true)
+    expect(Math.min(...below.map(entry => entry.value))).toBeCloseTo(0.9553571428571429, 12)
+  })
+
+  it('is always short of the sibling’s reading by the same amount', () => {
+    // 15 × 0.65 / cooldown, whatever the bonus — the constant the two
+    // expressions differ by, not a scaling error.
+    const cooldown = 42
+    for (const bonus of [2.5, 4, 7.03, 9.5]) {
+      const sibling = 1 + (15 * (0.35 * (bonus - 1))) / cooldown
+      expect(sibling - at(bonus, cooldown)).toBeCloseTo(15 * 0.65 / cooldown, 12)
+    }
   })
 
   it('differs from its sibling\u2019s reading by a constant 0.65 of the bonus', () => {
@@ -214,7 +230,9 @@ describe('the Super Tower ultimate-weapon share, which looks wrong', () => {
   })
 
   it('still matches the sheet, penalty and all', () => {
-    // The fixture rows below 1 are the sheet's own answers, not ours.
+    // These fixture bonuses are synthetic — below what EPD_SUPERTOWER_BONUS
+    // can produce — so they prove the function, not the reachable window.
+    // The sub-1 answers are the sheet's own.
     const penalties = fixtures.superTowerEffectiveUw
       .filter(e => e.hasCard && e.hasMastery && e.sheet < 1)
     expect(penalties.length).toBeGreaterThan(0)

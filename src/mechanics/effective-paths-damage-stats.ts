@@ -434,21 +434,23 @@ export function superTowerEffectiveBonus(input: {
  * `EPD_SUPERTOWER_EFFECTIVE_UWBONUS` — what Super Tower does for ultimate
  * weapons, when both the card and its mastery are owned.
  *
- * **This reproduces a formula that looks wrong, on purpose.** The sheet writes
- * the ultimate-weapon share as `35% × bonus − 1`, where its own sibling above
- * writes the same idea as `1 + 35% × (bonus − 1)`. The two differ by 0.65 at
- * every bonus, and the sheet's version drops below 1 for any card bonus under
- * `1 / 0.35 ≈ 2.857` — which is Super Tower card level 1 at any lab level, and
- * level 2 at low ones.
+ * **This reproduces a formula that disagrees with its own sibling, on purpose.**
+ * The sheet writes the ultimate-weapon share as `35% × bonus − 1`, where
+ * {@link superTowerEffectiveBonus} writes the same idea as
+ * `1 + 35% × (bonus − 1)`. The numerators differ by a constant 0.65, so this
+ * always returns `15 × 0.65 / cooldown` less than the sibling's reading —
+ * about 0.23 at a 42-second cooldown.
  *
- * Below 1 means owning the card *and* paying for its mastery makes every
- * ultimate weapon weaker. The card's own description says the mastery "causes
- * 35% of card's multiplier effect to increase all Ultimate Weapon damage", so
- * a decrease is not what it is meant to do.
+ * For most of the card's range that is still a bonus, just a smaller one. It
+ * only turns into a penalty where `35% × bonus < 1`, and the reachable range
+ * is narrow: `EPD_SUPERTOWER_BONUS` cannot return less than 2.5, so it takes
+ * card level 1 with the S.T. Bonus lab at 4 or below. Three of the 42
+ * card/lab combinations checked against the live sheet land there, the worst
+ * at 0.955.
  *
- * Ported as written because parity with the sheet is the goal here, and pinned
- * by a test so the penalty is deliberate rather than something a later reader
- * quietly "fixes" into a disagreement.
+ * Ported as written because parity with the sheet is the goal, and pinned by
+ * tests so the shortfall stays deliberate rather than being quietly "fixed"
+ * into a disagreement.
  */
 export function superTowerEffectiveUltimateBonus(input: {
   hasCard: boolean
