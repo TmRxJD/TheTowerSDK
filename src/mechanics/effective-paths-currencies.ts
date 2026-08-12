@@ -1,0 +1,154 @@
+/**
+ * Effective Paths — what every path spends, and on what.
+ *
+ * The sheet organises itself by currency: each domain has a tab per currency,
+ * and a candidate belongs to a path because that path's currency buys it. Two
+ * porting errors came from inferring the currency from the upgrade instead of
+ * reading the path, so the mapping is written out here once and the candidate
+ * lists are transcribed rather than derived.
+ *
+ * The currencies are the game's own — see `currency.ts` for where each comes
+ * from. This is only about what the paths spend them on.
+ */
+
+/**
+ * What a path spends.
+ *
+ * `research-time` is not a currency the game has; it is the same lab purchase
+ * priced in days instead of coins, because a lab costs both and which one
+ * binds depends on the player.
+ */
+export type EffectivePathCurrency =
+  | 'coins'
+  | 'research-time'
+  | 'power-stones'
+  | 'keys'
+  | 'shards'
+
+export interface EffectivePathCurrencyDefinition {
+  currency: EffectivePathCurrency
+  /** What the game calls it. */
+  gameName: string
+  /** What the paths buy with it. */
+  buys: readonly string[]
+  /** Where the cost table lives, so the next reader does not hunt for it. */
+  costSource: string
+}
+
+export const EFFECTIVE_PATH_CURRENCIES: readonly EffectivePathCurrencyDefinition[] = [
+  {
+    currency: 'research-time',
+    gameName: 'Coins (priced in research days)',
+    buys: [
+      'Lab levels',
+      'Card mastery labs',
+      'Assist Module Bonus and Substats labs',
+      'Dissonant Echo labs',
+    ],
+    costSource: 'LAB_CATALOG durations — effective-paths-lab-costs.ts',
+  },
+  {
+    currency: 'coins',
+    gameName: 'Coins',
+    buys: [
+      'Lab levels, priced in coins rather than days',
+      'Workshop enhancements',
+      'Card mastery labs',
+      'Module levels between 160 and 300',
+      'Assist Module Bonus and Substats labs',
+    ],
+    costSource:
+      'LAB_CATALOG costs, workshop-enhancement-costs.json, MODULE_COIN_COSTS',
+  },
+  {
+    currency: 'power-stones',
+    gameName: 'Power Stones',
+    buys: [
+      'Ultimate weapon upgrades — damage, quantity, cooldown and each weapon’s own fourth stat',
+      'Assist module slot efficiency, both multiplier and substat',
+    ],
+    costSource:
+      'ultimate-weapon-stones.ts, and effective-paths-assist-efficiency.ts for the slot ladder',
+  },
+  {
+    currency: 'keys',
+    gameName: 'Keys',
+    buys: ['Vault tech tree nodes'],
+    costSource: 'vault-tree.ts — each node carries its own cost per level',
+  },
+  {
+    currency: 'shards',
+    gameName: 'Module Currency (shards)',
+    buys: ['Module levels below 160, where shards beat coins'],
+    costSource: 'MODULE_SHARD_COSTS — module-costs.ts',
+  },
+]
+
+/** A path, named by the domain it optimises and the currency it spends. */
+export interface EffectivePathDefinition {
+  domain: 'ehp' | 'eregen' | 'edamage' | 'eecon'
+  /** The sheet tab it comes from. */
+  tab: string
+  currency: EffectivePathCurrency
+  /** How many candidates it ranks. */
+  candidates: number
+}
+
+/**
+ * Every path the sheet publishes, and what it spends.
+ *
+ * The eHP and regen paths share the eHP tab; the sheet marks all four across
+ * its row 5. Damage has a tab per currency, and its keys path is the vault.
+ *
+ * `eEcon` is listed for completeness and is not ported yet.
+ */
+export const EFFECTIVE_PATHS: readonly EffectivePathDefinition[] = [
+  { domain: 'ehp', tab: 'eHP', currency: 'research-time', candidates: 17 },
+  { domain: 'ehp', tab: 'eHP', currency: 'coins', candidates: 17 },
+  { domain: 'ehp', tab: 'eHP Stone', currency: 'power-stones', candidates: 3 },
+  { domain: 'ehp', tab: 'eHP Coins', currency: 'coins', candidates: 12 },
+  { domain: 'eregen', tab: 'eRegen', currency: 'research-time', candidates: 7 },
+  { domain: 'eregen', tab: 'eRegen', currency: 'coins', candidates: 7 },
+  { domain: 'edamage', tab: 'eDamage', currency: 'research-time', candidates: 32 },
+  { domain: 'edamage', tab: 'eDamage', currency: 'coins', candidates: 32 },
+  { domain: 'edamage', tab: 'eDamage Stone', currency: 'power-stones', candidates: 29 },
+  { domain: 'edamage', tab: 'eDamage Coins', currency: 'coins', candidates: 25 },
+  { domain: 'edamage', tab: 'eDamage Keys', currency: 'keys', candidates: 11 },
+  { domain: 'eecon', tab: 'eEcon', currency: 'research-time', candidates: 0 },
+  { domain: 'eecon', tab: 'eEcon Stones', currency: 'power-stones', candidates: 0 },
+  { domain: 'eecon', tab: 'eEcon Discount', currency: 'coins', candidates: 0 },
+]
+
+/**
+ * Upgrades bought by more than one currency, and what that means for a model.
+ *
+ * These are the ones that have caused trouble: the same level appears on two
+ * paths, so a plan has to treat them as one quantity rather than two, and a
+ * player who bought it one way already has it the other way.
+ */
+export const SHARED_ACROSS_CURRENCIES = [
+  {
+    upgrade: 'Card mastery labs',
+    currencies: ['research-time', 'coins'] as const,
+    note: 'One lab level. The coin path prices it in coins; the lab path in days.',
+  },
+  {
+    upgrade: 'Assist Module Bonus and Substats labs',
+    currencies: ['research-time', 'coins'] as const,
+    note: 'One lab level, capped at 30, on both the lab and coin paths.',
+  },
+  {
+    upgrade: 'Assist module slot efficiency',
+    currencies: ['power-stones'] as const,
+    note:
+      'A separate quantity from the lab of the same name. The two add inside '
+      + '(1 + stone + lab) / 100 — see effective-paths-assist-efficiency.ts.',
+  },
+  {
+    upgrade: 'Module levels',
+    currencies: ['shards', 'coins'] as const,
+    note:
+      'One level, two prices. The paths buy it with coins only above 160, '
+      + 'where shards stop being the cheaper option.',
+  },
+] as const
