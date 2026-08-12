@@ -288,7 +288,10 @@ describe('lab candidates whose prerequisite is unmet', () => {
       config: bare(), levels: ZERO_EFFECTIVE_DAMAGE_LEVELS, variant: 'lab-time', steps: 25,
     })
     const reasons = new Map(plan.excluded.map(entry => [entry.sheetName, entry.reason]))
-    for (const name of ['Damage Mastery', 'Standard Perks Bonus', 'Improve Trade-off Perks']) {
+    for (const name of [
+      'Damage Mastery', 'Standard Perks Bonus', 'Improve Trade-off Perks',
+      'Demon Mode Mastery',
+    ]) {
       expect(reasons.get(name), name).toMatch(/not taken yet/)
     }
     for (const step of plan.steps) {
@@ -300,6 +303,13 @@ describe('lab candidates whose prerequisite is unmet', () => {
     const config = {
       ...bare(),
       cardsEquipped: true,
+      // `AY43` is the Damage Mastery *card*, not the cards switch, so turning
+      // cards on is not enough — the card itself has to be equipped.
+      cards: {
+        ...bare().cards,
+        'Damage Mastery': { ...bare().cards['Damage Mastery'], active: true },
+        'Demon Mode Mastery': { ...bare().cards['Demon Mode Mastery'], active: true },
+      },
       perksEquipped: true,
       perks: { ...bare().perks, 'Damage': true, 'Boss Health Trade-off': true },
     }
@@ -325,5 +335,21 @@ describe('every variant name plans something', () => {
       })
       expect(plan.steps.length + plan.excluded.length, variant).toBeGreaterThan(0)
     }
+  })
+})
+
+describe('the Damage Mastery lab needs its own card', () => {
+  it('is not offered when cards are on but that card is not equipped', () => {
+    // `AY43` is row 43 of the cards block, which `AT43` names Damage Mastery —
+    // reading it as the cards master switch offers the lab to a player who has
+    // cards but not this one.
+    const plan = planEffectiveDamagePath({
+      config: { ...zeroEffectiveDamageConfig(), cardsEquipped: true },
+      levels: ZERO_EFFECTIVE_DAMAGE_LEVELS,
+      variant: 'lab-time',
+      steps: 10,
+    })
+    const reasons = new Map(plan.excluded.map(entry => [entry.sheetName, entry.reason]))
+    expect(reasons.get('Damage Mastery')).toMatch(/not taken yet/)
   })
 })

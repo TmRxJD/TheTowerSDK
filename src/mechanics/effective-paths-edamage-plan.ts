@@ -32,7 +32,7 @@ import type {
 import { computeEffectiveDamage } from './effective-paths-edamage-compute'
 import { checkEffectiveDamageInputs } from './effective-paths-edamage-schema'
 import type { EffectiveDamageInputIssue } from './effective-paths-edamage-schema'
-import type { EffectiveDamageConfig } from './effective-paths-edamage-config'
+import type { DamageCard, EffectiveDamageConfig } from './effective-paths-edamage-config'
 import {
   keysCandidateCost,
   keysCandidateMaxLevel,
@@ -119,18 +119,30 @@ export const WORKSHOP_ENHANCEMENTS_LAB = 'Workshop Enhancements'
  * damage path filled up with upgrades that do nothing. Same defect the weapon
  * gates fixed, one layer along.
  *
- * Two more in that row are **not** listed here because their cells are not yet
- * identified: Shock Multiplier gates on `AND($BH$31, $AL$75)` and Demon Mode
- * Mastery on `$AY$58`. Guessing at either would be inventing a rule.
+ * One more in that row is **not** listed here: Shock Multiplier gates on
+ * `AND($BH$31, $AL$75)`, and neither cell is identified. Guessing would be
+ * inventing a rule.
  */
 const LAB_PREREQUISITES: Readonly<Record<string, (config: EffectiveDamageConfig) => boolean>> = {
-  // `NOT($AY$43)` — the cards master switch. A mastery with no card is nothing.
-  'Damage Mastery': config => config.cardsEquipped,
+  // `NOT($AY$43)`. Row 43 of the cards block is the **Damage Mastery card**,
+  // not the master switch — `AT41` is the Name header and `AT42` is Damage. So
+  // the lab needs that one card, not merely cards being on: reading it as the
+  // master switch offers the lab to a player who has cards but not this one.
+  'Damage Mastery': config => card(config, 'Damage Mastery'),
   // `NOT(AND($AY$61, $AY$63))` — perks on, and the Damage perk among them.
   'Standard Perks Bonus': config => config.perksEquipped && config.perks.Damage,
   // `NOT(AND($AY$61, $AY$65))` — `AY65` is the third perk row, Boss Health.
   'Improve Trade-off Perks': config =>
     config.perksEquipped && config.perks['Boss Health Trade-off'],
+  // `NOT(AND($AY$39, $AY$58))` — the cards switch at the block's head, and row
+  // 58, which `AT58` names "Demon Mode Mastery ⚠️".
+  'Demon Mode Mastery': config =>
+    config.cardsEquipped && card(config, 'Demon Mode Mastery'),
+}
+
+/** Whether a card is equipped and switched on, as the cards block reads it. */
+function card(config: EffectiveDamageConfig, name: DamageCard): boolean {
+  return config.cardsEquipped && Boolean(config.cards[name]?.active)
 }
 
 const ENHANCEMENT_SUFFIX = ' +'
