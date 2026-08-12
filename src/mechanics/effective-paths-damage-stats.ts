@@ -401,11 +401,14 @@ export function spotlightCoverage(quantity: number, angleDegrees: number): numbe
  *
  * The card fires for 15 seconds out of every cooldown, so its bonus is
  * pro-rated by how much of the time it is up. The mastery adds 35% of the
- * bonus again, but only over the part of the field Spotlight lights.
+ * bonus *above 1* again — `1 + 35% × (bonus − 1)` — but only over the part of
+ * the field Spotlight lights.
  *
- * The sheet's own version takes a `has_sl` parameter and then ignores it,
- * reading `eDamage!$BH$33` instead — so passing `has_sl` false while that cell
- * is true still applies the coverage. This takes the parameter and means it.
+ * The sheet's version declares a `has_sl` parameter and ignores it, reading
+ * `eDamage!$BH$33` instead. Every one of its five call sites passes that same
+ * cell in, so it cannot change an answer the sheet produces — but the function
+ * is not callable with the parameter meaning anything. This takes it and means
+ * it, which is the same thing for every call the sheet makes.
  */
 export function superTowerEffectiveBonus(input: {
   hasCard: boolean
@@ -429,7 +432,23 @@ export function superTowerEffectiveBonus(input: {
 
 /**
  * `EPD_SUPERTOWER_EFFECTIVE_UWBONUS` — what Super Tower does for ultimate
- * weapons, which is only the mastery's 35% and only when both are owned.
+ * weapons, when both the card and its mastery are owned.
+ *
+ * **This reproduces a formula that looks wrong, on purpose.** The sheet writes
+ * the ultimate-weapon share as `35% × bonus − 1`, where its own sibling above
+ * writes the same idea as `1 + 35% × (bonus − 1)`. The two differ by 0.65 at
+ * every bonus, and the sheet's version drops below 1 for any card bonus under
+ * `1 / 0.35 ≈ 2.857` — which is Super Tower card level 1 at any lab level, and
+ * level 2 at low ones.
+ *
+ * Below 1 means owning the card *and* paying for its mastery makes every
+ * ultimate weapon weaker. The card's own description says the mastery "causes
+ * 35% of card's multiplier effect to increase all Ultimate Weapon damage", so
+ * a decrease is not what it is meant to do.
+ *
+ * Ported as written because parity with the sheet is the goal here, and pinned
+ * by a test so the penalty is deliberate rather than something a later reader
+ * quietly "fixes" into a disagreement.
  */
 export function superTowerEffectiveUltimateBonus(input: {
   hasCard: boolean

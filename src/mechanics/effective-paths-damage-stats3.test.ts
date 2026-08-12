@@ -172,3 +172,59 @@ describe('EPD_SHOCKWAVE_DAMAGE', () => {
     expect(fast).toBeCloseTo(1 + 2 * (7 / 7.3), 12)
   })
 })
+
+describe('the Super Tower ultimate-weapon share, which looks wrong', () => {
+  /**
+   * `EPD_SUPERTOWER_EFFECTIVE_UWBONUS` writes `35% × bonus − 1` where its own
+   * sibling writes `1 + 35% × (bonus − 1)`. These pin the consequence so it
+   * stays deliberate: parity with the sheet, not agreement with the card.
+   */
+  const at = (bonus: number, cooldown = 45) => superTowerEffectiveUltimateBonus({
+    hasCard: true, hasMastery: true, bonus, cooldownSeconds: cooldown,
+  })
+
+  it('turns into a penalty below a card bonus of 1 / 0.35', () => {
+    const breakEven = 1 / 0.35
+    expect(at(breakEven)).toBeCloseTo(1, 12)
+    expect(at(breakEven - 0.1)).toBeLessThan(1)
+    expect(at(breakEven + 0.1)).toBeGreaterThan(1)
+  })
+
+  it('makes a level 1 Super Tower card weaken every ultimate weapon', () => {
+    // 2.1 + 0.4 × 1 = 2.5, and 0.35 × 2.5 − 1 is negative.
+    expect(at(superTowerBonus(1, 0))).toBeLessThan(1)
+    // Its sibling, given the same bonus, is above 1 as a bonus should be.
+    expect(superTowerEffectiveBonus({
+      hasCard: true,
+      hasMastery: true,
+      bonus: superTowerBonus(1, 0),
+      cooldownSeconds: 45,
+      hasSpotlight: false,
+      spotlightQuantity: 0,
+      spotlightAngleDegrees: 0,
+    })).toBeGreaterThan(1)
+  })
+
+  it('differs from its sibling\u2019s reading by a constant 0.65 of the bonus', () => {
+    for (const bonus of [1.5, 2.5, 5, 7.3]) {
+      const sheetShare = 0.35 * bonus - 1
+      const siblingShare = 0.35 * (bonus - 1)
+      expect(siblingShare - sheetShare).toBeCloseTo(0.65, 12)
+    }
+  })
+
+  it('still matches the sheet, penalty and all', () => {
+    // The fixture rows below 1 are the sheet's own answers, not ours.
+    const penalties = fixtures.superTowerEffectiveUw
+      .filter(e => e.hasCard && e.hasMastery && e.sheet < 1)
+    expect(penalties.length).toBeGreaterThan(0)
+    for (const e of penalties) {
+      expect(superTowerEffectiveUltimateBonus({
+        hasCard: e.hasCard,
+        hasMastery: e.hasMastery,
+        bonus: e.bonus,
+        cooldownSeconds: e.cooldown,
+      })).toBeCloseTo(e.sheet, 12)
+    }
+  })
+})
