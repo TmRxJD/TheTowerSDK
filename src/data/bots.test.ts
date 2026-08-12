@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   BOT_UPGRADES_DATA,
+  botStatValue,
   buildBotUnlockOrdinalByLabel,
   estimateBotUptimeFraction,
   estimateEffectiveAmplifiedBotMetricValue,
@@ -165,5 +166,24 @@ describe('bot unlock medal costs', () => {
   it('orders enabled bots by catalog order regardless of enable sequence', () => {
     expect(getBotUnlockCostForEnabledBot('Amplify Bot', ['Golden Bot', 'Amplify Bot'])).toBe(300)
     expect(getBotUnlockCostForEnabledBot('Golden Bot', ['Golden Bot', 'Amplify Bot'])).toBe(150)
+  })
+})
+
+describe('botStatValue', () => {
+  it('reads the Gold Bot stats the economy model needs', () => {
+    expect(botStatValue('Golden Bot', 'Bonus', 0)).toBe(2)
+    expect(botStatValue('Golden Bot', 'Bonus', 10)).toBe(4)
+    expect(botStatValue('Golden Bot', 'Duration', 30)).toBe(35)
+    expect(botStatValue('Golden Bot', 'Cooldown', 15)).toBe(75)
+  })
+
+  it('falls back to the base value past the end of the table', () => {
+    // Golden Bot's cooldown stops at 15; the model must not read 0 seconds.
+    expect(botStatValue('Golden Bot', 'Cooldown', 99)).toBe(120)
+  })
+
+  it('says nothing rather than zero for a stat that does not exist', () => {
+    expect(botStatValue('Golden Bot', 'Not A Stat', 1)).toBeNull()
+    expect(botStatValue('Not A Bot', 'Bonus', 1)).toBeNull()
   })
 })

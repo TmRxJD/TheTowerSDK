@@ -152,6 +152,16 @@ export interface EffectiveEconomyConfig {
     waveAcceleratorMastery: EconomyCard
   }
 
+  /**
+   * How many ultimate weapons the player has unlocked.
+   *
+   * `eEcon Stones!DP2` gates Golden Combo on
+   * `COUNTIF('_IDS'!$AA$2:$AA$37, "UW Unlocked") <= 8` — the stat does not
+   * exist below nine weapons, so offering it is a recommendation the player
+   * cannot act on.
+   */
+  unlockedUltimateWeaponCount: number
+
   /** `AZ43` gates every perk, as `AY61` does on the damage tab. */
   perksEquipped: boolean
   perks: {
@@ -625,6 +635,59 @@ function resolveWaveBoost(
   return WAVE_UNITS / (accelerated - introSprint - skipped)
 }
 
+/**
+ * The six perks the economy tab reads — `eEcon!AZ45` to `AZ50`.
+ *
+ * Named as the sheet's own rows name them. The two stacking ones carry no
+ * quantity here because the tab does not ask for one: `EPC_CPK` writes
+ * `0.15 * 5` and `EPC_FUP` writes `0.05 * 5` inline, so five of each is baked
+ * into the formulas rather than being an input.
+ *
+ * `AZ43` gates all six, and unlike the damage tab's `AY61` — which is
+ * `NOT(AX20 = "Tourney")` — it is a plain switch the player sets, not
+ * something derived from the run.
+ *
+ * None of them takes a quantity. The Quantity column beside the first two is
+ * display only — see {@link ECONOMY_PERK_STACKS}.
+ */
+export const ECONOMY_PERKS = [
+  { key: 'coins', cell: 'AZ45', label: 'Coins' },
+  { key: 'freeUpgrades', cell: 'AZ46', label: 'Free Upgrades' },
+  { key: 'coinsTradeOff', cell: 'AZ47', label: 'x1.8 Coins / Health −70%' },
+  { key: 'goldenTowerBonus', cell: 'AZ48', label: 'Golden Tower Bonus x1.5' },
+  { key: 'blackHoleDuration', cell: 'AZ49', label: 'Black Hole Duration' },
+  { key: 'deathWaveQuantity', cell: 'AZ50', label: 'Death Wave Quantity' },
+] as const satisfies ReadonlyArray<{
+  key: keyof EffectiveEconomyConfig['perks']
+  cell: string
+  label: string
+}>
+
+export type EconomyPerk = typeof ECONOMY_PERKS[number]['key']
+
+/**
+ * The estimates the sheet asks the player for, at the values it ships with.
+ *
+ * These are inputs no tracker holds, and they are **not** zero on the sheet:
+ * `eEcon!AZ19` and `AZ22` default both kill shares to 100%, `AZ25` puts a boss
+ * every ten waves and `AZ26` tags 90% of enemies with an extra orb. Zeroing
+ * them is not a neutral starting point — it is an account where nothing dies
+ * inside a Black Hole, which the coin model then reports as a much smaller
+ * number than the sheet gives the same player.
+ *
+ * `killsPerSecond` is `AZ20`, which reads `7 + eDamage!CX9`. That second term
+ * is the Summon guardian's spawn rate and the sheet leaves its numerator at
+ * zero, so seven is the answer for every account today.
+ */
+export const SHEET_DEFAULT_ECONOMY_ESTIMATES: EffectiveEconomyConfig['estimates'] = {
+  blackHoleKillShare: 1,
+  killsPerSecond: 7,
+  goldBotKillShare: 1,
+  goldBotSyncRatio: 1,
+  bossWaveInterval: 10,
+  extraOrbTagShare: 0.9,
+}
+
 /** A config with everything switched off, to spread over. */
 export function zeroEffectiveEconomyConfig(): EffectiveEconomyConfig {
   const substat = () => ({ ...NO_SUBSTAT })
@@ -673,6 +736,7 @@ export function zeroEffectiveEconomyConfig(): EffectiveEconomyConfig {
       introSprintMastery: { ...NO_CARD },
       waveAcceleratorMastery: { ...NO_CARD },
     },
+    unlockedUltimateWeaponCount: 0,
     perksEquipped: false,
     perks: {
       coins: false,
@@ -689,14 +753,7 @@ export function zeroEffectiveEconomyConfig(): EffectiveEconomyConfig {
       spotlight: { unlocked: false, angle: 0, quantity: 0 },
       goldBot: { unlocked: false, bonus: 1, duration: 0, cooldown: 0 },
     },
-    estimates: {
-      blackHoleKillShare: 0,
-      killsPerSecond: 0,
-      goldBotKillShare: 0,
-      goldBotSyncRatio: 1,
-      bossWaveInterval: 10,
-      extraOrbTagShare: 0,
-    },
+    estimates: { ...SHEET_DEFAULT_ECONOMY_ESTIMATES },
     dissonance: { active: false, tierPersonalBest: 0, allTierPersonalBests: [] },
   }
 }

@@ -41,8 +41,37 @@ function econSubstat(
   return combinedSubstat({ primary, assist }, assistSubstatCap(true, stoneCap, labCap))
 }
 
+/**
+ * How many of the two stacking economy perks the sheet assumes.
+ *
+ * `eEcon!AW45` and `AW46` show a Quantity of five beside the Coins and Free
+ * Upgrades perks, which reads like an input and is not one: `EPC_CPK` and
+ * `EPC_FUP` each take exactly twelve arguments and neither has a slot for it —
+ * evaluating them with a thirteenth is an arity error. The five is written
+ * inside the lambdas, so the column is telling you what the `1.75` and the
+ * `25%` are made of rather than letting you change them.
+ *
+ * Kept as a name so the next reader finds the answer here instead of probing
+ * the sheet again.
+ */
+export const ECONOMY_PERK_STACKS = 5
+
+/**
+ * The Coins / Kill Bonus workshop value, from its level.
+ *
+ * `workshopStatValue` refuses this stat, and rightly — it answers in the units
+ * of `DVT_WS_VALUE`, whose fallback formula for Coins / Kill Bonus is stale.
+ * The economy tab never calls that function. `BJ5` is `1 + BI5/100` off the
+ * preset level, which is the game's own curve exactly, at all 150 levels. So
+ * the value is derivable here even though it is not derivable there; the two
+ * are different questions, which is easy to read as one.
+ */
+export function coinsPerKillWorkshopValue(level: number): number {
+  return 1 + Math.max(0, Math.floor(level)) / 100
+}
+
 export interface CoinsPerKillInput {
-  /** The Coins / Kill Bonus workshop value. */
+  /** The Coins / Kill Bonus workshop value — see {@link coinsPerKillWorkshopValue}. */
   workshopValue: number
   /** The Coins / Kill Bonus lab; 2% a level. */
   labLevel: number
@@ -84,7 +113,7 @@ export function coinsPerKill(input: CoinsPerKillInput): number {
   )
   const enhancement = (1 + 0.01 * input.enhancementLevel) ** 2
   const perk = input.hasCoinPerk
-    ? (1 + 0.15 * 5) * (1 + 0.01 * input.standardPerksBonusLabLevel)
+    ? (1 + 0.15 * ECONOMY_PERK_STACKS) * (1 + 0.01 * input.standardPerksBonusLabLevel)
     : 1
   const tradeOff = input.hasCoinTradeOffPerk
     ? 1.8 * (1 + 0.01 * input.improveTradeOffPerksLabLevel)
@@ -152,7 +181,7 @@ export interface FreeUpgradeInput {
 export function freeUpgradeChance(input: FreeUpgradeInput): number {
   const card = input.hasFreeUpgradesCard ? input.cardValue : 0
   const perk = input.hasPerk
-    ? 0.05 * 5 * (1 + 0.01 * input.standardPerksBonusLabLevel)
+    ? 0.05 * ECONOMY_PERK_STACKS * (1 + 0.01 * input.standardPerksBonusLabLevel)
     : 0
   const substat = econSubstat(
     input.primarySubstat, input.assistSubstat, input.stoneCap, input.labCap,
@@ -442,10 +471,16 @@ export function maxValueNukeCooldown(input: {
 }
 
 /**
- * The three functions this module does not port yet, and why.
+ * The one function this module does not port, and why.
  *
- * Recorded rather than left to be rediscovered: each needs something beyond
- * arithmetic, and guessing at any of them would produce a plausible number.
+ * `EPC_LAB_DISCOUNT` and `EPC_MOD_DISCOUNT` used to be listed here on the
+ * grounds that they read the player rather than the tab. They do — and both
+ * are now ported in `effective-paths-eecon-discount.ts`, measured against the
+ * live sheet rather than reasoned about. What made them look unknowable was
+ * that the sheet holds no player data of its own: `_IDS` is an `IMPORTRANGE`
+ * of a separate spreadsheet, so writing a level anywhere on the workbook
+ * either edits a mirror formula or breaks the import, and both look like
+ * "the function ignores this input".
  */
 export const ECONOMY_FUNCTIONS_PORTED = [
   'EPC_CPK', 'EPC_CARD_COINS', 'EPC_CARD_EOM', 'EPC_FUP', 'EPC_GCOMP',
@@ -454,22 +489,14 @@ export const ECONOMY_FUNCTIONS_PORTED = [
   'EPC_DWCB', 'EPC_SLCB', 'EPC_SLA', 'EPC_SLQ', 'EPC_MVN',
   'EPU_DWCD', 'EPU_DWQ',
   'EPC_SYNC', 'EPC_CARD_WS', 'EPC_WSM', 'EPC_WS_FUP',
+  // Ported in `effective-paths-eecon-discount.ts`, against the live sheet.
+  'EPC_LAB_DISCOUNT', 'EPC_MOD_DISCOUNT',
 ] as const
 
 export const UNPORTED_ECONOMY_FUNCTIONS = [
   {
     name: 'EPC_SYNC_OLD',
-    reason: 'the previous version of the same, kept on the sheet and unused',
-  },
-  {
-    name: 'EPC_LAB_DISCOUNT',
-    reason: 'totals the cost of every lab in a chosen category from '
-      + 'DVT_Laboratory_Unlock',
-  },
-  {
-    name: 'EPC_MOD_DISCOUNT',
-    reason: 'totals module upgrade costs from Data_Val_Tables by reading the '
-      + 'player’s equipped modules',
+    reason: 'the previous version of EPC_SYNC, kept on the sheet and unused',
   },
 ] as const
 

@@ -438,6 +438,35 @@ export function normalizeBotTierStats(bot: BotData, tier: BotUpgradeTier, labLev
   return getTierStatRows(bot, tier, labLevels)
 }
 
+/**
+ * A bot stat's value at a level, as a number.
+ *
+ * The table stores what the game displays -- `20s`, `2.2x`, `20M` -- because
+ * that is what the tracker shows. A model wants the number, and the unit is
+ * carried by the stat rather than by the string: `Cooldown` is always seconds,
+ * `Bonus` always a multiplier. So the suffix is stripped rather than
+ * interpreted, and a stat whose string is not a number at all returns `null`
+ * rather than `0`, which would read as a real value.
+ *
+ * The level is the *base* tier's, and lab levels are deliberately not applied
+ * -- callers that want them add their own, as the effective paths do for the
+ * Gold Bot's cooldown.
+ */
+export function botStatValue(
+  botLabel: string,
+  statName: string,
+  level: number,
+): number | null {
+  const bot = findBotByName(botLabel)
+  const stat = bot?.stats[statName]
+  if (!stat) return null
+
+  const wanted = Math.max(0, Math.floor(level))
+  const raw = stat.levels[wanted] ?? stat.base
+  const parsed = Number.parseFloat(String(raw).replace(/[^0-9.-]/g, ''))
+  return Number.isFinite(parsed) ? parsed : null
+}
+
 export function getBotStatMinLevel(stat: BotStatRow): number {
   const valid = stat.levels.filter(level => level.value !== '')
   if (!valid.length) return 0

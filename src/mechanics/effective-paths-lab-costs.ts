@@ -141,6 +141,21 @@ export function labDurationDaysToReachLevel(
   return hours / HOURS_PER_DAY / speed
 }
 
+/**
+ * The catalog's own name for a lab, whatever spelling you have.
+ *
+ * The catalog keys labs the way the save file does — `death_wave_coin_bonus` —
+ * while the sheet and the trackers use display names. Anything keyed off the
+ * save (a tracker's target levels, for one) needs the first from the second,
+ * and matching on letters and digits alone is what makes the two agree.
+ *
+ * Returns `null` rather than the input when nothing matches, so a caller
+ * cannot go on to look up a key that does not exist.
+ */
+export function labCatalogName(labKey: string): string | null {
+  return CATALOG_BY_KEY.get(catalogKey(labKey))?.name ?? null
+}
+
 /** The highest level the catalog has data for, or `0` for an unknown lab. */
 export function labMaxCatalogLevel(labKey: string): number {
   return CATALOG_BY_KEY.get(catalogKey(labKey))?.levels.length ?? 0

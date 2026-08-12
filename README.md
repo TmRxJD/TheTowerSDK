@@ -344,7 +344,7 @@ tools you've built.
 
 ## Credits
 
-**Matthew** (`matteweon` on Discord) — the
+**Mattew** (`matteweon` on Discord) — the
 [Effective Paths](https://docs.google.com/spreadsheets/d/1YwZtKP6B4WYhRba5T6APJ1YxKNdfnIGQnprgnxmO7zc)
 spreadsheets for The Tower. A large amount of the reference data here, especially the cost, mastery
 and substat tables, was compiled with the help of that work.

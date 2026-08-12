@@ -50,6 +50,22 @@ import type { PathStep, PathUpgrade } from './effective-paths-planner'
 /** The paths the econ tabs publish. The time tab is priced two ways. */
 export type EffectiveEconomyPlanVariant = 'time' | 'coin' | 'stone' | 'discount'
 
+/**
+ * Why the discount path is planned elsewhere.
+ *
+ * The other three rank a candidate by what a level does to `effectiveEconomy`.
+ * The discount tab does not: nothing on it moves coins per kill, so scoring it
+ * that way gives every candidate a gain of exactly zero and a rank decided by
+ * the tie-break. It has its own model and its own planner —
+ * `planEffectiveEconomyDiscountPath` in `effective-paths-eecon-discount.ts`,
+ * which ranks coins saved and takes the account totals that model needs.
+ *
+ * This one refuses rather than silently returning that table of zeroes.
+ */
+export const DISCOUNT_PATH_UNSUPPORTED
+  = 'the discount path ranks coins saved rather than coins earned — call '
+    + 'planEffectiveEconomyDiscountPath instead'
+
 /** The two workshop enhancements the time path buys rather than labs. */
 const ENHANCEMENT_STATS: Readonly<Record<string, string>> = {
   'Coin Bonus': 'Coin Bonus',
@@ -71,6 +87,48 @@ const STONE_WEAPON_STATS: Readonly<Record<string, { weapon: string, stat: string
   'DW Cooldown': { weapon: 'Death Wave', stat: 'Cooldown' },
   'SL Angle': { weapon: 'Spotlight', stat: 'Angle' },
   'SL Quantity': { weapon: 'Spotlight', stat: 'Quantity' },
+}
+
+/**
+ * Candidates the sheet hides when the weapon behind them is not owned.
+ *
+ * Read off `eEcon!DV2:DZ2`, the time band's hide row: the Golden Tower
+ * candidates open with `NOT(BK15)`, and `BK15` is `IDS_UW_OWN("Golden Tower")`.
+ *
+ * Without this the planner does not *mis-price* them — a locked weapon
+ * contributes nothing, so their gain is zero — but a zero-gain candidate still
+ * fills the path in tie-break order, which is how an account owning no ultimate
+ * weapons was being told to buy Golden Tower Bonus twenty-five times. Excluding
+ * them leaves an empty path, which is the honest answer.
+ */
+const WEAPON_GATED_CANDIDATES: Readonly<Record<string, keyof EffectiveEconomyConfig['weapons']>> = {
+  'Golden Tower Bonus': 'goldenTower',
+  'Golden Tower Duration': 'goldenTower',
+  'Black Hole Coin Bonus': 'blackHole',
+  'Death Wave Coin Bonus': 'deathWave',
+  'Spotlight Coin Bonus': 'spotlight',
+  'Gold Bot Duration': 'goldBot',
+}
+
+/**
+ * Golden Combo needs more than eight ultimate weapons unlocked.
+ *
+ * `eEcon Stones!DP2` hides it on
+ * `COUNTIF('_IDS'!$AA$2:$AA$37, "UW Unlocked") <= 8`. The stone cost table
+ * still prices it, so nothing else stops the planner recommending a stat the
+ * player has no way to buy.
+ */
+const GOLDEN_COMBO_MINIMUM_WEAPONS = 9
+
+/** The three cooldowns `AZ17`, "Keep GT|BH|DW CD Synced", takes off the path. */
+const SYNCED_COOLDOWN_CANDIDATES = new Set(['GT Cooldown', 'BH Cooldown', 'DW Cooldown'])
+
+/** The weapon each stone candidate's name refers to, in the config's spelling. */
+const WEAPON_KEYS: Readonly<Record<string, keyof EffectiveEconomyConfig['weapons']>> = {
+  'Golden Tower': 'goldenTower',
+  'Black Hole': 'blackHole',
+  'Death Wave': 'deathWave',
+  'Spotlight': 'spotlight',
 }
 
 /** The stone path's assist capacities, and which ladder each climbs. */
@@ -158,6 +216,21 @@ export interface EffectiveEconomyPlanOptions {
   labModifiers?: LabCostModifiers
   moduleDiscountPercent?: number
   enhancementDiscounts?: WorkshopEnhancementDiscounts
+  /**
+   * `eEcon!AZ17` — "Keep GT|BH|DW CD Synced".
+   *
+   * Not a term in the synchronisation multiplier, which is where it looks like
+   * it belongs: `EPC_SYNC` takes twelve arguments and none of them is this.
+   * `eEcon Stones!DO2` shows what it really does — it hides the three
+   * individual cooldown candidates, because keeping them synced means buying
+   * them together, which is the `UW CD` composite this planner cannot express.
+   */
+  keepCooldownsSynced?: boolean
+  /**
+   * Whether the Workshop Enhancements lab is bought — `'Master Sheet'!$F$5`.
+   * The coin path buys two enhancements and neither exists without it.
+   */
+  workshopEnhancementsUnlocked?: boolean
 }
 
 export interface EffectiveEconomyPlan {
@@ -254,6 +327,8 @@ export function planEffectiveEconomyPath(
   options: EffectiveEconomyPlanOptions,
 ): EffectiveEconomyPlan {
   const { config, levels, variant } = options
+  if (variant === 'discount') throw new Error(DISCOUNT_PATH_UNSUPPORTED)
+
   const steps = options.steps ?? 145
   const skipped = new Set(options.excludeIds ?? [])
 
@@ -282,6 +357,43 @@ export function planEffectiveEconomyPath(
       excluded.push({
         sheetName: upgrade.sheetName,
         reason: 'the sheet ranks it from a player-supplied return rather than a stone price',
+      })
+      continue
+    }
+
+    // The weapon behind a candidate has to be owned. The stone band buys
+    // weapon stats outright, so its gate is the weapon it names; the time band
+    // names five coin-bonus labs that need theirs.
+    const gatedWeapon = STONE_WEAPON_STATS[upgrade.sheetName]
+      ? WEAPON_KEYS[STONE_WEAPON_STATS[upgrade.sheetName].weapon]
+      : WEAPON_GATED_CANDIDATES[upgrade.sheetName]
+    if (gatedWeapon && !config.weapons[gatedWeapon]?.unlocked) {
+      excluded.push({ sheetName: upgrade.sheetName, reason: 'the weapon is not unlocked' })
+      continue
+    }
+
+    if (options.workshopEnhancementsUnlocked === false
+      && ENHANCEMENT_STATS[upgrade.sheetName]) {
+      excluded.push({
+        sheetName: upgrade.sheetName,
+        reason: 'the Workshop Enhancements lab is not bought yet',
+      })
+      continue
+    }
+
+    if (upgrade.sheetName === 'GT Golden Combo'
+      && config.unlockedUltimateWeaponCount < GOLDEN_COMBO_MINIMUM_WEAPONS) {
+      excluded.push({
+        sheetName: upgrade.sheetName,
+        reason: `needs ${GOLDEN_COMBO_MINIMUM_WEAPONS} ultimate weapons unlocked`,
+      })
+      continue
+    }
+
+    if (options.keepCooldownsSynced && SYNCED_COOLDOWN_CANDIDATES.has(upgrade.sheetName)) {
+      excluded.push({
+        sheetName: upgrade.sheetName,
+        reason: 'cooldowns are being kept synced, which buys them together',
       })
       continue
     }

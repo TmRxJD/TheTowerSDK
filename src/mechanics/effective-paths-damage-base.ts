@@ -21,7 +21,11 @@
 import { standardPerksBonusScale } from './effective-paths-generics'
 
 /** The run being simulated — `eDamage!$AX$19`. */
-export type DamageRunType = 'Regular' | 'Tourney' | 'Attack Disso' | 'UW Disso' | 'Util Disso'
+export const DAMAGE_RUN_TYPES = [
+  'Regular', 'Tourney', 'Attack Disso', 'UW Disso', 'Util Disso',
+] as const
+
+export type DamageRunType = typeof DAMAGE_RUN_TYPES[number]
 
 /**
  * `eDamage!CZ5` — tower damage before the perks and multipliers on top.

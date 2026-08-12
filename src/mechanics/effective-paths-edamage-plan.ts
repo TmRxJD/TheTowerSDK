@@ -95,6 +95,16 @@ const LAB_NAME_ALIASES: Readonly<Record<string, string>> = {
 }
 
 /** The coin path's workshop enhancements, which the sheet suffixes with `+`. */
+/**
+ * Workshop enhancements do not exist until their lab is bought.
+ *
+ * `eDamage Coins!EZ2` opens with `'Master Sheet'!$F$5 <> 1` — row 5 of the lab
+ * list is "Workshop Enhancements", a single-level lab. Until it is bought there
+ * is nothing to buy, and a planner that does not know this spends the coin path
+ * on upgrades the player cannot reach.
+ */
+export const WORKSHOP_ENHANCEMENTS_LAB = 'Workshop Enhancements'
+
 const ENHANCEMENT_SUFFIX = ' +'
 
 /** The coin path's four module candidates, which buy levels rather than a lab. */
@@ -163,6 +173,11 @@ export interface EffectiveDamagePlanOptions {
   maxLevels?: Readonly<Record<string, number>>
   /** Player-imposed stops below the maximum, by upgrade id. */
   targetLevels?: Readonly<Record<string, number>>
+  /**
+   * Whether the Workshop Enhancements lab is bought. Absent means yes, so a
+   * caller that knows nothing about it gets the behaviour it had before.
+   */
+  workshopEnhancementsUnlocked?: boolean
   /** Upgrades to leave out entirely — the sheet's "Hide non-unlocked". */
   excludeIds?: readonly string[]
   /** Lab coin discount and lab speed. */
@@ -272,6 +287,29 @@ export function planEffectiveDamagePath(
 
     if (skipped.has(upgrade.id)) {
       excluded.push({ sheetName: upgrade.sheetName, reason: 'not unlocked yet' })
+      continue
+    }
+
+    // `eDamage Stone!EY2` and its neighbours gate a weapon's stats on the
+    // weapon itself — `NOT($BH$35)` for Poison Swamp, `NOT($BH$37)` for Inner
+    // Land Mines. Without it the planner spends stones on a weapon the player
+    // does not own: the gain is zero, but a zero still wins a tie-break.
+    if (options.workshopEnhancementsUnlocked === false
+      && upgrade.sheetName.endsWith(ENHANCEMENT_SUFFIX)) {
+      excluded.push({
+        sheetName: upgrade.sheetName,
+        reason: `the ${WORKSHOP_ENHANCEMENTS_LAB} lab is not bought yet`,
+      })
+      continue
+    }
+
+    const weaponStat = upgrade.band === 'stone'
+      ? resolveUltimateWeaponStat(upgrade.sheetName)
+      : null
+    if (weaponStat && !config.ultimateWeapons[
+      weaponStat.weapon as keyof typeof config.ultimateWeapons
+    ]?.unlocked) {
+      excluded.push({ sheetName: upgrade.sheetName, reason: 'the weapon is not unlocked' })
       continue
     }
 

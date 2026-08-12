@@ -226,3 +226,50 @@ describe('what the paths actually pick', () => {
     }
   })
 })
+
+describe('a weapon the player does not own, on the stone path', () => {
+  it('is excluded rather than tied at zero', () => {
+    // `eDamage Stone!EY2` gates the Poison Swamp stats on `NOT($BH$35)`, and
+    // its neighbours gate Inner Land Mines on `NOT($BH$37)`. The stone cost
+    // table prices them regardless, so nothing else stops the planner
+    // recommending stones for a weapon that is not owned.
+    const plan = planEffectiveDamagePath({
+      config: zeroEffectiveDamageConfig(),
+      levels: ZERO_EFFECTIVE_DAMAGE_LEVELS,
+      variant: 'stone',
+      steps: 25,
+    })
+    for (const step of plan.steps) {
+      expect(step.name, `${step.name} needs a weapon nobody owns`).not.toMatch(/^(PS|ILM|DW|CL|SM|SL) /)
+    }
+    expect(plan.excluded.some(entry => /the weapon is not unlocked/.test(entry.reason))).toBe(true)
+  })
+})
+
+describe('the Workshop Enhancements lab', () => {
+  it('takes every enhancement off the coin path until it is bought', () => {
+    // `eDamage Coins!EZ2` opens with `'Master Sheet'!$F$5 <> 1`. Without this
+    // the coin path recommends "Damage +" to a player who cannot buy any
+    // enhancement at all.
+    const plan = planEffectiveDamagePath({
+      config: zeroEffectiveDamageConfig(),
+      levels: ZERO_EFFECTIVE_DAMAGE_LEVELS,
+      variant: 'coin',
+      steps: 25,
+      workshopEnhancementsUnlocked: false,
+    })
+    for (const step of plan.steps) expect(step.name).not.toMatch(/ \+$/)
+    expect(plan.excluded.some(entry => /Workshop Enhancements/.test(entry.reason))).toBe(true)
+  })
+
+  it('offers them once it is', () => {
+    const plan = planEffectiveDamagePath({
+      config: zeroEffectiveDamageConfig(),
+      levels: ZERO_EFFECTIVE_DAMAGE_LEVELS,
+      variant: 'coin',
+      steps: 25,
+      workshopEnhancementsUnlocked: true,
+    })
+    expect(plan.excluded.some(entry => /Workshop Enhancements/.test(entry.reason))).toBe(false)
+  })
+})

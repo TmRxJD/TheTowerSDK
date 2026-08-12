@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest'
+import { WORKSHOP_DATA } from '../data/workshop-table'
 import {
   blackHoleCoinBonus,
   blackHoleCooldown,
   blackHoleDuration,
   coinsCard,
   coinsPerKill,
+  coinsPerKillWorkshopValue,
   deathWaveCoinBonus,
   extraOrbMastery,
   freeUpgradeChance,
@@ -299,8 +301,8 @@ describe('the function inventory', () => {
   it('accounts for all twenty-six, ported or not', () => {
     // Enumerating `EPC_*` alone misses the two `EPU_*` the tab also calls,
     // which is how the first pass came to claim "17 of 24".
-    expect(ECONOMY_FUNCTIONS_PORTED).toHaveLength(23)
-    expect(UNPORTED_ECONOMY_FUNCTIONS).toHaveLength(3)
+    expect(ECONOMY_FUNCTIONS_PORTED).toHaveLength(25)
+    expect(UNPORTED_ECONOMY_FUNCTIONS).toHaveLength(1)
 
     const all = [...ECONOMY_FUNCTIONS_PORTED, ...UNPORTED_ECONOMY_FUNCTIONS.map(e => e.name)]
     expect(new Set(all).size, 'a name is listed twice').toBe(all.length)
@@ -311,5 +313,23 @@ describe('the function inventory', () => {
   it('says why each unported one needs more than arithmetic', () => {
     for (const entry of UNPORTED_ECONOMY_FUNCTIONS)
       expect(entry.reason.length, entry.name).toBeGreaterThan(20)
+  })
+})
+
+describe('the Coins / Kill Bonus workshop value', () => {
+  it('matches the game table at every level', () => {
+    // `workshopStatValue` refuses this stat because `DVT_WS_VALUE`'s formula
+    // for it is stale. The economy tab computes it inline instead, and that
+    // form is the game's own curve — which is why deriving it here is sound.
+    const rows = WORKSHOP_DATA['Coins / Kill Bonus']
+    const levels = Object.keys(rows).map(Number).sort((a, b) => a - b)
+    expect(levels.length).toBeGreaterThan(100)
+    for (const level of levels)
+      expect(coinsPerKillWorkshopValue(level), `level ${level}`)
+        .toBeCloseTo(rows[String(level)].value, 9)
+  })
+
+  it('refuses to read a level as a discount', () => {
+    expect(coinsPerKillWorkshopValue(-5)).toBe(1)
   })
 })
