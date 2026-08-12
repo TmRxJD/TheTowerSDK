@@ -151,8 +151,15 @@ describe('EPD_AOE_CARD_BOOST', () => {
     expect(at(7) - at(6)).toBeCloseTo(0.05, 12)
   })
 
-  it('is one past the table rather than undefined', () => {
-    expect(areaOfEffectCardBoost(true, 8)).toBe(1)
+  it('clamps into the table rather than falling out of it', () => {
+    // Level 0 is what the sheet does — `INDEX(table, 0)` yields the whole
+    // table, which collapses to its first entry — and it is what the game
+    // means too: an equipped card is at least level 1.
+    expect(areaOfEffectCardBoost(true, 0)).toBeCloseTo(1.05, 12)
+    // Cards stop at 7, so the top end is unreachable; the sheet errors there.
+    expect(areaOfEffectCardBoost(true, 8)).toBeCloseTo(1.25, 12)
+    // The card being absent is still the thing that switches it off.
+    expect(areaOfEffectCardBoost(false, 7)).toBe(1)
   })
 })
 

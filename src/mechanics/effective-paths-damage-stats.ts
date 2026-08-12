@@ -357,11 +357,19 @@ const AOE_CARD_LEVELS = [0.05, 0.08, 0.11, 0.14, 0.17, 0.2, 0.25]
  *
  * Not a formula: the sheet indexes a literal seven-entry table, and the last
  * step is 5 points where every other step is 3.
+ *
+ * The level is clamped into the table rather than falling out of it. That is
+ * the sheet's own behaviour at the bottom — `INDEX(table, 0)` yields the whole
+ * table, which collapses to its first entry — and it is right for the game
+ * too: an equipped card is at least level 1, so `hasCard` is what decides
+ * whether the boost applies, not the level.
  */
 export function areaOfEffectCardBoost(hasCard: boolean, cardLevel: number): number {
   if (!hasCard) return 1
-  const bonus = AOE_CARD_LEVELS[Math.floor(cardLevel) - 1]
-  return bonus === undefined ? 1 : 1 + bonus
+  const index = Math.min(
+    AOE_CARD_LEVELS.length - 1, Math.max(0, Math.floor(cardLevel) - 1),
+  )
+  return 1 + AOE_CARD_LEVELS[index]
 }
 
 // ---------------------------------------------------------------------------
