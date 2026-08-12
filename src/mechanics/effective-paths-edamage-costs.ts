@@ -105,6 +105,31 @@ export function ultimateWeaponMaxLevel(weapon: string, stat: string): number | n
   return priced.length ? Math.max(...priced.map(entry => entry.level)) : null
 }
 
+/**
+ * An ultimate weapon stat's value at a level, as a number.
+ *
+ * The chart stores what the game displays — `"x2.0"`, `"30°"`, `"1#"`,
+ * `"300s"`, `"20%"` — because that is what a tracker shows a player. The model
+ * wants the number, with a percentage as a fraction.
+ *
+ * Returns `null` when the chart has no such level, which for level 0 means the
+ * weapon is not unlocked.
+ */
+export function ultimateWeaponStatValue(
+  weapon: string,
+  stat: string,
+  level: number,
+): number | null {
+  const row = statLevels(weapon, stat)?.find(entry => entry.level === level)
+  if (row === undefined) return null
+  if (typeof row.value === 'number') return row.value
+
+  const text = String(row.value).trim()
+  const parsed = Number.parseFloat(text.replace(/[^0-9.-]/g, ''))
+  if (!Number.isFinite(parsed)) return null
+  return text.includes('%') ? parsed / 100 : parsed
+}
+
 const VAULT_NODES = [...DEFAULT_HARMONY_VAULT_NODES, ...DEFAULT_POWER_VAULT_NODES]
 
 /**

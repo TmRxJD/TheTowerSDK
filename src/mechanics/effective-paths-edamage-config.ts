@@ -61,11 +61,13 @@ export interface DamageStatSource {
   /** `BG` — the workshop upgrade level. */
   workshopLevel: number
   /**
-   * `BH` — the workshop block's resolved value at that level.
+   * The raw `WSValues` entry for this stat at its level — what
+   * `workshopStatValue()` returns.
    *
-   * Only Damage / Meter reads it, and the sheet has already applied the ÷1000
-   * that `EPD_DPM` applies again to its own lookup — so the compute multiplies
-   * it back out. Everything else scales off the level.
+   * Only Damage / Meter reads it, and it wants the table value untouched:
+   * `EPD_DPM` applies its own ÷1000. The sheet's `BH13` shows the divided
+   * form, so that cell is *not* this field. Everything else scales off the
+   * level rather than the value.
    */
   workshopValue: number
   /** `BI` — the workshop enhancement, the `+` levels. */

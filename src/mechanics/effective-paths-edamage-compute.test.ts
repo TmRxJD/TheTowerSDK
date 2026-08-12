@@ -171,7 +171,9 @@ function configFromSheet(): EffectiveDamageConfig {
     const row = WORKSHOP_ROW[name]
     stats[name] = {
       workshopLevel: cell(`BG${row}`),
-      workshopValue: cell(`BH${row}`),
+      // `BH13` is the only one anything reads, and it shows Damage / Meter
+      // already divided by a thousand — the model wants the raw table entry.
+      workshopValue: cell(`BH${row}`) * (name === 'Damage / Meter' ? 1000 : 1),
       enhancementLevel: cell(`BI${row}`),
       enhancementMultiplier: cell(`BK${row}`) || 1,
       relicPct: cell(`BL${row}`),

@@ -446,9 +446,7 @@ export function computeEffectiveDamage(
   const perMeter = config.runType === 'Attack Disso'
     ? 0
     : damagePerMeter({
-        // The sheet's own cell has already been divided by a thousand; the
-        // primitive divides its raw lookup by the same, so it goes back in.
-        workshopValue: stat('Damage / Meter').workshopValue * 1000,
+        workshopValue: stat('Damage / Meter').workshopValue,
         enhancementLevel: stat('Damage / Meter').enhancementLevel,
         labLevel: lab.damagePerMeter,
         substat: cannonSubstat('Damage / Meter'),
