@@ -77,6 +77,11 @@ export type EffectiveDamagePlanVariant
 export type EffectiveDamageBand = 'lab' | 'stone' | 'coin' | 'keys'
 
 /** The variants that read each band's candidate list. */
+/** Every variant the damage planner answers to. The lab band has two names. */
+export const DAMAGE_PLAN_VARIANTS: readonly EffectiveDamagePlanVariant[] = [
+  'lab-time', 'lab-coins', 'stone', 'coin', 'keys',
+]
+
 const BAND_VARIANTS: Readonly<Record<EffectiveDamageBand, readonly EffectiveDamagePlanVariant[]>> = {
   lab: ['lab-time', 'lab-coins'],
   stone: ['stone'],
@@ -104,6 +109,29 @@ const LAB_NAME_ALIASES: Readonly<Record<string, string>> = {
  * on upgrades the player cannot reach.
  */
 export const WORKSHOP_ENHANCEMENTS_LAB = 'Workshop Enhancements'
+
+/**
+ * Lab candidates whose prerequisite the sheet checks before offering them.
+ *
+ * From `eDamage!FV2:GA2`, the lab band's hide row. Each of these multiplies
+ * something that has to exist first, so with the prerequisite unmet its gain is
+ * zero — and a zero still wins a tie-break, which is how a fresh account's
+ * damage path filled up with upgrades that do nothing. Same defect the weapon
+ * gates fixed, one layer along.
+ *
+ * Two more in that row are **not** listed here because their cells are not yet
+ * identified: Shock Multiplier gates on `AND($BH$31, $AL$75)` and Demon Mode
+ * Mastery on `$AY$58`. Guessing at either would be inventing a rule.
+ */
+const LAB_PREREQUISITES: Readonly<Record<string, (config: EffectiveDamageConfig) => boolean>> = {
+  // `NOT($AY$43)` — the cards master switch. A mastery with no card is nothing.
+  'Damage Mastery': config => config.cardsEquipped,
+  // `NOT(AND($AY$61, $AY$63))` — perks on, and the Damage perk among them.
+  'Standard Perks Bonus': config => config.perksEquipped && config.perks.Damage,
+  // `NOT(AND($AY$61, $AY$65))` — `AY65` is the third perk row, Boss Health.
+  'Improve Trade-off Perks': config =>
+    config.perksEquipped && config.perks['Boss Health Trade-off'],
+}
 
 const ENHANCEMENT_SUFFIX = ' +'
 
@@ -294,6 +322,15 @@ export function planEffectiveDamagePath(
     // weapon itself — `NOT($BH$35)` for Poison Swamp, `NOT($BH$37)` for Inner
     // Land Mines. Without it the planner spends stones on a weapon the player
     // does not own: the gain is zero, but a zero still wins a tie-break.
+    const prerequisite = LAB_PREREQUISITES[upgrade.sheetName]
+    if (upgrade.band === 'lab' && prerequisite && !prerequisite(config)) {
+      excluded.push({
+        sheetName: upgrade.sheetName,
+        reason: 'what it multiplies is not taken yet',
+      })
+      continue
+    }
+
     if (options.workshopEnhancementsUnlocked === false
       && upgrade.sheetName.endsWith(ENHANCEMENT_SUFFIX)) {
       excluded.push({

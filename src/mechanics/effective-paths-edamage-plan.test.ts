@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  DAMAGE_PLAN_VARIANTS,
   EFFECTIVE_DAMAGE_UPGRADES,
   planEffectiveDamagePath,
 } from './effective-paths-edamage-plan'
@@ -271,5 +272,58 @@ describe('the Workshop Enhancements lab', () => {
       workshopEnhancementsUnlocked: true,
     })
     expect(plan.excluded.some(entry => /Workshop Enhancements/.test(entry.reason))).toBe(false)
+  })
+})
+
+describe('lab candidates whose prerequisite is unmet', () => {
+  const bare = () => zeroEffectiveDamageConfig()
+
+  it('leaves out a mastery when cards are off, and the two perk labs when perks are', () => {
+    // `eDamage!FW2` gates Damage Mastery on the cards switch, `FX2` gates
+    // Standard Perks Bonus on the Damage perk and `FY2` gates Improve
+    // Trade-off Perks on the Boss Health one. Each multiplies something that
+    // has to exist first, so on a fresh account all three gain nothing — and a
+    // zero gain still wins a tie-break.
+    const plan = planEffectiveDamagePath({
+      config: bare(), levels: ZERO_EFFECTIVE_DAMAGE_LEVELS, variant: 'lab-time', steps: 25,
+    })
+    const reasons = new Map(plan.excluded.map(entry => [entry.sheetName, entry.reason]))
+    for (const name of ['Damage Mastery', 'Standard Perks Bonus', 'Improve Trade-off Perks']) {
+      expect(reasons.get(name), name).toMatch(/not taken yet/)
+    }
+    for (const step of plan.steps) {
+      expect(['Damage Mastery', 'Standard Perks Bonus']).not.toContain(step.name)
+    }
+  })
+
+  it('offers them once what they multiply is taken', () => {
+    const config = {
+      ...bare(),
+      cardsEquipped: true,
+      perksEquipped: true,
+      perks: { ...bare().perks, 'Damage': true, 'Boss Health Trade-off': true },
+    }
+    const plan = planEffectiveDamagePath({
+      config, levels: ZERO_EFFECTIVE_DAMAGE_LEVELS, variant: 'lab-time', steps: 5,
+    })
+    expect(plan.excluded.some(entry => /not taken yet/.test(entry.reason))).toBe(false)
+  })
+})
+
+describe('every variant name plans something', () => {
+  it('rejects a typo instead of silently planning nothing', () => {
+    // Two of the tests above were written against `variant: 'lab'`, which is
+    // not a variant — the lab band answers to `lab-time` and `lab-coins`. The
+    // loop skips every candidate, the plan comes back empty, and an assertion
+    // over "no bad steps" passes for the wrong reason. This is the guard.
+    for (const variant of DAMAGE_PLAN_VARIANTS) {
+      const plan = planEffectiveDamagePath({
+        config: zeroEffectiveDamageConfig(),
+        levels: ZERO_EFFECTIVE_DAMAGE_LEVELS,
+        variant,
+        steps: 3,
+      })
+      expect(plan.steps.length + plan.excluded.length, variant).toBeGreaterThan(0)
+    }
   })
 })
