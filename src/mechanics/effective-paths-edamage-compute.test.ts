@@ -17,6 +17,26 @@ import type {
   ModuleSlot,
 } from './effective-paths-edamage-config'
 import { ZERO_EFFECTIVE_DAMAGE_LEVELS } from './effective-paths-edamage-levels'
+import { workshopStatValue } from './effective-paths-workshop-values'
+
+/** The three rows the sheet's workshop block spells differently from the game. */
+const WORKSHOP_GAME_NAMES: Record<DamageWorkshopStat, string> = {
+  'Damage': 'Damage',
+  'Attack Speed': 'Attack Speed',
+  'Critical Chance': 'Critical Chance',
+  'Critical Factor': 'Critical Factor',
+  'Range': 'Range',
+  'Damage / Meter': 'Damage / Meter',
+  'Multishot Chance': 'Multishot Chance',
+  'Multishot Targets': 'Multishot Targets',
+  'Rapid Fire Chance': 'Rapid Fire Chance',
+  'Rapid Fire Duration': 'Rapid Fire Duration',
+  'Bounce Shot Chance': 'Bounce Shot Chance',
+  'Bounce Shot Targets': 'Bounce Shot Targets',
+  'Super Critical Chance': 'Super Crit Chance',
+  'Super Critical Mult': 'Super Crit Mult',
+  'Max Rend Armor Multiplier': 'Rend Armor Mult',
+}
 import type { EffectiveDamageLevels } from './effective-paths-edamage-levels'
 import type { DamageRunType } from './effective-paths-damage-base'
 import cells from './effective-paths-edamage.fixtures.json'
@@ -38,14 +58,21 @@ import cells from './effective-paths-edamage.fixtures.json'
  * green suite imply more than it proves.
  */
 
-const cell = (ref: string): number => {
-  const value = (cells as Record<string, unknown>)[ref]
-  return typeof value === 'number' ? value : 0
+export type SheetCells = Record<string, unknown>
+
+const reader = (source: SheetCells) => {
+  const cell = (ref: string): number => {
+    const value = source[ref]
+    return typeof value === 'number' ? value : 0
+  }
+  const flag = (ref: string): boolean => source[ref] === true
+  const text = (ref: string): string => String(source[ref] ?? '')
+  /** The sheet reads a card's level as the last character of `"Lvl 4"`. */
+  const cardLevel = (ref: string): number => Number(text(ref).slice(-1)) || 0
+  return { cell, flag, text, cardLevel }
 }
-const flag = (ref: string): boolean => (cells as Record<string, unknown>)[ref] === true
-const text = (ref: string): string => String((cells as Record<string, unknown>)[ref] ?? '')
-/** The sheet reads a card's level as the last character of `"Lvl 4"`. */
-const cardLevel = (ref: string): number => Number(text(ref).slice(-1)) || 0
+
+const { cell } = reader(cells as SheetCells)
 
 /** The workshop block's rows — column `BB`. */
 const WORKSHOP_ROW: Record<DamageWorkshopStat, number> = {
@@ -163,17 +190,19 @@ const MODULE_ROW: Record<ModuleSlot, { block: number, bonus: number, substat: nu
   core: { block: 23, bonus: 47, substat: 48 },
 }
 
-function configFromSheet(): EffectiveDamageConfig {
+export function configFromSheet(source: SheetCells = cells as SheetCells): EffectiveDamageConfig {
+  const { cell, flag, text, cardLevel } = reader(source)
   const zero = zeroEffectiveDamageConfig()
 
   const stats = { ...zero.stats } as Record<DamageWorkshopStat, typeof ZERO_DAMAGE_STAT_SOURCE>
   for (const name of DAMAGE_WORKSHOP_STATS) {
     const row = WORKSHOP_ROW[name]
+    const level = cell(`BG${row}`)
     stats[name] = {
-      workshopLevel: cell(`BG${row}`),
-      // `BH13` is the only one anything reads, and it shows Damage / Meter
-      // already divided by a thousand — the model wants the raw table entry.
-      workshopValue: cell(`BH${row}`) * (name === 'Damage / Meter' ? 1000 : 1),
+      workshopLevel: level,
+      // Derived from the level rather than read off the sheet, which is what
+      // the site does too — and what `EPD_DPM` does internally.
+      workshopValue: workshopStatValue(WORKSHOP_GAME_NAMES[name], level)?.value ?? 0,
       enhancementLevel: cell(`BI${row}`),
       enhancementMultiplier: cell(`BK${row}`) || 1,
       relicPct: cell(`BL${row}`),
@@ -215,7 +244,7 @@ function configFromSheet(): EffectiveDamageConfig {
 
   const ultimateWeapons = { ...zero.ultimateWeapons }
   for (const [name, row] of Object.entries(WEAPON_ROW)) {
-    const plus = (cells as Record<string, unknown>)[`BL${row}`]
+    const plus = source[`BL${row}`]
     ultimateWeapons[name as DamageUltimateWeapon] = {
       unlocked: flag(`BH${row}`),
       damage: cell(`BI${row}`),
@@ -253,6 +282,7 @@ function configFromSheet(): EffectiveDamageConfig {
     ultimateWeapons,
     landMineChance: cell('BH25'),
     ampStrikeShare: cell('AY35'),
+    chronoFieldEnabled: flag('AY33'),
     shockMultiplierUnlocked: flag('AL75'),
     hasRendArmour: flag('AL69'),
     spotlightQuantity: cell('AY8'),
@@ -265,9 +295,14 @@ function configFromSheet(): EffectiveDamageConfig {
       frequencyVault: cell('BM24'),
     },
     heatUpHits: {
-      smartMissiles: cell('AY30'),
+      smartMissiles: cell('AY29'),
       poisonSwamp: cell('AY32'),
       innerLandMines: cell('AY37'),
+    },
+    areaOfEffect: {
+      smartMissiles: cell('AY30'),
+      poisonSwamp: cell('AY31'),
+      innerLandMines: cell('AY36'),
     },
     recovery: {
       durationBonus: cell('BF26'),
@@ -279,7 +314,10 @@ function configFromSheet(): EffectiveDamageConfig {
 }
 
 /** Row 5 is the "current levels" row, so the levels are the player's own. */
-function levelsFromSheet(): EffectiveDamageLevels {
+export function levelsFromSheet(
+  source: SheetCells = cells as SheetCells,
+): EffectiveDamageLevels {
+  const { cell } = reader(source)
   const base = ZERO_EFFECTIVE_DAMAGE_LEVELS
   return {
     ...base,

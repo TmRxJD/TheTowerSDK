@@ -404,6 +404,14 @@ export interface EffectiveDamageConfig {
    */
   ampStrikeShare: number
 
+  /**
+   * `AY33` — whether Chrono Field is switched on for this run.
+   *
+   * Separate from the weapon being unlocked: the slow only applies when both
+   * are true, and a UW Dissonance run is what normally turns it off.
+   */
+  chronoFieldEnabled: boolean
+
   /** `AL75` — whether the Shock Multiplier is unlocked at all. */
   shockMultiplierUnlocked: boolean
   /** `AL69` — whether Rend Armour is in play. */
@@ -434,9 +442,22 @@ export interface EffectiveDamageConfig {
 
   /**
    * How many times a weapon is assumed to hit the same target, which is what
-   * its `+` heat-up scales off — `AY29` through `AY37`.
+   * its `+` heat-up scales off — `AY29`, `AY32` and `AY37`.
    */
   heatUpHits: {
+    smartMissiles: number
+    poisonSwamp: number
+    innerLandMines: number
+  }
+
+  /**
+   * How much wider each weapon's area of effect is — `AY30`, `AY31`, `AY36`.
+   *
+   * A separate estimate from the heat-up, and next to it in the sheet's own
+   * block, which is how the two came to be confused: `EI5` reads `AY29` and
+   * `EG5` reads `AY30`, one row apart.
+   */
+  areaOfEffect: {
     smartMissiles: number
     poisonSwamp: number
     innerLandMines: number
@@ -505,6 +526,7 @@ export function zeroEffectiveDamageConfig(): EffectiveDamageConfig {
       DAMAGE_ULTIMATE_WEAPONS, () => ({ ...ZERO_ULTIMATE_WEAPON_SOURCE }),
     ),
     landMineChance: 0,
+    chronoFieldEnabled: false,
     ampStrikeShare: 0,
     shockMultiplierUnlocked: false,
     hasRendArmour: false,
@@ -518,6 +540,7 @@ export function zeroEffectiveDamageConfig(): EffectiveDamageConfig {
       frequencyVault: 0,
     },
     heatUpHits: { smartMissiles: 1, poisonSwamp: 1, innerLandMines: 1 },
+    areaOfEffect: { smartMissiles: 1, poisonSwamp: 1, innerLandMines: 1 },
     recovery: { durationBonus: 0, bossWave: false, bossWaveDivisor: 1 },
     dissonance: { active: false, tierPersonalBest: 0, allTierPersonalBests: [] },
   }

@@ -110,15 +110,21 @@ describe('what the Run Type switches off', () => {
     }
   })
 
-  it('drops perks only in a tournament', () => {
-    expect(damageRunEffects('Tourney').perksApply).toBe(false)
-    expect(damageRunEffects('Regular').perksApply).toBe(true)
-  })
-
-  it('drops Spotlight and Chrono Field together, only on UW Dissonance', () => {
-    // Both gate on the same comparison — BH33 and BH36.
-    expect(damageRunEffects('UW Disso').ultimateWeaponUtilityApplies).toBe(false)
-    expect(damageRunEffects('Attack Disso').ultimateWeaponUtilityApplies).toBe(true)
+  it('leaves the tournament and UW Dissonance rules to the input layer', () => {
+    /**
+     * Only two run-type rules live in the grid's columns, and this reports
+     * exactly those two.
+     *
+     * The rest are one layer earlier. `AY61` is driven from the simulated
+     * tier, so a tournament arrives at the columns with its perks already
+     * switched off; `BH33` is `AND(IDS_UW_OWN("Spotlight"), AX19<>"UW Disso")`,
+     * so a UW Dissonance run arrives with Spotlight already locked. A model
+     * that re-applied either here would apply it twice — which it did, and was
+     * wrong by exactly the perk multipliers until ten sheet-driven accounts
+     * said so.
+     */
+    const effects = damageRunEffects('Tourney')
+    expect(Object.keys(effects).sort()).toEqual(['towerFires', 'usesDissonanceCash'])
   })
 
   it('recomputes cash only on Utility Dissonance', () => {

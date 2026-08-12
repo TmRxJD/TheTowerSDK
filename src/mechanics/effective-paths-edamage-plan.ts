@@ -141,14 +141,14 @@ const BAND_KEYS: Readonly<Record<EffectiveDamageBand, readonly string[]>> = {
  */
 export const EFFECTIVE_DAMAGE_UPGRADES: readonly EffectiveDamageUpgrade[]
   = (['lab', 'stone', 'coin', 'keys'] as const).flatMap(band =>
-      EFFECTIVE_DAMAGE_CANDIDATES[band].map((candidate, index) => ({
-        id: `${band}.${BAND_KEYS[band][index]}`,
-        band,
-        key: BAND_KEYS[band][index],
-        sheetName: candidate.sheetName,
-        column: candidate.column,
-      })),
-    )
+    EFFECTIVE_DAMAGE_CANDIDATES[band].map((candidate, index) => ({
+      id: `${band}.${BAND_KEYS[band][index]}`,
+      band,
+      key: BAND_KEYS[band][index],
+      sheetName: candidate.sheetName,
+      column: candidate.column,
+    })),
+  )
 
 export interface EffectiveDamagePlanOptions {
   config: EffectiveDamageConfig

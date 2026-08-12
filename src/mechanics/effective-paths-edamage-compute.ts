@@ -25,7 +25,6 @@ import {
   tradeOffDamagePerk,
 } from './effective-paths-damage-base'
 import {
-  areaOfEffectCardBoost,
   attackRange,
   attackSpeed,
   bounceShotChance,
@@ -51,7 +50,7 @@ import {
   ultimateWeaponCriticalMultiplier,
 } from './effective-paths-damage-stats'
 import { bulletsPerSecond } from './effective-paths-damage-substats'
-import { bulletDamageMultiplier, composeEffectiveDamage, damageRunEffects } from './effective-paths-edamage-model'
+import { bulletDamageMultiplier, composeEffectiveDamage } from './effective-paths-edamage-model'
 import { assistSubstatCap, moduleBonus } from './effective-paths-generics'
 import {
   chainLightningChance,
@@ -64,6 +63,7 @@ import {
   innerLandMineQuantity,
   smartMissileCooldown,
   smartMissileDamage,
+  smartMissileDamagePerSecond,
   smartMissileQuantity,
   spotlightAngle,
   spotlightDamage,
@@ -84,6 +84,10 @@ import { dissonantBoostOfType } from './effective-paths-ehp-model'
 import { computeModuleStat } from '../data/module-bonus'
 import { KEYS_CANDIDATE_NODES } from './effective-paths-edamage-costs'
 import type {
+  DamageCard,
+  DamageCardSource,
+  DamagePerk,
+  DamageStatSource,
   DamageSubstat,
   EffectiveDamageConfig,
   ModuleSlot,
@@ -97,6 +101,9 @@ import type { EffectiveDamageLevels } from './effective-paths-edamage-levels'
  * know *which* half moved — and a test comparing against the sheet can compare
  * a column at a time instead of bisecting one number.
  */
+/** What a Spotlight-lit missile hits for when Smart Missiles is not unlocked. */
+const UNLOCKED_SMART_MISSILE_BASE_DAMAGE = 10
+
 export interface EffectiveDamageBreakdown {
   /** `DI5`. */
   base: number
@@ -114,6 +121,14 @@ export interface EffectiveDamageBreakdown {
   slow: number
   /** `ES5`. */
   effectiveDamage: number
+  /**
+   * Every intermediate column, by its own name on the sheet.
+   *
+   * The seven factors above are each built from a dozen of these, so when one
+   * of them disagrees with the sheet this is what says which part did. It is
+   * also what the page reads to show a player *which* half a step moved.
+   */
+  columns: Readonly<Record<string, number>>
 }
 
 /**
@@ -127,7 +142,6 @@ export function computeEffectiveDamage(
   config: EffectiveDamageConfig,
   levels: EffectiveDamageLevels,
 ): EffectiveDamageBreakdown {
-  const run = damageRunEffects(config.runType)
   const lab = levels.lab
 
   /**
@@ -147,32 +161,9 @@ export function computeEffectiveDamage(
     return { ...source, vaultPct: levels.keys[keysKey.key] * node.perLevel }
   }
 
-  // --- Assist capacities -------------------------------------------------
-  // How much of an assist module's substat counts, per module. The stone half
-  // is bought by the stone path and the lab half by the lab and coin paths,
-  // and the two add rather than replacing each other.
-  const capacity = (slot: ModuleSlot): number => {
-    const module = config.modules[slot]
-    const stone = slot === 'cannon'
-      ? levels.stone.assistSubstatCannonStone
-      : slot === 'core'
-        ? levels.stone.assistSubstatCoreStone
-        : slot === 'armor'
-          ? levels.stone.assistSubstatArmorStone
-          : module.substatStoneLevel
-    const labLevel = slot === 'cannon'
-      ? lab.assistSubstatCannon + levels.coin.assistSubstatCannon
-      : slot === 'core'
-        ? lab.assistSubstatCore + levels.coin.assistSubstatCore
-        : slot === 'armor'
-          ? lab.assistSubstatArmor + levels.coin.assistSubstatArmor
-          : 0
-    return assistSubstatCap(module.hasAssist, stone, labLevel)
-  }
-
-  const cannonCapacity = capacity('cannon')
-  const coreCapacity = capacity('core')
-  const armorCapacity = capacity('armor')
+  const cannonCapacity = assistCapacity(config, levels, 'cannon')
+  const coreCapacity = assistCapacity(config, levels, 'core')
+  const armorCapacity = assistCapacity(config, levels, 'armor')
 
   /** `AM_n + capacity × AO_n` — a substat with its assist half weighted. */
   const substat = (name: DamageSubstat, capacityValue: number): number => {
@@ -186,18 +177,24 @@ export function computeEffectiveDamage(
   const unique = (name: Parameters<typeof uniqueOf>[1]) => uniqueOf(config, name)
 
   const card = (name: Parameters<typeof cardOf>[1]) => cardOf(config, name)
-  const perk = (name: Parameters<typeof perkOf>[1]) =>
-    run.perksApply && config.perksEquipped && config.perks[name]
+  /**
+   * `AND($AY$61, $AY$6n)` — the grid's only perk gate.
+   *
+   * The tournament rule is not here. The sheet drives `AY61` from the
+   * simulated tier, so by the time a column reads it the decision is made.
+   */
+  const perk = (name: DamagePerk) =>
+    config.perksEquipped && config.perks[name]
 
   // --- Dissonance --------------------------------------------------------
   const dissonanceBoost = (type: 'attack' | 'uw', level: number): number =>
     config.dissonance.active
       ? dissonantBoostOfType(
-          type,
-          config.dissonance.tierPersonalBest,
-          config.dissonance.allTierPersonalBests,
-          level,
-        )
+        type,
+        config.dissonance.tierPersonalBest,
+        config.dissonance.allTierPersonalBests,
+        level,
+      )
       : 1
 
   /** `CY5`. */
@@ -230,24 +227,14 @@ export function computeEffectiveDamage(
     dissonance: attackDisco,
   })
 
-  /**
-   * A module's bonus at the level the path has taken it to, when the rarity is
-   * known. The coin path buys module levels, so this has to move with them.
-   */
-  const atLevel = (
-    type: 'cannon' | 'core', rarity: string | undefined, level: number, fallback: number,
-  ): number => (rarity && level > 0
-    ? computeModuleStat({ type, rarityLabel: rarity, level })
-    : fallback)
-
   /** `DE5` — the Cannon module pair. */
   const cannonModule = moduleBonus({
-    primaryBonus: atLevel(
+    primaryBonus: moduleBonusAtLevel(
       'cannon', config.modules.cannon.primaryRarity,
       levels.coin.primaryModuleCannon, config.modules.cannon.primaryBonus,
     ),
     hasAssist: config.modules.cannon.hasAssist,
-    assistBonus: atLevel(
+    assistBonus: moduleBonusAtLevel(
       'cannon', config.modules.cannon.assistRarity,
       levels.coin.assistModuleCannon, config.modules.cannon.assistBonus,
     ),
@@ -359,107 +346,20 @@ export function computeEffectiveDamage(
 
   // --- The bullet multiplier, DP5 through EA5 ---------------------------
 
-  const attacksPerSecond = config.runType === 'Attack Disso'
-    ? 1
-    : attackSpeed({
-        workshopLevel: stat('Attack Speed').workshopLevel,
-        enhancementLevel: stat('Attack Speed').enhancementLevel,
-        labLevel: lab.attackSpeed,
-        hasAttackSpeedCard: config.cardsEquipped && card('Attack Speed').active,
-        cardLevel: card('Attack Speed').level,
-        hasCardMastery: card('Attack Speed Mastery').active,
-        masteryLevel: lab.attackSpeedMastery + levels.coin.attackSpeedMastery,
-        substat: cannonSubstat('Attack Speed'),
-        relicPct: stat('Attack Speed').relicPct,
-        vaultPct: stat('Attack Speed').vaultPct,
-      })
-
-  /** `DT5`. */
-  const bps = bulletsPerSecond(attacksPerSecond)
-
-  /** `DP5`. */
-  const multishot = config.runType === 'Attack Disso'
-    ? 1
-    : multishotMultiplier(
-        multishotChance(
-          stat('Multishot Chance').workshopLevel,
-          cannonSubstat('MultiShot Chance'),
-          stat('Multishot Chance').vaultPct,
-        ),
-        multishotTargets(
-          stat('Multishot Targets').workshopLevel,
-          cannonSubstat('Multishot Targets'),
-        ),
-      )
-
-  const bounceChance = bounceShotChance(
-    stat('Bounce Shot Chance').workshopLevel,
-    cannonSubstat('Bounce Shot Chance'),
-    stat('Bounce Shot Chance').vaultPct,
-  )
-  const bounceTargets = bounceShotTargets(
-    stat('Bounce Shot Targets').workshopLevel,
-    perk('Bounce Shot') ? config.bounceShotPerkTargets : 0,
-    cannonSubstat('Bounce Shot Targets'),
-  )
-
-  /** `DQ5` — with Astral Deliverance, which the bullet multiplier uses. */
-  const bounce = config.runType === 'Attack Disso'
-    ? 1
-    : bounceShotMultiplier(bounceChance, bounceTargets, unique('Astral Deliverance'))
-  /**
-   * `DR5` — the same without it. Chain Lightning reads this one, because
-   * Astral Deliverance's extra bounces do not roll for a proc.
-   */
-  const bounceNoAstral = config.runType === 'Attack Disso'
-    ? 1
-    : bounceShotMultiplier(bounceChance, bounceTargets, 0)
-
-  /** `DS5`. */
-  const rapidFire = config.runType === 'Attack Disso'
-    ? 1
-    : rapidFireMultiplier(
-        rapidFireChance(
-          stat('Rapid Fire Chance').workshopLevel,
-          cannonSubstat('Rapid Fire Chance'),
-          stat('Rapid Fire Chance').vaultPct,
-        ),
-        rapidFireDuration(
-          stat('Rapid Fire Duration').workshopLevel,
-          cannonSubstat('Rapid Fire Duration'),
-        ),
-        bps,
-      )
-
-  /** `DU5` — range, which an Attack Dissonance run fixes at the base 30m. */
-  const range = config.runType === 'Attack Disso'
-    ? 30
-    : attackRange({
-        workshopLevel: stat('Range').workshopLevel,
-        hasRangeCard: config.cardsEquipped && card('Range').active,
-        cardLevel: card('Range').level,
-        labLevel: lab.range,
-        substat: cannonSubstat('Attack Range'),
-      })
-
-  /** `DV5`. */
-  const perMeter = config.runType === 'Attack Disso'
-    ? 0
-    : damagePerMeter({
-        workshopValue: stat('Damage / Meter').workshopValue,
-        enhancementLevel: stat('Damage / Meter').enhancementLevel,
-        labLevel: lab.damagePerMeter,
-        substat: cannonSubstat('Damage / Meter'),
-        relicPct: stat('Damage / Meter').relicPct,
-        vaultPct: stat('Damage / Meter').vaultPct,
-        hasRangeMastery: card('Range Mastery').active,
-        masteryLevel: lab.rangeMastery + levels.coin.rangeMastery,
-      })
-
-  /** `DW5`. */
-  const rangeDamage = config.runType === 'Attack Disso'
-    ? 1
-    : rangeDamageMultiplier(range, perMeter, config.damageAtRangePct)
+  const bullet = bulletStats({
+    config,
+    labLevels: lab,
+    stat,
+    cannonSubstat,
+    bounceShotPerkTargets: perk('Bounce Shot') ? config.bounceShotPerkTargets : 0,
+    card,
+    attackSpeedMasteryLevel: lab.attackSpeedMastery + levels.coin.attackSpeedMastery,
+    astralDeliverance: unique('Astral Deliverance'),
+    rangeMasteryLevel: lab.rangeMastery + levels.coin.rangeMastery,
+  })
+  const {
+    bps, multishot, bounce, bounceNoAstral, rapidFire, range, perMeter, rangeDamage,
+  } = bullet
 
   // --- Super Tower, DX5 and DY5 -----------------------------------------
   // The card multiplies bullet damage; the mastery passes a share of that
@@ -500,11 +400,11 @@ export function computeEffectiveDamage(
   const rend = config.runType === 'Attack Disso'
     ? 1
     : maxRendArmourMultiplier({
-        hasRend: config.hasRendArmour,
-        labLevel: lab.maxRendArmorMultiplier,
-        substat: cannonSubstat('Max Rend Armor Multi'),
-        enhancementLevel: stat('Max Rend Armor Multiplier').enhancementLevel,
-      })
+      hasRend: config.hasRendArmour,
+      labLevel: lab.maxRendArmorMultiplier,
+      substat: cannonSubstat('Max Rend Armor Multi'),
+      enhancementLevel: stat('Max Rend Armor Multiplier').enhancementLevel,
+    })
 
   /** `EA5`. */
   const bulletMultiplier = bulletDamageMultiplier({
@@ -546,25 +446,25 @@ export function computeEffectiveDamage(
   /** `EF5` — the only weapon whose output moves when a bullet stat does. */
   const chainLightning = weapon('Chain Lightning').unlocked
     ? chainLightningDps({
-        damage: chainLightningDamage(
-          weapon('Chain Lightning').damage,
-          coreSubstat('Chain Lightning - Damage'),
-          perk('Chain Lightning Damage'),
-        ),
-        quantity: chainLightningQuantity(
-          weapon('Chain Lightning').quantity,
-          coreSubstat('Chain Lightning - Quantity'),
-          unique('Dimension Core') > 0,
-        ),
-        chance: chainLightningChance(
-          weapon('Chain Lightning').cooldown, coreSubstat('Chain Lightning - Chance'),
-        ),
-        attackSpeed: bps,
-        rapidFire,
-        multishot,
-        bounce: bounceNoAstral,
-        displayedGameSpeed: config.gameSpeed,
-      })
+      damage: chainLightningDamage(
+        weapon('Chain Lightning').damage,
+        coreSubstat('Chain Lightning - Damage'),
+        perk('Chain Lightning Damage'),
+      ),
+      quantity: chainLightningQuantity(
+        weapon('Chain Lightning').quantity,
+        coreSubstat('Chain Lightning - Quantity'),
+        unique('Dimension Core') > 0,
+      ),
+      chance: chainLightningChance(
+        weapon('Chain Lightning').cooldown, coreSubstat('Chain Lightning - Chance'),
+      ),
+      attackSpeed: bps,
+      rapidFire,
+      multishot,
+      bounce: bounceNoAstral,
+      displayedGameSpeed: config.gameSpeed,
+    })
     : 0
 
   const areaOfEffect = {
@@ -587,18 +487,21 @@ export function computeEffectiveDamage(
   /** `EG5`. */
   const smartMissiles = weapon('Smart Missiles').unlocked
     ? smartMissilesDps({
-        damage: smDamage,
-        quantity: smartMissileQuantity(
-          weapon('Smart Missiles').quantity,
-          coreSubstat('Smart Missiles - Quantity'),
-          perk('More Smart Missiles'),
-        ),
-        cooldownSeconds: smCooldown,
-        coverFire: weapon('Smart Missiles').plus ?? 0,
-        heatUp: missileHeatUp,
-        areaOfEffect: 1,
-        ...areaOfEffect,
-      })
+      damage: smDamage,
+      quantity: smartMissileQuantity(
+        weapon('Smart Missiles').quantity,
+        coreSubstat('Smart Missiles - Quantity'),
+        perk('More Smart Missiles'),
+      ),
+      cooldownSeconds: smCooldown,
+      // `STAT_UW_SM_FINAL_CF(SMB, $BL$32)` — Cover Fire is a *rate*, the
+      // missile's damage over the interval between bursts, which is why it
+      // is added after the cooldown divide rather than before it.
+      coverFire: smartMissileDamagePerSecond(smDamage, weapon('Smart Missiles').plus),
+      heatUp: missileHeatUp,
+      areaOfEffect: config.areaOfEffect.smartMissiles,
+      ...areaOfEffect,
+    })
     : 0
 
   /** Spotlight's own damage, which every other weapon is measured against. */
@@ -613,23 +516,37 @@ export function computeEffectiveDamage(
   }) * ultimateDisco
 
   /** `ED5` — the coverage-weighted bonus, on the bullet half only. */
-  const spotlight = run.ultimateWeaponUtilityApplies && weapon('Spotlight').unlocked
+  const spotlight = weapon('Spotlight').unlocked
     ? spotlightFinalBonus(
-        spotlightCoverage(config.spotlightQuantity, spotlightAngleDegrees), slDamage,
-      )
+      spotlightCoverage(config.spotlightQuantity, spotlightAngleDegrees), slDamage,
+    )
     : 1
 
-  /** `EH5` — the missiles a lit Smart Missile fires. */
+  /**
+   * `EH5` — the missiles a lit Smart Missile fires.
+   *
+   * Spotlight Missiles do not need Smart Missiles to be unlocked. Without it
+   * the sheet substitutes a base of 10 — `IF($BH$32, $BI$32, 10)` — so a
+   * player who has Spotlight and its `+` but never bought Smart Missiles still
+   * gets them, just off an unupgraded base.
+   */
+  const spotlightMissileBase = weapon('Smart Missiles').unlocked
+    ? weapon('Smart Missiles').damage
+    : UNLOCKED_SMART_MISSILE_BASE_DAMAGE
+
   const spotlightMissiles
     = weapon('Spotlight').unlocked && weapon('Spotlight Missiles').unlocked
       ? spotlightMissilesDps({
-          smartMissileDamage: smDamage,
-          spotlightDamage: slDamage,
-          cooldownSeconds: 20 - lab.spotlightMissiles,
-          heatUp: missileHeatUp,
-          areaOfEffect: 1,
-          ...areaOfEffect,
-        })
+        smartMissileDamage: smartMissileDamage(
+          spotlightMissileBase, coreSubstat('Smart Missiles - Damage'),
+        ),
+        spotlightDamage: slDamage,
+        cooldownSeconds: 20 - lab.spotlightMissiles,
+        heatUp: missileHeatUp,
+        // Spotlight Missiles are Smart Missiles, so they share its estimate.
+        areaOfEffect: config.areaOfEffect.smartMissiles,
+        ...areaOfEffect,
+      })
       : 0
 
   /** `EK5` — Poison Swamp's own heat-up, from its Death Creep `+`. */
@@ -643,7 +560,8 @@ export function computeEffectiveDamage(
     damage: weapon('Poison Swamp').damage + coreSubstat('Poison Swamp - Damage'),
     durationSeconds: weapon('Poison Swamp').quantity,
     cooldownSeconds: weapon('Poison Swamp').cooldown,
-    deathCreep: swampDeathCreep,
+    // `EJ5` passes `$EK$5 * $AY$31` — the heat-up and the area together.
+    deathCreep: swampDeathCreep * config.areaOfEffect.poisonSwamp,
     rend: 1 + (rend - 1) * lab.swampRend * 0.03,
     ...areaOfEffect,
   })
@@ -670,18 +588,18 @@ export function computeEffectiveDamage(
     chronoJump: lab.innerLandMineChronoJump * 5
       * ultimateWeaponHeatUp(1, config.heatUpHits.innerLandMines),
     chargedMines: weapon('Inner Land Mines').plus ?? 0,
-    areaOfEffect: 1,
+    areaOfEffect: config.areaOfEffect.innerLandMines,
     ...areaOfEffect,
   })
 
   /** `EN5` — the Core module pair, which boosts every ultimate weapon. */
   const coreModule = moduleBonus({
-    primaryBonus: atLevel(
+    primaryBonus: moduleBonusAtLevel(
       'core', config.modules.core.primaryRarity,
       levels.coin.primaryModuleCore, config.modules.core.primaryBonus,
     ),
     hasAssist: config.modules.core.hasAssist,
-    assistBonus: atLevel(
+    assistBonus: moduleBonusAtLevel(
       'core', config.modules.core.assistRarity,
       levels.coin.assistModuleCore, config.modules.core.assistBonus,
     ),
@@ -718,8 +636,8 @@ export function computeEffectiveDamage(
 
   // --- The slow, EP5 through ER5 ----------------------------------------
 
-  const chronoUnlocked = run.ultimateWeaponUtilityApplies
-    && weapon('Chrono Field').unlocked
+  // `AND(AY33, BH36)` — the weapon has to be unlocked *and* switched on.
+  const chronoUnlocked = config.chronoFieldEnabled && weapon('Chrono Field').unlocked
   const chronoSubstat = coreSubstat('Chrono Field - Speed Reduction')
   const chronoSlow = chronoUnlocked
     ? 1 / (1 - Math.min(0.9, weapon('Chrono Field').quantity + chronoSubstat))
@@ -748,6 +666,45 @@ export function computeEffectiveDamage(
     ultimateWeapons,
     slow,
     effectiveDamage,
+    columns: {
+      CZ5: damage,
+      DE5: cannonModule,
+      DF5: shockwave,
+      DG5: freeze,
+      DI5: base,
+      DJ5: critInput.criticalChance,
+      DK5: critInput.criticalFactor,
+      DL5: critInput.superCritChance,
+      DM5: critInput.superCritMultiplier,
+      DN5: crit,
+      DO5: uwCrit,
+      DP5: multishot,
+      DQ5: bounce,
+      DR5: bounceNoAstral,
+      DS5: rapidFire,
+      DT5: bps,
+      DU5: range,
+      DV5: perMeter,
+      DW5: rangeDamage,
+      DX5: superTower,
+      DY5: superTowerUltimate,
+      DZ5: rend,
+      EA5: bulletMultiplier,
+      EC5: timeBoost,
+      ED5: spotlight,
+      EE5: deathWave,
+      EF5: chainLightning,
+      EG5: smartMissiles,
+      EH5: spotlightMissiles,
+      EI5: missileHeatUp,
+      EJ5: poisonSwamp,
+      EK5: swampDeathCreep,
+      EL5: innerLandMines,
+      EN5: coreModule,
+      EO5: ultimateWeapons,
+      ER5: slow,
+      ES5: effectiveDamage,
+    },
   }
 }
 
@@ -777,6 +734,182 @@ const KEYS_STAT_LEVELS: Partial<Record<
   'Bounce Shot Chance': { sheetName: 'Bounce Shot Chance', key: 'bounceShotChance' },
 }
 
+/**
+ * How much of an assist module's substat counts, for one module.
+ *
+ * The stone half is bought by the stone path and the lab half by the lab and
+ * coin paths, and the two add rather than replacing each other. Cannon and
+ * Core take theirs from `levels`, because a path can buy them; Armor and
+ * Generator have no candidate, so their stone level stays in the config.
+ */
+function assistCapacity(
+  config: EffectiveDamageConfig,
+  levels: EffectiveDamageLevels,
+  slot: ModuleSlot,
+): number {
+  const module = config.modules[slot]
+  const stone = slot === 'cannon'
+    ? levels.stone.assistSubstatCannonStone
+    : slot === 'core'
+      ? levels.stone.assistSubstatCoreStone
+      : slot === 'armor'
+        ? levels.stone.assistSubstatArmorStone
+        : module.substatStoneLevel
+  const labLevel = slot === 'cannon'
+    ? levels.lab.assistSubstatCannon + levels.coin.assistSubstatCannon
+    : slot === 'core'
+      ? levels.lab.assistSubstatCore + levels.coin.assistSubstatCore
+      : slot === 'armor'
+        ? levels.lab.assistSubstatArmor + levels.coin.assistSubstatArmor
+        : 0
+  return assistSubstatCap(module.hasAssist, stone, labLevel)
+}
+
+/**
+ * A module's bonus at the level the path has taken it to, when the rarity is
+ * known. The coin path buys module levels, so this has to move with them.
+ */
+function moduleBonusAtLevel(
+  type: 'cannon' | 'core',
+  rarity: string | undefined,
+  level: number,
+  fallback: number,
+): number {
+  return rarity && level > 0
+    ? computeModuleStat({ type, rarityLabel: rarity, level })
+    : fallback
+}
+
+/** What one call to {@link bulletStats} needs from the walk above. */
+interface BulletStatsInput {
+  config: EffectiveDamageConfig
+  labLevels: EffectiveDamageLevels['lab']
+  stat: (name: keyof EffectiveDamageConfig['stats']) => DamageStatSource
+  cannonSubstat: (name: DamageSubstat) => number
+  /** Already resolved, because the perk gate belongs with the other perks. */
+  bounceShotPerkTargets: number
+  card: (name: DamageCard) => DamageCardSource
+  /** Mastery levels are labs, and the coin path buys the same ones. */
+  attackSpeedMasteryLevel: number
+  rangeMasteryLevel: number
+  /** The Astral Deliverance unique, which adds bounces that do not proc. */
+  astralDeliverance: number
+}
+
+/**
+ * `DP5` through `DZ5` — everything a bullet does, and the Attack Dissonance
+ * guard every one of them opens with.
+ *
+ * Kept together because the guard is the same each time: the tower does not
+ * fire, so each column collapses to its own identity — one for a multiplier,
+ * zero for damage per meter, and the base 30 metres for range.
+ */
+function bulletStats(input: BulletStatsInput) {
+  const { config, labLevels: lab, stat, cannonSubstat, card } = input
+  const attacksPerSecond = config.runType === 'Attack Disso'
+    ? 1
+    : attackSpeed({
+      workshopLevel: stat('Attack Speed').workshopLevel,
+      enhancementLevel: stat('Attack Speed').enhancementLevel,
+      labLevel: lab.attackSpeed,
+      hasAttackSpeedCard: config.cardsEquipped && card('Attack Speed').active,
+      cardLevel: card('Attack Speed').level,
+      hasCardMastery: card('Attack Speed Mastery').active,
+      masteryLevel: input.attackSpeedMasteryLevel,
+      substat: cannonSubstat('Attack Speed'),
+      relicPct: stat('Attack Speed').relicPct,
+      vaultPct: stat('Attack Speed').vaultPct,
+    })
+
+  /** `DT5`. */
+  const bps = bulletsPerSecond(attacksPerSecond)
+
+  /** `DP5`. */
+  const multishot = config.runType === 'Attack Disso'
+    ? 1
+    : multishotMultiplier(
+      multishotChance(
+        stat('Multishot Chance').workshopLevel,
+        cannonSubstat('MultiShot Chance'),
+        stat('Multishot Chance').vaultPct,
+      ),
+      multishotTargets(
+        stat('Multishot Targets').workshopLevel,
+        cannonSubstat('Multishot Targets'),
+      ),
+    )
+
+  const bounceChance = bounceShotChance(
+    stat('Bounce Shot Chance').workshopLevel,
+    cannonSubstat('Bounce Shot Chance'),
+    stat('Bounce Shot Chance').vaultPct,
+  )
+  const bounceTargets = bounceShotTargets(
+    stat('Bounce Shot Targets').workshopLevel,
+    input.bounceShotPerkTargets,
+    cannonSubstat('Bounce Shot Targets'),
+  )
+
+  /** `DQ5` — with Astral Deliverance, which the bullet multiplier uses. */
+  const bounce = config.runType === 'Attack Disso'
+    ? 1
+    : bounceShotMultiplier(bounceChance, bounceTargets, input.astralDeliverance)
+  /**
+   * `DR5` — the same without it. Chain Lightning reads this one, because
+   * Astral Deliverance's extra bounces do not roll for a proc.
+   */
+  const bounceNoAstral = config.runType === 'Attack Disso'
+    ? 1
+    : bounceShotMultiplier(bounceChance, bounceTargets, 0)
+
+  /** `DS5`. */
+  const rapidFire = config.runType === 'Attack Disso'
+    ? 1
+    : rapidFireMultiplier(
+      rapidFireChance(
+        stat('Rapid Fire Chance').workshopLevel,
+        cannonSubstat('Rapid Fire Chance'),
+        stat('Rapid Fire Chance').vaultPct,
+      ),
+      rapidFireDuration(
+        stat('Rapid Fire Duration').workshopLevel,
+        cannonSubstat('Rapid Fire Duration'),
+      ),
+      bps,
+    )
+
+  /** `DU5` — range, which an Attack Dissonance run fixes at the base 30m. */
+  const range = config.runType === 'Attack Disso'
+    ? 30
+    : attackRange({
+      workshopLevel: stat('Range').workshopLevel,
+      hasRangeCard: config.cardsEquipped && card('Range').active,
+      cardLevel: card('Range').level,
+      labLevel: lab.range,
+      substat: cannonSubstat('Attack Range'),
+    })
+
+  /** `DV5`. */
+  const perMeter = config.runType === 'Attack Disso'
+    ? 0
+    : damagePerMeter({
+      workshopValue: stat('Damage / Meter').workshopValue,
+      enhancementLevel: stat('Damage / Meter').enhancementLevel,
+      labLevel: lab.damagePerMeter,
+      substat: cannonSubstat('Damage / Meter'),
+      relicPct: stat('Damage / Meter').relicPct,
+      vaultPct: stat('Damage / Meter').vaultPct,
+      hasRangeMastery: card('Range Mastery').active,
+      masteryLevel: input.rangeMasteryLevel,
+    })
+
+  /** `DW5`. */
+  const rangeDamage = config.runType === 'Attack Disso'
+    ? 1
+    : rangeDamageMultiplier(range, perMeter, config.damageAtRangePct)
+  return { bps, multishot, bounce, bounceNoAstral, rapidFire, range, perMeter, rangeDamage }
+}
+
 function statOf(
   config: EffectiveDamageConfig,
   name: keyof EffectiveDamageConfig['stats'],
@@ -799,12 +932,6 @@ function cardOf(
   return config.cards[name]
 }
 
-function perkOf(
-  config: EffectiveDamageConfig,
-  name: keyof EffectiveDamageConfig['perks'],
-): boolean {
-  return config.perks[name]
-}
 
 function weaponOf(
   config: EffectiveDamageConfig,

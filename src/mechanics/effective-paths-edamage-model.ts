@@ -122,28 +122,28 @@ export function composeEffectiveDamage(input: EffectiveDamageComposition): numbe
 }
 
 /**
- * What the Run Type switches off, from every `$AX$19` comparison in the grid.
+ * What the Run Type switches off **inside the grid's own columns**.
  *
- * Scanned rather than inferred: the sheet gates on it in four distinct ways,
- * and two of them are not where you would look. `perksApply` runs through
- * `AX20` — the Simulated Tier, which is `"Tourney"` when the run is and the
- * farming tier otherwise — and only then into `AY61`. And a UW Dissonance run
- * disables **both** Spotlight and Chrono Field, not just Spotlight.
+ * Only two run-type rules live in the columns, and both are written there as a
+ * literal `$AX$19` comparison. Everything else people associate with a run
+ * type — no perks in a tournament, no Spotlight or Chrono Field on a UW
+ * Dissonance run — the sheet implements one layer earlier, by driving `AY61`,
+ * `BH33` and `BH36` from the simulated tier. The columns then read those flags
+ * and know nothing about the run.
+ *
+ * Keeping that split is what makes the model match the sheet column for
+ * column. A model that re-applied the tournament rule here would suppress
+ * perks the sheet had already decided to apply, and be wrong by exactly the
+ * perk multipliers — which is how this was found.
  */
 export function damageRunEffects(runType: DamageRunType): {
   /** Attack Dissonance stops the tower firing: `DI`, the crit and bullet columns. */
   towerFires: boolean
-  /** No perks in a tournament — via `AX20` into `AY61`. */
-  perksApply: boolean
-  /** A UW Dissonance run turns off Spotlight (`BH33`) and Chrono Field (`BH36`). */
-  ultimateWeaponUtilityApplies: boolean
   /** A Utility Dissonance run computes its own cash for Perfect Freeze (`DG`). */
   usesDissonanceCash: boolean
 } {
   return {
     towerFires: runType !== 'Attack Disso',
-    perksApply: runType !== 'Tourney',
-    ultimateWeaponUtilityApplies: runType !== 'UW Disso',
     usesDissonanceCash: runType === 'Util Disso',
   }
 }
