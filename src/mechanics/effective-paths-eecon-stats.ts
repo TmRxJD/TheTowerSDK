@@ -442,7 +442,7 @@ export function maxValueNukeCooldown(input: {
 }
 
 /**
- * The seven `EPC_*` functions this module does not port yet, and why.
+ * The six functions this module does not port yet, and why.
  *
  * Recorded rather than left to be rediscovered: each needs something beyond
  * arithmetic, and guessing at any of them would produce a plausible number.
@@ -453,14 +453,10 @@ export const ECONOMY_FUNCTIONS_PORTED = [
   'EPC_BHCB', 'EPC_BHD', 'EPC_BHCD',
   'EPC_DWCB', 'EPC_SLCB', 'EPC_SLA', 'EPC_SLQ', 'EPC_MVN',
   'EPU_DWCD', 'EPU_DWQ',
+  'EPC_SYNC',
 ] as const
 
 export const UNPORTED_ECONOMY_FUNCTIONS = [
-  {
-    name: 'EPC_SYNC',
-    reason: 'simulates every second of each weapon’s cooldown cycle with array '
-      + 'formulas to find how often their windows overlap',
-  },
   {
     name: 'EPC_SYNC_OLD',
     reason: 'the previous version of the same, kept on the sheet and unused',
@@ -483,3 +479,109 @@ export const UNPORTED_ECONOMY_FUNCTIONS = [
       + 'player’s equipped modules',
   },
 ] as const
+
+// ---------------------------------------------------------------------------
+// Synchronisation
+// ---------------------------------------------------------------------------
+
+/** One coin weapon's cycle, as `EPC_SYNC` reads it. */
+export interface SyncWeaponCycle {
+  active: boolean
+  /** The multiplier while it is up. */
+  multiplier: number
+  /** How many seconds of the cycle it is up for. */
+  duration: number
+  /** The whole cycle, in seconds. */
+  cooldown: number
+}
+
+const INACTIVE_CYCLE: SyncWeaponCycle = {
+  active: false, multiplier: 1, duration: 0, cooldown: 1,
+}
+
+const gcd = (a: number, b: number): number => (b === 0 ? a : gcd(b, a % b))
+
+/**
+ * One weapon's cycle as a value per second: 1 while down, its multiplier while
+ * up. The uptime sits at the end of the cycle, which is where the sheet's
+ * `IF(r <= n - d, 1, m)` puts it.
+ */
+function cycleValues(cycle: SyncWeaponCycle): number[] {
+  const length = Math.max(1, Math.floor(cycle.cooldown))
+  const up = Math.floor(cycle.duration)
+  return Array.from({ length }, (_, index) =>
+    (index + 1 <= length - up ? 1 : cycle.multiplier))
+}
+
+/**
+ * Average the cycle by phase.
+ *
+ * `WRAPCOLS(values, width)` fills column by column, so row `r` collects every
+ * entry `width` apart — `r`, `r + width`, `r + 2 × width` — and `BYROW`
+ * averages it. What comes back is what this weapon is worth at each phase of
+ * the shortest cycle it shares with any other, which is the whole point: two
+ * weapons on cooldowns of 200 and 300 line up every 100 seconds, not every
+ * 600.
+ */
+function phaseAverages(values: number[], width: number): number[] {
+  const size = Math.max(1, width)
+  return Array.from({ length: size }, (_, phase) => {
+    let total = 0
+    let count = 0
+    for (let index = phase; index < values.length; index += size) {
+      total += values[index]
+      count++
+    }
+    return count === 0 ? 1 : total / count
+  })
+}
+
+/**
+ * `EPC_SYNC` — what the coin weapons are worth once their cycles interleave.
+ *
+ * Four weapons on different cooldowns are rarely all up at once, and the sheet
+ * does not approximate that: it lays out each one's cycle second by second,
+ * folds each to its per-phase average, then averages the product across the
+ * combined period. A weapon that is off contributes a flat 1.
+ *
+ * The width each cycle folds to is the largest common divisor it shares with
+ * any *other* active weapon — how often the two can line up at all.
+ */
+export function syncMultiplier(weapons: {
+  goldenTower?: SyncWeaponCycle
+  blackHole?: SyncWeaponCycle
+  deathWave?: SyncWeaponCycle
+  goldBot?: SyncWeaponCycle
+}): number {
+  const cycles = [
+    weapons.goldenTower ?? INACTIVE_CYCLE,
+    weapons.blackHole ?? INACTIVE_CYCLE,
+    weapons.deathWave ?? INACTIVE_CYCLE,
+    weapons.goldBot ?? INACTIVE_CYCLE,
+  ]
+
+  const lengths = cycles.map(cycle =>
+    (cycle.active ? Math.max(1, Math.floor(cycle.cooldown)) : 1))
+
+  const blocks = cycles.map((cycle, index) => {
+    if (!cycle.active) return [1]
+
+    const others = cycles
+      .map((other, position) => (other.active && position !== index ? lengths[position] : null))
+      .filter((length): length is number => length !== null)
+    const width = others.length
+      ? Math.max(...others.map(length => gcd(lengths[index], length)), 1)
+      : 1
+
+    return phaseAverages(cycleValues(cycle), width)
+  })
+
+  const lcm = (a: number, b: number): number => (a * b) / gcd(a, b)
+  const period = blocks.map(block => block.length).reduce(lcm, 1)
+
+  let total = 0
+  for (let step = 0; step < period; step++) {
+    total += blocks.reduce((product, block) => product * block[step % block.length], 1)
+  }
+  return total / period
+}
