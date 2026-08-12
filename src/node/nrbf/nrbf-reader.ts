@@ -130,14 +130,38 @@ class BinaryReader {
   }
 }
 
-export class BinaryObject {
-  private m = new Map<string, any>()
-  typeName = ''
-  get entries(): IterableIterator<[string, any]> { return this.m.entries() }
-  addMember(n: string, v: any): void { this.m.set(n, v) }
-}
-
 type DeferredReference = { id: number }
+
+/**
+ * Everything an NRBF stream can decode to.
+ *
+ * The format reconstructs arbitrary .NET object graphs, so a reader for it is
+ * genuinely dynamic — but "dynamic" here has a shape: a primitive, an object
+ * with named members, an array of those, or a reference to one not yet read.
+ * Naming that is worth more than `any`, because it makes a caller narrow
+ * before it can read a member off whatever came back.
+ */
+export type NrbfValue =
+  | BinaryObject
+  | NrbfValue[]
+  | string
+  | number
+  | boolean
+  | bigint
+  | Date
+  | DeferredReference
+  /** A run of nulls, which the format encodes as a count rather than repeats. */
+  | { nullCount: number }
+  | ClassSerializationRecord
+  | null
+  | undefined
+
+export class BinaryObject {
+  private m = new Map<string, NrbfValue>()
+  typeName = ''
+  get entries(): IterableIterator<[string, NrbfValue]> { return this.m.entries() }
+  addMember(n: string, v: NrbfValue): void { this.m.set(n, v) }
+}
 
 type ClassInfo = { objectId: number; name: string; memberCount: number; memberNames: string[] }
 const readClassInfo = (r: BinaryReader): ClassInfo => {
@@ -177,8 +201,8 @@ const readHeader = (r: BinaryReader): number => {
 
 const readTimeSpan = (r: BinaryReader) => Number(r.readInt64()) / 10000
 const readDateTime = (r: BinaryReader) => new Date(Number(((r.readInt64() & 0x3FFFFFFFFFFFFFFFn) - 621355968000000000n) / 10000n))
-const readPrimitive = (type: PrimitiveType, r: BinaryReader): any => {
-  const m: Partial<Record<PrimitiveType, () => any>> = {
+const readPrimitive = (type: PrimitiveType, r: BinaryReader): NrbfValue => {
+  const m: Partial<Record<PrimitiveType, () => NrbfValue>> = {
     [PrimitiveType.Boolean]: () => r.readBoolean(), [PrimitiveType.Byte]: () => r.readByte(), [PrimitiveType.Char]: () => r.readChar(),
     [PrimitiveType.Double]: () => r.readDouble(), [PrimitiveType.Int16]: () => r.readInt16(), [PrimitiveType.Int32]: () => r.readInt32(),
     [PrimitiveType.Int64]: () => r.readInt64(), [PrimitiveType.SByte]: () => r.readSByte(), [PrimitiveType.Single]: () => r.readSingle(),
@@ -212,24 +236,24 @@ interface DeferredItem {
   owner?: BinaryObject;
   member?: string;
   id: number;
-  deferredAction?: (value: any) => void;
+  deferredAction?: (value: NrbfValue) => void;
 }
 
 export class NRBFReader {
   private reader: BinaryReader
   private endOfStream = false
-  private objectTracker = new Map<number, any>()
+  private objectTracker = new Map<number, NrbfValue>()
   private deferredItems: DeferredItem[] = []
 
   private constructor(buffer: Uint8Array) {
     this.reader = new BinaryReader(buffer)
   }
 
-  public static readStream(buffer: Uint8Array): any {
+  public static readStream(buffer: Uint8Array): NrbfValue {
     return new NRBFReader(buffer).parse()
   }
 
-  private parse(): any {
+  private parse(): NrbfValue {
     if (this.reader.readByte() !== RecordType.SerializedStreamHeader) throw new Error('Invalid NRBF stream')
     const rootId = readHeader(this.reader)
     while (!this.endOfStream) this.read()
@@ -237,10 +261,10 @@ export class NRBFReader {
     return this.dereferenceTrackedObject(rootId)
   }
 
-  private read = (): any => this.readWithRecordType().value
+  private read = (): NrbfValue => this.readWithRecordType().value
 
-  private readWithRecordType(): { value: any; recordType: RecordType } {
-    let currentObject: any = null
+  private readWithRecordType(): { value: NrbfValue; recordType: RecordType } {
+    let currentObject: NrbfValue = null
     const recordType = this.reader.readByte() as RecordType
 
     switch (recordType) {
@@ -392,7 +416,7 @@ export class NRBFReader {
     throw new Error('Unsupported untyped member: ' + cn)
   }
 
-  private readPrimitiveArray(info: ArrayInfo, type: PrimitiveType): any[] {
+  private readPrimitiveArray(info: ArrayInfo, type: PrimitiveType): NrbfValue[] {
     return Array.from({ length: info.length }, () => readPrimitive(type, this.reader))
   }
 
@@ -401,17 +425,17 @@ export class NRBFReader {
     for (let i = 0; i < info.length; i++) {
       const v = this.read()
       if (typeof v === 'string') r[i] = v
-      else if (v && typeof v === 'object' && 'nullCount' in v) i += (v as any).nullCount - 1
+      else if (v && typeof v === 'object' && 'nullCount' in v) i += (v as { nullCount: number }).nullCount - 1
     }
     return r
   }
 
-  private readObjectArray(info: ArrayInfo): any[] {
-    const r: any[] = []
+  private readObjectArray(info: ArrayInfo): NrbfValue[] {
+    const r: NrbfValue[] = []
     for (let i = 0; i < info.length; i++) {
       const rr = this.readWithRecordType()
       const v = rr.recordType === RecordType.BinaryLibrary ? this.read() : rr.value
-      if (v && typeof v === 'object' && 'nullCount' in v) i += (v as any).nullCount - 1
+      if (v && typeof v === 'object' && 'nullCount' in v) i += (v as { nullCount: number }).nullCount - 1
       else if (v && typeof v === 'object' && 'id' in v) {
         const idx = i
         this.deferredItems.push({ id: (v as DeferredReference).id, deferredAction: res => { r[idx] = res } })
@@ -420,10 +444,10 @@ export class NRBFReader {
     return r
   }
 
-  private readBinaryArray(r: BinaryArrayRecord): any {
-    const createArray = (d: number[], l?: number[]): any => d.length === 1
-      ? (() => { const a: any[] = []; const lb = l ? l[0] : 0; for (let i = 0; i < d[0]; i++) a[lb + i] = undefined; return a })()
-      : (() => { const a: any[] = []; const lb = l ? l[0] : 0; for (let i = 0; i < d[0]; i++) a[lb + i] = createArray(d.slice(1), l?.slice(1)); return a })()
+  private readBinaryArray(r: BinaryArrayRecord): NrbfValue {
+    const createArray = (d: number[], l?: number[]): NrbfValue => d.length === 1
+      ? (() => { const a: NrbfValue[] = []; const lb = l ? l[0] : 0; for (let i = 0; i < d[0]; i++) a[lb + i] = undefined; return a })()
+      : (() => { const a: NrbfValue[] = []; const lb = l ? l[0] : 0; for (let i = 0; i < d[0]; i++) a[lb + i] = createArray(d.slice(1), l?.slice(1)); return a })()
     const res = createArray(r.lengths, r.lowerBounds)
     const firstIdx = (d: number[], l?: number[]): number[] => d.map((_, i) => l ? l[i] : 0)
     const nextIdx = (idx: number[], d: number[], l?: number[]): number[] | null => {
@@ -434,9 +458,15 @@ export class NRBFReader {
       }
       return null
     }
-    const setVal = (a: any, idx: number[], v: any): void => {
-      let c = a
-      for (let i = 0; i < idx.length - 1; i++) c = c[idx[i]]
+    /**
+     * Write into a jagged array by index path.
+     *
+     * The intermediate levels are arrays because `createArray` just built them
+     * that way, which is knowledge the type cannot carry on its own.
+     */
+    const setVal = (a: NrbfValue, idx: number[], v: NrbfValue): void => {
+      let c = a as NrbfValue[]
+      for (let i = 0; i < idx.length - 1; i++) c = c[idx[i]] as NrbfValue[]
       c[idx[idx.length - 1]] = v
     }
 
@@ -448,7 +478,7 @@ export class NRBFReader {
           if (cc > 0) { cc--; idx = nextIdx(idx!, r.lengths, r.lowerBounds); continue }
           const rr = this.readWithRecordType()
           const v = rr.recordType === RecordType.BinaryLibrary ? this.read() : rr.value
-          if (v && typeof v === 'object' && 'nullCount' in v) cc = (v as any).nullCount - 1
+          if (v && typeof v === 'object' && 'nullCount' in v) cc = (v as { nullCount: number }).nullCount - 1
           else if (v && typeof v === 'object' && 'id' in v) {
             const si = [...idx]
             this.deferredItems.push({ id: (v as DeferredReference).id, deferredAction: rv => setVal(res, si, rv) })
@@ -474,7 +504,7 @@ export class NRBFReader {
     }
   }
 
-  private dereferenceTrackedObject(id: number): any {
+  private dereferenceTrackedObject(id: number): NrbfValue {
     const ref = this.objectTracker.get(id)
     return (ref && typeof ref === 'object' && 'value' in ref) ? (ref as ClassSerializationRecord).value : ref
   }

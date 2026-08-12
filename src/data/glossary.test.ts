@@ -21,21 +21,23 @@ const catalog = { ...data, ...save } as Record<string, unknown>
 
 /** Every player-facing name the shipped catalogs contain. */
 function collectCatalogNames(): Set<string> {
+  type CatalogRow = Record<string, unknown>
+
   const names = new Set<string>()
   const push = (value: unknown) => {
     if (typeof value === 'string' && value.trim()) names.add(value.trim().toLowerCase())
   }
 
-  for (const weapon of (catalog.ULTIMATE_WEAPON_IMPORT_CATALOG as any[]) ?? []) {
+  for (const weapon of (catalog.ULTIMATE_WEAPON_IMPORT_CATALOG as CatalogRow[]) ?? []) {
     push(weapon.name)
     push(weapon.plusName)
   }
-  for (const bot of (catalog.BOT_IMPORT_CATALOG as any[]) ?? []) push(bot.name)
-  for (const module of (catalog.MODULE_TEMPLATES as any[]) ?? []) push(module.name)
-  for (const card of (catalog.CARD_IMPORT_CATALOG as any[]) ?? []) push(card.name)
-  for (const currency of (catalog.CURRENCY_DEFINITIONS as any[]) ?? []) push(currency.name)
-  for (const type of (catalog.TOWER_MODULE_TYPE_ENUM as any[]) ?? []) push(type.name)
-  const workshop = (catalog.getWorkshopStatDefinitions as (() => any[]) | undefined)?.() ?? []
+  for (const bot of (catalog.BOT_IMPORT_CATALOG as CatalogRow[]) ?? []) push(bot.name)
+  for (const module of (catalog.MODULE_TEMPLATES as CatalogRow[]) ?? []) push(module.name)
+  for (const card of (catalog.CARD_IMPORT_CATALOG as CatalogRow[]) ?? []) push(card.name)
+  for (const currency of (catalog.CURRENCY_DEFINITIONS as CatalogRow[]) ?? []) push(currency.name)
+  for (const type of (catalog.TOWER_MODULE_TYPE_ENUM as CatalogRow[]) ?? []) push(type.name)
+  const workshop = (catalog.getWorkshopStatDefinitions as (() => CatalogRow[]) | undefined)?.() ?? []
   for (const stat of workshop) push(stat.name ?? stat.label)
 
   return names
