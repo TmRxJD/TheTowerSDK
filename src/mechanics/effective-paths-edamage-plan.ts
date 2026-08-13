@@ -63,6 +63,7 @@ import type { LabCostModifiers } from './effective-paths-lab-costs'
 import {
   appendSkipExclusions,
   assertPathVariant,
+  type PathExclusion,
   type PathSkip,
   planPath,
 } from './effective-paths-planner'
@@ -274,7 +275,7 @@ export interface EffectiveDamagePlan {
   /** Effective damage after the last step. */
   finalEffectiveDamage: number
   /** Candidates left out, and why. A path that silently drops half the game is worse than one that says so. */
-  excluded: Array<{ sheetName: string, reason: string }>
+  excluded: PathExclusion[]
   /**
    * Why the inputs could not be planned against, when they could not.
    *

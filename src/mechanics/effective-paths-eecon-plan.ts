@@ -47,6 +47,7 @@ import type { LabCostModifiers } from './effective-paths-lab-costs'
 import {
   appendSkipExclusions,
   assertPathVariant,
+  type PathExclusion,
   type PathSkip,
   planPath,
 } from './effective-paths-planner'
@@ -307,7 +308,7 @@ export interface EffectiveEconomyPlan {
   /** Coins per kill before any of it. */
   startingEffectiveEconomy: number
   finalEffectiveEconomy: number
-  excluded: Array<{ sheetName: string, reason: string }>
+  excluded: PathExclusion[]
 }
 
 /** The highest level a candidate can reach, or `null` when nothing prices one. */

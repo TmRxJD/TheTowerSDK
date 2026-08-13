@@ -46,6 +46,7 @@ import {
 import {
   appendSkipExclusions,
   assertPathVariant,
+  type PathExclusion,
   type PathSkip,
   type PathStep,
   type PathUpgrade,
@@ -296,7 +297,7 @@ export interface EffectiveHealthPlan {
   /** eHP after the last step. */
   finalEffectiveHealth: number
   /** Upgrades left out, and why — a path that silently ignores half the game is worse than one that says so. */
-  excluded: Array<{ sheetName: string, reason: string }>
+  excluded: PathExclusion[]
 }
 
 /** The currency each variant spends. */

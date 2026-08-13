@@ -67,7 +67,7 @@ import type { WorkshopEnhancementCategory } from './effective-paths-enhancement-
 import type { EffectiveEconomyLevels } from './effective-paths-eecon-levels'
 import { labDurationDaysToReachLevel, labMaxCatalogLevel } from './effective-paths-lab-costs'
 import type { LabCostModifiers } from './effective-paths-lab-costs'
-import type { PathStep } from './effective-paths-planner'
+import type { PathExclusion, PathStep } from './effective-paths-planner'
 
 /**
  * `WSPATTACK/DEFENSE/UTILITY_TOTAL_COINS_INVESTED` — coins sunk into a
@@ -329,7 +329,7 @@ export interface EffectiveEconomyDiscountPlan {
   steps: EffectiveEconomyDiscountStep[]
   /** Coins the whole path saves. */
   totalCoinsSaved: number
-  excluded: Array<{ sheetName: string, reason: string }>
+  excluded: PathExclusion[]
 }
 
 /**

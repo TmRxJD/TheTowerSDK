@@ -137,11 +137,20 @@ describeServer('mcp server', () => {
       for (const entry of plan.excluded) expect(entry.reason.length).toBeGreaterThan(10)
     })
 
-    it('plans the damage family too', async () => {
-      const plan = await call('plan_effective_path', {
-        family: 'damage', variant: 'lab-time', steps: 2,
-      })
+    it.each([
+      { family: 'damage', variant: 'lab-time' },
+      { family: 'economy', variant: 'stone' },
+      { family: 'health', variant: 'lab-time' },
+      { family: 'regen', variant: 'lab-time' },
+    ])('plans the $family family', async ({ family, variant }) => {
+      const plan = await call('plan_effective_path', { family, variant, steps: 2 })
+      expect(plan.error, plan.error).toBeUndefined()
       expect(plan.steps.length).toBeGreaterThan(0)
+    })
+
+    it('names the families it has when given one it does not', async () => {
+      const bad = await call('plan_effective_path', { family: 'nope', variant: 'x' })
+      expect(bad.families).toEqual(['damage', 'economy', 'health', 'regen'])
     })
 
     it('passes the variant guard’s own message through', async () => {

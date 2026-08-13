@@ -26,6 +26,7 @@ import { labMaxCatalogLevel } from './effective-paths-lab-costs'
 import {
   appendSkipExclusions,
   assertPathVariant,
+  type PathExclusion,
   type PathSkip,
   type PathStep,
   type PathUpgrade,
@@ -176,7 +177,7 @@ export interface EffectiveRegenPlan {
   steps: PathStep[]
   startingEffectiveRegen: number
   finalEffectiveRegen: number
-  excluded: Array<{ sheetName: string, reason: string }>
+  excluded: PathExclusion[]
 }
 
 /** Plan a regen path, the same greedy loop the eHP paths use. */

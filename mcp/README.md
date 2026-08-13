@@ -62,5 +62,6 @@ it is good at:
   publish. `lab` is a damage *band* and `lab-time` is a *variant*, one character apart, and passing
   the band used to plan nothing at all in silence.
 
-eHP and eRegen are not offered here. Both need a fully populated config that the package publishes no
-zero for, and a hand-written one would drift from the model without anything saying so.
+All four families are here — `damage`, `economy`, `health`, `regen` — since `zeroEffectiveHealthConfig`
+gave the last two a complete config to start from. An unknown family is answered with the list of
+real ones rather than a failure.

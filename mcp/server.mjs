@@ -199,13 +199,14 @@ const TOOLS = {
       properties: {
         family: {
           type: 'string',
-          enum: ['damage', 'economy'],
-          description: 'Which model to plan. eHP and eRegen need a full config, so they are not here',
+          enum: ['damage', 'economy', 'health', 'regen'],
+          description: 'Which model to plan',
         },
         variant: {
           type: 'string',
           description:
             'The path. damage: lab-time, lab-coins, stone, coin, keys. economy: time, coin, stone. '
+            + 'health: lab-time, lab-coins, stone, coin. regen: lab-time, lab-coins. '
             + 'A variant a planner does not publish is refused by name rather than planning nothing',
         },
         steps: { type: 'number', description: 'How many steps to plan (default 10)' },
@@ -220,32 +221,62 @@ const TOOLS = {
     },
     run: ({ family, variant, steps, levels }) => {
       const m = sdk.mechanics
-      const isDamage = family === 'damage'
+      const count = steps ?? 10
 
-      const zeroLevels = isDamage ? m.ZERO_EFFECTIVE_DAMAGE_LEVELS : m.ZERO_EFFECTIVE_ECONOMY_LEVELS
-      const merged = { ...zeroLevels }
-      for (const [band, values] of Object.entries(levels ?? {})) {
-        if (merged[band] && typeof merged[band] === 'object') {
-          merged[band] = { ...merged[band], ...values }
+      /** Merge a caller's partial levels over the model's zero. */
+      const merge = zero => {
+        const merged = { ...zero }
+        for (const [key, value] of Object.entries(levels ?? {})) {
+          merged[key] = merged[key] && typeof merged[key] === 'object'
+            ? { ...merged[key], ...value }
+            : value
         }
+        return merged
+      }
+
+      const plans = {
+        damage: () => m.planEffectiveDamagePath({
+          config: m.zeroEffectiveDamageConfig(),
+          levels: merge(m.ZERO_EFFECTIVE_DAMAGE_LEVELS),
+          variant,
+          steps: count,
+        }),
+        economy: () => m.planEffectiveEconomyPath({
+          config: m.zeroEffectiveEconomyConfig(),
+          levels: merge(m.ZERO_EFFECTIVE_ECONOMY_LEVELS),
+          variant,
+          steps: count,
+          workshopEnhancementsUnlocked: true,
+        }),
+        health: () => m.planEffectiveHealthPath({
+          config: m.zeroEffectiveHealthConfig(),
+          levels: merge(m.ZERO_EFFECTIVE_HEALTH_LEVELS),
+          variant,
+          steps: count,
+        }),
+        regen: () => {
+          const regen = m.zeroEffectiveRegenConfigSource()
+          return m.planEffectiveRegenPath({
+            config: {
+              healthRegen: regen.healthRegen,
+              card: regen.card,
+              hasSecondWindMastery: regen.hasSecondWindMastery,
+            },
+            eHealth: m.zeroEffectiveHealthConfig(),
+            levels: merge({ ...m.ZERO_EFFECTIVE_HEALTH_LEVELS, ...m.ZERO_EFFECTIVE_REGEN_LEVELS }),
+            variant,
+            steps: count,
+          })
+        },
+      }
+
+      if (!plans[family]) {
+        return { error: `no family "${family}"`, families: Object.keys(plans) }
       }
 
       let plan
       try {
-        plan = isDamage
-          ? m.planEffectiveDamagePath({
-            config: m.zeroEffectiveDamageConfig(),
-            levels: merged,
-            variant,
-            steps: steps ?? 10,
-          })
-          : m.planEffectiveEconomyPath({
-            config: m.zeroEffectiveEconomyConfig(),
-            levels: merged,
-            variant,
-            steps: steps ?? 10,
-            workshopEnhancementsUnlocked: true,
-          })
+        plan = plans[family]()
       }
       catch (error) {
         // The variant guards throw by name and list what they do publish, so
