@@ -44,11 +44,22 @@ import {
   labMaxCatalogLevel,
 } from './effective-paths-lab-costs'
 import type { LabCostModifiers } from './effective-paths-lab-costs'
-import { planPath } from './effective-paths-planner'
+import { assertPathVariant, planPath } from './effective-paths-planner'
 import type { PathStep, PathUpgrade } from './effective-paths-planner'
 
 /** The paths the econ tabs publish. The time tab is priced two ways. */
 export type EffectiveEconomyPlanVariant = 'time' | 'coin' | 'stone' | 'discount'
+
+/**
+ * Every variant this planner recognises, including the one it refuses.
+ *
+ * `discount` is in the list deliberately: it is a real path, planned by
+ * {@link planEffectiveEconomyDiscountPath}, and it earns the message that says
+ * so rather than being lumped in with a typo.
+ */
+export const ECONOMY_PLAN_VARIANTS: readonly EffectiveEconomyPlanVariant[] = [
+  'time', 'coin', 'stone', 'discount',
+]
 
 /**
  * Why the discount path is planned elsewhere.
@@ -327,6 +338,9 @@ export function planEffectiveEconomyPath(
   options: EffectiveEconomyPlanOptions,
 ): EffectiveEconomyPlan {
   const { config, levels, variant } = options
+  // Order matters: a real path routed to the wrong planner deserves the message
+  // that names the right one, not "unknown variant".
+  assertPathVariant(variant, ECONOMY_PLAN_VARIANTS, 'eEcon')
   if (variant === 'discount') throw new Error(DISCOUNT_PATH_UNSUPPORTED)
 
   const steps = options.steps ?? 145

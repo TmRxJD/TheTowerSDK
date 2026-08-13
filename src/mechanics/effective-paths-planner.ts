@@ -27,6 +27,33 @@
  * `effective-paths-credits.ts`.
  */
 
+/**
+ * Refuse a path variant no upgrade claims.
+ *
+ * Every planner here decides eligibility by asking whether an upgrade's variant
+ * list contains the requested one. A variant nothing lists is therefore not an
+ * error anywhere: every candidate is skipped, and the result is a path with no
+ * steps, no exclusions and no issues — which is exactly what a player who has
+ * bought everything looks like.
+ *
+ * The near miss is a band name. `lab` is a band and `lab-time` is a variant,
+ * one character apart, and the compiler only objects where the argument is
+ * typed — not in a fixture, and not for a value read back from stored settings
+ * as a string.
+ *
+ * @param family how to name this planner in the message
+ */
+export function assertPathVariant(
+  variant: string,
+  allowed: readonly string[],
+  family: string,
+): void {
+  if (allowed.includes(variant)) return
+  throw new Error(
+    `unknown ${family} path variant "${variant}" — expected one of ${allowed.join(', ')}`,
+  )
+}
+
 /** One upgrade the planner may choose to buy. */
 export interface PathUpgrade {
   /** Stable key, used to look costs up and to identify steps. */

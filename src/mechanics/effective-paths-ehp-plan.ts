@@ -43,10 +43,15 @@ import {
   type EffectiveHealthConfig,
   type EffectiveHealthLevels,
 } from './effective-paths-ehp-model'
-import { type PathStep, type PathUpgrade, planPath } from './effective-paths-planner'
+import { assertPathVariant, type PathStep, type PathUpgrade, planPath } from './effective-paths-planner'
 
 /** Which currency the path spends, and therefore what it may buy. */
 export type EffectiveHealthPathVariant = 'lab-time' | 'lab-coins' | 'stone' | 'coin'
+
+/** Every variant this planner answers to. The lab band has two names. */
+export const HEALTH_PATH_VARIANTS: readonly EffectiveHealthPathVariant[] = [
+  'lab-time', 'lab-coins', 'stone', 'coin',
+]
 
 /**
  * How an upgrade is paid for.
@@ -318,6 +323,11 @@ function isEligible(
 export function planEffectiveHealthPath(options: EffectiveHealthPlanOptions): EffectiveHealthPlan {
   const { config, levels, variant } = options
   const steps = options.steps ?? 145
+
+  // A variant no upgrade claims plans nothing and says nothing — see the same
+  // guard in `planEffectiveDamagePath`, where a band name reaching a variant
+  // argument produced an empty path indistinguishable from a finished account.
+  assertPathVariant(variant, HEALTH_PATH_VARIANTS, 'eHP')
 
   const upgrades: PathUpgrade[] = []
   const excluded: EffectiveHealthPlan['excluded'] = []

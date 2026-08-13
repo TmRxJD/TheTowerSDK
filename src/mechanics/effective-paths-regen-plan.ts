@@ -23,7 +23,7 @@ import type { EffectiveHealthConfig, EffectiveHealthLevels } from './effective-p
 import { labCoinCostToReachLevel, labDurationDaysToReachLevel } from './effective-paths-lab-costs'
 import type { LabCostModifiers } from './effective-paths-lab-costs'
 import { labMaxCatalogLevel } from './effective-paths-lab-costs'
-import { type PathStep, type PathUpgrade, planPath } from './effective-paths-planner'
+import { assertPathVariant, type PathStep, type PathUpgrade, planPath } from './effective-paths-planner'
 import { CARD_MASTERY_MAX_LEVEL } from './effective-paths-coin-costs'
 
 /** The levels the regen path reads, over and above the eHP ones it shares. */
@@ -150,6 +150,9 @@ export const EFFECTIVE_REGEN_UPGRADES: readonly EffectiveRegenUpgradeDefinition[
 /** The regen path is a lab path, priced in research time or in coins. */
 export type EffectiveRegenPathVariant = 'lab-time' | 'lab-coins'
 
+/** Every variant this planner answers to. */
+export const REGEN_PATH_VARIANTS: readonly EffectiveRegenPathVariant[] = ['lab-time', 'lab-coins']
+
 export interface EffectiveRegenPlanOptions {
   config: EffectiveRegenConfig
   eHealth: EffectiveHealthConfig
@@ -173,6 +176,7 @@ export interface EffectiveRegenPlan {
 export function planEffectiveRegenPath(options: EffectiveRegenPlanOptions): EffectiveRegenPlan {
   const { config, eHealth, levels, variant } = options
   const steps = options.steps ?? 145
+  assertPathVariant(variant, REGEN_PATH_VARIANTS, 'eRegen')
   const skipped = new Set(options.excludeKeys ?? [])
 
   const upgrades: PathUpgrade[] = []
