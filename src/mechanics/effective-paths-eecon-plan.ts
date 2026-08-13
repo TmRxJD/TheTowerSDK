@@ -272,7 +272,31 @@ function resolveMaxLevel(upgrade: EffectiveEconomyUpgrade): number | null {
   return max > 0 ? max : null
 }
 
-/** What it costs to take a candidate to `nextLevel`, in the path's currency. */
+/**
+ * What it costs to take a candidate to `nextLevel`, in the path's currency.
+ *
+ * ## Known gap: the time path mixes two currencies
+ *
+ * Four of the 23 time-path candidates are not labs — `Coin Bonus` and `Free
+ * Upgrades` are workshop enhancements, and the two Generator entries buy module
+ * levels — and all four return **coin** costs, from the branches above, whatever
+ * the variant. On the `time` variant those coin figures are then ranked against
+ * research days and rendered under a Days column, so a module level shows a
+ * cost like `2.8e19 d` and its return on investment is a gain-per-coin sitting
+ * in a gain-per-day ordering.
+ *
+ * The sheet converts instead of mixing. `eEcon!L4` is
+ * `Time to farm Cost (100K/hr)` and `O3` selects the mode — `DO` for days only,
+ * `D+FT` for days plus farm time — with `O5` a `x1` speed-up multiplier beside
+ * it. Under `DO`, `eEcon!EO2`, `EP2`, `EQ2` and `ER2` all carry
+ * `NOT(O$3<>"DO")` in their hide rows, which drops those four candidates
+ * entirely; under `D+FT` they are priced by how long farming their coins takes.
+ *
+ * Neither the mode nor the farm rate is modelled here, so the port behaves like
+ * `D+FT` with the conversion missing. Closing it needs the rate as an input and
+ * a mode control, and it changes the order of the time path — so it is recorded
+ * rather than guessed at.
+ */
 function costOf(
   upgrade: EffectiveEconomyUpgrade,
   nextLevel: number,
