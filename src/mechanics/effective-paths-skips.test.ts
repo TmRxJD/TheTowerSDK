@@ -198,3 +198,56 @@ describe('appendSkipExclusions', () => {
     expect(excluded).toHaveLength(1)
   })
 })
+
+describe('a model that cannot value a candidate', () => {
+  /*
+   * The third reason in the rule above, and the only one with no test: the
+   * two below were the reasons a real account hit, so `unevaluable` was
+   * written and then never exercised.
+   */
+  const upgrades = [
+    { id: 'a', name: 'A', level: 0, maxLevel: 10 },
+    { id: 'b', name: 'B', level: 0, maxLevel: 10 },
+  ]
+
+  it('explains a candidate the model returns NaN for', () => {
+    const skips: PathSkip[] = []
+    const path = planPath({
+      upgrades,
+      steps: 3,
+      cost: () => 1,
+      evaluate: levels => ((levels.get('a') ?? 0) > 0 ? Number.NaN : levels.get('b') ?? 0),
+      onSkip: skip => { skips.push(skip) },
+    })
+
+    expect(skips.some(skip => skip.id === 'a' && skip.reason === 'unevaluable')).toBe(true)
+    // The other candidate is still planned — one bad value is not a dead end.
+    expect(path.map(step => step.id)).toEqual(['b', 'b', 'b'])
+  })
+
+  it('refuses to rank against a baseline it cannot compute', () => {
+    /*
+     * The case the candidate check above cannot see. With a non-finite
+     * baseline every gain is NaN, and `NaN > NaN` is false — so the incumbent
+     * is never displaced and the first candidate examined wins every step.
+     * That produced a path in declaration order, presented as a
+     * recommendation, with nothing marking it as meaningless.
+     */
+    const skips: PathSkip[] = []
+    const path = planPath({
+      upgrades,
+      steps: 3,
+      cost: () => 1,
+      // Non-finite at the starting levels and finite everywhere else, which
+      // is the only shape that reaches this: a model that is non-finite
+      // *everywhere* is already caught by the candidate check above, so a
+      // test using one proves nothing about this guard.
+      evaluate: levels => ((levels.get('a') ?? 0) + (levels.get('b') ?? 0) > 0 ? 5 : Number.NaN),
+      onSkip: skip => { skips.push(skip) },
+    })
+
+    expect(path, 'a path was planned from a baseline of NaN').toEqual([])
+    expect(skips.every(skip => skip.reason === 'unevaluable')).toBe(true)
+    expect(new Set(skips.map(skip => skip.id))).toEqual(new Set(['a', 'b']))
+  })
+})

@@ -290,6 +290,18 @@ export function planPath(options: PathPlanOptions): PathStep[] {
 
       const gain = value - currentValue
       const roi = gain / price
+      /*
+       * The candidate's own value is checked above; this catches the
+       * *baseline* being non-finite, which the check above cannot see. It
+       * matters because of how the comparison below fails: `NaN > NaN` is
+       * false, so a NaN ROI never displaces the incumbent and the first
+       * candidate examined wins every step — a path in upgrade-declaration
+       * order, presented as a recommendation, with nothing saying so.
+       */
+      if (!Number.isFinite(roi)) {
+        skip('unevaluable', roi)
+        continue
+      }
       // Strictly greater, so the earliest upgrade wins a tie — the sheet takes
       // the leftmost column of the joint maximum.
       if (best === null || roi > best.roi) {
