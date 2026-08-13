@@ -86,6 +86,21 @@ const ENHANCEMENT_STATS: Readonly<Record<string, string>> = {
 /** The two module levels it buys. */
 const MODULE_CANDIDATES = new Set(['Primary Module - Generator', 'Assist Module - Generator'])
 
+/**
+ * The four time-path candidates that cost coins rather than research time.
+ *
+ * `eEcon!EO2`, `EP2`, `EQ2` and `ER2` — the hide rows for these four and no
+ * others — each carry `NOT(O$3<>"DO")`, so all four leave the path when the
+ * tab is counting days only. They are the only candidates in the list with no
+ * research duration at all, which is why they are the only ones that clause
+ * names: on a days-only ranking a purchase that takes no research time is free,
+ * and free wins every step forever.
+ */
+const COIN_PRICED_TIME_CANDIDATES: ReadonlySet<string> = new Set([
+  ...Object.keys(ENHANCEMENT_STATS),
+  ...MODULE_CANDIDATES,
+])
+
 /** Which ultimate weapon stat each stone candidate buys. */
 const STONE_WEAPON_STATS: Readonly<Record<string, { weapon: string, stat: string }>> = {
   'GT Bonus': { weapon: 'Golden Tower', stat: 'Multiplier' },
@@ -238,6 +253,21 @@ export interface EffectiveEconomyPlanOptions {
    */
   keepCooldownsSynced?: boolean
   /**
+   * `eEcon!O3` — count research days only, rather than days plus farm time.
+   *
+   * The tab's cost mode, spelled `DO` against `D+FT` on the sheet, and read by
+   * the hide rows of the four candidates that cost coins and no research time:
+   * `NOT(O$3<>"DO")` drops all four when it is `DO`.
+   *
+   * **Only the `DO` half is modelled.** Under `D+FT` the sheet prices those
+   * four by how long farming their coins takes, at the `Coin / Hour` rate its
+   * `L4` header names — a conversion this planner does not do, so it ranks
+   * their raw coin cost against research days instead. That is why the mode is
+   * a plain boolean rather than the sheet's two-value control: offering `D+FT`
+   * as a choice would imply a conversion that is not here.
+   */
+  daysOnly?: boolean
+  /**
    * Whether the Workshop Enhancements lab is bought — `'Master Sheet'!$F$5`.
    * The coin path buys two enhancements and neither exists without it.
    */
@@ -387,6 +417,14 @@ export function planEffectiveEconomyPath(
         sheetName: upgrade.sheetName,
         reason: 'buys a cooldown level on every weapon at the longest cooldown, '
           + 'which is more than one level a step',
+      })
+      continue
+    }
+
+    if (options.daysOnly && COIN_PRICED_TIME_CANDIDATES.has(upgrade.sheetName)) {
+      excluded.push({
+        sheetName: upgrade.sheetName,
+        reason: 'costs coins rather than research time, and the path is counting days only',
       })
       continue
     }
