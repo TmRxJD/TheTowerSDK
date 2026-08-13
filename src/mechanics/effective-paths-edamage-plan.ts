@@ -470,12 +470,35 @@ function costOf(
     : labCoinCostToReachLevel(labName(upgrade.sheetName), nextLevel, options.labModifiers)
 }
 
-/** A candidate's current level. */
+/**
+ * A candidate's current level.
+ *
+ * ## Why the coin band adds the lab band
+ *
+ * Fourteen keys exist in both — the seven masteries, the assist capacities and
+ * the two dissonant echoes — and on the sheet they are **one level**, offered
+ * at two prices. `eDamage!GK5` prices the next mastery level as `CD5 + 1`, and
+ * `CD` is the single level block; the fourth block that looks like a second one
+ * carries headers and no formulas.
+ *
+ * The two are split here because the compute reads them as
+ * `lab.X + levels.coin.X` in thirteen places: the lab band holds what the
+ * player has, and the coin band accumulates what a coin path buys on top. That
+ * makes `levels.coin[key]` an increment, not a level — so reading it alone
+ * offered a maxed mastery from level one, which is exactly what the Coins tab
+ * did.
+ *
+ * Adding them gives the planner the real level while leaving the compute's sums
+ * correct: a step raises the increment, and both sides agree on the total.
+ */
 function levelOf(levels: EffectiveDamageLevels, upgrade: EffectiveDamageUpgrade): number {
   switch (upgrade.band) {
     case 'lab': return levels.lab[upgrade.key as keyof EffectiveDamageLabLevels]
     case 'stone': return levels.stone[upgrade.key as keyof EffectiveDamageStoneLevels]
-    case 'coin': return levels.coin[upgrade.key as keyof EffectiveDamageCoinLevels]
+    case 'coin': {
+      const shared = levels.lab[upgrade.key as keyof EffectiveDamageLabLevels] ?? 0
+      return levels.coin[upgrade.key as keyof EffectiveDamageCoinLevels] + shared
+    }
     case 'keys': return levels.keys[upgrade.key as keyof EffectiveDamageKeysLevels]
   }
 }
