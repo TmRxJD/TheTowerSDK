@@ -91,18 +91,51 @@ describe('RELIC_TEMPLATES against the import catalog', () => {
     expect(invented).toEqual([])
   })
 
-  it('agrees with the game on every value', () => {
+  it('agrees with the game on every value, in the game’s own unit', () => {
+    /*
+     * The unit comes from the description, not from an assumption here.
+     *
+     * This test used to build its expectation as `benefit * 100 + '%'` — the
+     * same formula the generator used — so it agreed with the generator rather
+     * than with the game, and passed while seven Bot Range relics said "100%"
+     * for what the game calls "1m" and a Wall Rebuild relic said "200%" for
+     * "2s". A test that reproduces the implementation cannot disagree with it.
+     *
+     * The descriptions state the unit outright:
+     *
+     *   Increase super critical mult by 5%    benefit 0.05  → 5%
+     *   Increase bot range by 2m              benefit 2     → 2m
+     *   Decrease wall rebuild time by 2s      benefit 2     → 2s
+     */
     const wrong: string[] = []
+    let checkedFlat = 0
 
     for (const row of rows) {
       const template = byName.get(row.label!)
       if (!template) continue
 
-      const expected = `${Math.round((row.benefit ?? 0) * 1000) / 10}%`
-      if (template.value !== expected) wrong.push(`${row.label} value ${template.value} != ${expected}`)
+      const benefit = row.benefit ?? 0
+      const stated = String(row.description ?? '').match(/by\s+[\d.]+\s*(%|m\b|s\b|x\b)/i)
+      const unit = stated?.[1]?.toLowerCase()
+
+      let expected: string
+      if (unit && unit !== '%') {
+        expected = `${Math.round(benefit * 100) / 100}${unit}`
+        checkedFlat += 1
+      }
+      else {
+        expected = `${Math.round(benefit * 1000) / 10}%`
+      }
+
+      if (template.value !== expected) {
+        wrong.push(`${row.label} value ${template.value} != ${expected} — "${row.description}"`)
+      }
     }
 
     expect(wrong).toEqual([])
+    // The guard on the guard: if no description stated a non-percent unit, this
+    // would have collapsed back into the percentage-only test it replaced.
+    expect(checkedFlat, 'no flat-unit relic was checked').toBeGreaterThan(0)
   })
 
   it('gives one bonus type per benefitType', () => {
