@@ -33,9 +33,19 @@ export const ULTIMATE_WEAPON_ABBREVIATIONS: Readonly<Record<string, string>> = {
  * Spotlight's damage stat is `Multiplier` on the chart, and Chrono Field's
  * slow is `Speed`. Everything else matches.
  */
+/**
+ * Names the sheet uses for a stat the chart stores under another.
+ *
+ * `Golden Tower/Bonus` was missing, and nothing said so: `GT Bonus` resolved to
+ * a stat called `Bonus`, the chart has only `Multiplier`, and every lookup for
+ * it returned `null` — a cost of nothing and a value of zero on the economy
+ * path's single largest coin multiplier. It surfaced only when the input range
+ * catalog asked for a maximum and no data answered.
+ */
 const STAT_ALIASES: Readonly<Record<string, string>> = {
   'Spotlight/Damage': 'Multiplier',
   'Chrono Field/Slow': 'Speed',
+  'Golden Tower/Bonus': 'Multiplier',
 }
 
 /**

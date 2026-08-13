@@ -4,6 +4,7 @@ import { DEFAULT_HARMONY_VAULT_NODES, DEFAULT_POWER_VAULT_NODES } from '../data/
 import { resolveUltimateWeaponStat, ultimateWeaponMaxLevel } from './effective-paths-edamage-costs'
 import { labMaxCatalogLevel } from './effective-paths-lab-costs'
 import { EFFECTIVE_DAMAGE_UPGRADES } from './effective-paths-edamage-plan'
+import { EFFECTIVE_ECONOMY_UPGRADES } from './effective-paths-eecon-plan'
 import { EFFECTIVE_HEALTH_UPGRADES } from './effective-paths-ehp-plan'
 
 /**
@@ -163,7 +164,16 @@ function ultimateWeaponRanges(): InputRange[] {
   const seen = new Set<string>()
   const ranges: InputRange[] = []
 
-  for (const upgrade of EFFECTIVE_DAMAGE_UPGRADES) {
+  /*
+   * Both paths, because they price different weapons.
+   *
+   * Reading only the damage upgrades covered 24 stats and left 11 with no
+   * range — every Golden Tower, Chrono Field and Black Hole stat, which are
+   * the economy path's weapons and never appear on the damage grid. The test
+   * account's midpoint pass then skipped exactly those, so they stayed
+   * wherever the account had them while everything else moved.
+   */
+  for (const upgrade of [...EFFECTIVE_DAMAGE_UPGRADES, ...EFFECTIVE_ECONOMY_UPGRADES]) {
     const stat = resolveUltimateWeaponStat(upgrade.sheetName)
     if (!stat) continue
 

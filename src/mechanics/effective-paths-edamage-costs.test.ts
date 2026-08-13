@@ -6,6 +6,7 @@ import {
   resolveUltimateWeaponStat,
   ultimateWeaponMaxLevel,
   ultimateWeaponStats,
+  ultimateWeaponStatValue,
   ultimateWeaponStoneCost,
   vaultNodeKeysCost,
   vaultNodeMaxLevel,
@@ -125,5 +126,34 @@ describe('the keys path is the vault tree', () => {
     expect(vaultNodeMaxLevel('nosuchnode')).toBeNull()
     expect(vaultNodeKeysCost('nosuchnode', 1)).toBeNull()
     expect(keysCandidateCost('Nonsense', 1)).toBeNull()
+  })
+})
+
+describe('the stat aliases', () => {
+  /*
+   * `GT Bonus` is the economy path's largest coin multiplier and it resolved to
+   * a stat called `Bonus`, which the chart does not have — it stores it as
+   * `Multiplier`. Every lookup returned null: no maximum, no value, no cost, so
+   * the stone band could not price it and the model read zero.
+   *
+   * Nothing failed. It surfaced only when the input range catalog asked for a
+   * maximum and no data answered, which is the whole argument for that catalog.
+   */
+  it('resolves every aliased stat to something the chart prices', () => {
+    for (const sheetName of ['GT Bonus', 'SL Damage', 'CF Slow']) {
+      const stat = resolveUltimateWeaponStat(sheetName)
+      expect(stat, `${sheetName} does not resolve`).not.toBeNull()
+      expect(
+        ultimateWeaponMaxLevel(stat!.weapon, stat!.stat),
+        `${sheetName} -> ${stat!.weapon}/${stat!.stat} has no chart`,
+      ).toBeGreaterThan(0)
+    }
+  })
+
+  it('prices Golden Tower Bonus rather than returning null', () => {
+    const stat = resolveUltimateWeaponStat('GT Bonus')!
+    expect(stat.stat).toBe('Multiplier')
+    expect(ultimateWeaponStatValue(stat.weapon, stat.stat, 10)).toBe(13)
+    expect(ultimateWeaponStoneCost(stat.weapon, stat.stat, 10)).toBe(116)
   })
 })
