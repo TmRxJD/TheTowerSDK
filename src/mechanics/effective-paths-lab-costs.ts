@@ -69,13 +69,24 @@ const CATALOG_BY_KEY = new Map(
 
 /**
  * The catalog row for reaching `level`, or `null` when the lab or level is
- * unknown. Level 1 is the first row — reaching level 1 costs `levels[0]`.
+ * unknown.
+ *
+ * Found by its own `level` field rather than by position, because the two are
+ * not the same thing. Most labs list level 1 first, but all thirty-five Card
+ * Mastery labs and the Dissonant Echo pair list a **level 0** row, free and
+ * instant, before it.
+ *
+ * Indexing by position read that row as level 1, so every mastery's first
+ * level looked free and every level after it was charged the price of the one
+ * below — and `labMaxCatalogLevel` reported one level more than exists, which
+ * is how a maxed Super Tower Mastery kept being recommended at level 10 when
+ * the game stops at 9.
  */
 function levelRow(labKey: string, level: number) {
   const record = CATALOG_BY_KEY.get(catalogKey(labKey))
   if (!record) return null
   if (!Number.isInteger(level) || level < 1) return null
-  return record.levels[level - 1] ?? null
+  return record.levels.find(row => row.level === level) ?? null
 }
 
 export interface LabCostModifiers {
@@ -156,7 +167,15 @@ export function labCatalogName(labKey: string): string | null {
   return CATALOG_BY_KEY.get(catalogKey(labKey))?.name ?? null
 }
 
-/** The highest level the catalog has data for, or `0` for an unknown lab. */
+/**
+ * The highest level the catalog has data for, or `0` for an unknown lab.
+ *
+ * The largest `level` in the table, not the number of rows. A Card Mastery
+ * lists ten rows for nine levels because the first is level 0, and counting
+ * rows offered a tenth level that does not exist.
+ */
 export function labMaxCatalogLevel(labKey: string): number {
-  return CATALOG_BY_KEY.get(catalogKey(labKey))?.levels.length ?? 0
+  const levels = CATALOG_BY_KEY.get(catalogKey(labKey))?.levels
+  if (!levels?.length) return 0
+  return levels.reduce((highest, row) => Math.max(highest, row.level), 0)
 }
