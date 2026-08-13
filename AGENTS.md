@@ -54,6 +54,28 @@ catalogs rather than guessing — the MCP server's `define_term` does both.
 **Formulas under `mechanics/` are approximations.** They are fitted to observed behaviour and drift
 at very high waves and tiers. Do not use them where an exact match to the game matters.
 
+**`effective-paths-*` is a transcription, and the sheet is the authority.** Not these files'
+comments, not the wiki, not the game dump — the spreadsheet. Every rule cites the cell it came from
+(`eEcon!E6`, `eDamage Coins!EZ2`) and `effective-paths-cell-references.test.ts` enumerates those
+citations and pins how many there are. When it fails because you added one, **read the cell before
+updating the count**; that failure is the prompt, not paperwork.
+
+Before deriving a number in this area, read
+[`EFFECTIVE_PATHS_ORACLE.md`](../../docs/EFFECTIVE_PATHS_ORACLE.md) in the tracker repo. It lists the
+ways the spreadsheet API misleads — chiefly that a spilled range reads as *empty* through both
+`read_range` and `FORMULA` render while `COUNTA` sees a hundred rows of it. That has twice been
+mistaken for a missing feature.
+
+**A planner explains everything it leaves out.** `plan.excluded` carries a reason per candidate, and
+`planPath`'s `onSkip` reports the three ways the loop passes one over. Keep it that way: a path that
+stops after one step usually means every other candidate is at its cap, and without a reason that is
+indistinguishable from a bug. The rule is **planned, or explained — never neither.**
+
+**A path variant is refused, not guessed at.** `lab` is a damage *band* and `lab-time` is a
+*variant*. Passing the band matched no band's variant list, skipped every candidate, and returned an
+empty path that looked exactly like a finished account. All four planners now throw and name what
+they publish. Do not soften that into a default.
+
 ## Conventions this package enforces
 
 `pnpm lint:conventions` checks these; it runs in CI and will fail a PR.
@@ -75,12 +97,16 @@ at very high waves and tiers. Do not use them where an exact match to the game m
 ## Checking things without writing a script
 
 There is an MCP server in [`mcp/`](mcp/README.md). Point your agent at it and you can list exports,
-read a table, define a term, decode a save and run an extractor directly — useful for confirming a
-value instead of assuming one.
+read a table, define a term, decode a save, run an extractor, and plan an Effective Path directly —
+useful for confirming a value instead of assuming one.
 
 ```bash
 pnpm build && pnpm mcp
 ```
+
+`plan_effective_path` is the quickest way to see which candidates a path offers and why the rest are
+out, without writing a scratch script. It plans from a zero config, so read it for structure rather
+than for numbers.
 
 ## Before you open a PR
 
@@ -104,6 +130,16 @@ schema in `src/data/schemas.ts` so `pnpm test:schema` validates it. If it introd
 
 **A new formula** — put it in `src/mechanics/`, export it from `src/mechanics/index.ts`, and say in
 the doc comment whether it is exact or fitted.
+
+**A test for any of it** — three rules, each of which has already caught a real fault here and each
+of which was learned by shipping the opposite:
+
+1. *Do not restate the implementation.* A test that computed `cost / (rate * 23)` and compared it
+   against `cost / (rate * 23)` stayed green when the constant became `24`. Call the export.
+2. *Pin several states, not one.* A constant agrees with a formula at exactly one input — four
+   frozen rates here each matched at a different single point and were wrong everywhere else.
+3. *Prove it by breaking what it guards.* Change the value the test exists to pin and watch it fail
+   by name. If it does not, it is testing itself.
 
 ## What not to do
 
