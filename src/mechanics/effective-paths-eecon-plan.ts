@@ -101,6 +101,24 @@ const COIN_PRICED_TIME_CANDIDATES: ReadonlySet<string> = new Set([
   ...MODULE_CANDIDATES,
 ])
 
+/**
+ * `eEcon!E6`'s divisor, beside the coins-per-hour rate.
+ *
+ * Not hours in a day — the sheet prices a day of farming at 23 hours of it, and
+ * the literal is `CpH * 23`. Kept as the sheet's number rather than 24, because
+ * agreeing with it matters more than the rounding being explicable.
+ */
+const FARM_HOURS_PER_DAY = 23
+
+/**
+ * The rate the sheet ships, from `IDS_PS_PLAYERDATA("Coin / Hour")`.
+ *
+ * It is a real default rather than a placeholder — the tab renders a warning
+ * beside it telling the player to replace it with their own figure — so a
+ * caller that supplies nothing gets the same path the sheet would show.
+ */
+export const SHEET_DEFAULT_COINS_PER_HOUR = 100_000
+
 /** Which ultimate weapon stat each stone candidate buys. */
 const STONE_WEAPON_STATS: Readonly<Record<string, { weapon: string, stat: string }>> = {
   'GT Bonus': { weapon: 'Golden Tower', stat: 'Multiplier' },
@@ -259,14 +277,19 @@ export interface EffectiveEconomyPlanOptions {
    * the hide rows of the four candidates that cost coins and no research time:
    * `NOT(O$3<>"DO")` drops all four when it is `DO`.
    *
-   * **Only the `DO` half is modelled.** Under `D+FT` the sheet prices those
-   * four by how long farming their coins takes, at the `Coin / Hour` rate its
-   * `L4` header names — a conversion this planner does not do, so it ranks
-   * their raw coin cost against research days instead. That is why the mode is
-   * a plain boolean rather than the sheet's two-value control: offering `D+FT`
-   * as a choice would imply a conversion that is not here.
+   * Off is `D+FT`, where every candidate also carries the time to farm its
+   * coins — see {@link costOf}. That is what the sheet ships, so an absent
+   * value behaves as `D+FT` does.
    */
   daysOnly?: boolean
+  /**
+   * `IDS_PS_PLAYERDATA("Coin / Hour")` — coins the player farms in an hour.
+   *
+   * Turns a coin cost into days, at `cost / (rate * 23)`. Only read when
+   * {@link daysOnly} is off, and defaults to
+   * {@link SHEET_DEFAULT_COINS_PER_HOUR}, which is the sheet's own default.
+   */
+  coinsPerHour?: number
   /**
    * Whether the Workshop Enhancements lab is bought — `'Master Sheet'!$F$5`.
    * The coin path buys two enhancements and neither exists without it.
@@ -305,27 +328,27 @@ function resolveMaxLevel(upgrade: EffectiveEconomyUpgrade): number | null {
 /**
  * What it costs to take a candidate to `nextLevel`, in the path's currency.
  *
- * ## Known gap: the time path mixes two currencies
+ * ## The time path spends two things at once
  *
- * Four of the 23 time-path candidates are not labs — `Coin Bonus` and `Free
- * Upgrades` are workshop enhancements, and the two Generator entries buy module
- * levels — and all four return **coin** costs, from the branches above, whatever
- * the variant. On the `time` variant those coin figures are then ranked against
- * research days and rendered under a Days column, so a module level shows a
- * cost like `2.8e19 d` and its return on investment is a gain-per-coin sitting
- * in a gain-per-day ordering.
+ * A lab costs research time *and* coins, and four of the 23 candidates — the
+ * two workshop enhancements and the two Generator module levels — cost only
+ * coins. Ranking those against research days needs the two put in one unit,
+ * and the sheet does it by asking how long farming the coins takes:
  *
- * The sheet converts instead of mixing. `eEcon!L4` is
- * `Time to farm Cost (100K/hr)` and `O3` selects the mode — `DO` for days only,
- * `D+FT` for days plus farm time — with `O5` a `x1` speed-up multiplier beside
- * it. Under `DO`, `eEcon!EO2`, `EP2`, `EQ2` and `ER2` all carry
- * `NOT(O$3<>"DO")` in their hide rows, which drops those four candidates
- * entirely; under `D+FT` they are priced by how long farming their coins takes.
+ * ```text
+ * eEcon!E6 = IF(AND(O3<>"DO", NOT(ISBLANK(CpH))),
+ *              <that level's coin cost> / (UNFORMAT_NUMBER(CpH) * 23), )
+ * eEcon!O6 = SCAN over MAP(Duration, FarmTime, (d, c) => d + c)
+ * ```
  *
- * Neither the mode nor the farm rate is modelled here, so the port behaves like
- * `D+FT` with the conversion missing. Closing it needs the rate as an input and
- * a mode control, and it changes the order of the time path — so it is recorded
- * rather than guessed at.
+ * So a step's cost is its research duration plus its farm time, and `O3`
+ * chooses whether the second half counts: `D+FT` for days plus farm time, `DO`
+ * for days only. Under `DO` the four coin-only candidates leave the path
+ * entirely — they would otherwise cost nothing at all, and nothing beats free.
+ *
+ * The `23` is the sheet's own literal, not hours in a day: it prices a day of
+ * farming at 23 hours of it. Both halves come out in days, which is what
+ * `ROI / Day` ranks by.
  */
 function costOf(
   upgrade: EffectiveEconomyUpgrade,
@@ -342,6 +365,36 @@ function costOf(
     return assist ? assistEfficiencyStoneCost(assist, nextLevel) : null
   }
 
+  const coins = coinCostOf(upgrade, nextLevel, options)
+
+  if (variant === 'coin') return coins
+
+  /*
+   * The time path, in days.
+   *
+   * A lab contributes its research duration; the four coin-only candidates have
+   * none, which is exactly why they leave the path under days-only rather than
+   * ranking as free. Every candidate then contributes the time to farm its
+   * coins. Both halves are days, which is what `ROI / Day` ranks by.
+   */
+  const research = COIN_PRICED_TIME_CANDIDATES.has(upgrade.sheetName)
+    ? 0
+    : labDurationDaysToReachLevel(upgrade.sheetName, nextLevel, options.labModifiers)
+
+  // A duration the catalog cannot supply still drops the candidate, as before:
+  // a lab with no known duration is not a lab that takes no time.
+  if (research === null) return null
+  if (options.daysOnly) return research
+
+  return coins === null ? research : research + farmDays(coins, options)
+}
+
+/** What a candidate's next level costs in coins, whatever the path. */
+function coinCostOf(
+  upgrade: EffectiveEconomyUpgrade,
+  nextLevel: number,
+  options: EffectiveEconomyPlanOptions,
+): number | null {
   if (MODULE_CANDIDATES.has(upgrade.sheetName)) {
     // The table is keyed by the level being left, not the one bought.
     return moduleUpgradeCoinCost(nextLevel - 1, {
@@ -354,9 +407,32 @@ function costOf(
     return enhancementCoinCost(enhancement, nextLevel, options.enhancementDiscounts)
   }
 
-  return variant === 'time'
-    ? labDurationDaysToReachLevel(upgrade.sheetName, nextLevel, options.labModifiers)
-    : labCoinCostToReachLevel(upgrade.sheetName, nextLevel, options.labModifiers)
+  return labCoinCostToReachLevel(upgrade.sheetName, nextLevel, options.labModifiers)
+}
+
+/**
+ * `eEcon!E6` — how long farming a coin cost takes, in days.
+ *
+ * ```text
+ * =IF(AND(O3<>"DO", NOT(ISBLANK(CpH))),
+ *      <that level's coin cost> / (UNFORMAT_NUMBER(CpH) * 23), )
+ * ```
+ *
+ * The `23` is the sheet's own literal and is not hours in a day: it prices a
+ * day of farming at 23 hours of it.
+ *
+ * Exported so it can be checked against the cell it comes from. Left as a
+ * private helper it was only ever reachable through a planned step, and a test
+ * that reproduces `cost / (rate * 23)` to check `cost / (rate * 23)` passes
+ * whatever the constant says — which is how a `24` survived a green suite here.
+ */
+export function coinFarmDays(coins: number, coinsPerHour = SHEET_DEFAULT_COINS_PER_HOUR): number {
+  if (!(coinsPerHour > 0) || !Number.isFinite(coins)) return 0
+  return coins / (coinsPerHour * FARM_HOURS_PER_DAY)
+}
+
+function farmDays(coins: number, options: EffectiveEconomyPlanOptions): number {
+  return coinFarmDays(coins, options.coinsPerHour ?? SHEET_DEFAULT_COINS_PER_HOUR)
 }
 
 /** A candidate's current level. */
