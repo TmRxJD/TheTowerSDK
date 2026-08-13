@@ -56,6 +56,24 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
+/**
+ * Whether this is a decoded save at all, as opposed to something else.
+ *
+ * Several extractors accept any object and return an empty result for it, so
+ * `{}` — a fetch that failed, a file that is not a save, a decode that gave up
+ * — reached the planner and came back **importable**, with a payload full of
+ * nothing. `canImport` is what a caller gates the write on, so that is an offer
+ * to overwrite a tracker with blanks.
+ *
+ * Deliberately the weakest possible test: a record with at least one key. A
+ * real save has hundreds, including saves far older than any of these
+ * features, so this cannot refuse a legitimate one — and it catches every shape
+ * a failure actually takes.
+ */
+function looksLikeSaveRoot(value: unknown): boolean {
+  return isRecord(value) && Object.keys(value).length > 0
+}
+
 export function planSaveImportTracker(
   key: SaveImportTrackerKey,
   parsedRoot: unknown,
@@ -63,6 +81,10 @@ export function planSaveImportTracker(
 ): SaveImportPlannerResult {
   const label = SAVE_IMPORT_TRACKER_LABELS[key]
   const root = isRecord(parsedRoot) ? parsedRoot : null
+
+  if (!looksLikeSaveRoot(parsedRoot)) {
+    return { key, label, canImport: false, skipReason: 'This file is not a save.', payload: null }
+  }
 
   if (key === 'battleReports') {
     const plan = planBattleReportImport(parsedRoot, options?.existingRuns ?? [])
@@ -210,7 +232,18 @@ export function planSaveImportTracker(
   if (key === 'dissonance') {
     const extract = readDissonanceFromSaveRoot(parsedRoot)
     const hasWaveData = canImportDissonanceFromSave(extract)
-    const canImport = hasWaveData || extract != null
+    /*
+     * `canImportDissonanceFromSave` is the answer, not half of it.
+     *
+     * This read `hasWaveData || extract != null`, and the extractor returns an
+     * extract for any object — so the second half was always true and the first
+     * never mattered. A record with one unrelated key came back importable.
+     *
+     * The helper already covers the case that clause was presumably for: it
+     * accepts a save with no wave data as long as the Echo labs are unlocked,
+     * which is the state where there is something to sync and nothing to show.
+     */
+    const canImport = hasWaveData
     return {
       key,
       label,

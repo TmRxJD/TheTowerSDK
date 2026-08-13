@@ -406,6 +406,23 @@ export function buildWorkshopTrackerImportPayload(parsedRoot: unknown): Workshop
   const extract = readWorkshopFromSaveRoot(parsedRoot)
   if (!extract) return null
   const activeSnapshot = getPresetSnapshot(extract, extract.meta.currentPreset)
+
+  /*
+   * Nothing found is `null`, not an empty payload.
+   *
+   * `readWorkshopFromSaveRoot` returns an extract for any object — it only
+   * refuses non-objects — so a file that is not a save produced a payload with
+   * empty levels, and the import planner read that as **importable**. A caller
+   * gates the write on that flag, so it was an offer to replace a player's
+   * workshop with blanks.
+   *
+   * Every other builder here already returns `null` when it finds nothing; this
+   * one did not, and it is the only one whose extractor never fails.
+   */
+  const found = countPositiveLevels(activeSnapshot.levels)
+    + countPositiveLevels(activeSnapshot.enhancementLevels)
+  if (found === 0 && extract.meta.presetNames.length === 0) return null
+
   return {
     levels: activeSnapshot.levels,
     enhancementLevels: activeSnapshot.enhancementLevels,
