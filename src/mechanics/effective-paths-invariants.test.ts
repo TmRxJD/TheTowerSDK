@@ -1,10 +1,21 @@
 import { describe, expect, it } from 'vitest'
 import { DAMAGE_PLAN_VARIANTS, planEffectiveDamagePath } from './effective-paths-edamage-plan'
 import { planEffectiveEconomyPath } from './effective-paths-eecon-plan'
+import { HEALTH_PATH_VARIANTS, planEffectiveHealthPath } from './effective-paths-ehp-plan'
+import {
+  planEffectiveRegenPath,
+  REGEN_PATH_VARIANTS,
+  ZERO_EFFECTIVE_REGEN_LEVELS,
+} from './effective-paths-regen-plan'
 import { zeroEffectiveDamageConfig } from './effective-paths-edamage-config'
 import { ZERO_EFFECTIVE_DAMAGE_LEVELS } from './effective-paths-edamage-levels'
 import { ZERO_EFFECTIVE_ECONOMY_LEVELS } from './effective-paths-eecon-levels'
 import { zeroEffectiveEconomyConfig } from './effective-paths-eecon-compute'
+import {
+  ZERO_EFFECTIVE_HEALTH_LEVELS,
+  zeroEffectiveHealthConfig,
+  zeroEffectiveRegenConfigSource,
+} from './effective-paths-ehp-model'
 import type { PathStep } from './effective-paths-planner'
 
 /**
@@ -46,6 +57,37 @@ const PLANS = [
       steps,
       workshopEnhancementsUnlocked: true,
     }),
+  })),
+  /*
+   * eHP and eRegen, which used to be absent from this file for want of a zero
+   * config to plan against — `zeroEffectiveHealthConfig` was added so they
+   * could be here rather than tested only through the site's tracker builder.
+   */
+  ...HEALTH_PATH_VARIANTS.map(variant => ({
+    family: `eHP/${variant}`,
+    plan: (steps: number) => planEffectiveHealthPath({
+      config: zeroEffectiveHealthConfig(),
+      levels: ZERO_EFFECTIVE_HEALTH_LEVELS,
+      variant,
+      steps,
+    }),
+  })),
+  ...REGEN_PATH_VARIANTS.map(variant => ({
+    family: `eRegen/${variant}`,
+    plan: (steps: number) => {
+      const regen = zeroEffectiveRegenConfigSource()
+      return planEffectiveRegenPath({
+        config: {
+          healthRegen: regen.healthRegen,
+          card: regen.card,
+          hasSecondWindMastery: regen.hasSecondWindMastery,
+        },
+        eHealth: zeroEffectiveHealthConfig(),
+        levels: { ...ZERO_EFFECTIVE_HEALTH_LEVELS, ...ZERO_EFFECTIVE_REGEN_LEVELS },
+        variant,
+        steps,
+      })
+    },
   })),
 ]
 
@@ -147,11 +189,21 @@ describe.each(PLANS)('$family', ({ plan }) => {
   })
 
   it('explains every candidate it did not plan', () => {
-    const planned = new Set(steps.map(step => step.name))
+    /*
+     * Compared by `id`, not by `sheetName`.
+     *
+     * `sheetName` is not unique: `assistSubstatArmorLab` and
+     * `assistSubstatArmor` are both `Assist Module Substats - Armor`, the lab
+     * and the stone-bought slot upgrade. On the eHP stone path one is planned
+     * and the other is correctly excluded, and the first version of this test
+     * compared names and called that a contradiction. It was the test that was
+     * wrong — which is why `PathExclusion` carries an id at all.
+     */
+    const planned = new Set(steps.map(step => step.id))
     for (const entry of result.excluded) {
       expect(entry.reason, entry.sheetName).toBeTruthy()
-      // And does not contradict itself by excluding something it bought.
-      expect(planned.has(entry.sheetName), `${entry.sheetName} was planned and excluded`).toBe(false)
+      if (entry.id === undefined) continue
+      expect(planned.has(entry.id), `${entry.sheetName} was planned and excluded`).toBe(false)
     }
   })
 

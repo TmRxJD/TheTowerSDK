@@ -159,10 +159,25 @@ describe('appendSkipExclusions', () => {
      * "the weapon is not unlocked" says more than "already at its cap", and the
      * planner knew the first before the loop ever ran. A second entry for the
      * same upgrade would also render twice.
+     *
+     * Matched on `id`, since a display name can belong to two upgrades — see
+     * `PathExclusion`.
      */
-    const excluded = [{ sheetName: 'A', reason: 'the weapon is not unlocked' }]
+    const excluded = [{ id: 'a', sheetName: 'A', reason: 'the weapon is not unlocked' }]
     appendSkipExclusions(excluded, [], [skip()])
-    expect(excluded).toEqual([{ sheetName: 'A', reason: 'the weapon is not unlocked' }])
+    expect(excluded).toEqual([{ id: 'a', sheetName: 'A', reason: 'the weapon is not unlocked' }])
+  })
+
+  it('still adds a same-named upgrade that is a different one', () => {
+    /*
+     * The case the id exists for. Two eHP upgrades are both `Assist Module
+     * Substats - Armor`; if one is already excluded, the other still needs its
+     * own reason rather than being swallowed as a duplicate.
+     */
+    const excluded = [{ id: 'lab', sheetName: 'Assist Module Substats - Armor', reason: 'a lab reason' }]
+    appendSkipExclusions(excluded, [], [skip({ id: 'stone', name: 'Assist Module Substats - Armor' })])
+    expect(excluded).toHaveLength(2)
+    expect(excluded[1].id).toBe('stone')
   })
 
   it('says nothing about an upgrade that was planned', () => {

@@ -218,6 +218,77 @@ export const NO_EFFECTIVE_HEALTH_PERKS: EffectiveHealthPerks = {
   },
 }
 
+/**
+ * An eHP config with nothing in it — every stat at zero, nothing owned.
+ *
+ * The counterpart to `zeroEffectiveDamageConfig` and
+ * `zeroEffectiveEconomyConfig`, and it exists for the same two reasons.
+ *
+ * A caller building a config from a save or a tracker needs somewhere to start
+ * that is *complete*, so a field they have no data for is a documented zero
+ * rather than an `undefined` that reaches the model and returns `NaN`. And a
+ * test needs a config it can plan against without hand-writing one — a
+ * hand-written fixture agrees with itself and drifts from the model silently,
+ * which is why eHP and eRegen went uncovered by the shared path invariants for
+ * as long as this was missing.
+ *
+ * It is a **floor, not a player**: eHP computed from it is the tower with no
+ * labs, no cards, no modules and no wall. Use it as a base to spread over.
+ */
+export function zeroEffectiveHealthConfig(): EffectiveHealthConfig {
+  const stat = (): EffectiveHealthStatSource => ({
+    workshopValue: 0,
+    relicPct: 0,
+    vaultPct: 0,
+    primarySubstat: 0,
+    assistSubstat: 0,
+  })
+  const card = (): EffectiveHealthCardSource => ({ has: false, value: 0, hasMastery: false })
+
+  return {
+    health: stat(),
+    defenseAbsolute: stat(),
+    defensePercent: stat(),
+    wallHealth: stat(),
+    maxRecovery: stat(),
+    cards: { health: card(), defenseAbsolute: card(), defensePercent: card() },
+    armor: { primaryBonus: 1, hasAssist: false, assistBonus: 1 },
+    wall: { has: false, primaryEffect: 0, assistEffect: 0 },
+    recovery: { has: false },
+    perks: { ...NO_EFFECTIVE_HEALTH_PERKS, quantity: { ...NO_EFFECTIVE_HEALTH_PERKS.quantity } },
+    chronoField: { unlocked: false },
+    chainThunder: { has: false, damageShare: 0 },
+    deathWave: { hasHealth: false },
+    // One rather than zero: it multiplies defense absolute, and nothing is ever
+    // hit by no enemies.
+    enemiesAttackingTogether: 1,
+    dissonance: { active: false, tierPersonalBest: 0, allTierPersonalBests: [] },
+  }
+}
+
+/**
+ * A regen config with nothing in it, to go with the eHP one above.
+ *
+ * The regen path takes both, so a caller starting from zero needs both.
+ */
+export function zeroEffectiveRegenConfigSource(): {
+  healthRegen: EffectiveHealthStatSource
+  card: EffectiveHealthCardSource
+  hasSecondWindMastery: boolean
+} {
+  return {
+    healthRegen: {
+      workshopValue: 0,
+      relicPct: 0,
+      vaultPct: 0,
+      primarySubstat: 0,
+      assistSubstat: 0,
+    },
+    card: { has: false, value: 0, hasMastery: false },
+    hasSecondWindMastery: false,
+  }
+}
+
 /** Build a perk set from the few flags a caller cares about. */
 export function effectiveHealthPerks(
   overrides: Partial<EffectiveHealthPerks> = {},

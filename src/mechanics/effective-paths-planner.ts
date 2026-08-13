@@ -149,8 +149,20 @@ export function skipsFromFirstStep(skips: readonly PathSkip[]): PathSkip[] {
   return skips.filter(skip => skip.step === 1)
 }
 
-/** One upgrade a plan left out, and why, as every planner reports it. */
+/**
+ * One upgrade a plan left out, and why, as every planner reports it.
+ *
+ * `id` matters because `sheetName` is **not unique**. Two eHP upgrades are both
+ * called `Assist Module Substats - Armor` — the Assist Module lab and the
+ * stone-bought slot upgrade — and on the stone path one is planned while the
+ * other is excluded. Compare these lists by `id`; a name-keyed comparison
+ * reports that as the same upgrade being planned and left out at once.
+ *
+ * Optional only because the discount planner predates it and keys its
+ * candidates differently; prefer to set it.
+ */
 export interface PathExclusion {
+  id?: string
   sheetName: string
   reason: string
 }
@@ -191,12 +203,14 @@ export function appendSkipExclusions(
   skips: readonly PathSkip[],
 ): void {
   const plannedIds = new Set(planned.map(step => step.id))
-  const named = new Set(excluded.map(entry => entry.sheetName))
+  // By id, not by name: two upgrades can share a display name, and skipping one
+  // because the *other* is already listed would lose a real reason.
+  const already = new Set(excluded.map(entry => entry.id ?? entry.sheetName))
 
   for (const skip of skipsFromFirstStep(skips)) {
-    if (plannedIds.has(skip.id) || named.has(skip.name)) continue
-    named.add(skip.name)
-    excluded.push({ sheetName: skip.name, reason: describePathSkip(skip) })
+    if (plannedIds.has(skip.id) || already.has(skip.id)) continue
+    already.add(skip.id)
+    excluded.push({ id: skip.id, sheetName: skip.name, reason: describePathSkip(skip) })
   }
 }
 

@@ -355,8 +355,25 @@ export function planEffectiveHealthPath(options: EffectiveHealthPlanOptions): Ef
       excluded.push({ sheetName: upgrade.sheetName, reason: 'not unlocked yet' })
       continue
     }
+    /*
+     * eHP accounts for **every** upgrade in the catalog, including the ones
+     * another tab buys — a stronger guarantee than the damage and economy
+     * planners make, and a deliberate one: `effective-paths-stone-costs.test.ts`
+     * asserts that bought plus explained equals the whole list.
+     *
+     * Two upgrades share a display name on purpose, so this list has to be read
+     * by `id`: `assistSubstatArmorLab` is the Assist Module *lab* and
+     * `assistSubstatArmor` is the stone-bought slot upgrade, both called
+     * `Assist Module Substats - Armor`. On the stone path the second is planned
+     * while the first is excluded here, and keying either list by name makes
+     * that look like a contradiction.
+     */
     if (!isEligible(upgrade, variant)) {
-      excluded.push({ sheetName: upgrade.sheetName, reason: `not bought with ${variant} currency` })
+      excluded.push({
+        id: upgrade.key,
+        sheetName: upgrade.sheetName,
+        reason: `not bought with ${variant} currency`,
+      })
       continue
     }
 
