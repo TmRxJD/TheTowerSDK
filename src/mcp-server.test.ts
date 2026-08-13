@@ -72,7 +72,8 @@ describeServer('mcp server', () => {
     const list = await rpc('tools/list', {})
     const names = list.result.tools.map((tool: { name: string }) => tool.name).sort()
     expect(names).toEqual([
-      'decode_save', 'define_term', 'describe_schema', 'get_export', 'list_exports', 'run_extractor',
+      'decode_save', 'define_term', 'describe_schema', 'get_export', 'list_exports',
+      'plan_effective_path', 'run_extractor',
     ])
     for (const tool of list.result.tools) {
       expect(tool.description).toBeTruthy()
@@ -122,6 +123,47 @@ describeServer('mcp server', () => {
     expect((await call('list_exports', { entry: 'nope' })).entries).toBeTruthy()
     expect((await call('get_export', { name: 'nope' })).error).toContain('nope')
     expect((await call('decode_save', { path: 'C:/no/such/file.dat' })).error).toBeTruthy()
+  })
+
+  describe('plan_effective_path', () => {
+    it('plans a path and says what it left out', async () => {
+      const plan = await call('plan_effective_path', {
+        family: 'economy', variant: 'time', steps: 3,
+      })
+      expect(plan.steps.length).toBe(3)
+      // The half that makes the tool worth having: a candidate is planned or it
+      // is explained, and the reasons come through the wire intact.
+      expect(plan.excluded.length).toBeGreaterThan(0)
+      for (const entry of plan.excluded) expect(entry.reason.length).toBeGreaterThan(10)
+    })
+
+    it('plans the damage family too', async () => {
+      const plan = await call('plan_effective_path', {
+        family: 'damage', variant: 'lab-time', steps: 2,
+      })
+      expect(plan.steps.length).toBeGreaterThan(0)
+    })
+
+    it('passes the variant guard’s own message through', async () => {
+      /*
+       * `lab` is a damage *band* and `lab-time` is a *variant*, one character
+       * apart. The planner refuses it and names the five it does publish, and
+       * the point of catching it here is that an agent reading the reply gets
+       * the fix rather than a stack trace.
+       */
+      const bad = await call('plan_effective_path', { family: 'damage', variant: 'lab' })
+      expect(bad.error).toContain('unknown damage path variant "lab"')
+      expect(bad.error).toContain('lab-time')
+    })
+
+    it('takes starting levels and merges them over zero', async () => {
+      const plan = await call('plan_effective_path', {
+        family: 'economy', variant: 'time', steps: 2, levels: { time: { coinsKillBonus: 40 } },
+      })
+      // Merged, not replaced: a partial `levels` must not blank the other bands.
+      expect(plan.steps.length).toBeGreaterThan(0)
+      expect(plan.error).toBeUndefined()
+    })
   })
 
   it('defines terms and refuses to guess at unknown ones', async () => {

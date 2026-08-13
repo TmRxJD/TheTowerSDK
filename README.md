@@ -301,16 +301,71 @@ import { computeWaveBaseHealth, abilityDamage, goldenComboBonus } from 'thetower
 
 ## Effective Paths
 
-> **Not shipped yet.** This section is a placeholder for work in progress.
-
 [Effective Paths][ep] is the community spreadsheet that works out the cheapest order to buy things
-in — which lab, workshop stat or card to put your next coins into for the most effect. Its author
-takes the numbers from the developers, which is why the SDK already checks its own tables against
-it: see [`src/data/fixtures/README.md`](src/data/fixtures/README.md).
+in — which lab, workshop stat or module to put your next coins into for the most effect. Its authors
+take the numbers from the developers, which is why the SDK already checks its own tables against it:
+see [`src/data/fixtures/README.md`](src/data/fixtures/README.md).
 
-The plan is to port the path solver itself, so `thetowersdk` can answer "what should I buy next"
-rather than only "what does this cost". Nothing is exported for it yet; this section will describe
-the entry points when there are some.
+The solver is ported. Four models, each with the sheet's own paths:
+
+| Model | Planner | Paths |
+|---|---|---|
+| eHP | `planEffectiveHealthPath` | `lab-time` · `lab-coins` · `stone` · `coin` |
+| eRegen | `planEffectiveRegenPath` | `lab-time` · `lab-coins` |
+| eDamage | `planEffectiveDamagePath` | `lab-time` · `lab-coins` · `stone` · `coin` · `keys` |
+| eEcon | `planEffectiveEconomyPath` | `time` · `coin` · `stone` |
+| eEcon Discount | `planEffectiveEconomyDiscountPath` | its own, ranking coins **saved** |
+
+The lab path appears twice everywhere because the sheet prices the same candidates two ways — in
+research days or in coins — and which one binds depends on the player.
+
+```ts
+import {
+  planEffectiveDamagePath,
+  ZERO_EFFECTIVE_DAMAGE_LEVELS,
+  zeroEffectiveDamageConfig,
+} from 'thetowersdk/mechanics'
+
+const plan = planEffectiveDamagePath({
+  config: zeroEffectiveDamageConfig(),   // build this from a save or a tracker
+  levels: ZERO_EFFECTIVE_DAMAGE_LEVELS,  // where the player is now
+  variant: 'lab-time',
+  steps: 25,
+})
+
+plan.steps      // what to buy, in order, with cost, gain and ROI
+plan.excluded   // what it did not offer, and why
+```
+
+### `excluded` is half the answer
+
+Every planner reports the candidates it passed over, each with a reason: `already at its cap of 99`,
+`the weapon is not unlocked`, `priced at 0 for level 12, which is not a cost`. **A candidate is
+planned, or it is explained — never neither.**
+
+This matters more than it sounds. A path that stops after one step almost always means everything
+else is already maxed, and without the exclusions that is indistinguishable from a bug. Read
+`excluded` before concluding a short path is wrong.
+
+Passing a variant a planner does not publish throws, naming the ones it does. `lab` is a damage
+*band* and `lab-time` is a *variant*; the band used to plan nothing at all, in silence.
+
+### Discount is a different quantity
+
+`planEffectiveEconomyDiscountPath` ranks coins **saved**, not coins earned, so it is not comparable
+to the others and has its own entry point. `planEffectiveEconomyPath` refuses `discount` and says so
+rather than returning a table of zeroes.
+
+### Checking it against the sheet
+
+The port cites the cell behind every rule it implements — `eEcon!E6`, `eDamage Coins!EZ2` — and those
+citations are enumerated by a test that checks the tab exists. If you are changing a formula, read
+the cell first. `docs/EFFECTIVE_PATHS_ORACLE.md` in the tracker repo describes how, and which of the
+spreadsheet API's answers are misleading: a spilled range reads as *empty* while `COUNTA` sees a
+hundred rows of it.
+
+The MCP server's `plan_effective_path` tool runs any of this without a scratch script — see
+[`mcp/README.md`](mcp/README.md).
 
 [ep]: https://docs.google.com/spreadsheets/d/1YwZtKP6B4WYhRba5T6APJ1YxKNdfnIGQnprgnxmO7zc/edit
 

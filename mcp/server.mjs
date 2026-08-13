@@ -188,6 +188,85 @@ const TOOLS = {
     },
   },
 
+  plan_effective_path: {
+    description:
+      'Plan an Effective Paths route and show what it left out and why. Every planner reports both '
+      + 'the steps it chose and the candidates it passed over with a reason, so an empty or '
+      + 'surprising path can be read rather than guessed at — a path that stops after one step '
+      + 'usually means everything else is already at its cap, and this says so.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        family: {
+          type: 'string',
+          enum: ['damage', 'economy'],
+          description: 'Which model to plan. eHP and eRegen need a full config, so they are not here',
+        },
+        variant: {
+          type: 'string',
+          description:
+            'The path. damage: lab-time, lab-coins, stone, coin, keys. economy: time, coin, stone. '
+            + 'A variant a planner does not publish is refused by name rather than planning nothing',
+        },
+        steps: { type: 'number', description: 'How many steps to plan (default 10)' },
+        levels: {
+          type: 'object',
+          description:
+            'Starting levels, merged over all-zero. Shape matches the family\'s levels type — use '
+            + 'get_export on ZERO_EFFECTIVE_DAMAGE_LEVELS or ZERO_EFFECTIVE_ECONOMY_LEVELS to see it',
+        },
+      },
+      required: ['family', 'variant'],
+    },
+    run: ({ family, variant, steps, levels }) => {
+      const m = sdk.mechanics
+      const isDamage = family === 'damage'
+
+      const zeroLevels = isDamage ? m.ZERO_EFFECTIVE_DAMAGE_LEVELS : m.ZERO_EFFECTIVE_ECONOMY_LEVELS
+      const merged = { ...zeroLevels }
+      for (const [band, values] of Object.entries(levels ?? {})) {
+        if (merged[band] && typeof merged[band] === 'object') {
+          merged[band] = { ...merged[band], ...values }
+        }
+      }
+
+      let plan
+      try {
+        plan = isDamage
+          ? m.planEffectiveDamagePath({
+            config: m.zeroEffectiveDamageConfig(),
+            levels: merged,
+            variant,
+            steps: steps ?? 10,
+          })
+          : m.planEffectiveEconomyPath({
+            config: m.zeroEffectiveEconomyConfig(),
+            levels: merged,
+            variant,
+            steps: steps ?? 10,
+            workshopEnhancementsUnlocked: true,
+          })
+      }
+      catch (error) {
+        // The variant guards throw by name and list what they do publish, so
+        // the message is more use than a generic failure.
+        return { error: String(error instanceof Error ? error.message : error) }
+      }
+
+      return {
+        family,
+        variant,
+        note:
+          'Planned from a zero config, so the values are shaped rather than real — this is for '
+          + 'reading which candidates a variant offers and why others are out, not for advice.',
+        steps: plan.steps.map(step => ({
+          step: step.step, name: step.name, level: step.level, cost: step.cost, roi: step.roi,
+        })),
+        excluded: plan.excluded,
+      }
+    },
+  },
+
   describe_schema: {
     description:
       'The declared runtime schema for a data table — the exact shape, rather than one inferred from '
