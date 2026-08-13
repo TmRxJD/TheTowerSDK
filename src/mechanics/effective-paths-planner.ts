@@ -95,6 +95,58 @@ export interface PathPlanOptions {
    * "not a candidate".
    */
   cost: (id: string, nextLevel: number) => number
+  /**
+   * Called for every candidate the loop passes over, and why.
+   *
+   * The three `continue`s below are silent by design — the sheet's own division
+   * simply errors and the column drops out — and that silence is a problem for
+   * a caller trying to explain an empty or surprising path. A candidate that is
+   * capped, unpriced or unevaluable appears nowhere: not in the steps, and not
+   * in the exclusions a planner reports, because nothing knew to record it.
+   *
+   * Fires once per candidate per step, so a caller that wants a report should
+   * keep the first step's and drop the rest — see `skipsFromFirstStep`.
+   */
+  onSkip?: (skip: PathSkip) => void
+}
+
+/** Why a candidate was passed over on a given step. */
+export interface PathSkip {
+  /** 1-based step the candidate was passed over on. */
+  step: number
+  id: string
+  name: string
+  /** The level it would have bought. */
+  nextLevel: number
+  reason: PathSkipReason
+  /**
+   * The number that disqualified it — the price for `unpriced`, the value for
+   * `unevaluable`, the cap for `capped`. Recorded because "no price" and "a
+   * price of exactly zero" are different bugs with the same symptom.
+   */
+  detail: number
+}
+
+/**
+ * The three ways a candidate leaves the running.
+ *
+ * - `capped` — already at its target or maximum, which is normal and expected.
+ * - `unpriced` — the cost was not a positive finite number. A missing catalog
+ *   entry and a fully discounted cost of zero both land here.
+ * - `unevaluable` — the model returned a non-finite value for the state that
+ *   buying it would produce.
+ */
+export type PathSkipReason = 'capped' | 'unpriced' | 'unevaluable'
+
+/**
+ * The first step's skips, one per candidate.
+ *
+ * A skip fires every step, so an unfiltered log is thousands of entries saying
+ * the same thing. The first step is the one that describes the account the
+ * player actually has.
+ */
+export function skipsFromFirstStep(skips: readonly PathSkip[]): PathSkip[] {
+  return skips.filter(skip => skip.step === 1)
 }
 
 export interface PathStep {
@@ -133,7 +185,7 @@ function isCapped(upgrade: PathUpgrade, nextLevel: number): boolean {
  * result as the sheet's recommendation, not a proof.
  */
 export function planPath(options: PathPlanOptions): PathStep[] {
-  const { upgrades, steps, evaluate, cost } = options
+  const { upgrades, steps, evaluate, cost, onSkip } = options
 
   const levels = new Map<string, number>()
   for (const upgrade of upgrades) levels.set(upgrade.id, upgrade.level)
@@ -147,17 +199,29 @@ export function planPath(options: PathPlanOptions): PathStep[] {
 
     for (const upgrade of upgrades) {
       const nextLevel = (levels.get(upgrade.id) ?? upgrade.level) + 1
-      if (isCapped(upgrade, nextLevel)) continue
+      const skip = (reason: PathSkipReason, detail: number) =>
+        onSkip?.({ step, id: upgrade.id, name: upgrade.name, nextLevel, reason, detail })
+
+      if (isCapped(upgrade, nextLevel)) {
+        skip('capped', upgrade.targetLevel ?? upgrade.maxLevel)
+        continue
+      }
 
       const price = cost(upgrade.id, nextLevel)
-      if (!Number.isFinite(price) || price <= 0) continue
+      if (!Number.isFinite(price) || price <= 0) {
+        skip('unpriced', price)
+        continue
+      }
 
       const previous = levels.get(upgrade.id) ?? upgrade.level
       levels.set(upgrade.id, nextLevel)
       const value = evaluate(levels)
       levels.set(upgrade.id, previous)
 
-      if (!Number.isFinite(value)) continue
+      if (!Number.isFinite(value)) {
+        skip('unevaluable', value)
+        continue
+      }
 
       const gain = value - currentValue
       const roi = gain / price
