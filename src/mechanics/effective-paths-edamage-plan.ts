@@ -334,6 +334,21 @@ export function planEffectiveDamagePath(
   const steps = options.steps ?? 145
   const skipped = new Set(options.excludeIds ?? [])
 
+  /*
+   * A variant no band claims would otherwise skip every candidate and return an
+   * empty path — no steps, no exclusions, no issues, indistinguishable from a
+   * player who has bought everything.
+   *
+   * The near miss is a band name: `lab` is a band and `lab-time` is a variant,
+   * and the two are one character apart in a call the compiler only checks when
+   * the argument is typed.
+   */
+  if (!DAMAGE_PLAN_VARIANTS.includes(variant)) {
+    throw new Error(
+      `unknown damage path variant "${variant}" — expected one of ${DAMAGE_PLAN_VARIANTS.join(', ')}`,
+    )
+  }
+
   /**
    * The boundary check, run once here rather than inside `evaluate`.
    *

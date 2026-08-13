@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { planEffectiveDamagePath } from './effective-paths-edamage-plan'
+import { DAMAGE_PLAN_VARIANTS, planEffectiveDamagePath } from './effective-paths-edamage-plan'
 import { configFromSheet, levelsFromSheet } from './effective-paths-edamage-compute.test'
 import fixture from './effective-paths-edamage-path.fixtures.json'
 
@@ -89,4 +89,35 @@ describe('the path the sheet plans', () => {
     const relative = Math.abs(plan.finalEffectiveDamage - last.eDamage) / last.eDamage
     expect(relative).toBeLessThan(1e-9)
   })
+})
+
+describe('a variant it does not have', () => {
+  const planWith = (variant: string) => planEffectiveDamagePath({
+    config: configFromSheet(), levels: levelsFromSheet(), variant: variant as never, steps: 5,
+  })
+
+  it('says so instead of returning an empty path', () => {
+    /*
+     * `lab` is a band and `lab-time` is a variant. Passing the band matched no
+     * band's variant list, so every candidate was skipped and the result was a
+     * path with no steps, no exclusions and no issues — which reads exactly
+     * like a player who has bought everything.
+     *
+     * The types catch it wherever the argument is typed; this is for the calls
+     * where it is not, which is every test fixture and every stored setting
+     * read back as a string.
+     */
+    expect(() => planWith('lab')).toThrow(/unknown damage path variant "lab"/)
+  })
+
+  it('names the variants it does have', () => {
+    // So the message is actionable rather than just a rejection.
+    expect(() => planWith('nonsense')).toThrow(/lab-time, lab-coins, stone, coin, keys/)
+  })
+
+  for (const variant of DAMAGE_PLAN_VARIANTS) {
+    it(`still accepts ${variant}`, () => {
+      expect(() => planWith(variant)).not.toThrow()
+    })
+  }
 })
