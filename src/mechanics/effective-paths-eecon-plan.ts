@@ -428,7 +428,13 @@ function coinCostOf(
  */
 export function coinFarmDays(coins: number, coinsPerHour = SHEET_DEFAULT_COINS_PER_HOUR): number {
   if (!(coinsPerHour > 0) || !Number.isFinite(coins)) return 0
-  return coins / (coinsPerHour * FARM_HOURS_PER_DAY)
+  /*
+   * Never negative. A fully discounted cost can come back at or below zero, and
+   * farm time is added to a research duration — so a negative would pay the
+   * player back time and could drag a step's cost to zero, where the planner
+   * skips it silently for having no price at all.
+   */
+  return Math.max(0, coins) / (coinsPerHour * FARM_HOURS_PER_DAY)
 }
 
 function farmDays(coins: number, options: EffectiveEconomyPlanOptions): number {
