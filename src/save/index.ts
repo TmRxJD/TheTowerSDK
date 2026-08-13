@@ -35,6 +35,7 @@ export * from './vault'
 export * from './themes'
 export * from './dissonance'
 export * from './favorite-labs'
+export * from './effective-paths-settings'
 export * from './lifetime'
 export * from './killed-by'
 
