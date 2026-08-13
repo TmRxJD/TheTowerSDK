@@ -1,4 +1,7 @@
+import { BOT_UPGRADES_DATA } from '../data/bots'
 import { CARD_TEMPLATE_MAP } from '../data/cards'
+import { guardianUpgrades } from '../data/guardian-upgrades'
+import { MODULE_RARITY_LEVEL_CAPS } from '../data/module-levels'
 import { WORKSHOP_DATA } from '../data/workshop-table'
 import { DEFAULT_HARMONY_VAULT_NODES, DEFAULT_POWER_VAULT_NODES } from '../data/vault-tree'
 import { resolveUltimateWeaponStat, ultimateWeaponMaxLevel } from './effective-paths-edamage-costs'
@@ -222,6 +225,123 @@ function vaultRanges(): InputRange[] {
 }
 
 /**
+ * Bot stats, whose caps differ per bot and per stat.
+ *
+ * There is a shared cost table and a shared-looking stat list, and neither is
+ * the range: Flame Bot's Cooldown stops at 15 while the generic entry says 25.
+ * So the maximum is the highest level its own value table lists, per bot and
+ * per stat, which is the only place the truth is.
+ */
+function botRanges(): InputRange[] {
+  const ranges: InputRange[] = []
+
+  for (const bot of BOT_UPGRADES_DATA) {
+    for (const [stat, definition] of Object.entries(bot.stats ?? {})) {
+      const levels = numericKeys((definition as { levels?: Record<string, unknown> })?.levels)
+      ranges.push({
+        id: `bot.${bot.label ?? bot.name}.${stat}`,
+        kind: 'level',
+        source: 'BOT_UPGRADES_DATA — the highest level the stat’s own table lists',
+        min: 0,
+        max: highest(levels),
+      })
+    }
+  }
+
+  return ranges
+}
+
+/**
+ * Guardian stats, capped by where each column stops costing.
+ *
+ * Two things here are read from the data rather than written down, and both
+ * were got wrong first.
+ *
+ * **Which stats a guardian has.** They are not the same three. Attack has
+ * `attackCost`, `cooldownCost` and `targetsCost`; Ally has `recoveryCost` and
+ * `maxRecoveryCost`; Fetch has `findChanceCost` and `doubleFindChanceCost`;
+ * Summon has `durationCost` and `cashBonusCost`; Scout has `rangeBonusCost`.
+ * A hard-coded list of three matched 9 of the 18 columns and skipped the rest
+ * silently, which is the failure this whole catalog exists to prevent — so the
+ * columns are whatever fields end in `Cost`.
+ *
+ * **Where each one stops.** One row per level carries every stat, and they do
+ * not end together: `targetsCost` goes null after level 10 while `attackCost`
+ * keeps going. Taking the row count would offer ninety levels of a stat that
+ * has ten, so each column is measured on its own.
+ */
+function guardianRanges(): InputRange[] {
+  const ranges: InputRange[] = []
+
+  /** `doubleFindChance` -> `Double Find Chance`. */
+  const titleCase = (field: string) => field
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/^./, first => first.toUpperCase())
+
+  /**
+   * A stat is named after its value column, not its cost column.
+   *
+   * The rows read `level, percentage, attackCost, cooldown, cooldownCost, …`,
+   * so each cost is preceded by the value it prices. Naming from the cost gave
+   * `Attack` where every other source calls it `Percentage`, and
+   * `Recovery`/`Max Recovery` where the tracker says `Recovery Amount` — so the
+   * midpoint pass matched none of the eighteen and silently left them all.
+   */
+  const statNameFor = (fields: readonly string[], costField: string) => {
+    const at = fields.indexOf(costField)
+    const previous = at > 0 ? fields[at - 1] : ''
+    return titleCase(previous && !previous.endsWith('Cost') ? previous : costField.slice(0, -4))
+  }
+
+  for (const [guardian, rows] of Object.entries(guardianUpgrades)) {
+    // Each guardian has its own row type and they share no common shape, which
+    // is the point: the fields are discovered rather than declared.
+    const table = rows as unknown as ReadonlyArray<Record<string, unknown>>
+
+    const fields = [...new Set(table.flatMap(row => Object.keys(row)))]
+    const costFields = fields.filter(field => field.endsWith('Cost'))
+
+    for (const field of costFields) {
+      const priced = table
+        .filter(row => typeof row[field] === 'number')
+        .map(row => Number(row.level))
+
+      // A column present but never priced has no range, rather than a zero
+      // that would read as "cannot be upgraded".
+      if (!priced.length) continue
+
+      ranges.push({
+        // Title case, because every other source spells the guardian that way
+        // and an id nothing can look up is an id nobody uses.
+        id: `guardian.${titleCase(guardian)}.${statNameFor(fields, field)}`,
+        kind: 'level',
+        source: `guardianUpgrades — the last level with a ${field}`,
+        min: 0,
+        max: highest(priced),
+      })
+    }
+  }
+
+  return ranges
+}
+
+/**
+ * Module levels, which are capped by rarity rather than by the module.
+ *
+ * An Epic tops out well below an Ancestral 5, so the range is per rarity and a
+ * test setting a module level has to know which one it is holding.
+ */
+function moduleRanges(): InputRange[] {
+  return Object.entries(MODULE_RARITY_LEVEL_CAPS).map(([rarity, cap]) => ({
+    id: `module.${rarity}`,
+    kind: 'level' as const,
+    source: 'MODULE_RARITY_LEVEL_CAPS — the level cap for that rarity',
+    min: 0,
+    max: typeof cap === 'number' && cap > 0 ? cap : null,
+  }))
+}
+
+/**
  * The feature controls, which are inputs too.
  *
  * These are the ones a test is most likely to get wrong, because nothing about
@@ -263,6 +383,9 @@ export function effectivePathsInputRanges(): InputRangeCatalog {
     ...ultimateWeaponRanges(),
     ...cardRanges(),
     ...vaultRanges(),
+    ...botRanges(),
+    ...guardianRanges(),
+    ...moduleRanges(),
     ...CONTROL_RANGES,
   ]
 

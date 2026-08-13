@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import {
   effectivePathsInputRanges,
+  isDamageLabUpgrade,
   midpointOf,
   NOT_LABS,
 } from './effective-paths-input-ranges'
+import { guardianUpgrades } from '../data/guardian-upgrades'
+import { WORKSHOP_DATA } from '../data/workshop-table'
 import { labMaxCatalogLevel } from './effective-paths-lab-costs'
 import { EFFECTIVE_DAMAGE_UPGRADES } from './effective-paths-edamage-plan'
 import { EFFECTIVE_HEALTH_UPGRADES } from './effective-paths-ehp-plan'
@@ -24,9 +27,14 @@ describe('the input range catalog', () => {
     expect(gaps, `no data answers the maximum for: ${gaps.join(', ')}`).toEqual([])
   })
 
-  it('covers all five domains and the feature controls', () => {
+  it('covers every domain and the feature controls', () => {
+    // Pinned as a list rather than a count: a domain silently dropping out is
+    // the failure this catalog exists to prevent, and a count would still pass
+    // if one arrived as another left.
     const kinds = new Set(ranges.map(range => range.id.split('.')[0]))
-    expect([...kinds].sort()).toEqual(['card', 'control', 'lab', 'uw', 'vault', 'workshop'])
+    expect([...kinds].sort()).toEqual([
+      'bot', 'card', 'control', 'guardian', 'lab', 'module', 'uw', 'vault', 'workshop',
+    ])
     // A catalog that silently shrank would still pass the checks above.
     expect(ranges.length).toBeGreaterThan(200)
   })
@@ -90,10 +98,19 @@ describe('the not-a-lab exceptions', () => {
     const onPaths = new Set<string>()
     for (const upgrade of EFFECTIVE_HEALTH_UPGRADES) onPaths.add(upgrade.sheetName)
     for (const upgrade of EFFECTIVE_DAMAGE_UPGRADES) {
-      if (upgrade.band === 'lab' || upgrade.band === 'time') onPaths.add(upgrade.sheetName)
+      if (isDamageLabUpgrade(upgrade.id)) onPaths.add(upgrade.sheetName)
     }
 
-    const unresolvable = [...onPaths].filter(name => labMaxCatalogLevel(name) <= 0).sort()
+    // Workshop stats and their `+` enhancements ride the same paths and are
+    // priced by WORKSHOP_DATA, so asking the lab catalog for them would invent
+    // gaps that are not gaps.
+    const isWorkshop = (name: string) =>
+      name in WORKSHOP_DATA || (name.endsWith(' +') && name.slice(0, -2) in WORKSHOP_DATA)
+
+    const unresolvable = [...onPaths]
+      .filter(name => !isWorkshop(name))
+      .filter(name => labMaxCatalogLevel(name) <= 0)
+      .sort()
     expect(unresolvable).toEqual(claimed)
   })
 
@@ -101,5 +118,53 @@ describe('the not-a-lab exceptions', () => {
     for (const [name, reason] of Object.entries(NOT_LABS)) {
       expect(reason.length, `${name} has no reason`).toBeGreaterThan(20)
     }
+  })
+})
+
+describe('the per-entry domains', () => {
+  const { ranges } = effectivePathsInputRanges()
+  const idsFor = (prefix: string) => ranges.filter(range => range.id.startsWith(prefix))
+
+  it('gives every guardian every column it actually has', () => {
+    /*
+     * The first version listed three columns — attackCost, cooldownCost,
+     * targetsCost — and matched 9 of the 18. Ally is priced on recoveryCost and
+     * maxRecoveryCost, Fetch on findChanceCost and doubleFindChanceCost, Summon
+     * on durationCost and cashBonusCost, Scout on rangeBonusCost. The other
+     * nine were skipped in silence, which is the shape this catalog exists to
+     * catch, so the columns are counted from the data.
+     */
+    let columns = 0
+    for (const rows of Object.values(guardianUpgrades)) {
+      const table = rows as unknown as ReadonlyArray<Record<string, unknown>>
+      const fields = [...new Set(table.flatMap(row => Object.keys(row)))]
+        .filter(field => field.endsWith('Cost'))
+      columns += fields.filter(field => table.some(row => typeof row[field] === 'number')).length
+    }
+
+    expect(idsFor('guardian.')).toHaveLength(columns)
+    expect(columns).toBeGreaterThan(9)
+  })
+
+  it('caps a bot stat by its own table, not the shared one', () => {
+    // Flame Bot's Cooldown stops at 15 where the generic stat list says 25.
+    // Reading the shared list would offer ten levels that do not exist.
+    const cooldown = ranges.find(range => range.id === 'bot.Flame Bot.Cooldown')
+    expect(cooldown?.max).toBe(15)
+  })
+
+  it('caps a guardian stat where its own column stops costing', () => {
+    // `targetsCost` goes null long before the rows run out.
+    const targets = ranges.find(range => range.id === 'guardian.Attack.Targets')
+    const cooldown = ranges.find(range => range.id === 'guardian.Attack.Cooldown')
+    expect(targets?.max).toBe(10)
+    expect(cooldown?.max).toBeGreaterThan(targets?.max ?? 0)
+  })
+
+  it('caps module levels by rarity', () => {
+    const epic = ranges.find(range => range.id === 'module.Epic')
+    const top = ranges.find(range => range.id === 'module.Ancestral 5')
+    expect(epic?.max).toBeGreaterThan(0)
+    expect(top?.max).toBeGreaterThan(epic?.max ?? 0)
   })
 })
