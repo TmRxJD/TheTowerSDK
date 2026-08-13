@@ -367,6 +367,10 @@ hundred rows of it.
 The MCP server's `plan_effective_path` tool runs any of this without a scratch script — see
 [`mcp/README.md`](mcp/README.md).
 
+[`docs/EFFECTIVE_PATHS.md`](docs/EFFECTIVE_PATHS.md) is the longer version: how a config differs from
+levels, why the damage and economy levels are banded, what a step guarantees, and the two testing
+habits this port learned the hard way.
+
 [ep]: https://docs.google.com/spreadsheets/d/1YwZtKP6B4WYhRba5T6APJ1YxKNdfnIGQnprgnxmO7zc/edit
 
 ---
