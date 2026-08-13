@@ -342,6 +342,34 @@ function moduleRanges(): InputRange[] {
 }
 
 /**
+ * The options the three "show N levels" dropdowns offer, in the sheet's order.
+ *
+ * `All` is the sheet's word for no cap and is kept as its word rather than
+ * translated to a number here — a caller that turns it into `Infinity` or into
+ * a large integer is making a decision, and it should be visible where that
+ * decision is made. {@link showLevelsCap} is that place.
+ */
+export const SHOW_LEVELS_OPTIONS = ['None', '1 level', '4 level', '10 level', 'All'] as const
+
+export type ShowLevelsOption = typeof SHOW_LEVELS_OPTIONS[number]
+
+/**
+ * How many further levels of one upgrade a path may show.
+ *
+ * `null` means no cap. The sheet's damage dropdown appends a description to
+ * each option — `4 level  | Show the 4 next labs levels on Coin path` — so the
+ * leading token is what carries the meaning, and matching on the whole string
+ * would silently fall through to the default on that tab alone.
+ */
+export function showLevelsCap(option: string | undefined): number | null {
+  const token = String(option ?? '').split('|')[0]?.trim()
+  if (!token || token === 'All') return null
+  if (token === 'None') return 0
+  const levels = Number.parseInt(token, 10)
+  return Number.isFinite(levels) && levels >= 0 ? levels : null
+}
+
+/**
  * The feature controls, which are inputs too.
  *
  * These are the ones a test is most likely to get wrong, because nothing about
@@ -359,6 +387,39 @@ const CONTROL_RANGES: readonly InputRange[] = [
   { id: 'control.hideNonUwUpgrades', kind: 'boolean', source: 'eDamage!AY25', min: 0, max: 1, options: [false, true] },
   { id: 'control.perksEquipped', kind: 'boolean', source: 'eDamage!AY61, eEcon!AZ43', min: 0, max: 1, options: [false, true] },
   { id: 'control.useCards', kind: 'boolean', source: 'eDamage!AY39', min: 0, max: 1, options: [false, true] },
+  /*
+   * The three "how many levels to show" dropdowns.
+   *
+   * Read off the sheet rather than guessed: all three offer
+   * `None / 1 level / 4 level / 10 level / All`, and the damage one dresses
+   * each option with a description — `4 level  | Show the 4 next labs levels on
+   * Coin path` — while meaning the same thing. They cap how far a single
+   * upgrade may run in one path, which is why they are ranges and not switches.
+   */
+  {
+    id: 'control.showLabs',
+    kind: 'enum',
+    source: 'eEcon!AZ12 — ONE_OF_LIST on the sheet',
+    min: 0,
+    max: 10,
+    options: SHOW_LEVELS_OPTIONS,
+  },
+  {
+    id: 'control.showEnhancements',
+    kind: 'enum',
+    source: 'eEcon!AZ13 — ONE_OF_LIST on the sheet',
+    min: 0,
+    max: 10,
+    options: SHOW_LEVELS_OPTIONS,
+  },
+  {
+    id: 'control.showLabsOnCoinPath',
+    kind: 'enum',
+    source: 'eDamage!AY27 — the same options, each with a description appended',
+    min: 0,
+    max: 10,
+    options: SHOW_LEVELS_OPTIONS,
+  },
   {
     id: 'control.rowsCalculated',
     kind: 'enum',
