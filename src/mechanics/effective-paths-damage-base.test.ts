@@ -159,3 +159,51 @@ describe('the Base composition', () => {
     expect(withFreeze).toBe(200)
   })
 })
+
+describe('the Base composition under each run type', () => {
+  /*
+   * `DI5` is
+   *
+   *   IF($AX$19 = "Attack Disso",
+   *      Acp * AmpStrike,
+   *      DMG * PerkDMG * TODMG * Shock * CardDMMastery * CannonAssist * Acp * PF * AmpStrike)
+   *
+   * so Attack Dissonance drops seven of the nine factors — the tower is not
+   * firing, and only the shockwave and Amp Strike remain. The other four run
+   * types take the full product.
+   *
+   * Two of these six states repeat the inputs of the state above with only the
+   * run type changed, so the collapse shows up as a difference between two rows
+   * rather than as two unrelated numbers. Each `sheet` value was evaluated on
+   * the sheet itself with the cell references swapped for literals.
+   *
+   * This block exists because the run-type rules were reported as unimplemented
+   * for a long time while two of the three were in fact wired — the note was
+   * written from intent rather than from the code, and nothing measured either.
+   */
+  for (const [index, c] of fixtures.baseByRunType.entries()) {
+    it(`matches the sheet on ${c.runType} (state ${index})`, () => {
+      close(damageBase({
+        runType: c.runType as never,
+        towerDamage: c.towerDamage,
+        damagePerk: c.damagePerk,
+        tradeOffPerk: c.tradeOffPerk,
+        shock: c.shock,
+        demonModeMastery: c.demonModeMastery,
+        cannonAssist: c.cannonAssist,
+        shockwave: c.shockwave,
+        perfectFreeze: c.perfectFreeze,
+        ampStrike: c.ampStrike,
+      }), c.sheet)
+    })
+  }
+
+  it('drops the other seven factors only on Attack Dissonance', () => {
+    const full = fixtures.baseByRunType[0]
+    const collapsed = fixtures.baseByRunType[1]
+    // Same inputs, different run type: the sheet's own two answers differ by
+    // the seven factors, so a model that ignored run type would fail here.
+    expect(collapsed.sheet).toBeLessThan(full.sheet)
+    expect(collapsed.sheet).toBeCloseTo(full.shockwave * full.ampStrike, 9)
+  })
+})

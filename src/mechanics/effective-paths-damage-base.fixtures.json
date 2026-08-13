@@ -462,5 +462,85 @@
    "lab": 7,
    "sheet": 5
   }
+ ],
+ "baseByRunType": [
+  {
+   "runType": "Regular",
+   "towerDamage": 26078.79,
+   "damagePerk": 1.75,
+   "tradeOffPerk": 1.5,
+   "shock": 1.21,
+   "demonModeMastery": 1.5,
+   "cannonAssist": 1.44,
+   "shockwave": 1.37,
+   "perfectFreeze": 1.09,
+   "ampStrike": 2.15,
+   "sheet": 574435.6587740891
+  },
+  {
+   "runType": "Attack Disso",
+   "towerDamage": 26078.79,
+   "damagePerk": 1.75,
+   "tradeOffPerk": 1.5,
+   "shock": 1.21,
+   "demonModeMastery": 1.5,
+   "cannonAssist": 1.44,
+   "shockwave": 1.37,
+   "perfectFreeze": 1.09,
+   "ampStrike": 2.15,
+   "sheet": 2.9455
+  },
+  {
+   "runType": "Tourney",
+   "towerDamage": 453.344,
+   "damagePerk": 1,
+   "tradeOffPerk": 1,
+   "shock": 1.0073,
+   "demonModeMastery": 1,
+   "cannonAssist": 1.87,
+   "shockwave": 3.11,
+   "perfectFreeze": 1.4412,
+   "ampStrike": 1.02,
+   "sheet": 3904.02982619013
+  },
+  {
+   "runType": "Attack Disso",
+   "towerDamage": 453.344,
+   "damagePerk": 1,
+   "tradeOffPerk": 1,
+   "shock": 1.0073,
+   "demonModeMastery": 1,
+   "cannonAssist": 1.87,
+   "shockwave": 3.11,
+   "perfectFreeze": 1.4412,
+   "ampStrike": 1.02,
+   "sheet": 3.1722
+  },
+  {
+   "runType": "Util Disso",
+   "towerDamage": 4130.56,
+   "damagePerk": 2.3125,
+   "tradeOffPerk": 8,
+   "shock": 1.1333,
+   "demonModeMastery": 1.5,
+   "cannonAssist": 1.09,
+   "shockwave": 5.02,
+   "perfectFreeze": 3.9,
+   "ampStrike": 4.87,
+   "sheet": 13500212.19060175
+  },
+  {
+   "runType": "UW Disso",
+   "towerDamage": 14714.55,
+   "damagePerk": 1,
+   "tradeOffPerk": 1,
+   "shock": 1,
+   "demonModeMastery": 1,
+   "cannonAssist": 1,
+   "shockwave": 1,
+   "perfectFreeze": 1,
+   "ampStrike": 1,
+   "sheet": 14714.55
+  }
  ]
 }
