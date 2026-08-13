@@ -189,7 +189,24 @@ export interface EffectiveDamageUpgrade {
   /** The key within that band's level object. */
   key: string
   sheetName: string
-  /** The matrix column, kept so a reader can find it on the sheet. */
+  /**
+   * The matrix column, kept so a reader can find it on the sheet.
+   *
+   * **Relative to the band's own tab**, which is the part worth stating: each
+   * band is a separate tab, and its columns only mean anything against that one.
+   *
+   *   lab    -> eDamage
+   *   stone  -> eDamage Stone
+   *   coin   -> eDamage Coins
+   *   keys   -> eDamage Keys
+   *
+   * Checked against row 4 of each: all 97 columns resolve to a header matching
+   * their `sheetName`. Reading a coin column against `eDamage` instead lands in
+   * an unrelated block whose headers are lab names — near enough to look like an
+   * off-by-one and waste an hour, which is why the mapping is written down.
+   *
+   * Metadata only. Nothing reads the sheet with it.
+   */
   column: string
 }
 
