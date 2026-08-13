@@ -133,6 +133,6 @@ describe('the sheet cells the port cites', () => {
     expect(
       distinct.size,
       'a cell reference was added or removed — verify it against the sheet, then update this',
-    ).toBe(74)
+    ).toBe(78)
   })
 })

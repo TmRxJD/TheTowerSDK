@@ -99,6 +99,19 @@ export interface LabCostModifiers {
   labSpeedLabLevel?: number
   /** Lab speed from relics, as a fraction — 0.1 for +10%. */
   labSpeedRelicPct?: number
+  /**
+   * `eEcon!O5` — the "Speed Up" what-if, on top of the two above.
+   *
+   * The sheet takes it as text (`x1`, `x2`) and `eEcon!E4` strips the `x`
+   * before handing the number to `EPP_LAB_DUR_NON_FORMAT`'s `labspeed`
+   * argument. It is a planning aid — *how would this path look if labs ran
+   * twice as fast* — not anything the player owns, which is why it multiplies
+   * the real speed rather than adding to it.
+   *
+   * Only the economy tab has it: `eHP!O5` and `eDamage!O5` are a different
+   * layout entirely. Absent means `1`.
+   */
+  labSpeedMultiplier?: number
 }
 
 /** `LAB_COIN_DISCOUNT` — the fraction taken off every lab's coin cost. */
@@ -110,9 +123,19 @@ export function labCoinDiscount(coinDiscountLabLevel: number): number {
  * `LAB_SPEED_TOTAL` — the divisor on every lab's duration.
  *
  * The lab and the relic stack multiplicatively, not additively.
+ *
+ * `speedUpMultiplier` is `eEcon!O5`, which is not a stat the player has: it is
+ * the tab's what-if control, and it multiplies the real speed rather than
+ * adding to it. Anything at or below zero is ignored rather than allowed to
+ * flip a duration negative or divide it by nothing.
  */
-export function labSpeedTotal(labSpeedLabLevel: number, labSpeedRelicPct = 0): number {
-  return (1 + labSpeedLabLevel * 0.02) * (1 + labSpeedRelicPct)
+export function labSpeedTotal(
+  labSpeedLabLevel: number,
+  labSpeedRelicPct = 0,
+  speedUpMultiplier = 1,
+): number {
+  const speedUp = speedUpMultiplier > 0 ? speedUpMultiplier : 1
+  return (1 + labSpeedLabLevel * 0.02) * (1 + labSpeedRelicPct) * speedUp
 }
 
 /**
@@ -147,7 +170,11 @@ export function labDurationDaysToReachLevel(
   if (!row) return null
   const hours = parseDurationToHours(row.duration)
   if (!Number.isFinite(hours)) return null
-  const speed = labSpeedTotal(modifiers.labSpeedLabLevel ?? 0, modifiers.labSpeedRelicPct ?? 0)
+  const speed = labSpeedTotal(
+    modifiers.labSpeedLabLevel ?? 0,
+    modifiers.labSpeedRelicPct ?? 0,
+    modifiers.labSpeedMultiplier ?? 1,
+  )
   if (speed <= 0) return null
   return hours / HOURS_PER_DAY / speed
 }
