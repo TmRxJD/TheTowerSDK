@@ -60,7 +60,12 @@ import {
   labMaxCatalogLevel,
 } from './effective-paths-lab-costs'
 import type { LabCostModifiers } from './effective-paths-lab-costs'
-import { assertPathVariant, planPath } from './effective-paths-planner'
+import {
+  appendSkipExclusions,
+  assertPathVariant,
+  type PathSkip,
+  planPath,
+} from './effective-paths-planner'
 import type { PathStep, PathUpgrade } from './effective-paths-planner'
 
 /**
@@ -425,6 +430,7 @@ export function planEffectiveDamagePath(
     })
   }
 
+  const skips: PathSkip[] = []
   const planned = planPath({
     upgrades,
     steps,
@@ -437,7 +443,12 @@ export function planEffectiveDamagePath(
       if (!upgrade) return Number.NaN
       return costOf(upgrade, nextLevel, variant, options) ?? Number.NaN
     },
+    onSkip: skip => skips.push(skip),
   })
+
+  // Every candidate the loop passed over, named with the number that
+  // disqualified it, so a short path can be explained rather than guessed at.
+  appendSkipExclusions(excluded, planned, skips)
 
   const startingEffectiveDamage = computeEffectiveDamage(config, levels).effectiveDamage
 

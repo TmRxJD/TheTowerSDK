@@ -23,7 +23,14 @@ import type { EffectiveHealthConfig, EffectiveHealthLevels } from './effective-p
 import { labCoinCostToReachLevel, labDurationDaysToReachLevel } from './effective-paths-lab-costs'
 import type { LabCostModifiers } from './effective-paths-lab-costs'
 import { labMaxCatalogLevel } from './effective-paths-lab-costs'
-import { assertPathVariant, type PathStep, type PathUpgrade, planPath } from './effective-paths-planner'
+import {
+  appendSkipExclusions,
+  assertPathVariant,
+  type PathSkip,
+  type PathStep,
+  type PathUpgrade,
+  planPath,
+} from './effective-paths-planner'
 import { CARD_MASTERY_MAX_LEVEL } from './effective-paths-coin-costs'
 
 /** The levels the regen path reads, over and above the eHP ones it shares. */
@@ -206,6 +213,7 @@ export function planEffectiveRegenPath(options: EffectiveRegenPlanOptions): Effe
 
   const bySaveKey = new Map(EFFECTIVE_REGEN_UPGRADES.map(entry => [entry.key as string, entry]))
 
+  const skips: PathSkip[] = []
   const planned = planPath({
     upgrades,
     steps,
@@ -224,7 +232,10 @@ export function planEffectiveRegenPath(options: EffectiveRegenPlanOptions): Effe
         : labCoinCostToReachLevel(upgrade.saveKey, nextLevel, options.labModifiers)
       return cost ?? Number.NaN
     },
+    onSkip: skip => skips.push(skip),
   })
+
+  appendSkipExclusions(excluded, planned, skips)
 
   const starting = computeEffectiveRegen(config, eHealth, levels).effectiveRegen
   return {

@@ -149,6 +149,57 @@ export function skipsFromFirstStep(skips: readonly PathSkip[]): PathSkip[] {
   return skips.filter(skip => skip.step === 1)
 }
 
+/** One upgrade a plan left out, and why, as every planner reports it. */
+export interface PathExclusion {
+  sheetName: string
+  reason: string
+}
+
+/**
+ * A skip in the words a player reads.
+ *
+ * Each names the number that disqualified the candidate. "No price" and "a
+ * price of exactly zero" look identical on screen and are different faults: a
+ * missing catalog entry against a discount that has reached 100%.
+ */
+export function describePathSkip(skip: PathSkip): string {
+  switch (skip.reason) {
+    case 'capped':
+      return `already at its cap of ${skip.detail}`
+    case 'unpriced':
+      return Number.isFinite(skip.detail)
+        ? `priced at ${skip.detail} for level ${skip.nextLevel}, which is not a cost`
+        : `no price for level ${skip.nextLevel}`
+    case 'unevaluable':
+      return `the model could not value level ${skip.nextLevel}`
+  }
+}
+
+/**
+ * Add every first-step skip that is not already accounted for.
+ *
+ * Shared by all four planners so a candidate cannot vanish from one of them and
+ * be explained by another. Anything already planned, or already excluded for a
+ * reason of the planner's own — a locked weapon, a synced cooldown — keeps that
+ * reason: it says more than "capped" does.
+ *
+ * Mutates `excluded` in place, which is how each planner already builds it.
+ */
+export function appendSkipExclusions(
+  excluded: PathExclusion[],
+  planned: readonly PathStep[],
+  skips: readonly PathSkip[],
+): void {
+  const plannedIds = new Set(planned.map(step => step.id))
+  const named = new Set(excluded.map(entry => entry.sheetName))
+
+  for (const skip of skipsFromFirstStep(skips)) {
+    if (plannedIds.has(skip.id) || named.has(skip.name)) continue
+    named.add(skip.name)
+    excluded.push({ sheetName: skip.name, reason: describePathSkip(skip) })
+  }
+}
+
 export interface PathStep {
   /** 1-based position in the path. */
   step: number

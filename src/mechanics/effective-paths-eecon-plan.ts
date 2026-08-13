@@ -44,7 +44,12 @@ import {
   labMaxCatalogLevel,
 } from './effective-paths-lab-costs'
 import type { LabCostModifiers } from './effective-paths-lab-costs'
-import { assertPathVariant, type PathSkip, planPath, skipsFromFirstStep } from './effective-paths-planner'
+import {
+  appendSkipExclusions,
+  assertPathVariant,
+  type PathSkip,
+  planPath,
+} from './effective-paths-planner'
 import type { PathStep, PathUpgrade } from './effective-paths-planner'
 
 /** The paths the econ tabs publish. The time tab is priced two ways. */
@@ -441,26 +446,6 @@ function farmDays(coins: number, options: EffectiveEconomyPlanOptions): number {
   return coinFarmDays(coins, options.coinsPerHour ?? SHEET_DEFAULT_COINS_PER_HOUR)
 }
 
-/**
- * A skip, in the words the page shows.
- *
- * Each says which number disqualified the candidate. "No price" and "a price of
- * exactly zero" look identical on screen and are different faults: the first is
- * a missing catalog entry, the second is a discount that has reached 100%.
- */
-function skipReason(skip: PathSkip): string {
-  switch (skip.reason) {
-    case 'capped':
-      return `already at its cap of ${skip.detail}`
-    case 'unpriced':
-      return Number.isFinite(skip.detail)
-        ? `priced at ${skip.detail} for level ${skip.nextLevel}, which is not a cost`
-        : `no price for level ${skip.nextLevel}`
-    case 'unevaluable':
-      return `the model could not value level ${skip.nextLevel}`
-  }
-}
-
 /** A candidate's current level. */
 function levelOf(levels: EffectiveEconomyLevels, upgrade: EffectiveEconomyUpgrade): number {
   return (levels[upgrade.band] as unknown as Record<string, number>)[upgrade.key] ?? 0
@@ -623,15 +608,10 @@ export function planEffectiveEconomyPath(
    * — not in the steps, not in `excluded` — so a path that stops after one step
    * offers no way to find out why. That is not hypothetical: a real account
    * planned a module level nine orders of magnitude worse per day than a lab
-   * whose next level simply never appeared, and there was nothing to read.
+   * whose next level simply never appeared, and there was nothing to read. It
+   * turned out every lab was at its cap, which the path can now say.
    */
-  const planterIds = new Set(planned.map(step => step.id))
-  const named = new Set(excluded.map(entry => entry.sheetName))
-  for (const skip of skipsFromFirstStep(skips)) {
-    if (planterIds.has(skip.id) || named.has(skip.name)) continue
-    named.add(skip.name)
-    excluded.push({ sheetName: skip.name, reason: skipReason(skip) })
-  }
+  appendSkipExclusions(excluded, planned, skips)
 
   const startingEffectiveEconomy = computeEffectiveEconomy(config, levels).effectiveEconomy
 

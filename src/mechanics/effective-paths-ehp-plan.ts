@@ -43,7 +43,14 @@ import {
   type EffectiveHealthConfig,
   type EffectiveHealthLevels,
 } from './effective-paths-ehp-model'
-import { assertPathVariant, type PathStep, type PathUpgrade, planPath } from './effective-paths-planner'
+import {
+  appendSkipExclusions,
+  assertPathVariant,
+  type PathSkip,
+  type PathStep,
+  type PathUpgrade,
+  planPath,
+} from './effective-paths-planner'
 
 /** Which currency the path spends, and therefore what it may buy. */
 export type EffectiveHealthPathVariant = 'lab-time' | 'lab-coins' | 'stone' | 'coin'
@@ -398,6 +405,7 @@ export function planEffectiveHealthPath(options: EffectiveHealthPlanOptions): Ef
 
   const byId = new Map(EFFECTIVE_HEALTH_UPGRADES.map(upgrade => [upgrade.key as string, upgrade]))
 
+  const skips: PathSkip[] = []
   const planned = planPath({
     upgrades,
     steps,
@@ -433,7 +441,10 @@ export function planEffectiveHealthPath(options: EffectiveHealthPlanOptions): Ef
         : labCoinCostToReachLevel(upgrade.saveKey, nextLevel, options.labModifiers)
       return cost ?? Number.NaN
     },
+    onSkip: skip => skips.push(skip),
   })
+
+  appendSkipExclusions(excluded, planned, skips)
 
   const startingEffectiveHealth = computeEffectiveHealth(config, levels).effectiveHealth
 
