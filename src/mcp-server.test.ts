@@ -230,6 +230,76 @@ describeServer('mcp server', () => {
     })
   })
 
+  describe('with a local page library', () => {
+    /*
+     * The offline path, and the one that matters most: an agent with no
+     * network still gets the game knowledge instead of guessing. Spawns its
+     * own server because the directory is read from the environment at start.
+     */
+    let offline: ChildProcessWithoutNullStreams
+    let offlineBuffer = ''
+    let offlineId = 1
+    const offlinePending = new Map<number, (msg: Record<string, unknown>) => void>()
+    const dir = path.join(HERE, '..', '..', '..', 'scripts', 'wiki-seed', 'fandom', '_fetched')
+
+    const hasLibrary = existsSync(dir)
+    const itLocal = hasLibrary ? it : it.skip
+
+    beforeAll(() => {
+      if (!hasLibrary) return
+      offline = spawn('node', [SERVER], {
+        stdio: ['pipe', 'pipe', 'inherit'],
+        env: { ...process.env, TOWER_WIKI_DIR: dir },
+      })
+      offline.stdout.on('data', chunk => {
+        offlineBuffer += chunk
+        let newline: number
+        while ((newline = offlineBuffer.indexOf('\n')) !== -1) {
+          const line = offlineBuffer.slice(0, newline).trim()
+          offlineBuffer = offlineBuffer.slice(newline + 1)
+          if (!line) continue
+          const message = JSON.parse(line)
+          offlinePending.get(message.id)?.(message)
+          offlinePending.delete(message.id)
+        }
+      })
+    })
+
+    afterAll(() => offline?.kill())
+
+    const callLocal = async (name: string, args: Record<string, unknown>) => {
+      const response = await new Promise<Record<string, unknown>>((resolve, reject) => {
+        const id = offlineId++
+        offlinePending.set(id, resolve)
+        offline.stdin.write(`${JSON.stringify({
+          jsonrpc: '2.0', id, method: 'tools/call', params: { name, arguments: args },
+        })}\n`)
+        setTimeout(() => reject(new Error(`timeout: ${name}`)), 20_000)
+      })
+      const text = response.result?.content?.[0]?.text
+      return text ? JSON.parse(text) : null
+    }
+
+    itLocal('reads a page from disk rather than the network', async () => {
+      const result = await callLocal('wiki_page', { title: 'black-hole' })
+      expect(result.source, 'served from somewhere other than the local library').toBe('local')
+      expect(result.sections.length).toBeGreaterThan(2)
+    })
+
+    itLocal('searches the library without a request', async () => {
+      const result = await callLocal('wiki_search', { query: 'black hole' })
+      expect(result.source).toBe('local')
+      expect(result.results.map((hit: { title: string }) => hit.title)).toContain('black-hole')
+    })
+
+    itLocal('says where every answer came from', async () => {
+      // The distinction a reader needs: local pages can be stale in a way a
+      // fresh fetch cannot, and silence about it is how stale data gets quoted.
+      const result = await callLocal('wiki_page', { title: 'black-hole' })
+      expect(['local', 'cache', 'fandom']).toContain(result.source)
+    })
+  })
+
   const itNetwork = process.env.TOWER_TEST_NETWORK ? it : it.skip
 
   describe('the wiki tools, against the live wiki', () => {

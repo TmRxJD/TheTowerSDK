@@ -40,8 +40,26 @@ You are looking for the thing you did not know to ask about. Real examples from 
 - Eight relic values were rendered as percentages when they are **metres and seconds**. The unit
   lives in the game's own description string, not in the number.
 
-The wiki's text is **CC-BY-SA** and this package is MIT, which is why the pages are not bundled.
-Attribute it if you reproduce it.
+**Working offline.** Point `TOWER_WIKI_DIR` at a directory of `slug.md` pages and both tools read it
+before the network, so a disconnected agent still has the knowledge. Every answer reports
+`source: "local" | "cache" | "fandom"`, because a local page can be stale in a way a fresh fetch
+cannot and quoting a stale one unknowingly is the failure to avoid.
+
+### Why the pages are not in this package, and how they could ship
+
+The wiki declares **CC-BY-SA** (confirmed from its own API: `action=query&meta=siteinfo&siprop=rightsinfo`).
+This package is MIT. Bundling the text would put two incompatible licences in one install and would
+mean shipping MIT-licensed files that are not, in fact, MIT.
+
+That is a packaging constraint, not a prohibition. CC-BY-SA permits redistribution and adaptation —
+wikitext converted to Markdown *is* an adaptation — provided the result carries the same licence,
+credits the source, and says it was changed. So the content can ship as a **separate package** of
+its own: `license: "CC-BY-SA-3.0"`, a NOTICE crediting the wiki and its contributors, and a line
+recording that the pages were converted from wikitext. Install it, point `TOWER_WIKI_DIR` at it, and
+the wiki is offline and instant. The seam already exists and is tested; only the package does not,
+because publishing under someone else's licence is a decision for a person, not an agent.
+
+`scripts/fetch-fandom-wiki-markdown.mjs` in the tracker repo already produces exactly that directory.
 
 ## The entry points, and which to use
 

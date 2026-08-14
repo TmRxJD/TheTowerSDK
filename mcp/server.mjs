@@ -51,20 +51,52 @@ const sdk = loadSdk()
  */
 const WIKI_CACHE_DIR = path.join(os.tmpdir(), 'thetowersdk-wiki-cache')
 
-function cachedWikiPath(title) {
-  return path.join(WIKI_CACHE_DIR, `${title.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}.md`)
+/**
+ * An offline library of pages, when one is available.
+ *
+ * `TOWER_WIKI_DIR` points at a directory of `slug.md` files — either a set
+ * fetched ahead of time, or a content package installed separately. It is read
+ * before the network, so an agent with no connection still gets the game
+ * knowledge, and an agent with one does not spend a request on a page that has
+ * not changed.
+ *
+ * It exists because the pages cannot ship inside this package: wiki text is
+ * CC-BY-SA and this package is MIT, so the content has to travel under its own
+ * licence, separately.
+ */
+const WIKI_LOCAL_DIR = process.env.TOWER_WIKI_DIR ?? null
+
+const wikiSlug = title => title.replace(/[^a-z0-9]+/gi, '-').toLowerCase().replace(/^-|-$/g, '')
+
+function localWikiPage(title) {
+  if (!WIKI_LOCAL_DIR) return null
+  const file = path.join(WIKI_LOCAL_DIR, `${wikiSlug(title)}.md`)
+  return fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : null
 }
 
 async function wikiPageMarkdown(title, { refresh = false } = {}) {
-  const cacheFile = cachedWikiPath(title)
-  if (!refresh && fs.existsSync(cacheFile)) {
-    return { markdown: fs.readFileSync(cacheFile, 'utf8'), cached: true }
+  if (!refresh) {
+    const local = localWikiPage(title)
+    if (local) return { markdown: local, source: 'local' }
+
+    const cacheFile = path.join(WIKI_CACHE_DIR, `${wikiSlug(title)}.md`)
+    if (fs.existsSync(cacheFile)) {
+      return { markdown: fs.readFileSync(cacheFile, 'utf8'), source: 'cache' }
+    }
   }
 
   const markdown = await sdk.wiki.fetchFandomPageAsMarkdown(title)
   fs.mkdirSync(WIKI_CACHE_DIR, { recursive: true })
-  fs.writeFileSync(cacheFile, markdown, 'utf8')
-  return { markdown, cached: false }
+  fs.writeFileSync(path.join(WIKI_CACHE_DIR, `${wikiSlug(title)}.md`), markdown, 'utf8')
+  return { markdown, source: 'fandom' }
+}
+
+/** Titles available offline, so `wiki_search` can answer without a network. */
+function localWikiTitles() {
+  if (!WIKI_LOCAL_DIR || !fs.existsSync(WIKI_LOCAL_DIR)) return []
+  return fs.readdirSync(WIKI_LOCAL_DIR)
+    .filter(name => name.endsWith('.md'))
+    .map(name => name.replace(/\.md$/, ''))
 }
 /** Read, not hard-coded, so it cannot drift from the package on a release. */
 const { version: VERSION } = require(path.join(HERE, '..', 'package.json'))
@@ -221,7 +253,7 @@ const TOOLS = {
       if (!section) {
         return {
           title,
-          cached: page.cached,
+          source: page.source,
           sections: headings,
           markdown: page.markdown.slice(0, 12000),
           truncated: page.markdown.length > 12000,
@@ -260,6 +292,19 @@ const TOOLS = {
       required: ['query'],
     },
     run: async ({ query, limit }) => {
+      const wanted = String(query).toLowerCase()
+      const offline = localWikiTitles().filter(slug => slug.includes(wanted.replace(/\s+/g, '-')))
+      if (offline.length > 0) {
+        // A local library answers without a request, and its slugs are the
+        // titles `wiki_page` will find, so the pair stays usable offline.
+        return {
+          query,
+          source: 'local',
+          results: offline.slice(0, Math.min(Number(limit) || 10, 25)).map(title => ({ title })),
+          next: 'pass one of these titles to wiki_page',
+        }
+      }
+
       const params = new URLSearchParams({
         action: 'query',
         format: 'json',

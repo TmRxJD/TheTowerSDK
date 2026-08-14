@@ -59,6 +59,23 @@ wiki_page   { title: "Cards", section: "Costs" } → just the part you need
 Pages are cached in the OS temp directory after the first read, so looking something up twice is
 free. A wrong title returns an error *object* pointing you at `wiki_search`, not a throw.
 
+### Working offline
+
+Set `TOWER_WIKI_DIR` to a directory of `slug.md` files and both tools read it **before** the
+network — so an agent with no connection still has the game knowledge:
+
+```bash
+TOWER_WIKI_DIR=/path/to/wiki-pages pnpm mcp
+```
+
+Every response says where it came from — `source: "local" | "cache" | "fandom"` — so you always know
+whether you are reading something that could be stale.
+
+This is the seam a **content package** plugs into. The pages cannot ship inside this package
+(CC-BY-SA text, MIT code), but nothing stops them shipping *beside* it under their own licence:
+install one, point `TOWER_WIKI_DIR` at it, and the wiki is available offline and instantly. In this
+repo, `scripts/fetch-fandom-wiki-markdown.mjs` produces exactly that directory.
+
 Things the data cannot tell you and the wiki can: Spotlight Missiles takes its damage from Smart
 Missiles; `UW+` needs all nine weapons; eight relic bonuses are metres and seconds, not percentages.
 
