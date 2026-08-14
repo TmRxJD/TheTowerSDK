@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.1
+
+`sharedToolsCatalog` gains an Effective Paths entry, so a consumer building links or a menu from the
+catalog gets the tool rather than a gap.
+
+README: a worked example of planning for a real player — what a config is versus levels, how to fill
+a zero record from the candidate lists, and the fact that mapping a save onto them is the caller's
+job rather than something this package does. The MCP section now lists the tools and says which two
+change how an agent works: `plan_effective_path` and `wiki_page`.
+
 ## 0.4.0
 
 ### New entry point: `thetowersdk/wiki`

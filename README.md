@@ -291,15 +291,49 @@ those names, so a term cannot appear unless it is real.
 
 ## Using it with an AI agent
 
-There's an MCP server in [`mcp/`](mcp/README.md). Point your agent at it and it can list exports,
-read a table, look up a term, decode a save and run an extractor directly — which beats having it
-guess at an API and hand you code that does not compile.
+There's an MCP server in [`mcp/`](mcp/README.md). Point your agent at it and it can read the real
+API and the real game data instead of guessing at both.
 
 ```bash
 claude mcp add thetowersdk -- node ./node_modules/thetowersdk/mcp/server.mjs
 ```
 
-Agent instructions live in [AGENTS.md](AGENTS.md); `CLAUDE.md` and
+Any MCP client works — it speaks stdio. For one that reads a JSON config:
+
+```json
+{
+  "mcpServers": {
+    "thetowersdk": {
+      "command": "node",
+      "args": ["./node_modules/thetowersdk/mcp/server.mjs"]
+    }
+  }
+}
+```
+
+| Tool | Ask it for |
+|---|---|
+| `list_exports` · `get_export` | What exists, and one table previewed rather than dumped |
+| `describe_schema` | A table's declared shape, not one guessed from a sample row |
+| `decode_save` · `run_extractor` | What is in a `playerInfo.dat`, and one extractor's output |
+| `define_term` | What an acronym means, and whether it is ambiguous |
+| `plan_effective_path` | An Effective Path, with the candidates it left out and why |
+| `wiki_search` · `wiki_page` | How a mechanic actually behaves, from the community wiki |
+
+Two of those change how an agent works on this domain:
+
+**`plan_effective_path`** runs any family and variant without a scratch script — `{ family:
+"economy", variant: "time", steps: 5 }`. It plans from a zero config, so read it for *structure*:
+which candidates a variant offers, and why the rest are excluded. Pass a wrong variant and it names
+the ones that exist rather than returning an empty result.
+
+**`wiki_page`** is the one to reach for before describing game behaviour. This package supplies
+values, not semantics — a table says a number changes, not what it means or what it interacts with.
+`wiki_search { query }` finds the title, `wiki_page { title, section? }` reads it. Pages are cached
+after first read; set `TOWER_WIKI_DIR` to a directory of `slug.md` files to serve them offline, and
+every response says whether it came from `local`, `cache` or `fandom`.
+
+Agent instructions live in [AGENTS.md](AGENTS.md), which ships with the package; `CLAUDE.md` and
 `.github/copilot-instructions.md` point at the same file.
 
 ---
@@ -354,8 +388,8 @@ import {
 } from 'thetowersdk/mechanics'
 
 const plan = planEffectiveDamagePath({
-  config: zeroEffectiveDamageConfig(),   // build this from a save or a tracker
-  levels: ZERO_EFFECTIVE_DAMAGE_LEVELS,  // where the player is now
+  config: zeroEffectiveDamageConfig(),   // the account: what is unlocked, owned, equipped
+  levels: ZERO_EFFECTIVE_DAMAGE_LEVELS,  // what is bought, per candidate
   variant: 'lab-time',
   steps: 25,
 })
@@ -364,6 +398,59 @@ plan.steps      // what to buy, in order, with cost, gain and ROI
 plan.excluded   // what it did not offer, and why
 plan.issues     // why it could not plan at all — empty on every plan that ran
 ```
+
+### Planning for a real player
+
+A plan takes two things, and they are different:
+
+- a **config** — the account around the numbers: which weapons are unlocked, which cards are owned,
+  what the modules are, which perks are taken;
+- **levels** — how far each candidate is already bought.
+
+**The SDK does not build either from a save.** It supplies the model and the zero records; mapping a
+player onto them is yours to write, because where a player's data comes from — a save file, your own
+database, a form — is your decision, not this package's.
+
+The candidate lists are what make that mapping short. Each entry carries the `id` a plan reports
+back, the `band` and `key` its level lives under, and the `sheetName` the community sheet uses:
+
+```ts
+import {
+  EFFECTIVE_ECONOMY_UPGRADES,
+  ZERO_EFFECTIVE_ECONOMY_LEVELS,
+  planEffectiveEconomyPath,
+  zeroEffectiveEconomyConfig,
+} from 'thetowersdk/mechanics'
+
+// However you got it — a save, a tracker, a form.
+const myLabLevels = { 'Coins / Kill Bonus': 40, 'Golden Tower Bonus': 12 }
+
+// Start from a complete zero record and fill it in. Do not build one by hand:
+// a missing key reads as `undefined`, which becomes a NaN the planner refuses.
+const levels = structuredClone(ZERO_EFFECTIVE_ECONOMY_LEVELS)
+for (const candidate of EFFECTIVE_ECONOMY_UPGRADES) {
+  const known = myLabLevels[candidate.sheetName]
+  if (known !== undefined) levels[candidate.band][candidate.key] = known
+}
+
+const plan = planEffectiveEconomyPath({
+  config: zeroEffectiveEconomyConfig(),
+  levels,
+  variant: 'time',
+  steps: 5,
+})
+
+plan.steps    // → Coins / Kill Bonus L41, L42, L43 … — it continues from 40
+plan.excluded // → Golden Tower Bonus — "the weapon is not unlocked"
+```
+
+That exclusion is the config talking, not the levels: a zero config owns no weapons, so the whole
+Golden Tower band is out. Fill the config in the same way — start from `zeroEffectiveEconomyConfig()`
+and set what you know — and those candidates appear.
+
+Reading a save is a separate step, and the extractors are in
+[`thetowersdk/save`](#reading-a-save): `readLabsFromSaveRoot`, `readWorkshopFromSaveRoot`,
+`readModulesFromSaveRoot` and the rest give you the numbers to map from.
 
 ### An empty plan always says why
 
