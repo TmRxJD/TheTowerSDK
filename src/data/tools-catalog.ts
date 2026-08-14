@@ -41,6 +41,7 @@ export const sharedToolsCatalog: SharedToolDefinition[] = [
   { id: 'enemy-stats', name: 'Enemy Stats', category: 'calculator', path: '/calculators/enemy-stats', icon: 'mdi-skull-crossbones', color: 'orange-darken-2' },
   { id: 'enemy-drops', name: 'Resource Drops', category: 'calculator', path: '/calculators/enemy-drops', icon: 'mdi-treasure-chest', color: 'amber-darken-3' },
   { id: 'dissonance-calculator', name: 'Dissonance Calculator', category: 'calculator', path: '/calculators/dissonance', icon: 'mdi-waveform', color: 'deep-purple-darken-1' },
+  { id: 'effective-paths', name: 'Effective Paths', category: 'calculator', path: '/calculators/effective-paths', icon: 'mdi-map-marker-path', color: 'teal-darken-2' },
   { id: 'labs-calculator', name: 'Labs Calculator', category: 'calculator', path: '/calculators/labs', icon: 'mdi-flask', color: 'blue', botCommand: 'lab' },
   { id: 'modules-calculator', name: 'Modules Calculator', category: 'calculator', path: '/calculators/modules', icon: 'mdi-chip', color: 'cyan', botCommand: 'module' },
   { id: 'uptime-calculator', name: 'Uptime Calculator', category: 'calculator', path: '/calculators/uptime', icon: 'mdi-timer', color: 'green' },
