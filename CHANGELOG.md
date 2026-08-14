@@ -1,6 +1,22 @@
 # Changelog
 
-## Unreleased
+## 0.4.0
+
+### New entry point: `thetowersdk/wiki`
+
+Converts the community wiki's Fandom wikitext to Markdown, and fetches a page:
+
+```ts
+import { fetchFandomPageAsMarkdown } from 'thetowersdk/wiki'
+
+const markdown = await fetchFandomPageAsMarkdown('Cards')
+```
+
+Wiki text is CC-BY-SA and this package is MIT, so pages are fetched rather than bundled.
+
+The MCP server gains `wiki_search` and `wiki_page`, so an agent can confirm how a mechanic behaves
+instead of inferring it from a table. Set `TOWER_WIKI_DIR` to a directory of `slug.md` pages to serve
+them offline; every response reports whether it came from `local`, `cache` or `fandom`.
 
 ### Every plan family validates its levels
 
