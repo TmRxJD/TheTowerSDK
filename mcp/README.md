@@ -37,8 +37,33 @@ Claude Code: `claude mcp add thetowersdk -- node ./node_modules/thetowersdk/mcp/
 | `decode_save` | Decode a `playerInfo.dat` and summarise what's in it. |
 | `run_extractor` | Run one `extract*FromSaveRoot` against a save, with its warnings. |
 | `plan_effective_path` | Plan an Effective Paths route, with the candidates it left out and why. |
+| `wiki_search` | Find the community wiki's real page titles for a mechanic. |
+| `wiki_page` | Read a wiki page as Markdown, whole or one section. |
 
 Everything is read-only. `decode_save` and `run_extractor` read the file you name and nothing else.
+
+## Read the wiki before explaining a mechanic
+
+This is the tool an agent most often *should* have reached for and did not.
+
+The SDK models the game; it does not explain it. A cost table tells you a number changes, not what
+the number means or what it interacts with — and inferring the rest is how nearly every wrong answer
+in this project started.
+
+```
+wiki_search { query: "wave skip" }              → real titles, since guessing one 404s
+wiki_page   { title: "Cards" }                  → sections plus the page
+wiki_page   { title: "Cards", section: "Costs" } → just the part you need
+```
+
+Pages are cached in the OS temp directory after the first read, so looking something up twice is
+free. A wrong title returns an error *object* pointing you at `wiki_search`, not a throw.
+
+Things the data cannot tell you and the wiki can: Spotlight Missiles takes its damage from Smart
+Missiles; `UW+` needs all nine weapons; eight relic bonuses are metres and seconds, not percentages.
+
+Wiki text is **CC-BY-SA** while this package is MIT, which is why the pages are fetched rather than
+bundled. Attribute it if you reproduce it.
 
 ## Notes
 

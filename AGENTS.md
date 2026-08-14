@@ -9,7 +9,41 @@ This file is the canonical instruction set. `CLAUDE.md` and
 calculators and tools for The Tower. It is pure TypeScript: no framework, no I/O outside the save
 decoder, no global state.
 
-## The five entry points, and which to use
+## Read the wiki before you explain a mechanic. Every time.
+
+**This package models the game. It does not explain it.** A table tells you a number changes; it
+does not tell you what the number means, when it applies, or what it interacts with. Every wrong
+answer this codebase has shipped came from reading a table and inferring the rest.
+
+So before you describe how anything in the game works — in code, in a comment, in a commit message,
+in an answer to a person — **look it up**:
+
+```
+wiki_search { query: "wave skip" }     → the real page titles
+wiki_page   { title: "Wave Skip" }     → the page, as Markdown
+wiki_page   { title: "Cards", section: "Card Slots" }
+```
+
+Those are MCP tools on this package's own server (`mcp/server.mjs`), so the lookup is one call, it
+is cached on disk, and it costs you almost nothing. In code, the same thing is
+`fetchFandomPageAsMarkdown` from `thetowersdk/wiki`.
+
+**If the MCP server is not available to you, use the open web** —
+`the-tower-idle-tower-defense.fandom.com`. Searching the internet is slower than the tool and
+completely fine. What is not fine is skipping the step and writing down a guess.
+
+You are looking for the thing you did not know to ask about. Real examples from this repo:
+
+- Spotlight Missiles takes its damage from **Smart Missiles**. Nothing in the data says so.
+- `UW+` requires **all nine** weapons — a threshold no table encodes.
+- The community sheet's Spotlight Missiles fallback is `10`; the wiki says `14`. The wiki was right.
+- Eight relic values were rendered as percentages when they are **metres and seconds**. The unit
+  lives in the game's own description string, not in the number.
+
+The wiki's text is **CC-BY-SA** and this package is MIT, which is why the pages are not bundled.
+Attribute it if you reproduce it.
+
+## The entry points, and which to use
 
 | Import | Use it for |
 |---|---|
@@ -18,6 +52,7 @@ decoder, no global state.
 | `thetowersdk/node` | Decoding the save file (needs Node; browsers see the recipe in the README) |
 | `thetowersdk/formatting` | Numbers and durations formatted the way the game shows them |
 | `thetowersdk/mechanics` | Formulas — enemy scaling, damage, drops, workshop stats |
+| `thetowersdk/wiki` | Fandom wikitext → Markdown, and fetching a page |
 
 Import from the subpath, not the root barrel, unless you genuinely want everything.
 
@@ -107,6 +142,44 @@ pnpm build && pnpm mcp
 `plan_effective_path` is the quickest way to see which candidates a path offers and why the rest are
 out, without writing a scratch script. It plans from a zero config, so read it for structure rather
 than for numbers.
+
+`wiki_search` and `wiki_page` are the ones to reach for **first** when the question is "how does X
+work" rather than "what value does X have". See the top of this file.
+
+## Traps that have already cost someone a day
+
+Every one of these produced a confident wrong answer here. They are listed because none of them
+looks like a mistake while you are making it.
+
+**Do not read a source by counting its rows.** The module cost column was checked by counting rows
+in a range read, which "showed" the tail was shifted by eight levels. It was not; the count was.
+Using the source's own lookup — `INDEX(Data_Val_Tables!EV4:EV, level)` — answered it in one call and
+disagreed with the counting. Prefer the accessor a source defines over an offset you worked out.
+
+**Suspect the fixture before the source.** A too-fake fixture has accused working code here far more
+often than a real bug has been found: invented module ids, an inverted nested record, a fake port
+returning `undefined` where the real one returns counts. When a test fails, ask whether the fixture
+is a faithful sample *before* you edit the thing it is testing.
+
+**A test that restates the implementation tests nothing.** One compared `cost / (rate * 23)` against
+`cost / (rate * 23)` and stayed green when the constant changed to `24`. Call the real export and
+assert against a figure read from the source.
+
+**Prove a guard by planting the fault it catches.** If you cannot make it fail, you have not shown it
+works. Several "fixes" here passed only because a string replace silently did not match — always
+confirm the file actually changed before trusting the red-then-green.
+
+**Your assumption about a bound is not the source's.** A level schema was written `.min(0)` on the
+reasoning that a negative level is impossible. The community sheet carries a negative one, so the
+schema rejected the very authority being reproduced — and rejected it by returning an *empty
+result*, which reads as "nothing to do" rather than "I refused".
+
+**Screen-scraped numbers are a bad lens.** Working backwards from what a UI displayed produced an
+arithmetic "discrepancy" that did not exist. Reproduce the calculation from its inputs instead.
+
+**Check the artefact before diagnosing the code.** A page that renders nothing is more often a stale
+bundle, a dev-server module cache, or the wrong host than a bug. Hard-load it, and check
+`last-modified` on `index.html`, before reading a line of source.
 
 ## Before you open a PR
 

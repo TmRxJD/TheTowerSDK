@@ -14,6 +14,7 @@
  * Register it with your agent as a stdio server. See mcp/README.md.
  */
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
@@ -32,15 +33,42 @@ function loadSdk() {
       node: require(path.join(base, 'node', 'index.js')),
       mechanics: require(path.join(base, 'mechanics', 'index.js')),
       formatting: require(path.join(base, 'formatting', 'index.js')),
+      wiki: require(path.join(base, 'wiki', 'index.js')),
     }
   }
   throw new Error('thetowersdk build not found — run `pnpm build` first')
 }
 
 const sdk = loadSdk()
+
+/**
+ * Wiki pages, cached on disk between calls.
+ *
+ * Two reasons, and the second is the important one. It is a volunteer-run wiki
+ * and an agent reading six pages to answer one question should not fetch six
+ * pages twice. And an agent that has already looked something up should not be
+ * tempted to guess the second time because the lookup felt expensive.
+ */
+const WIKI_CACHE_DIR = path.join(os.tmpdir(), 'thetowersdk-wiki-cache')
+
+function cachedWikiPath(title) {
+  return path.join(WIKI_CACHE_DIR, `${title.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}.md`)
+}
+
+async function wikiPageMarkdown(title, { refresh = false } = {}) {
+  const cacheFile = cachedWikiPath(title)
+  if (!refresh && fs.existsSync(cacheFile)) {
+    return { markdown: fs.readFileSync(cacheFile, 'utf8'), cached: true }
+  }
+
+  const markdown = await sdk.wiki.fetchFandomPageAsMarkdown(title)
+  fs.mkdirSync(WIKI_CACHE_DIR, { recursive: true })
+  fs.writeFileSync(cacheFile, markdown, 'utf8')
+  return { markdown, cached: false }
+}
 /** Read, not hard-coded, so it cannot drift from the package on a release. */
 const { version: VERSION } = require(path.join(HERE, '..', 'package.json'))
-const ENTRIES = ['data', 'save', 'node', 'mechanics', 'formatting']
+const ENTRIES = ['data', 'save', 'node', 'mechanics', 'formatting', 'wiki']
 
 /** Values are often huge tables; never return one whole by accident. */
 const preview = (value, limit = 40) => {
@@ -155,6 +183,104 @@ const TOOLS = {
       const result = fn(parsedRoot)
       if (result === null) return { extractor, result: null, note: 'this save has no data for that feature' }
       return { extractor, warnings: result?.warnings ?? [], ...preview(result) }
+    },
+  },
+
+  wiki_page: {
+    description:
+      'Read a page of The Tower community wiki as Markdown. USE THIS BEFORE describing how any game '
+      + 'mechanic works. The SDK models the game; it does not explain it, and a formula that looks '
+      + 'self-evident from a table has more than once meant something else. Cheap, cached, and '
+      + 'always better than inferring. Try `wiki_search` first if you are unsure of the exact title.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', description: 'Exact page title, e.g. "Cards" or "Ultimate Weapons"' },
+        section: {
+          type: 'string',
+          description: 'Case-insensitive heading to return alone, when the page is long',
+        },
+        refresh: { type: 'boolean', description: 'Bypass the cache and refetch' },
+      },
+      required: ['title'],
+    },
+    run: async ({ title, section, refresh }) => {
+      let page
+      try {
+        page = await wikiPageMarkdown(title, { refresh: Boolean(refresh) })
+      } catch (error) {
+        // A wrong title is the common case and is recoverable; say so rather
+        // than letting it read as "the wiki has nothing on this".
+        return {
+          error: error instanceof Error ? error.message : String(error),
+          hint: 'titles are case- and spelling-sensitive; run wiki_search to find the real one',
+        }
+      }
+
+      const headings = [...page.markdown.matchAll(/^#{1,3} (.+)$/gm)].map(m => m[1].trim())
+      if (!section) {
+        return {
+          title,
+          cached: page.cached,
+          sections: headings,
+          markdown: page.markdown.slice(0, 12000),
+          truncated: page.markdown.length > 12000,
+          licence: 'Wiki text is CC-BY-SA. Attribute it if you reproduce it.',
+        }
+      }
+
+      const wanted = String(section).toLowerCase()
+      const lines = page.markdown.split('\n')
+      const start = lines.findIndex(
+        line => /^#{1,3} /.test(line) && line.replace(/^#+ /, '').trim().toLowerCase().includes(wanted),
+      )
+      if (start === -1) return { title, error: `no section matching "${section}"`, sections: headings }
+
+      const depth = (lines[start].match(/^#+/) ?? ['#'])[0].length
+      let end = lines.length
+      for (let i = start + 1; i < lines.length; i += 1) {
+        const match = lines[i].match(/^(#+) /)
+        if (match && match[1].length <= depth) { end = i; break }
+      }
+      return { title, section: lines[start].replace(/^#+ /, ''), markdown: lines.slice(start, end).join('\n') }
+    },
+  },
+
+  wiki_search: {
+    description:
+      'Search the community wiki for pages about a mechanic, and get their exact titles back. Use '
+      + 'this when you do not know what a page is called, rather than guessing a title or searching '
+      + 'the open web.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'What you want to understand, e.g. "wave skip"' },
+        limit: { type: 'number', description: 'How many titles to return (default 10)' },
+      },
+      required: ['query'],
+    },
+    run: async ({ query, limit }) => {
+      const params = new URLSearchParams({
+        action: 'query',
+        format: 'json',
+        list: 'search',
+        srsearch: String(query),
+        srlimit: String(Math.min(Number(limit) || 10, 25)),
+      })
+      const response = await fetch(`${sdk.wiki.FANDOM_API_URL}?${params}`)
+      if (!response.ok) return { error: `Fandom API HTTP ${response.status}` }
+
+      const payload = await response.json()
+      const hits = payload?.query?.search ?? []
+      return {
+        query,
+        results: hits.map(hit => ({
+          title: hit.title,
+          // Snippets carry search-highlight markup; strip it so the text reads.
+          snippet: String(hit.snippet ?? '').replace(/<[^>]*>/g, ''),
+        })),
+        next: 'pass one of these titles to wiki_page',
+      }
     },
   },
 
@@ -339,11 +465,15 @@ const handlers = {
       inputSchema: t.inputSchema,
     })),
   }),
-  'tools/call': ({ name, arguments: args }) => {
+  // Awaited: the wiki tools fetch, and a returned promise would serialise as
+  // `{}` — an empty answer that reads like "the wiki has nothing" rather than
+  // like a bug. Synchronous tools are unaffected.
+  'tools/call': async ({ name, arguments: args }) => {
     const tool = TOOLS[name]
     if (!tool) return { isError: true, content: [{ type: 'text', text: `unknown tool: ${name}` }] }
     try {
-      return { content: [{ type: 'text', text: JSON.stringify(tool.run(args ?? {}), null, 2) }] }
+      const result = await tool.run(args ?? {})
+      return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] }
     } catch (error) {
       return { isError: true, content: [{ type: 'text', text: `${name} failed: ${error.message}` }] }
     }
@@ -374,10 +504,15 @@ process.stdin.on('data', chunk => {
       }
       continue
     }
-    try {
-      send({ jsonrpc: '2.0', id: request.id, result: handler(request.params ?? {}) })
-    } catch (error) {
-      send({ jsonrpc: '2.0', id: request.id, error: { code: -32603, message: error.message } })
-    }
+    // `handler` may be async — resolve before replying, and keep rejections on
+    // the same error path a throw already took.
+    Promise.resolve()
+      .then(() => handler(request.params ?? {}))
+      .then(result => send({ jsonrpc: '2.0', id: request.id, result }))
+      .catch(error => send({
+        jsonrpc: '2.0',
+        id: request.id,
+        error: { code: -32603, message: error.message },
+      }))
   }
 })

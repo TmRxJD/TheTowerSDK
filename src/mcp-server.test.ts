@@ -73,7 +73,7 @@ describeServer('mcp server', () => {
     const names = list.result.tools.map((tool: { name: string }) => tool.name).sort()
     expect(names).toEqual([
       'decode_save', 'define_term', 'describe_schema', 'get_export', 'list_exports',
-      'plan_effective_path', 'run_extractor',
+      'plan_effective_path', 'run_extractor', 'wiki_page', 'wiki_search',
     ])
     for (const tool of list.result.tools) {
       expect(tool.description).toBeTruthy()
@@ -203,4 +203,58 @@ describeServer('mcp server', () => {
     const unknown = await call('run_extractor', { extractor: 'nope', path: savePath })
     expect(unknown.error).toContain('nope')
   })
+
+  describe('the wiki tools', () => {
+    /*
+     * These are what stops an agent guessing at a mechanic, so the property
+     * that matters most is that they are findable and that their descriptions
+     * say *when* to reach for them. An agent does not read this file; it reads
+     * `tools/list`, so that is where the instruction has to be.
+     */
+    it('tells an agent to read before inferring', async () => {
+      const list = await rpc('tools/list', {})
+      const tools: Array<{ name: string, description: string }> = list.result.tools
+      const page = tools.find(tool => tool.name === 'wiki_page')
+
+      expect(page?.description).toMatch(/before/i)
+      expect(page?.description, 'the description must name the failure it prevents')
+        .toMatch(/mechanic/i)
+    })
+
+    it('hands back a recoverable error for a title that does not exist', async () => {
+      // Offline this is a fetch failure and online it is a "not found"; either
+      // way it must be an error *object* with a way forward, not a throw.
+      const result = await call('wiki_page', { title: 'ThisPageCannotExist9f3a' })
+      expect(result.error).toBeTruthy()
+      expect(result.hint ?? '').toMatch(/wiki_search|title/i)
+    })
+  })
+
+  const itNetwork = process.env.TOWER_TEST_NETWORK ? it : it.skip
+
+  describe('the wiki tools, against the live wiki', () => {
+    // Gated: CI should not fail because a volunteer-run wiki is having a bad
+    // day. Run with TOWER_TEST_NETWORK=1.
+    itNetwork('reads a page and lists its sections', async () => {
+      const result = await call('wiki_page', { title: 'Cards' })
+      expect(result.sections.length).toBeGreaterThan(3)
+      expect(result.markdown).toBeTruthy()
+      expect(result.licence, 'an agent reproducing this text needs to know').toMatch(/CC-BY-SA/)
+    })
+
+    itNetwork('returns one section rather than the whole page when asked', async () => {
+      const whole = await call('wiki_page', { title: 'Cards' })
+      const part = await call('wiki_page', { title: 'Cards', section: 'Card Slots' })
+
+      expect(part.markdown.length).toBeLessThan(whole.markdown.length)
+      expect(part.markdown.split('\n')[0]).toMatch(/Card Slots/i)
+    })
+
+    itNetwork('finds a page by what it is about, not by its title', async () => {
+      const result = await call('wiki_search', { query: 'wave skip', limit: 3 })
+      expect(result.results.length).toBeGreaterThan(0)
+      for (const hit of result.results) expect(hit.title).toBeTruthy()
+    })
+  })
 })
+
