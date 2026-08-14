@@ -3,7 +3,7 @@
  * thing that makes that true: an expansion that does not resolve to a catalog
  * name fails the build, so a plausible-sounding but invented term cannot land.
  */
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import * as data from './index'
@@ -65,16 +65,22 @@ describe('glossary', () => {
     expect(unresolved).toEqual([])
   })
 
-  it('carries the whole curated acronym list, not a subset of it', () => {
-    // packages/platform/src/ai/acronyms.ts is what the assistant uses to read a
-    // player's question. It and the glossary disagreed about 257 terms while
-    // each was maintained alone, so completeness is asserted rather than hoped
-    // for: every curated term must be here, or the two vocabularies have
-    // started drifting apart again.
-    const curatedSource = readFileSync(
-      join(__dirname, '..', '..', '..', 'platform', 'src', 'ai', 'acronyms.ts'),
-      'utf8',
-    )
+  /*
+   * A drift check against a list that lives in a *sibling package*, so it only
+   * exists when this source tree sits inside the workspace it was extracted
+   * from. Published on its own, the file is absent and the check is not
+   * meaningful — skipped rather than failed, and skipped on the file being
+   * missing rather than on an env var, so it cannot silently stop running
+   * where it does apply.
+   */
+  const curatedPath = join(__dirname, '..', '..', '..', 'platform', 'src', 'ai', 'acronyms.ts')
+  const itCurated = existsSync(curatedPath) ? it : it.skip
+
+  itCurated('carries the whole curated acronym list, not a subset of it', () => {
+    // The assistant reads a player's question against that list. It and the
+    // glossary disagreed about 257 terms while each was maintained alone, so
+    // completeness is asserted rather than hoped for.
+    const curatedSource = readFileSync(curatedPath, 'utf8')
     const curatedTerms = [...curatedSource.matchAll(/^\s*'?([A-Za-z0-9#+_-]+)'?\s*:\s*'([^']+)'/gm)]
       .map(match => match[1].toLowerCase())
 
