@@ -42,22 +42,19 @@ Claude Code: `claude mcp add thetowersdk -- node ./node_modules/thetowersdk/mcp/
 
 Everything is read-only. `decode_save` and `run_extractor` read the file you name and nothing else.
 
-## Read the wiki before explaining a mechanic
+## Reading the wiki
 
-This is the tool an agent most often *should* have reached for and did not.
-
-The SDK models the game; it does not explain it. A cost table tells you a number changes, not what
-the number means or what it interacts with — and inferring the rest is how nearly every wrong answer
-in this project started.
+The SDK supplies data and formulas, not documentation of game behaviour. Confirm how a mechanic
+works against the wiki before describing it.
 
 ```
-wiki_search { query: "wave skip" }              → real titles, since guessing one 404s
-wiki_page   { title: "Cards" }                  → sections plus the page
-wiki_page   { title: "Cards", section: "Costs" } → just the part you need
+wiki_search { query: "wave skip" }               page titles matching a topic
+wiki_page   { title: "Cards" }                   sections, plus the page
+wiki_page   { title: "Cards", section: "Costs" } one section
 ```
 
-Pages are cached in the OS temp directory after the first read, so looking something up twice is
-free. A wrong title returns an error *object* pointing you at `wiki_search`, not a throw.
+Pages are cached in the OS temp directory after the first read. An unknown title returns an error
+object naming `wiki_search` rather than throwing.
 
 ### Working offline
 
@@ -68,19 +65,13 @@ network — so an agent with no connection still has the game knowledge:
 TOWER_WIKI_DIR=/path/to/wiki-pages pnpm mcp
 ```
 
-Every response says where it came from — `source: "local" | "cache" | "fandom"` — so you always know
-whether you are reading something that could be stale.
+Every response reports `source: "local" | "cache" | "fandom"`, so a local page that may be stale is
+distinguishable from a fresh fetch.
 
-This is the seam a **content package** plugs into. The pages cannot ship inside this package
-(CC-BY-SA text, MIT code), but nothing stops them shipping *beside* it under their own licence:
-install one, point `TOWER_WIKI_DIR` at it, and the wiki is available offline and instantly. In this
-repo, `scripts/fetch-fandom-wiki-markdown.mjs` produces exactly that directory.
-
-Things the data cannot tell you and the wiki can: Spotlight Missiles takes its damage from Smart
-Missiles; `UW+` needs all nine weapons; eight relic bonuses are metres and seconds, not percentages.
-
-Wiki text is **CC-BY-SA** while this package is MIT, which is why the pages are fetched rather than
-bundled. Attribute it if you reproduce it.
+This is the integration point for a separate content package. Wiki text is **CC-BY-SA** and this
+package is MIT, so pages are fetched rather than bundled; content distributed under its own licence
+can be installed alongside and pointed at with `TOWER_WIKI_DIR`. Attribute the wiki if you reproduce
+its text.
 
 ## Notes
 

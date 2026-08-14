@@ -1,28 +1,25 @@
 /**
- * Effective Paths — a level contract for the models that had none.
+ * Effective Paths — level validation for the economy, health and regen models.
  *
- * `effective-paths-edamage-schema.ts` already does this for the damage model,
- * config and levels both. This is the levels half for the other three, which
- * had nothing.
+ * `effective-paths-edamage-schema.ts` covers the damage model's config and
+ * levels; this covers levels for the other three.
  *
- * ## Why levels first
+ * ## What it checks, and why
  *
- * Levels are the input most likely to arrive damaged. A config is assembled
- * once from trackers; levels are rebuilt constantly — from a stored payload, a
- * partial import, a page that persisted half a record before a schema was
- * added — and the failure is always the same:
+ * Levels are the input most likely to arrive damaged, because they are rebuilt
+ * from stored payloads and partial imports rather than assembled once. Two
+ * failures matter:
  *
- * - a key is **missing**, so the model reads `undefined`, and arithmetic on it
- *   returns `NaN` that spreads through every term it touches;
- * - a key holds `NaN` already, from a number field the player emptied.
+ * - a **missing** key, so the model reads `undefined` and arithmetic on it
+ *   yields `NaN`, which spreads through every term it touches;
+ * - a key already holding `NaN`, typically from an emptied number field.
  *
- * None of those throw. The planner ranks against them, the page renders a full
- * table, and the answer is confidently wrong — which is the defect this whole
- * port keeps finding.
+ * Neither throws. The planner ranks against the result and returns a plausible
+ * table, so the error surfaces as a wrong answer rather than a failure.
  *
- * Strict about **completeness and finiteness**, lenient about **magnitude**. A
- * level far above any cap is somebody's data, not this file's business; a level
- * that is `undefined` is nobody's.
+ * Strict about **completeness and finiteness**, lenient about **magnitude**: a
+ * level beyond any cap is still the caller's data, whereas an absent one is
+ * unusable.
  */
 
 import { z } from 'zod'
@@ -36,17 +33,15 @@ import { ZERO_EFFECTIVE_REGEN_LEVELS } from './effective-paths-regen-levels'
 import type { EffectiveRegenLevels } from './effective-paths-regen-levels'
 
 /**
- * A level: a real number, and nothing more.
+ * A level: any finite number.
  *
- * This began as `.finite().int().min(0)`, which contradicted the rule three
- * lines of doc above it — magnitude is not this file's business — and the
- * sheet settled it: `eEcon` carries a negative Golden Combo stone level in the
- * oracle fixture, so `.min(0)` rejected the authority we are porting. The
- * bound was my assumption about what a level can be; the sheet is the source.
+ * Deliberately not `.int().min(0)`. The source this model reproduces contains
+ * negative levels, so a lower bound would reject valid input — and it would
+ * reject it by returning an empty result, which is indistinguishable from
+ * "nothing to plan".
  *
- * `.finite()` stays, because that one is not a matter of opinion: `NaN` and
- * `Infinity` have no arithmetic that ends anywhere useful, and catching them
- * is the entire reason this file exists.
+ * `.finite()` is the one constraint that holds regardless: `NaN` and `Infinity`
+ * have no useful arithmetic, and rejecting them is the purpose of this file.
  */
 const level = z.number().finite()
 

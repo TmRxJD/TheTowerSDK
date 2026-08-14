@@ -104,7 +104,7 @@ The regen planner runs *both* the regen and eHP checks, because it is handed the
 into the eHP ones and reads from both.
 
 Levels are held to completeness and finiteness, not magnitude — negative and fractional levels pass,
-because the sheet has a negative stone level of its own and the sheet is the authority here.
+because the source model contains them.
 
 **`excluded` is half the answer.** Reasons look like `already at its cap of 99`, `the weapon is not
 unlocked`, `priced at 0 for level 12, which is not a cost`. The rule the planners keep:
@@ -141,12 +141,12 @@ read the cell before updating the count.
 Some things are the sheet's own literals and are kept even where a rounder number would look better.
 Farm time is `coins / (CpH * 23)`; the 23 is not hours in a day.
 
-Two habits, both learned by shipping their opposite:
+Two rules apply when testing against the source:
 
-- **Do not restate the implementation in a test.** One here compared `cost / (rate * 23)` against
-  `cost / (rate * 23)` and stayed green when the constant became 24.
-- **Pin several states, not one.** A constant agrees with a formula at exactly one input; four frozen
-  rates here each matched at a different single point and were wrong everywhere else.
+- **Do not restate the implementation.** A test that recomputes `cost / (rate * 23)` to check
+  `cost / (rate * 23)` passes whatever the constant is. Assert against a value read from the source.
+- **Pin several states, not one.** A constant matches a formula at exactly one input, so a single
+  fixture cannot distinguish the two.
 
 ## Trying it without writing a script
 

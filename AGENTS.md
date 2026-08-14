@@ -9,57 +9,41 @@ This file is the canonical instruction set. `CLAUDE.md` and
 calculators and tools for The Tower. It is pure TypeScript: no framework, no I/O outside the save
 decoder, no global state.
 
-## Read the wiki before you explain a mechanic. Every time.
+## Consult the wiki before describing a mechanic
 
-**This package models the game. It does not explain it.** A table tells you a number changes; it
-does not tell you what the number means, when it applies, or what it interacts with. Every wrong
-answer this codebase has shipped came from reading a table and inferring the rest.
+This package supplies the game's data and formulas. It does not document game behaviour: a table
+gives a value, not what that value means, when it applies, or what it interacts with. Confirm
+behaviour against the community wiki before describing it in code, comments or output.
 
-So before you describe how anything in the game works — in code, in a comment, in a commit message,
-in an answer to a person — **look it up**:
+Via the MCP server (`mcp/server.mjs`):
 
 ```
-wiki_search { query: "wave skip" }     → the real page titles
-wiki_page   { title: "Wave Skip" }     → the page, as Markdown
-wiki_page   { title: "Cards", section: "Card Slots" }
+wiki_search { query: "wave skip" }                 find the page titles
+wiki_page   { title: "Wave Skip" }                 read it as Markdown
+wiki_page   { title: "Cards", section: "Costs" }   read one section
 ```
 
-Those are MCP tools on this package's own server (`mcp/server.mjs`), so the lookup is one call, it
-is cached on disk, and it costs you almost nothing. In code, the same thing is
-`fetchFandomPageAsMarkdown` from `thetowersdk/wiki`.
+In code, `fetchFandomPageAsMarkdown` from `thetowersdk/wiki` does the same. Without MCP, the wiki is
+at `the-tower-idle-tower-defense.fandom.com`.
 
-**If the MCP server is not available to you, use the open web** —
-`the-tower-idle-tower-defense.fandom.com`. Searching the internet is slower than the tool and
-completely fine. What is not fine is skipping the step and writing down a guess.
+Behaviour that is not derivable from the data alone includes ability sources (one weapon's damage
+scaling from another's stat), unlock thresholds spanning several entities, and units — a relic
+bonus may be metres or seconds where a neighbouring one is a percentage, and the unit appears only
+in the game's description text.
 
-You are looking for the thing you did not know to ask about. Real examples from this repo:
+**Offline use.** Set `TOWER_WIKI_DIR` to a directory of `slug.md` pages; both tools read it before
+the network. Every response reports `source: "local" | "cache" | "fandom"`, so a stale local page is
+distinguishable from a fresh fetch.
 
-- Spotlight Missiles takes its damage from **Smart Missiles**. Nothing in the data says so.
-- `UW+` requires **all nine** weapons — a threshold no table encodes.
-- The community sheet's Spotlight Missiles fallback is `10`; the wiki says `14`. The wiki was right.
-- Eight relic values were rendered as percentages when they are **metres and seconds**. The unit
-  lives in the game's own description string, not in the number.
+### Wiki content and licensing
 
-**Working offline.** Point `TOWER_WIKI_DIR` at a directory of `slug.md` pages and both tools read it
-before the network, so a disconnected agent still has the knowledge. Every answer reports
-`source: "local" | "cache" | "fandom"`, because a local page can be stale in a way a fresh fetch
-cannot and quoting a stale one unknowingly is the failure to avoid.
+The wiki declares **CC-BY-SA**; this package is MIT, so wiki text is fetched rather than bundled.
 
-### Why the pages are not in this package, and how they could ship
-
-The wiki declares **CC-BY-SA** (confirmed from its own API: `action=query&meta=siteinfo&siprop=rightsinfo`).
-This package is MIT. Bundling the text would put two incompatible licences in one install and would
-mean shipping MIT-licensed files that are not, in fact, MIT.
-
-That is a packaging constraint, not a prohibition. CC-BY-SA permits redistribution and adaptation —
-wikitext converted to Markdown *is* an adaptation — provided the result carries the same licence,
-credits the source, and says it was changed. So the content can ship as a **separate package** of
-its own: `license: "CC-BY-SA-3.0"`, a NOTICE crediting the wiki and its contributors, and a line
-recording that the pages were converted from wikitext. Install it, point `TOWER_WIKI_DIR` at it, and
-the wiki is offline and instant. The seam already exists and is tested; only the package does not,
-because publishing under someone else's licence is a decision for a person, not an agent.
-
-`scripts/fetch-fandom-wiki-markdown.mjs` in the tracker repo already produces exactly that directory.
+CC-BY-SA permits redistribution and adaptation — converting wikitext to Markdown is an adaptation —
+provided the result carries the same licence, credits the source, and records that it was changed.
+Content may therefore be distributed as a separate package declaring
+`license: "CC-BY-SA-3.0"` with an attribution notice. `TOWER_WIKI_DIR` is the integration point for
+such a package.
 
 ## The entry points, and which to use
 
@@ -164,40 +148,33 @@ than for numbers.
 `wiki_search` and `wiki_page` are the ones to reach for **first** when the question is "how does X
 work" rather than "what value does X have". See the top of this file.
 
-## Traps that have already cost someone a day
+## Verifying a value
 
-Every one of these produced a confident wrong answer here. They are listed because none of them
-looks like a mistake while you are making it.
+**Use a source's own accessor rather than a positional offset.** When checking data against an
+external source, address it the way the source does. An index computed by counting rows is a second
+thing that can be wrong, and it fails silently by appearing to disagree with correct data.
 
-**Do not read a source by counting its rows.** The module cost column was checked by counting rows
-in a range read, which "showed" the tail was shifted by eight levels. It was not; the count was.
-Using the source's own lookup — `INDEX(Data_Val_Tables!EV4:EV, level)` — answered it in one call and
-disagreed with the counting. Prefer the accessor a source defines over an offset you worked out.
+**Check the fixture before the code.** A failing test more often means an unrepresentative fixture —
+invented identifiers, an inverted nested structure, a stub returning a different shape than the real
+collaborator — than a defect in what it tests.
 
-**Suspect the fixture before the source.** A too-fake fixture has accused working code here far more
-often than a real bug has been found: invented module ids, an inverted nested record, a fake port
-returning `undefined` where the real one returns counts. When a test fails, ask whether the fixture
-is a faithful sample *before* you edit the thing it is testing.
+**Assert against the source, not against the implementation.** A test that recomputes the expression
+it is checking passes regardless of whether the expression is right. Call the exported function and
+compare with a value read from the source it models.
 
-**A test that restates the implementation tests nothing.** One compared `cost / (rate * 23)` against
-`cost / (rate * 23)` and stayed green when the constant changed to `24`. Call the real export and
-assert against a figure read from the source.
+**Prove a guard by introducing the fault it catches.** A guard that cannot be made to fail has not
+been shown to work. Confirm the edit that introduces the fault actually applied.
 
-**Prove a guard by planting the fault it catches.** If you cannot make it fail, you have not shown it
-works. Several "fixes" here passed only because a string replace silently did not match — always
-confirm the file actually changed before trusting the red-then-green.
+**Constrain values to what the source allows, not to what seems reasonable.** Validation tighter than
+the source rejects legitimate data. Where a check rejects input by returning an empty result, that
+outcome is indistinguishable from "nothing to do" unless the reason is reported alongside it.
 
-**Your assumption about a bound is not the source's.** A level schema was written `.min(0)` on the
-reasoning that a negative level is impossible. The community sheet carries a negative one, so the
-schema rejected the very authority being reproduced — and rejected it by returning an *empty
-result*, which reads as "nothing to do" rather than "I refused".
+**Reproduce a calculation from its inputs.** Working backwards from a rendered number introduces
+formatting and rounding as unknowns.
 
-**Screen-scraped numbers are a bad lens.** Working backwards from what a UI displayed produced an
-arithmetic "discrepancy" that did not exist. Reproduce the calculation from its inputs instead.
-
-**Check the artefact before diagnosing the code.** A page that renders nothing is more often a stale
-bundle, a dev-server module cache, or the wrong host than a bug. Hard-load it, and check
-`last-modified` on `index.html`, before reading a line of source.
+**Rule out a stale artefact before reading source.** Empty or unchanged output is frequently a cached
+bundle, a module-graph cache, or the wrong host. Reload without cache and check the served file's
+timestamp first.
 
 ## Before you open a PR
 

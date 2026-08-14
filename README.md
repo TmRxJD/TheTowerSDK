@@ -203,13 +203,12 @@ import { convertFandomWikitextToMarkdown, resolveFandomFileImages } from 'thetow
 const markdown = convertFandomWikitextToMarkdown(wikitext, { pageTitle: 'Cards' })
 ```
 
-A page that does not exist comes back `200 OK` with a `missing` marker rather than a 404, so
-`fetchFandomWikitext` throws on it — a mistyped title should not read as an empty page.
+A page that does not exist returns `200 OK` with a `missing` marker rather than a 404, so
+`fetchFandomWikitext` throws on it instead of returning an empty page.
 
-**The conversion ships here; the wiki's content does not.** Fandom text is CC-BY-SA and this package
-is MIT, so bundling the pages would put two incompatible licences in one install. Fetch what you
-need and honour the wiki's licence in whatever you ship. It is a volunteer-run wiki: cache what you
-fetch, and space out your requests when pulling many pages.
+**The conversion ships here; the wiki's content does not.** Wiki text is CC-BY-SA and this package
+is MIT, so fetch what you need and honour the wiki's licence in whatever you ship. It is a
+volunteer-run wiki — cache what you fetch, and space out requests when pulling many pages.
 
 ## Getting a save file
 
@@ -380,14 +379,13 @@ if (plan.issues.length > 0) {
 }
 ```
 
-The distinction is the whole point. A `NaN` level makes every gain `NaN`, every candidate compares
-false against every other, and the greedy loop returns an empty path that looks exactly like a
-finished account. Levels are checked once per plan rather than inside the evaluation loop, which
-runs thousands of times over inputs that do not change.
+A `NaN` level makes every gain `NaN`; every candidate then compares false against every other and
+the greedy loop returns an empty path, which is indistinguishable from a fully-upgraded account.
+Levels are validated once per plan rather than inside the evaluation loop, which runs many times
+over inputs that do not change.
 
 Levels are held to **completeness and finiteness, not magnitude**. Negative and fractional levels
-are accepted: the sheet this port follows carries a negative stone level of its own, and rejecting
-it would mean rejecting the authority being reproduced.
+are accepted, because the source model contains them.
 
 ### `excluded` is half the answer
 
@@ -395,12 +393,10 @@ Every planner reports the candidates it passed over, each with a reason: `alread
 `the weapon is not unlocked`, `priced at 0 for level 12, which is not a cost`. **A candidate is
 planned, or it is explained — never neither.**
 
-This matters more than it sounds. A path that stops after one step almost always means everything
-else is already maxed, and without the exclusions that is indistinguishable from a bug. Read
-`excluded` before concluding a short path is wrong.
+A path that stops after one step usually means every other candidate is at its cap. Read`excluded` before treating a short path as an error.
 
-Passing a variant a planner does not publish throws, naming the ones it does. `lab` is a damage
-*band* and `lab-time` is a *variant*; the band used to plan nothing at all, in silence.
+Passing a variant a planner does not publish throws, naming the ones it does. Note that `lab` is a
+damage *band* while `lab-time` is a *variant*.
 
 ### Discount is a different quantity
 
@@ -420,8 +416,7 @@ The MCP server's `plan_effective_path` tool runs any of this without a scratch s
 [`mcp/README.md`](mcp/README.md).
 
 [`docs/EFFECTIVE_PATHS.md`](docs/EFFECTIVE_PATHS.md) is the longer version: how a config differs from
-levels, why the damage and economy levels are banded, what a step guarantees, and the two testing
-habits this port learned the hard way.
+levels, why the damage and economy levels are banded, and what a step guarantees.
 
 [ep]: https://docs.google.com/spreadsheets/d/1YwZtKP6B4WYhRba5T6APJ1YxKNdfnIGQnprgnxmO7zc/edit
 

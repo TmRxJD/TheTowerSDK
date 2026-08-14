@@ -1,14 +1,9 @@
 /**
- * How much of the game each mechanic's formula actually reproduces.
+ * How closely each mechanic's formula reproduces the game.
  *
- * Published rather than kept internal, because a consumer deciding whether to
- * trust a number needs to know which kind of number it is: 30 of these are
- * confirmed against the game's own code, 8 are partial. A partial formula is
- * not a broken one — it is one with a named gap, listed in `gaps`.
- *
- * Named `formula-coverage.ts` rather than `coverage.ts` because the deploy
- * build rejects any file called `coverage.ts` as a test artefact, which this
- * is not.
+ * Published so a consumer can tell how much weight a given number carries:
+ * `confirmed` means checked against the game's own implementation, `partial`
+ * means correct within stated limits, with those limits listed in `gaps`.
  */
 export type FormulaStatus = 'confirmed' | 'inferred' | 'partial' | 'missing'
 

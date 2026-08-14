@@ -19,17 +19,14 @@
  * const markdown = convertFandomWikitextToMarkdown(wikitext, { pageTitle: 'Cards' })
  * ```
  *
- * ## What is here and what is not
+ * ## Scope
  *
- * The **conversion** is here: it is ours, it is plain string work, and it is
- * the part that took the effort. The wiki's **content** is not, and will not
- * be: Fandom text is CC-BY-SA and this package is MIT, so shipping the pages
- * themselves would put two incompatible licences in one bundle. Fetch it at
- * build time and honour the wiki's licence in whatever you ship.
+ * This module provides the conversion and a fetch helper. It does not include
+ * wiki content: wiki text is CC-BY-SA and this package is MIT, so pages are
+ * fetched rather than bundled. Honour the wiki's licence in whatever you ship.
  *
- * Be a good citizen of someone else's API: it is a volunteer-run wiki, so
- * fetch once into a cache rather than per request, and leave a gap between
- * calls when pulling many pages.
+ * The wiki is volunteer-run. Cache what you fetch rather than requesting per
+ * call, and space out requests when pulling many pages.
  */
 
 import { convertFandomWikitextToMarkdown } from './wiki-fandom-wikitext'
