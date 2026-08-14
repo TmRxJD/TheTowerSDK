@@ -77,6 +77,11 @@
       "require": "./dist/mechanics/index.js",
       "default": "./dist/mechanics/index.js"
     },
+    "./wiki": {
+      "types": "./dist/wiki/index.d.ts",
+      "require": "./dist/wiki/index.js",
+      "default": "./dist/wiki/index.js"
+    },
     "./internal/*": {
       "types": "./dist/*.d.ts",
       "require": "./dist/*.js",

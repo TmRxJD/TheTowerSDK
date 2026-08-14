@@ -80,6 +80,7 @@ can run as many as you like over the same root.
 | `thetowersdk/node` | The save decoder | Node — [see below](#decoding-in-a-browser) |
 | `thetowersdk/formatting` | Number and duration formatting matching the game | Yes |
 | `thetowersdk/mechanics` | Game formulas — see [below](#formulas) | Yes |
+| `thetowersdk/wiki` | Fandom wikitext → Markdown — see [below](#reading-the-community-wiki) | Yes |
 
 `import { … } from 'thetowersdk'` re-exports `data`, `save` and `formatting` together. Prefer the
 subpaths in real projects so your bundler can drop what you don't use.
@@ -182,6 +183,33 @@ readSaveIntList(parsedRoot.someList) // number[]
 Worked out a field that isn't covered? A PR adding an extractor is very welcome.
 
 ---
+
+## Reading the community wiki
+
+The Tower's wiki is on Fandom, which serves **wikitext** rather than anything you can render:
+templates, infoboxes, `[[File:…]]` links and vertical wikitables. This converts it to Markdown.
+
+```ts
+import { fetchFandomPageAsMarkdown } from 'thetowersdk/wiki'
+
+const markdown = await fetchFandomPageAsMarkdown('Cards')
+```
+
+Or the halves separately, if you fetch pages your own way — from a cache, a mirror, or a build step:
+
+```ts
+import { convertFandomWikitextToMarkdown, resolveFandomFileImages } from 'thetowersdk/wiki'
+
+const markdown = convertFandomWikitextToMarkdown(wikitext, { pageTitle: 'Cards' })
+```
+
+A page that does not exist comes back `200 OK` with a `missing` marker rather than a 404, so
+`fetchFandomWikitext` throws on it — a mistyped title should not read as an empty page.
+
+**The conversion ships here; the wiki's content does not.** Fandom text is CC-BY-SA and this package
+is MIT, so bundling the pages would put two incompatible licences in one install. Fetch what you
+need and honour the wiki's licence in whatever you ship. It is a volunteer-run wiki: cache what you
+fetch, and space out your requests when pulling many pages.
 
 ## Getting a save file
 
