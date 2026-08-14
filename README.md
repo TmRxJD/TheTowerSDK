@@ -335,7 +335,31 @@ const plan = planEffectiveDamagePath({
 
 plan.steps      // what to buy, in order, with cost, gain and ROI
 plan.excluded   // what it did not offer, and why
+plan.issues     // why it could not plan at all — empty on every plan that ran
 ```
+
+### An empty plan always says why
+
+The four families — damage, eHP, economy and regen — check their levels before planning and refuse
+rather than compute against a record they cannot use. When that happens `steps` is empty and
+`issues` names the offending key and what was wrong with it: a `NaN`, a missing entry, a level
+stored as text.
+
+```ts
+if (plan.issues.length > 0) {
+  // Not "this player has nothing worth buying" — "these levels are unusable".
+  console.error(plan.issues) // [{ path: 'time.coinsKillBonus', message: '…' }]
+}
+```
+
+The distinction is the whole point. A `NaN` level makes every gain `NaN`, every candidate compares
+false against every other, and the greedy loop returns an empty path that looks exactly like a
+finished account. Levels are checked once per plan rather than inside the evaluation loop, which
+runs thousands of times over inputs that do not change.
+
+Levels are held to **completeness and finiteness, not magnitude**. Negative and fractional levels
+are accepted: the sheet this port follows carries a negative stone level of its own, and rejecting
+it would mean rejecting the authority being reproduced.
 
 ### `excluded` is half the answer
 

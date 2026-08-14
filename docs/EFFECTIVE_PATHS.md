@@ -92,7 +92,19 @@ Filling both from the same source doubles every one of those terms.
 ```ts
 plan.steps      // ordered purchases: name, level, cost, gain, roi, value, cumulativeCost
 plan.excluded   // candidates not offered, each with a reason
+plan.issues     // why nothing could be planned; empty on every plan that ran
 ```
+
+**`issues` is the other half.** All four families validate their levels before planning and return
+early rather than compute against a record they cannot use — `{ path, message }` per offending key.
+An empty `steps` with a populated `issues` means "these levels are unusable", not "this account is
+finished", and those two look identical otherwise.
+
+The regen planner runs *both* the regen and eHP checks, because it is handed the regen levels merged
+into the eHP ones and reads from both.
+
+Levels are held to completeness and finiteness, not magnitude — negative and fractional levels pass,
+because the sheet has a negative stone level of its own and the sheet is the authority here.
 
 **`excluded` is half the answer.** Reasons look like `already at its cap of 99`, `the weapon is not
 unlocked`, `priced at 0 for level 12, which is not a cost`. The rule the planners keep:

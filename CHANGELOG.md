@@ -1,5 +1,35 @@
 # Changelog
 
+## Unreleased
+
+### Every plan family validates its levels
+
+`planEffectiveHealthPath`, `planEffectiveEconomyPath` and `planEffectiveRegenPath` now carry
+`issues` alongside `steps` and `excluded`, as `planEffectiveDamagePath` already did. Each checks its
+levels before planning and returns an empty path with a populated `issues` rather than computing
+against a record it cannot use.
+
+**This is additive for callers reading a plan, and a new field for anyone constructing one.** If you
+destructure a plan result, `issues` is `EffectiveLevelsIssue[]` — `{ path, message }`.
+
+Levels are held to completeness and finiteness, not magnitude. Negative and fractional levels are
+accepted deliberately: the source sheet carries a negative stone level of its own.
+
+### The planner refuses a baseline it cannot compute
+
+`planPath` checked each candidate's value for finiteness but not the value it ranked them against.
+With a non-finite baseline every ROI was `NaN`, `NaN > NaN` is false, and the first candidate
+examined won every step — a path in declaration order presented as a recommendation. Those
+candidates are now skipped as `unevaluable` and reported.
+
+### Renames
+
+- `mechanics/coverage.ts` → `mechanics/formula-coverage.ts`. Same exports, unchanged. The deploy
+  build of a consuming app rejects any file named `coverage.ts` as a test artefact.
+- `EffectiveRegenLevels` and `ZERO_EFFECTIVE_REGEN_LEVELS` now live in
+  `mechanics/effective-paths-regen-levels.ts`, matching where the damage and economy models keep
+  theirs. Both are still re-exported from the planner, so no import needs to change.
+
 ## 0.3.1
 
 58 label builders became formatters: `buildWorkshopStatFieldLabel` is now
