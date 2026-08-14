@@ -52,6 +52,10 @@ import {
   type PathUpgrade,
   planPath,
 } from './effective-paths-planner'
+import {
+  checkEffectiveHealthLevels,
+  type EffectiveLevelsIssue,
+} from './effective-paths-levels-schema'
 
 /** Which currency the path spends, and therefore what it may buy. */
 export type EffectiveHealthPathVariant = 'lab-time' | 'lab-coins' | 'stone' | 'coin'
@@ -298,6 +302,11 @@ export interface EffectiveHealthPlan {
   finalEffectiveHealth: number
   /** Upgrades left out, and why — a path that silently ignores half the game is worse than one that says so. */
   excluded: PathExclusion[]
+  /**
+   * What made the levels unusable, when they were. Empty on every plan that
+   * ran — the same contract the damage plan already kept.
+   */
+  issues: EffectiveLevelsIssue[]
 }
 
 /** The currency each variant spends. */
@@ -336,6 +345,19 @@ export function planEffectiveHealthPath(options: EffectiveHealthPlanOptions): Ef
   // guard in `planEffectiveDamagePath`, where a band name reaching a variant
   // argument produced an empty path indistinguishable from a finished account.
   assertPathVariant(variant, HEALTH_PATH_VARIANTS, 'eHP')
+
+  // Once here rather than inside `evaluate`, which runs thousands of times
+  // over inputs that do not change between the calls.
+  const check = checkEffectiveHealthLevels(levels)
+  if (!check.ok) {
+    return {
+      steps: [],
+      startingEffectiveHealth: 0,
+      finalEffectiveHealth: 0,
+      excluded: [],
+      issues: check.issues,
+    }
+  }
 
   const upgrades: PathUpgrade[] = []
   const excluded: EffectiveHealthPlan['excluded'] = []
@@ -473,5 +495,6 @@ export function planEffectiveHealthPath(options: EffectiveHealthPlanOptions): Ef
       ? planned[planned.length - 1].value
       : startingEffectiveHealth,
     excluded,
+    issues: [],
   }
 }

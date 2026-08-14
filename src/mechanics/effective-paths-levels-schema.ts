@@ -14,8 +14,7 @@
  *
  * - a key is **missing**, so the model reads `undefined`, and arithmetic on it
  *   returns `NaN` that spreads through every term it touches;
- * - a key holds `NaN` already, from a number field the player emptied;
- * - a key is negative, which prices a level the player cannot un-buy.
+ * - a key holds `NaN` already, from a number field the player emptied.
  *
  * None of those throw. The planner ranks against them, the page renders a full
  * table, and the answer is confidently wrong — which is the defect this whole
@@ -31,11 +30,25 @@ import { ZERO_EFFECTIVE_ECONOMY_LEVELS } from './effective-paths-eecon-levels'
 import type { EffectiveEconomyLevels } from './effective-paths-eecon-levels'
 import { ZERO_EFFECTIVE_HEALTH_LEVELS } from './effective-paths-ehp-model'
 import type { EffectiveHealthLevels } from './effective-paths-ehp-model'
-import { ZERO_EFFECTIVE_REGEN_LEVELS } from './effective-paths-regen-plan'
-import type { EffectiveRegenLevels } from './effective-paths-regen-plan'
+// From the levels module rather than the planner: the planner checks its
+// levels through this file, so importing it back would be a cycle.
+import { ZERO_EFFECTIVE_REGEN_LEVELS } from './effective-paths-regen-levels'
+import type { EffectiveRegenLevels } from './effective-paths-regen-levels'
 
-/** A level: finite, whole, not negative. `NaN` is the failure this catches. */
-const level = z.number().finite().int().min(0)
+/**
+ * A level: a real number, and nothing more.
+ *
+ * This began as `.finite().int().min(0)`, which contradicted the rule three
+ * lines of doc above it — magnitude is not this file's business — and the
+ * sheet settled it: `eEcon` carries a negative Golden Combo stone level in the
+ * oracle fixture, so `.min(0)` rejected the authority we are porting. The
+ * bound was my assumption about what a level can be; the sheet is the source.
+ *
+ * `.finite()` stays, because that one is not a matter of opinion: `NaN` and
+ * `Infinity` have no arithmetic that ends anywhere useful, and catching them
+ * is the entire reason this file exists.
+ */
+const level = z.number().finite()
 
 /**
  * A record with **exactly** these keys, each a level.

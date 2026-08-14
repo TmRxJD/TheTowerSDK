@@ -12,6 +12,7 @@ import {
   type EffectiveHealthConfig,
   type EffectiveHealthLevels,
   effectiveHealthPerks,
+  ZERO_EFFECTIVE_HEALTH_LEVELS,
 } from './effective-paths-ehp-model'
 import { EFFECTIVE_HEALTH_UPGRADES, planEffectiveHealthPath } from './effective-paths-ehp-plan'
 
@@ -75,6 +76,14 @@ function toConfig(c: ModelCase['cfg']): EffectiveHealthConfig {
 function toLevels(testCase: { levels: unknown, cfg: Record<string, number> }): EffectiveHealthLevels {
   const levels = testCase.levels as EffectiveHealthLevels
   return {
+    /*
+     * The zero record first, because "predates" turned out to cover more than
+     * the enhancements below: the fixture has no module armor levels either,
+     * and lifting only the fields someone remembered left two of them
+     * `undefined`. Starting from the canonical defaults means a level added to
+     * the model arrives here at zero rather than as a hole.
+     */
+    ...ZERO_EFFECTIVE_HEALTH_LEVELS,
     ...levels,
     enhancementHealth: testCase.cfg.wseHealth,
     enhancementDefenseAbsolute: testCase.cfg.wseDabs,

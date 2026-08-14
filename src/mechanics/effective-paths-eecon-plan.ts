@@ -18,6 +18,8 @@ import {
   ECONOMY_TIME_LEVEL_KEYS,
 } from './effective-paths-eecon-levels'
 import type { EffectiveEconomyLevels } from './effective-paths-eecon-levels'
+import { checkEffectiveEconomyLevels } from './effective-paths-levels-schema'
+import type { EffectiveLevelsIssue } from './effective-paths-levels-schema'
 import { computeEffectiveEconomy } from './effective-paths-eecon-compute'
 import type { EffectiveEconomyConfig } from './effective-paths-eecon-compute'
 import {
@@ -309,6 +311,11 @@ export interface EffectiveEconomyPlan {
   startingEffectiveEconomy: number
   finalEffectiveEconomy: number
   excluded: PathExclusion[]
+  /**
+   * What made the levels unusable, when they were. Empty on every plan that
+   * ran — the same contract the damage plan already kept.
+   */
+  issues: EffectiveLevelsIssue[]
 }
 
 /** The highest level a candidate can reach, or `null` when nothing prices one. */
@@ -488,6 +495,19 @@ export function planEffectiveEconomyPath(
   const steps = options.steps ?? 145
   const skipped = new Set(options.excludeIds ?? [])
 
+  // Once here rather than inside `evaluate`, which runs thousands of times
+  // over inputs that do not change between the calls.
+  const check = checkEffectiveEconomyLevels(levels)
+  if (!check.ok) {
+    return {
+      steps: [],
+      startingEffectiveEconomy: 0,
+      finalEffectiveEconomy: 0,
+      excluded: [],
+      issues: check.issues,
+    }
+  }
+
   const upgrades: PathUpgrade[] = []
   const excluded: EffectiveEconomyPlan['excluded'] = []
   const byId = new Map(EFFECTIVE_ECONOMY_UPGRADES.map(upgrade => [upgrade.id, upgrade]))
@@ -623,5 +643,6 @@ export function planEffectiveEconomyPath(
       ? planned[planned.length - 1].value
       : startingEffectiveEconomy,
     excluded,
+    issues: [],
   }
 }

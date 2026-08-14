@@ -33,26 +33,17 @@ import {
   planPath,
 } from './effective-paths-planner'
 import { CARD_MASTERY_MAX_LEVEL } from './effective-paths-coin-costs'
+import type { EffectiveRegenLevels } from './effective-paths-regen-levels'
+import {
+  checkEffectiveHealthLevels,
+  checkEffectiveRegenLevels,
+  type EffectiveLevelsIssue,
+} from './effective-paths-levels-schema'
 
-/** The levels the regen path reads, over and above the eHP ones it shares. */
-export interface EffectiveRegenLevels {
-  /** Tower Regen lab. */
-  healthRegen: number
-  /** Wall Regen lab. */
-  wallRegen: number
-  /** Health Regen Mastery lab. */
-  healthRegenMastery: number
-  /** Second Wind Mastery lab. */
-  secondWindMastery: number
-}
-
-/** Every regen level at zero. */
-export const ZERO_EFFECTIVE_REGEN_LEVELS: EffectiveRegenLevels = {
-  healthRegen: 0,
-  wallRegen: 0,
-  healthRegenMastery: 0,
-  secondWindMastery: 0,
-}
+// Defined in `effective-paths-regen-levels.ts` and re-exported here, so that
+// every existing importer of this module keeps working.
+export { ZERO_EFFECTIVE_REGEN_LEVELS } from './effective-paths-regen-levels'
+export type { EffectiveRegenLevels }
 
 /** What the regen path needs that the eHP config does not already carry. */
 export interface EffectiveRegenConfig {
@@ -178,6 +169,11 @@ export interface EffectiveRegenPlan {
   startingEffectiveRegen: number
   finalEffectiveRegen: number
   excluded: PathExclusion[]
+  /**
+   * What made the levels unusable, when they were. Empty on every plan that
+   * ran — the same contract the damage plan already kept.
+   */
+  issues: EffectiveLevelsIssue[]
 }
 
 /** Plan a regen path, the same greedy loop the eHP paths use. */
@@ -185,6 +181,26 @@ export function planEffectiveRegenPath(options: EffectiveRegenPlanOptions): Effe
   const { config, eHealth, levels, variant } = options
   const steps = options.steps ?? 145
   assertPathVariant(variant, REGEN_PATH_VARIANTS, 'eRegen')
+
+  /*
+   * Both checks, because this planner is handed the regen levels merged into
+   * the eHP ones and reads from both: `evaluate` computes eHP first and the
+   * regen figure on top of it, so a broken eHP level is just as fatal here as
+   * a broken regen one. The regen schema is lenient about unknown keys for
+   * exactly this reason — it sees the merged record too.
+   */
+  const check = checkEffectiveRegenLevels(levels)
+  const healthCheck = checkEffectiveHealthLevels(levels)
+  if (!check.ok || !healthCheck.ok) {
+    return {
+      steps: [],
+      startingEffectiveRegen: 0,
+      finalEffectiveRegen: 0,
+      excluded: [],
+      issues: [...check.issues, ...healthCheck.issues],
+    }
+  }
+
   const skipped = new Set(options.excludeKeys ?? [])
 
   const upgrades: PathUpgrade[] = []
@@ -244,5 +260,6 @@ export function planEffectiveRegenPath(options: EffectiveRegenPlanOptions): Effe
     startingEffectiveRegen: starting,
     finalEffectiveRegen: planned.length ? planned[planned.length - 1].value : starting,
     excluded,
+    issues: [],
   }
 }

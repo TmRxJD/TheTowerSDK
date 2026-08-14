@@ -75,13 +75,23 @@ describe.each(CHECKS)('$model levels', ({ check, zero, banded }) => {
     expect(check(withValue(Number.POSITIVE_INFINITY)).ok).toBe(false)
   })
 
-  it('catches a negative level', () => {
-    expect(check(withValue(-1)).ok).toBe(false)
+  it('allows a negative level, because the sheet has one', () => {
+    /*
+     * This asserted the opposite, on the reasoning that a negative level
+     * prices something a player cannot un-buy. The sheet disagreed: the
+     * `eEcon` oracle fixture carries a negative Golden Combo stone level, so
+     * the bound rejected the authority being ported — and it rejected it by
+     * returning an empty plan, which is the failure mode this whole file
+     * exists to prevent.
+     *
+     * Magnitude is the caller's business. Finiteness is not.
+     */
+    expect(check(withValue(-1)).ok).toBe(true)
   })
 
-  it('catches a fractional level', () => {
-    // Levels are whole. A fraction means someone divided where they should not.
-    expect(check(withValue(2.5)).ok).toBe(false)
+  it('allows a fractional level', () => {
+    // Same reasoning: unusual, but it is somebody's data and it computes.
+    expect(check(withValue(2.5)).ok).toBe(true)
   })
 
   it('catches a level that is a string', () => {
