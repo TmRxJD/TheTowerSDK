@@ -1,0 +1,28 @@
+{
+  /*
+   * Type-checks the examples against the package's own public entry points.
+   *
+   * `tsconfig.build.json` covers `src` only, so an example could import an
+   * export that no longer exists and nothing would notice — which is exactly
+   * what happened: `01-browse-game-data.ts` imported `generatedLabs` for two
+   * releases after `LAB_CATALOG` replaced it.
+   *
+   * `rootDir` is cleared because examples sit outside `src`, and there is no
+   * emit here to place anywhere.
+   */
+  "extends": "./tsconfig.build.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": ".",
+    "paths": {
+      "thetowersdk": ["./src/index.ts"],
+      "thetowersdk/data": ["./src/data/index.ts"],
+      "thetowersdk/save": ["./src/save/index.ts"],
+      "thetowersdk/node": ["./src/node/index.ts"],
+      "thetowersdk/formatting": ["./src/formatting/index.ts"],
+      "thetowersdk/mechanics": ["./src/mechanics/index.ts"],
+      "thetowersdk/wiki": ["./src/wiki/index.ts"]
+    }
+  },
+  "include": ["examples/**/*.ts"]
+}

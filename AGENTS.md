@@ -6,8 +6,135 @@ This file is the canonical instruction set. `CLAUDE.md` and
 ## What this package is
 
 `thetowersdk` gives you the game's data and a reader for a player's save file, so you can build
-calculators and tools for The Tower. It is pure TypeScript: no framework, no I/O outside the save
-decoder, no global state.
+calculators and tools for **The Tower** (TechTree Games' idle tower defence game). It is pure
+TypeScript: no framework, no I/O outside the save decoder, no global state.
+
+Everything here is about that one game. Nothing in this package is generic infrastructure.
+
+## Two rules, before anything else
+
+1. **Look up the mechanic before you describe it.** This package gives values, not meaning. See
+   [Consult the wiki](#consult-the-wiki-before-describing-a-mechanic) — it is not optional and it is
+   one tool call.
+2. **Find the export; do not invent one.** There are 2,007 exports across six entry points. Use the
+   map below, then `list_exports` with a filter, then `get_export`. A plausible-looking name you
+   guessed will not exist.
+
+## Where things are
+
+Sizes are exports, not files — they say how much you are searching through.
+
+| Entry point | Exports | Holds | Reach for it when |
+|---|---:|---|---|
+| `thetowersdk/data` | 374 | Game tables and catalogs | You need a cost, a level curve, an effect value, a name |
+| `thetowersdk/save` | 436 | `playerInfo.dat` readers | You need what a specific player has |
+| `thetowersdk/mechanics` | 1132 | Formulas | You need to compute something the game computes |
+| `thetowersdk/formatting` | 33 | Number and duration display | You need it to read the way the game shows it |
+| `thetowersdk/node` | 8 | The save decoder | You have bytes and need a save root (Node only) |
+| `thetowersdk/wiki` | 24 | Wikitext → Markdown, page fetch | You need to know how a mechanic behaves |
+
+`thetowersdk/internal/*` is **not** public: no stability guarantee, and it will move. Needing it is a
+gap worth reporting, not a path to depend on.
+
+### `data` — the game's tables
+
+Catalogs are the entry into game data. Each is an array of typed rows.
+
+| Catalog | What it holds |
+|---|---|
+| `LAB_CATALOG` | Every research lab: levels, coin cost and duration per level, caps |
+| `CARD_IMPORT_CATALOG` | Cards, their ids, rarities and per-level values |
+| `MODULE_TEMPLATES` · `MODULE_SUBSTAT_CANONICAL_DATA` | Modules, rarities, substat definitions |
+| `ULTIMATE_WEAPON_IMPORT_CATALOG` | The nine weapons, their stats and plus-levels |
+| `BOT_IMPORT_CATALOG` · `GUARDIAN_CHIP_IMPORT_CATALOG` | Bots and guardian chips |
+| `VAULT_POWER_IMPORT_CATALOG` · `VAULT_HARMONY_IMPORT_CATALOG` | The two vault trees |
+| `RELIC_IMPORT_CATALOG` | Relics and their bonus types — **read the note on units below** |
+| `LAB_RESEARCH_IMPORT_CATALOG` | Research entries as the save stores them |
+| `PLAYER_DATA_FIELD_CATALOG` | Named save fields |
+| `CURRENCY_DEFINITIONS` · `TOWER_MODULE_TYPE_ENUM` · `RESEARCH_CATEGORY_ENUM` | Enumerations |
+| `getWorkshopStatDefinitions()` | Workshop stats — a function, because it builds from tables |
+| `sharedToolsCatalog` | The Run Tracker's own tool list (links, categories) |
+| `GLOSSARY` · `lookupGlossary` · `expandAcronym` | What a term or acronym means |
+
+**A cost is a plain number of coins.** `1.1e15` is 1.1 quadrillion. There is no scaling factor to
+apply and no currency field to read first, so two labs can be added together directly.
+
+**Units are not uniform across a catalog.** A relic bonus may be a percentage, metres, seconds or a
+multiplier, and the unit lives in the game's description text rather than beside the number. Check
+before you format one.
+
+### `save` — what a player has
+
+32 `read*FromSaveRoot` extractors. The important ones:
+
+| Function | Returns |
+|---|---|
+| `readLabsFromSaveRoot` | Research levels, what is maxed, the active queue |
+| `readWorkshopFromSaveRoot` | Upgrade levels, enhancements, saved presets |
+| `readModulesFromSaveRoot` | Owned modules, rarities, substats, what is equipped |
+| `readCardsFromSaveRoot` | Card levels, copies, mastery, equipped slots |
+| `readUltimateWeaponsFromSaveRoot` | Weapon levels, unlocks, plus-levels, stones |
+| `readVaultFromSaveRoot` · `readRelicsFromSaveRoot` · `readBotsFromSaveRoot` · `readGuardiansFromSaveRoot` | The rest of the account |
+| `readLifetimeFromSaveRoot` · `readDissonanceFromSaveRoot` | Totals and echo progress |
+| `listImportableBattleRuns` | Run history, with every stored field |
+| `discoverSaveImportTrackers` | "What is even in this save?" — counts and summaries |
+
+Rules that hold for all of them:
+
+- **They return `null` rather than throwing** when a save predates a feature. Always check.
+- **Read `warnings`** — what they could not interpret, rather than dropping it silently.
+- **Never mutate `parsedRoot`.** Callers run many extractors over the same object.
+- **Arrays are positional and over-allocated.** `relicsUnlocked[112]` is relic 112; unused slots are
+  not always zero, and the card level array pads with `1`. Use the unlock flag where one exists.
+- **A save can be older than the catalog.** 305 relics in the catalog and 236 in the save means the
+  rest are *absent*, not locked. Do not present them as things the player is missing.
+
+### `mechanics` — the formulas
+
+1,132 exports. By area, so you know which filter to pass `list_exports`:
+
+| Area | ~Exports | Covers |
+|---|---:|---|
+| Enemies | 276 | Wave/tier base health and damage, type multipliers, level skip, elite spawns, wave-info panel |
+| Damage | 147 | Crit, multishot, bounce, rend armor, thorns, shockwave, land mines, knockback, tower fire and range |
+| Ultimates | 92 | The shared hit/absorb pipeline, Chrono Field, Poison Swamp, Inner Land Mines, Golden Tower, Black Hole, Death Wave, Spotlight |
+| Economy | 91 | Coin and drop simulation, interest, ROI scaling, cost tables |
+| Workshop | 58 | Attack, defence and utility stat curves |
+| Effective Paths | 54 | The upgrade-order solver — see below |
+| Bots and guardians | 51 | Hit multipliers, range and coverage, medal planning, cooldowns |
+| Labs | 34 | Research durations, costs, speed modifiers |
+| Modules · Cards | 33 | Module stat computation, card effect lookup |
+| Battle conditions | 22 | Resistance levels, tournament heat, counter labs |
+
+`MECHANICS_COVERAGE` states how much of the game each area reproduces: `confirmed` means checked
+against the game's implementation, `partial` means correct within limits named in its `gaps`.
+
+### Effective Paths — the upgrade-order solver
+
+Ports the community [Effective Paths][ep-agents] spreadsheet: given an account, what to buy next for
+the most effect per unit of cost.
+
+| Model | Planner | Variants |
+|---|---|---|
+| eHP | `planEffectiveHealthPath` | `lab-time` · `lab-coins` · `stone` · `coin` |
+| eRegen | `planEffectiveRegenPath` | `lab-time` · `lab-coins` |
+| eDamage | `planEffectiveDamagePath` | `lab-time` · `lab-coins` · `stone` · `coin` · `keys` |
+| eEcon | `planEffectiveEconomyPath` | `time` · `coin` · `stone` |
+| eEcon Discount | `planEffectiveEconomyDiscountPath` | ranks coins **saved**, not earned |
+
+Every planner takes `{ config, levels, variant, steps }` and returns `{ steps, excluded, issues }`.
+
+- **config** = the account: what is unlocked, owned, equipped. Start from `zeroEffective*Config()`.
+- **levels** = how far each candidate is bought. Start from `ZERO_EFFECTIVE_*_LEVELS` and fill it —
+  a missing key is `undefined`, which becomes a `NaN` the planner refuses.
+- **`excluded`** = candidates not offered, each with a reason. A candidate is planned or it is
+  explained, never neither. A short path usually means everything else is at its cap.
+- **`issues`** = why nothing could be planned. Empty on every plan that ran.
+
+`EFFECTIVE_*_UPGRADES` lists the candidates with the `id`, `band`, `key` and `sheetName` you map your
+own data onto. The README has a worked example.
+
+[ep-agents]: https://docs.google.com/spreadsheets/d/1YwZtKP6B4WYhRba5T6APJ1YxKNdfnIGQnprgnxmO7zc/edit
 
 ## Consult the wiki before describing a mechanic
 

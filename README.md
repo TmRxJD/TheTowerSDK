@@ -256,9 +256,14 @@ Everything in `thetowersdk/save` and `thetowersdk/data` then works on the result
 Runnable, in [`examples/`](examples):
 
 ```bash
-npx tsx examples/01-browse-game-data.ts
-npx tsx examples/02-read-a-save-file.ts ~/playerInfo.dat
+npx tsx examples/01-browse-game-data.ts                        # the tables, no save needed
+npx tsx examples/02-read-a-save-file.ts ~/playerInfo.dat       # what one player has
+npx tsx examples/03-plan-upgrades-from-a-save.ts ~/playerInfo.dat  # a tool: what to buy next
 ```
+
+The third is the one to read if you are building something: it goes save → extractors → planner,
+maps a player onto the model, and reports what it could not map rather than passing a silent zero
+into the plan. They are type-checked against the package on every `npm run verify`.
 
 ---
 
