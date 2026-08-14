@@ -106,6 +106,9 @@
       "mechanics": [
         "dist/mechanics/index.d.ts"
       ],
+      "wiki": [
+        "dist/wiki/index.d.ts"
+      ],
       "internal/*": [
         "dist/*.d.ts"
       ],
