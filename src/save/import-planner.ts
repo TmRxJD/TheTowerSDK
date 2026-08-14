@@ -1,18 +1,18 @@
-import { buildBotsTrackerImportPayload, extractBotsFromSaveRoot } from './bots'
+import { buildBotsTrackerImportPayload, readBotsFromSaveRoot } from './bots'
 import { planBattleReportImport } from './battle-reports'
-import { buildCardsTrackerImportPayload, extractCardsFromSaveRoot } from './cards'
-import { canImportDissonanceFromSave, extractDissonanceFromSaveRoot } from './dissonance'
-import { buildGuardiansTrackerImportPayload, extractGuardiansFromSaveRoot } from './guardians'
-import { buildLabsTrackerImportPayload, extractLabsFromSaveRoot } from './labs'
+import { buildCardsTrackerImportPayload, readCardsFromSaveRoot } from './cards'
+import { canImportDissonanceFromSave, readDissonanceFromSaveRoot } from './dissonance'
+import { buildGuardiansTrackerImportPayload, readGuardiansFromSaveRoot } from './guardians'
+import { buildLabsTrackerImportPayload, readLabsFromSaveRoot } from './labs'
 import {
   buildLifetimeTrackerImportPayload,
   canImportLifetimeFromSave,
-  extractLifetimeFromSaveRoot,
+  readLifetimeFromSaveRoot,
 } from './lifetime'
 import {
   buildModulesTrackerImportPayload,
   canImportModulesToTracker,
-  extractModulesFromSaveRoot,
+  readModulesFromSaveRoot,
 } from './modules'
 import { buildRelicsTrackerImportPayloadFromSaveRoot } from './relics'
 import {
@@ -22,18 +22,18 @@ import {
 import {
   buildUltimateWeaponsTrackerImportPayload,
   canImportUltimateWeaponsToTracker,
-  extractUltimateWeaponsFromSaveRoot,
-  resolveUltimateWeaponCatalogForHubSync,
+  getUltimateWeaponCatalogForHubSync,
+  readUltimateWeaponsFromSaveRoot,
 } from './ultimate-weapons'
-import { buildVaultTrackerImportPayload, extractVaultFromSaveRoot } from './vault'
+import { buildVaultTrackerImportPayload, readVaultFromSaveRoot } from './vault'
 import {
-  buildWorkshopTrackerImportPayloadFromSave,
+  buildWorkshopTrackerImportPayload,
 } from './workshop'
 
 export type SaveImportTrackerPayload =
   | { key: 'battleReports'; plan: ReturnType<typeof planBattleReportImport> }
   | { key: 'lifetime'; payload: ReturnType<typeof buildLifetimeTrackerImportPayload> }
-  | { key: 'workshop'; payload: NonNullable<ReturnType<typeof buildWorkshopTrackerImportPayloadFromSave>> }
+  | { key: 'workshop'; payload: NonNullable<ReturnType<typeof buildWorkshopTrackerImportPayload>> }
   | { key: 'labs'; payload: ReturnType<typeof buildLabsTrackerImportPayload> }
   | { key: 'ultimateWeapons'; payload: NonNullable<ReturnType<typeof buildUltimateWeaponsTrackerImportPayload>> }
   | { key: 'modules'; payload: NonNullable<ReturnType<typeof buildModulesTrackerImportPayload>> }
@@ -56,6 +56,24 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
+/**
+ * Whether this is a decoded save at all, as opposed to something else.
+ *
+ * Several extractors accept any object and return an empty result for it, so
+ * `{}` — a fetch that failed, a file that is not a save, a decode that gave up
+ * — reached the planner and came back **importable**, with a payload full of
+ * nothing. `canImport` is what a caller gates the write on, so that is an offer
+ * to overwrite a tracker with blanks.
+ *
+ * Deliberately the weakest possible test: a record with at least one key. A
+ * real save has hundreds, including saves far older than any of these
+ * features, so this cannot refuse a legitimate one — and it catches every shape
+ * a failure actually takes.
+ */
+function looksLikeSaveRoot(value: unknown): boolean {
+  return isRecord(value) && Object.keys(value).length > 0
+}
+
 export function planSaveImportTracker(
   key: SaveImportTrackerKey,
   parsedRoot: unknown,
@@ -63,6 +81,10 @@ export function planSaveImportTracker(
 ): SaveImportPlannerResult {
   const label = SAVE_IMPORT_TRACKER_LABELS[key]
   const root = isRecord(parsedRoot) ? parsedRoot : null
+
+  if (!looksLikeSaveRoot(parsedRoot)) {
+    return { key, label, canImport: false, skipReason: 'This file is not a save.', payload: null }
+  }
 
   if (key === 'battleReports') {
     const plan = planBattleReportImport(parsedRoot, options?.existingRuns ?? [])
@@ -77,7 +99,7 @@ export function planSaveImportTracker(
   }
 
   if (key === 'lifetime') {
-    const extract = extractLifetimeFromSaveRoot(parsedRoot)
+    const extract = readLifetimeFromSaveRoot(parsedRoot)
     const canImport = canImportLifetimeFromSave(extract)
     const payload = extract ? buildLifetimeTrackerImportPayload(extract) : null
     return {
@@ -90,7 +112,7 @@ export function planSaveImportTracker(
   }
 
   if (key === 'workshop') {
-    const payload = buildWorkshopTrackerImportPayloadFromSave(parsedRoot)
+    const payload = buildWorkshopTrackerImportPayload(parsedRoot)
     return {
       key,
       label,
@@ -101,7 +123,7 @@ export function planSaveImportTracker(
   }
 
   if (key === 'labs') {
-    const extract = extractLabsFromSaveRoot(root)
+    const extract = readLabsFromSaveRoot(root)
     const canImport = Boolean(
       extract
       && (
@@ -120,9 +142,9 @@ export function planSaveImportTracker(
   }
 
   if (key === 'ultimateWeapons') {
-    const extract = extractUltimateWeaponsFromSaveRoot(parsedRoot)
+    const extract = readUltimateWeaponsFromSaveRoot(parsedRoot)
     const canImport = canImportUltimateWeaponsToTracker(extract)
-    const weapons = resolveUltimateWeaponCatalogForHubSync()
+    const weapons = getUltimateWeaponCatalogForHubSync()
     const payload = extract && canImport
       ? buildUltimateWeaponsTrackerImportPayload(extract, weapons)
       : null
@@ -136,7 +158,7 @@ export function planSaveImportTracker(
   }
 
   if (key === 'modules') {
-    const extract = extractModulesFromSaveRoot(parsedRoot)
+    const extract = readModulesFromSaveRoot(parsedRoot)
     const canImport = canImportModulesToTracker(extract)
     const payload = extract && canImport ? buildModulesTrackerImportPayload(extract) : null
     return {
@@ -149,7 +171,7 @@ export function planSaveImportTracker(
   }
 
   if (key === 'cards') {
-    const extract = extractCardsFromSaveRoot(root)
+    const extract = readCardsFromSaveRoot(root)
     const payload = extract ? buildCardsTrackerImportPayload(extract) : null
     return {
       key,
@@ -161,7 +183,7 @@ export function planSaveImportTracker(
   }
 
   if (key === 'vault') {
-    const extract = extractVaultFromSaveRoot(root)
+    const extract = readVaultFromSaveRoot(root)
     const payload = extract ? buildVaultTrackerImportPayload(extract) : null
     return {
       key,
@@ -173,7 +195,7 @@ export function planSaveImportTracker(
   }
 
   if (key === 'bots') {
-    const extract = extractBotsFromSaveRoot(root)
+    const extract = readBotsFromSaveRoot(root)
     const payload = extract ? buildBotsTrackerImportPayload(extract) : null
     return {
       key,
@@ -185,7 +207,7 @@ export function planSaveImportTracker(
   }
 
   if (key === 'guardians') {
-    const extract = extractGuardiansFromSaveRoot(root)
+    const extract = readGuardiansFromSaveRoot(root)
     const payload = extract ? buildGuardiansTrackerImportPayload(extract) : null
     return {
       key,
@@ -208,9 +230,20 @@ export function planSaveImportTracker(
   }
 
   if (key === 'dissonance') {
-    const extract = extractDissonanceFromSaveRoot(parsedRoot)
+    const extract = readDissonanceFromSaveRoot(parsedRoot)
     const hasWaveData = canImportDissonanceFromSave(extract)
-    const canImport = hasWaveData || extract != null
+    /*
+     * `canImportDissonanceFromSave` is the answer, not half of it.
+     *
+     * This read `hasWaveData || extract != null`, and the extractor returns an
+     * extract for any object — so the second half was always true and the first
+     * never mattered. A record with one unrelated key came back importable.
+     *
+     * The helper already covers the case that clause was presumably for: it
+     * accepts a save with no wave data as long as the Echo labs are unlocked,
+     * which is the state where there is something to sync and nothing to show.
+     */
+    const canImport = hasWaveData
     return {
       key,
       label,

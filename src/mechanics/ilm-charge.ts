@@ -1,6 +1,6 @@
 import { clampAssistMultiplierEfficiencyPct } from '../internal/assist-module-efficiency'
-import { getSharedToolLabs, resolveLabValueAtLevel } from '../data/index'
-import { resolveWorkshopStatNumericValueAtLevel } from '../internal/game-input-data/workshop-stat-dropdown-math'
+import { computeLabValueAtLevel, getSharedToolLabs } from '../data/index'
+import { computeWorkshopStatNumericValueAtLevel } from '../internal/game-input-data/workshop-stat-dropdown-math'
 import { uwStoneChartData } from '../data/index'
 import { ultimateModuleMultiplier } from './ultimates'
 import {
@@ -46,32 +46,32 @@ function innerLandMinesStatRow(stat: InnerLandMinesUwStatName, level: number) {
   return statEntry?.levels.find(entry => entry.level === level) ?? null
 }
 
-export function resolveInnerLandMinesDamageMult(level: number): number {
+export function computeInnerLandMinesDamageMult(level: number): number {
   const row = innerLandMinesStatRow('Damage', level)
   return row ? parseUwDisplayMultiplier(row.value) : 0
 }
 
-export function resolveInnerLandMinesQuantity(level: number): number {
+export function computeInnerLandMinesQuantity(level: number): number {
   const row = innerLandMinesStatRow('Quantity', level)
   return row ? parseUwDisplayMultiplier(row.value) : 0
 }
 
-export function resolveInnerLandMinesCooldownSeconds(level: number): number {
+export function computeInnerLandMinesCooldownSeconds(level: number): number {
   const row = innerLandMinesStatRow('Cooldown', level)
   const raw = row ? parseUwCooldownSeconds(row.value) : 0
   if (raw <= 0) return raw
   return Math.max(ILM_COOLDOWN_FLOOR_SEC, raw)
 }
 
-export function resolveChargedMinesRatePerSecond(level: number): number {
+export function computeChargedMinesRatePerSecond(level: number): number {
   const clamped = Math.max(0, Math.min(CHARGED_MINES_RATE_PER_SECOND.length - 1, Math.floor(level)))
   return CHARGED_MINES_RATE_PER_SECOND[clamped] ?? 0
 }
 
-export function resolveChronoJumpLabBenefit(level: number): number {
+export function computeChronoJumpLabBenefit(level: number): number {
   const lab = getSharedToolLabs().find(entry => entry.name === INNER_LAND_MINE_CHRONO_JUMP_LAB_SLUG)
   if (!lab || level <= 0) return 0
-  return resolveLabValueAtLevel(lab, level)
+  return computeLabValueAtLevel(lab, level)
 }
 
 export interface IlmChargeInput {
@@ -94,12 +94,12 @@ export interface IlmChargeBreakdown {
 export function computeIlmChargeMultiplier(input: IlmChargeInput): IlmChargeBreakdown {
   const age = Math.max(0, input.mineAgeSeconds)
   const rate = input.chargedMinesActive
-    ? resolveChargedMinesRatePerSecond(input.chargedMinesLevel)
+    ? computeChargedMinesRatePerSecond(input.chargedMinesLevel)
     : 0
   const chargedGrowth = rate * age
 
   let chronoGrowth = 0
-  const chronoBenefit = resolveChronoJumpLabBenefit(input.chronoJumpLabLevel)
+  const chronoBenefit = computeChronoJumpLabBenefit(input.chronoJumpLabLevel)
   const hits = Math.max(0, Math.floor(input.timesHitByIlm))
   if (input.chargedMinesActive && input.chronoJumpLabLevel > 0 && hits > 0 && rate > 0) {
     chronoGrowth = chronoBenefit * rate * hits
@@ -278,11 +278,11 @@ export function defaultIlmCalcsSettings(): IlmCalcsSettings {
   }
 }
 
-export function resolveTowerDamageFromAttackLevel(level: number): number {
-  return Math.max(0, resolveWorkshopStatNumericValueAtLevel(WORKSHOP_ATTACK_DAMAGE_STAT_KEY, level))
+export function computeTowerDamageFromAttackLevel(level: number): number {
+  return Math.max(0, computeWorkshopStatNumericValueAtLevel(WORKSHOP_ATTACK_DAMAGE_STAT_KEY, level))
 }
 
-export function resolveMineAgeSecondsFromWaves(mineAgeWaves: number, waveTimeSeconds: number): number {
+export function computeMineAgeSecondsFromWaves(mineAgeWaves: number, waveTimeSeconds: number): number {
   const waves = Math.max(0, Number(mineAgeWaves) || 0)
   const waveTime = Math.max(0, Number(waveTimeSeconds) || 0)
   return waves * waveTime

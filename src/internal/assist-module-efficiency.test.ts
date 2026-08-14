@@ -3,9 +3,9 @@ import {
   assistMultiplierEfficiencyFactor,
   clampAssistModuleSlotEfficiencyPct,
   clampAssistMultiplierEfficiencyPct,
+  computeAssistMultiplierEfficiencyPct,
   MAX_ASSIST_MODULE_SLOT_EFFICIENCY_PCT,
   MAX_ASSIST_MULTIPLIER_EFFICIENCY_PCT,
-  resolveAssistMultiplierEfficiencyPct,
 } from './assist-module-efficiency'
 
 describe('assist-module-efficiency', () => {
@@ -15,8 +15,8 @@ describe('assist-module-efficiency', () => {
   })
 
   it('caps combined multiplier efficiency at 130% (v28.3)', () => {
-    expect(resolveAssistMultiplierEfficiencyPct(100, 30)).toBe(MAX_ASSIST_MULTIPLIER_EFFICIENCY_PCT)
-    expect(resolveAssistMultiplierEfficiencyPct(100, 50)).toBe(MAX_ASSIST_MULTIPLIER_EFFICIENCY_PCT)
+    expect(computeAssistMultiplierEfficiencyPct(100, 30)).toBe(MAX_ASSIST_MULTIPLIER_EFFICIENCY_PCT)
+    expect(computeAssistMultiplierEfficiencyPct(100, 50)).toBe(MAX_ASSIST_MULTIPLIER_EFFICIENCY_PCT)
     expect(clampAssistMultiplierEfficiencyPct(131)).toBe(130)
   })
 

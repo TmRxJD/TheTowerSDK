@@ -1,5 +1,5 @@
 import type { RelicTemplate } from '../../data/relics'
-import { resolveRelicCatalogRow } from './relics'
+import { findRelicCatalogRow } from './relics'
 
 const ROMAN_TIER_VALUES: ReadonlyArray<readonly [string, string]> = [
   ['xxiv', '24'],
@@ -94,13 +94,13 @@ function normalizeRelicUnlockKey(value: string | null | undefined): string {
     .replace(/\s+/g, ' ')
 }
 
-function extractTierFromUnlockDescription(description: string | null | undefined): number | null {
+function readTierFromUnlockDescription(description: string | null | undefined): number | null {
   if (!description) return null
   const match = String(description).match(/\btier\s+(\d+)\b/i)
   return match ? Number(match[1]) : null
 }
 
-function extractTierFromTrackerRequirement(template: RelicTemplate): number | null {
+function readTierFromTrackerRequirement(template: RelicTemplate): number | null {
   for (const source of [template.requirement, template.event]) {
     if (!source) continue
     const match = String(source).match(/\bT(\d+)\b/i)
@@ -119,7 +119,7 @@ function buildRelicTierSuffixKeysFromLabel(
   const direct = buildRelicTierSuffixKey(label)
   if (direct) keys.add(direct)
 
-  const tierFromUnlock = extractTierFromUnlockDescription(unlockDescription)
+  const tierFromUnlock = readTierFromUnlockDescription(unlockDescription)
   if (tierFromUnlock != null) {
     const match = String(label ?? '').match(/^t:\s*[^\s]+\s+(.+)$/i)
     if (match) {
@@ -282,7 +282,7 @@ export function buildRelicTemplateIdLookup(
     const tierSuffixKey = buildRelicTierSuffixKey(template.name)
     if (tierSuffixKey) keys.add(tierSuffixKey)
 
-    const requirementTier = extractTierFromTrackerRequirement(template)
+    const requirementTier = readTierFromTrackerRequirement(template)
     if (requirementTier != null) {
       const match = template.name.match(/^t:\s*[^\s]+\s+(.+)$/i)
       if (match) {
@@ -299,13 +299,13 @@ export function buildRelicTemplateIdLookup(
   return lookup
 }
 
-export function resolveRelicTemplateIdFromSaveIndex(
+export function findRelicTemplateIdFromSaveIndex(
   saveIndex: number,
   templates: readonly RelicTemplate[],
   lookup: ReadonlyMap<string, string> = buildRelicTemplateIdLookup(templates),
   requirementLookup: ReadonlyMap<string, string> = buildRelicRequirementLookup(templates),
 ): string | null {
-  const catalog = resolveRelicCatalogRow(saveIndex)
+  const catalog = findRelicCatalogRow(saveIndex)
   if (!catalog) return null
 
   for (const candidate of [

@@ -3,21 +3,21 @@ import { describe, expect, it } from 'vitest'
 import {
   advanceRetryScheduleState,
   applyRetryFailureState,
-  createRetryScheduleState,
+  buildRetryScheduleState,
   enqueueUniqueItemsByKey,
+  getRetryQueueDisposition,
   hasReachedRetryLimit,
   isRetryScheduleReady,
   normalizeRetryAttemptCount,
   parseRetryScheduleState,
   partitionRetryQueueItems,
   replaceOrInsertMatchingItem,
-  resolveRetryQueueDisposition,
   settleRetryQueueItems,
 } from './persistence-primitives'
 
 describe('persistence primitives retry schedule', () => {
   it('creates an immediately-ready retry schedule', () => {
-    expect(createRetryScheduleState(1_000)).toEqual({
+    expect(buildRetryScheduleState(1_000)).toEqual({
       attemptCount: 0,
       nextRetryAt: 1_000,
     })
@@ -57,9 +57,9 @@ describe('persistence primitives retry schedule', () => {
   })
 
   it('classifies and partitions retry queue items through shared helpers', () => {
-    expect(resolveRetryQueueDisposition({ attemptCount: 0, nextRetryAt: 900, nowMs: 1_000 })).toBe('ready')
-    expect(resolveRetryQueueDisposition({ attemptCount: 0, nextRetryAt: 1_100, nowMs: 1_000 })).toBe('deferred')
-    expect(resolveRetryQueueDisposition({ attemptCount: 3, nextRetryAt: 900, nowMs: 1_000, maxRetryCount: 3 })).toBe('exhausted')
+    expect(getRetryQueueDisposition({ attemptCount: 0, nextRetryAt: 900, nowMs: 1_000 })).toBe('ready')
+    expect(getRetryQueueDisposition({ attemptCount: 0, nextRetryAt: 1_100, nowMs: 1_000 })).toBe('deferred')
+    expect(getRetryQueueDisposition({ attemptCount: 3, nextRetryAt: 900, nowMs: 1_000, maxRetryCount: 3 })).toBe('exhausted')
 
     const partition = partitionRetryQueueItems({
       items: [

@@ -71,7 +71,7 @@ export function rangeSoftCap(raw: number): number {
   return raw * scale
 }
 
-export function calculateMaxDistance(input: RangePipelineInput): number {
+export function computeMaxDistance(input: RangePipelineInput): number {
   const labTerm = input.rangeLabBase + input.rangeLabIncrease * input.rangeLabLevel
   const upgradeMult = input.battleUpgradeLevel * RANGE_UPGRADE_STEP + RANGE_UPGRADE_BASE
   let raw = labTerm * upgradeMult

@@ -62,12 +62,12 @@ export const UPTIME_RESEARCH_LAB_SPEC_BY_SLUG = Object.fromEntries(
     .map(spec => [spec.researchSlug!, spec]),
 ) as Record<string, UptimeResearchLabSpec>
 
-export function resolveUptimeResearchLabGameDataKey(slug: string): UptimeResearchLabDataKey | null {
+export function findUptimeResearchLabGameDataKey(slug: string): UptimeResearchLabDataKey | null {
   const spec = UPTIME_RESEARCH_LAB_SPEC_BY_SLUG[slug]
   return spec?.key ?? null
 }
 
-export function resolveUptimeResearchLabGameDataKeyByField(
+export function findUptimeResearchLabGameDataKeyByField(
   field: UptimeResearchLabSpec['uptimeField'],
 ): UptimeResearchLabDataKey | null {
   const spec = UPTIME_RESEARCH_LAB_SPECS.find(entry => entry.uptimeField === field)
@@ -75,7 +75,7 @@ export function resolveUptimeResearchLabGameDataKeyByField(
 }
 
 /** Canonical field label shared by every uptime research-lab dropdown. */
-export function buildUptimeResearchLabFieldLabel(dataKey: UptimeResearchLabDataKey): string {
+export function formatUptimeResearchLabFieldLabel(dataKey: UptimeResearchLabDataKey): string {
   const spec = UPTIME_RESEARCH_LAB_SPEC_BY_KEY[dataKey]
   if (spec.researchSlug) return getResearchLabDisplayName(spec.researchSlug)
   if (dataKey === 'dw_base_waves_level') return 'Death Wave Quantity'

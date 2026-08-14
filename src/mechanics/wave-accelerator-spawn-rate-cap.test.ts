@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   enemySpawnRateCapFromWaveAcceleratorChart,
-  resolveWaveAcceleratorMasteryForSpawnCap,
+  findWaveAcceleratorMasteryForSpawnCap,
   waveAcceleratorSpawnMasteryBonusPercent,
   waveAcceleratorSpawnRateChartColumn,
 } from './wave-accelerator-spawn-rate-cap'
@@ -11,8 +11,8 @@ describe('wave-accelerator-spawn-rate-cap', () => {
     expect(waveAcceleratorSpawnMasteryBonusPercent(0)).toBe(10)
     expect(waveAcceleratorSpawnMasteryBonusPercent(4)).toBe(50)
     expect(waveAcceleratorSpawnMasteryBonusPercent(9)).toBe(100)
-    expect(resolveWaveAcceleratorMasteryForSpawnCap(null)).toBeNull()
-    expect(resolveWaveAcceleratorMasteryForSpawnCap(-1)).toBeNull()
+    expect(findWaveAcceleratorMasteryForSpawnCap(null)).toBeNull()
+    expect(findWaveAcceleratorMasteryForSpawnCap(-1)).toBeNull()
     expect(waveAcceleratorSpawnRateChartColumn(null)).toBe('normal')
     expect(waveAcceleratorSpawnRateChartColumn(-1)).toBe('normal')
     expect(waveAcceleratorSpawnRateChartColumn(0)).toBe('reduction10')

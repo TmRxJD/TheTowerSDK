@@ -280,7 +280,7 @@ function buildPresetSnapshots(root: Record<string, unknown>, warnings: string[])
   return snapshots
 }
 
-export function extractWorkshopFromSaveRoot(parsedRoot: unknown): WorkshopSaveExtract | null {
+export function readWorkshopFromSaveRoot(parsedRoot: unknown): WorkshopSaveExtract | null {
   if (!parsedRoot || typeof parsedRoot !== 'object') return null
 
   const root = parsedRoot as Record<string, unknown>
@@ -338,7 +338,7 @@ export function extractWorkshopFromSaveRoot(parsedRoot: unknown): WorkshopSaveEx
   }
 }
 
-export function resolvePresetSnapshot(extract: WorkshopSaveExtract, presetIndex: number): WorkshopSavePresetSnapshot {
+export function getPresetSnapshot(extract: WorkshopSaveExtract, presetIndex: number): WorkshopSavePresetSnapshot {
   const clamped = Math.max(0, Math.min(WORKSHOP_PRESET_COUNT - 1, Math.floor(presetIndex) || 0))
   return extract.presets[clamped] ?? extract.active
 }
@@ -402,10 +402,27 @@ export interface WorkshopTrackerSaveImportPayload {
   presetNames?: string[]
 }
 
-export function buildWorkshopTrackerImportPayloadFromSave(parsedRoot: unknown): WorkshopTrackerSaveImportPayload | null {
-  const extract = extractWorkshopFromSaveRoot(parsedRoot)
+export function buildWorkshopTrackerImportPayload(parsedRoot: unknown): WorkshopTrackerSaveImportPayload | null {
+  const extract = readWorkshopFromSaveRoot(parsedRoot)
   if (!extract) return null
-  const activeSnapshot = resolvePresetSnapshot(extract, extract.meta.currentPreset)
+  const activeSnapshot = getPresetSnapshot(extract, extract.meta.currentPreset)
+
+  /*
+   * Nothing found is `null`, not an empty payload.
+   *
+   * `readWorkshopFromSaveRoot` returns an extract for any object — it only
+   * refuses non-objects — so a file that is not a save produced a payload with
+   * empty levels, and the import planner read that as **importable**. A caller
+   * gates the write on that flag, so it was an offer to replace a player's
+   * workshop with blanks.
+   *
+   * Every other builder here already returns `null` when it finds nothing; this
+   * one did not, and it is the only one whose extractor never fails.
+   */
+  const found = countPositiveLevels(activeSnapshot.levels)
+    + countPositiveLevels(activeSnapshot.enhancementLevels)
+  if (found === 0 && extract.meta.presetNames.length === 0) return null
+
   return {
     levels: activeSnapshot.levels,
     enhancementLevels: activeSnapshot.enhancementLevels,

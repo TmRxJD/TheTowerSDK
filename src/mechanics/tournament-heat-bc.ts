@@ -89,7 +89,7 @@ export function getHeatRampPercent(
 }
 
 /** ELS Reduction BC level from league cap × heat ramp (heatLevel[22] in binary). */
-export function deriveElsReductionHeatLevel(
+export function computeElsReductionHeatLevel(
   league: TournamentLeague | null,
   wave: number,
 ): number {
@@ -106,7 +106,7 @@ export function deriveElsReductionHeatLevel(
  */
 export const CAMPAIGN_ELS_REDUCTION_HEAT_WAVES_PER_LEVEL = 366
 
-export function deriveCampaignElsReductionHeatLevel(
+export function computeCampaignElsReductionHeatLevel(
   tier: number,
   wave: number,
 ): number {
@@ -120,7 +120,7 @@ export function deriveCampaignElsReductionHeatLevel(
  * Random tournament BC level when heat tier exceeds 18 → level 100.
  * Below that, scale resistance BCs with the same heat effectiveness curve.
  */
-export function deriveRandomHeatBcLevel(
+export function computeRandomHeatBcLevel(
   league: TournamentLeague | null,
   wave: number,
 ): number {
@@ -133,7 +133,7 @@ export function deriveRandomHeatBcLevel(
 }
 
 /** heatLevel[18] scale used by GetUltimateBossModifier (Wave Info Boss HP only). */
-export function deriveBossUltimateHeatFactor(
+export function computeBossUltimateHeatFactor(
   league: TournamentLeague | null,
   wave: number,
 ): number {
@@ -142,7 +142,7 @@ export function deriveBossUltimateHeatFactor(
 }
 
 /** More Bosses BC level from league profile (boss interval is fixed per league). */
-export function deriveMoreBossesHeatLevel(league: TournamentLeague | null): number {
+export function computeMoreBossesHeatLevel(league: TournamentLeague | null): number {
   const profile = getTournamentHeatProfile(league)
   if (!profile) return 0
   return Math.max(0, 11 - profile.moreBossesEveryWaves)

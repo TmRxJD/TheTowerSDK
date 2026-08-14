@@ -9,7 +9,43 @@ This file is the canonical instruction set. `CLAUDE.md` and
 calculators and tools for The Tower. It is pure TypeScript: no framework, no I/O outside the save
 decoder, no global state.
 
-## The five entry points, and which to use
+## Consult the wiki before describing a mechanic
+
+This package supplies the game's data and formulas. It does not document game behaviour: a table
+gives a value, not what that value means, when it applies, or what it interacts with. Confirm
+behaviour against the community wiki before describing it in code, comments or output.
+
+Via the MCP server (`mcp/server.mjs`):
+
+```
+wiki_search { query: "wave skip" }                 find the page titles
+wiki_page   { title: "Wave Skip" }                 read it as Markdown
+wiki_page   { title: "Cards", section: "Costs" }   read one section
+```
+
+In code, `fetchFandomPageAsMarkdown` from `thetowersdk/wiki` does the same. Without MCP, the wiki is
+at `the-tower-idle-tower-defense.fandom.com`.
+
+Behaviour that is not derivable from the data alone includes ability sources (one weapon's damage
+scaling from another's stat), unlock thresholds spanning several entities, and units — a relic
+bonus may be metres or seconds where a neighbouring one is a percentage, and the unit appears only
+in the game's description text.
+
+**Offline use.** Set `TOWER_WIKI_DIR` to a directory of `slug.md` pages; both tools read it before
+the network. Every response reports `source: "local" | "cache" | "fandom"`, so a stale local page is
+distinguishable from a fresh fetch.
+
+### Wiki content and licensing
+
+The wiki declares **CC-BY-SA**; this package is MIT, so wiki text is fetched rather than bundled.
+
+CC-BY-SA permits redistribution and adaptation — converting wikitext to Markdown is an adaptation —
+provided the result carries the same licence, credits the source, and records that it was changed.
+Content may therefore be distributed as a separate package declaring
+`license: "CC-BY-SA-3.0"` with an attribution notice. `TOWER_WIKI_DIR` is the integration point for
+such a package.
+
+## The entry points, and which to use
 
 | Import | Use it for |
 |---|---|
@@ -18,6 +54,7 @@ decoder, no global state.
 | `thetowersdk/node` | Decoding the save file (needs Node; browsers see the recipe in the README) |
 | `thetowersdk/formatting` | Numbers and durations formatted the way the game shows them |
 | `thetowersdk/mechanics` | Formulas — enemy scaling, damage, drops, workshop stats |
+| `thetowersdk/wiki` | Fandom wikitext → Markdown, and fetching a page |
 
 Import from the subpath, not the root barrel, unless you genuinely want everything.
 
@@ -30,7 +67,7 @@ If you find yourself reaching into it, that is a gap worth reporting rather than
 for it. Always check:
 
 ```ts
-const labs = extractLabsFromSaveRoot(parsedRoot)
+const labs = readLabsFromSaveRoot(parsedRoot)
 if (!labs) return
 ```
 
@@ -54,6 +91,28 @@ catalogs rather than guessing — the MCP server's `define_term` does both.
 **Formulas under `mechanics/` are approximations.** They are fitted to observed behaviour and drift
 at very high waves and tiers. Do not use them where an exact match to the game matters.
 
+**`effective-paths-*` is a transcription, and the sheet is the authority.** Not these files'
+comments, not the wiki, not the game dump — the spreadsheet. Every rule cites the cell it came from
+(`eEcon!E6`, `eDamage Coins!EZ2`) and `effective-paths-cell-references.test.ts` enumerates those
+citations and pins how many there are. When it fails because you added one, **read the cell before
+updating the count**; that failure is the prompt, not paperwork.
+
+Before deriving a number in this area, read
+[`EFFECTIVE_PATHS_ORACLE.md`](../../docs/EFFECTIVE_PATHS_ORACLE.md) in the tracker repo. It lists the
+ways the spreadsheet API misleads — chiefly that a spilled range reads as *empty* through both
+`read_range` and `FORMULA` render while `COUNTA` sees a hundred rows of it. That has twice been
+mistaken for a missing feature.
+
+**A planner explains everything it leaves out.** `plan.excluded` carries a reason per candidate, and
+`planPath`'s `onSkip` reports the three ways the loop passes one over. Keep it that way: a path that
+stops after one step usually means every other candidate is at its cap, and without a reason that is
+indistinguishable from a bug. The rule is **planned, or explained — never neither.**
+
+**A path variant is refused, not guessed at.** `lab` is a damage *band* and `lab-time` is a
+*variant*. Passing the band matched no band's variant list, skipped every candidate, and returned an
+empty path that looked exactly like a finished account. All four planners now throw and name what
+they publish. Do not soften that into a default.
+
 ## Conventions this package enforces
 
 `pnpm lint:conventions` checks these; it runs in CI and will fail a PR.
@@ -75,12 +134,47 @@ at very high waves and tiers. Do not use them where an exact match to the game m
 ## Checking things without writing a script
 
 There is an MCP server in [`mcp/`](mcp/README.md). Point your agent at it and you can list exports,
-read a table, define a term, decode a save and run an extractor directly — useful for confirming a
-value instead of assuming one.
+read a table, define a term, decode a save, run an extractor, and plan an Effective Path directly —
+useful for confirming a value instead of assuming one.
 
 ```bash
 pnpm build && pnpm mcp
 ```
+
+`plan_effective_path` is the quickest way to see which candidates a path offers and why the rest are
+out, without writing a scratch script. It plans from a zero config, so read it for structure rather
+than for numbers.
+
+`wiki_search` and `wiki_page` are the ones to reach for **first** when the question is "how does X
+work" rather than "what value does X have". See the top of this file.
+
+## Verifying a value
+
+**Use a source's own accessor rather than a positional offset.** When checking data against an
+external source, address it the way the source does. An index computed by counting rows is a second
+thing that can be wrong, and it fails silently by appearing to disagree with correct data.
+
+**Check the fixture before the code.** A failing test more often means an unrepresentative fixture —
+invented identifiers, an inverted nested structure, a stub returning a different shape than the real
+collaborator — than a defect in what it tests.
+
+**Assert against the source, not against the implementation.** A test that recomputes the expression
+it is checking passes regardless of whether the expression is right. Call the exported function and
+compare with a value read from the source it models.
+
+**Prove a guard by introducing the fault it catches.** A guard that cannot be made to fail has not
+been shown to work. Confirm the edit that introduces the fault actually applied.
+
+**Constrain values to what the source allows, not to what seems reasonable.** Validation tighter than
+the source rejects legitimate data. Where a check rejects input by returning an empty result, that
+outcome is indistinguishable from "nothing to do" unless the reason is reported alongside it.
+
+**Reproduce a calculation from its inputs.** Working backwards from a rendered number introduces
+formatting and rounding as unknowns.
+
+**Rule out a stale artefact before reading source.** Empty or unchanged output is frequently a cached
+bundle, a module-graph cache, or the wrong host. Reload without cache and check the served file's
+timestamp first.
 
 ## Before you open a PR
 
@@ -104,6 +198,16 @@ schema in `src/data/schemas.ts` so `pnpm test:schema` validates it. If it introd
 
 **A new formula** — put it in `src/mechanics/`, export it from `src/mechanics/index.ts`, and say in
 the doc comment whether it is exact or fitted.
+
+**A test for any of it** — three rules, each of which has already caught a real fault here and each
+of which was learned by shipping the opposite:
+
+1. *Do not restate the implementation.* A test that computed `cost / (rate * 23)` and compared it
+   against `cost / (rate * 23)` stayed green when the constant became `24`. Call the export.
+2. *Pin several states, not one.* A constant agrees with a formula at exactly one input — four
+   frozen rates here each matched at a different single point and were wrong everywhere else.
+3. *Prove it by breaking what it guards.* Change the value the test exists to pin and watch it fail
+   by name. If it does not, it is testing itself.
 
 ## What not to do
 

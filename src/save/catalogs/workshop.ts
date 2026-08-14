@@ -6,11 +6,11 @@ import {
 export type WorkshopCatalogRow = (typeof WORKSHOP_IMPORT_CATALOG)[number]
 export type WorkshopEnhancementCatalogRow = (typeof WORKSHOP_ENHANCEMENT_IMPORT_CATALOG)[number]
 
-export function resolveWorkshopCatalogRow(index: number): WorkshopCatalogRow | null {
+export function findWorkshopCatalogRow(index: number): WorkshopCatalogRow | null {
   return WORKSHOP_IMPORT_CATALOG[index] ?? null
 }
 
-export function resolveWorkshopEnhancementCatalogRow(index: number): WorkshopEnhancementCatalogRow | null {
+export function findWorkshopEnhancementCatalogRow(index: number): WorkshopEnhancementCatalogRow | null {
   return WORKSHOP_ENHANCEMENT_IMPORT_CATALOG[index] ?? null
 }
 

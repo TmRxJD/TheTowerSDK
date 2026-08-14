@@ -4,9 +4,9 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { listActivePerkIndices } from './catalogs/perks'
 import {
-  derivePerkPreferencesFromSaveRoot,
-  deriveUnbannedPerkIndices,
-  resolveOverviewAutopickPerkIndices,
+  computeUnbannedPerkIndices,
+  getOverviewAutopickPerkIndices,
+  readPerkPreferencesFromSaveRoot,
 } from './perks'
 
 /** Synthetic, and inside the package, so a fork can run this without a save of its own. */
@@ -15,10 +15,10 @@ const playerInfo = JSON.parse(
   readFileSync(join(fixtureDir, 'perk-preferences.sample.json'), 'utf8'),
 ) as Record<string, unknown>
 
-describe('deriveUnbannedPerkIndices', () => {
+describe('computeUnbannedPerkIndices', () => {
   it('returns active catalog indices minus banned set', () => {
     const banned = [5, 14, 2, 13, 4, 47, 43, 49]
-    const unbanned = deriveUnbannedPerkIndices(banned)
+    const unbanned = computeUnbannedPerkIndices(banned)
     expect(unbanned).toHaveLength(listActivePerkIndices().length - banned.length)
     for (const index of banned) {
       expect(unbanned).not.toContain(index)
@@ -28,9 +28,9 @@ describe('deriveUnbannedPerkIndices', () => {
   })
 })
 
-describe('derivePerkPreferencesFromSaveRoot', () => {
+describe('readPerkPreferencesFromSaveRoot', () => {
   it('imports banned/unbanned perks and auto-pick settings from playerInfo fixture', () => {
-    const result = derivePerkPreferencesFromSaveRoot(playerInfo)
+    const result = readPerkPreferencesFromSaveRoot(playerInfo)
 
     expect(result.bannedIndices).toEqual([2, 4, 5, 14, 43, 46, 47, 49])
     expect(result.unbannedIndices).toHaveLength(26)
@@ -47,16 +47,16 @@ describe('derivePerkPreferencesFromSaveRoot', () => {
   })
 
   it('returns defaults for null root', () => {
-    const result = derivePerkPreferencesFromSaveRoot(null)
+    const result = readPerkPreferencesFromSaveRoot(null)
     expect(result.bannedIndices).toEqual([])
     expect(result.unbannedIndices).toHaveLength(listActivePerkIndices().length)
     expect(result.autoPickPerk).toBe(false)
   })
 })
 
-describe('resolveOverviewAutopickPerkIndices', () => {
+describe('getOverviewAutopickPerkIndices', () => {
   it('uses only autoPickOrder entries and excludes banned perks', () => {
-    const indices = resolveOverviewAutopickPerkIndices({
+    const indices = getOverviewAutopickPerkIndices({
       autoPickPerk: true,
       autoPickOrder: [20, 40, 1, 2],
       bannedIndices: [40],
@@ -65,7 +65,7 @@ describe('resolveOverviewAutopickPerkIndices', () => {
   })
 
   it('does not include unbanned perks missing from autoPickOrder', () => {
-    const indices = resolveOverviewAutopickPerkIndices({
+    const indices = getOverviewAutopickPerkIndices({
       autoPickPerk: true,
       autoPickOrder: [20, 1],
       bannedIndices: [],
@@ -74,7 +74,7 @@ describe('resolveOverviewAutopickPerkIndices', () => {
   })
 
   it('returns empty when auto pick is disabled', () => {
-    const indices = resolveOverviewAutopickPerkIndices({
+    const indices = getOverviewAutopickPerkIndices({
       autoPickPerk: false,
       autoPickOrder: [20, 1, 2],
       bannedIndices: [],

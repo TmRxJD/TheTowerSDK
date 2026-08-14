@@ -182,13 +182,13 @@ export function buildUptimeSubstatPickOptionLabel(
     : formatPrimaryLabel(spec, pick)
 }
 
-export function resolveUptimeSubstatPickIndex(kind: UptimeSubstatPickKind, pick: RarityPick | null | undefined): number {
+export function computeUptimeSubstatPickIndex(kind: UptimeSubstatPickKind, pick: RarityPick | null | undefined): number {
   const spec = UPTIME_SUBSTAT_PICK_SPECS[kind]
   const idx = spec.picks.indexOf(pick ?? 'None')
   return idx >= 0 ? idx : 0
 }
 
-export function resolveUptimeSubstatPickByIndex(kind: UptimeSubstatPickKind, index: number): RarityPick {
+export function getUptimeSubstatPickByIndex(kind: UptimeSubstatPickKind, index: number): RarityPick {
   const spec = UPTIME_SUBSTAT_PICK_SPECS[kind]
   const clamped = Math.max(0, Math.min(spec.picks.length - 1, Math.floor(Number(index) || 0)))
   return spec.picks[clamped] ?? 'None'

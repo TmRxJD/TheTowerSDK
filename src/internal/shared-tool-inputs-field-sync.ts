@@ -1,8 +1,8 @@
 import {
+  computeElsEnhancementLevel,
   ELS_ATTACK_WORKSHOP_KEY,
   ELS_ENHANCEMENT_KEY,
   ELS_HEALTH_WORKSHOP_KEY,
-  resolveElsEnhancementLevelFromTracker,
 } from '../mechanics/els-upgrade-path'
 import {
   VAULT_ELS_ATTACK_NODE_ID,
@@ -27,13 +27,13 @@ function readWorkshopLevel(levels: Record<string, number>, key: string): number 
   return Number.isFinite(value) ? Math.floor(value) : 0
 }
 
-export function deriveElsPlannerLevelsFromWorkshopStats(
+export function readElsPlannerLevels(
   workshop: SharedWorkshopStatLevels,
 ): Pick<SharedElsPlannerInputs, 'elsAttackLevel' | 'elsHealthLevel' | 'elsEnhancementLevel'> {
   return {
     elsAttackLevel: readWorkshopLevel(workshop.levels, ELS_ATTACK_WORKSHOP_KEY),
     elsHealthLevel: readWorkshopLevel(workshop.levels, ELS_HEALTH_WORKSHOP_KEY),
-    elsEnhancementLevel: resolveElsEnhancementLevelFromTracker(workshop.enhancementLevels),
+    elsEnhancementLevel: computeElsEnhancementLevel(workshop.enhancementLevels),
   }
 }
 
@@ -58,7 +58,7 @@ export function syncWorkshopStatsFromElsPlanner(
   }
 }
 
-export function deriveElsVaultStarsFromVaultLevels(
+export function readElsVaultStarsFromVaultLevels(
   vault: SharedVaultLevels,
 ): Pick<SharedElsPlannerInputs, 'elsVaultAttackStars' | 'elsVaultHealthStars'> {
   return {
@@ -92,8 +92,8 @@ export function enrichElsPlannerFromLinkedSources(
   workshop: SharedWorkshopStatLevels,
   vault: SharedVaultLevels,
 ): SharedElsPlannerInputs {
-  const fromWorkshop = deriveElsPlannerLevelsFromWorkshopStats(workshop)
-  const fromVault = deriveElsVaultStarsFromVaultLevels(vault)
+  const fromWorkshop = readElsPlannerLevels(workshop)
+  const fromVault = readElsVaultStarsFromVaultLevels(vault)
   return {
     ...els,
     elsAttackLevel: maxDefinedInt(els.elsAttackLevel, fromWorkshop.elsAttackLevel),

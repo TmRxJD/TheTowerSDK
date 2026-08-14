@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import {
+  computeEffectiveEchoLabLevel,
   DISSONANCE_ECHO_LAB_SLUG_BY_TYPE,
-  resolveEffectiveEchoLabLevel,
-  resolveEffectiveEchoLabLevels,
+  getEffectiveEchoLabLevels,
 } from './dissonance-echo-lab-keys'
 import {
   buildDissonanceEchoLabOptionLabel,
-  resolveDissonanceEchoLabBenefitPct,
+  computeDissonanceEchoLabBenefitPct,
 } from './dissonance-echo-lab-dropdown-math'
 import { evaluateDropdownOptions } from './dropdown-evaluator'
 
@@ -17,12 +17,12 @@ describe('dissonance-echo-lab-keys', () => {
   })
 
   it('prefers the higher of store and research lab levels', () => {
-    expect(resolveEffectiveEchoLabLevel('attack', { attack: 2 }, { dissonant_echo_attack: 5 })).toBe(5)
-    expect(resolveEffectiveEchoLabLevel('defense', { defense: 8 }, { dissonant_echo_defense: 3 })).toBe(8)
+    expect(computeEffectiveEchoLabLevel('attack', { attack: 2 }, { dissonant_echo_attack: 5 })).toBe(5)
+    expect(computeEffectiveEchoLabLevel('defense', { defense: 8 }, { dissonant_echo_defense: 3 })).toBe(8)
   })
 
   it('clamps echo lab levels to 0–20', () => {
-    expect(resolveEffectiveEchoLabLevels(
+    expect(getEffectiveEchoLabLevels(
       { attack: 99, defense: -3, utility: 4, uw: 1 },
       { dissonant_echo_attack: 0, dissonant_echo_defense: 21 },
     )).toEqual({
@@ -40,8 +40,8 @@ describe('dissonance echo lab dropdown labels', () => {
     expect(buildDissonanceEchoLabOptionLabel('dissonant_echo_attack', 1)).toBe('1 - 1.0%')
     expect(buildDissonanceEchoLabOptionLabel('dissonant_echo_attack', 10)).toBe('10 - 5.5%')
     expect(buildDissonanceEchoLabOptionLabel('dissonant_echo_attack', 20)).toBe('20 - 10.5%')
-    expect(resolveDissonanceEchoLabBenefitPct('dissonant_echo_attack', 0)).toBeCloseTo(0.5, 6)
-    expect(resolveDissonanceEchoLabBenefitPct('dissonant_echo_attack', 20)).toBeCloseTo(10.5, 6)
+    expect(computeDissonanceEchoLabBenefitPct('dissonant_echo_attack', 0)).toBeCloseTo(0.5, 6)
+    expect(computeDissonanceEchoLabBenefitPct('dissonant_echo_attack', 20)).toBeCloseTo(10.5, 6)
   })
 
   it('registers dedicated game-input keys with dynamic labels', () => {

@@ -1,5 +1,5 @@
 import { parseDurationToHours } from '../formatting/index'
-import { labs as staticLabs } from '../data/labs-static'
+import { LAB_CATALOG } from '../data/labs-catalog'
 
 export function getStaticLabWorkingLevelDurationHours(
   displayName: string | null | undefined,
@@ -7,7 +7,7 @@ export function getStaticLabWorkingLevelDurationHours(
   labSpeedLevel = 0,
 ): number | null {
   if (!displayName) return null
-  const lab = staticLabs.find(entry => entry.name === displayName)
+  const lab = LAB_CATALOG.find(entry => entry.name === displayName)
   if (!lab?.levels?.length) return null
 
   const workingLevel = Math.max(1, Math.floor(Number(completedLevel) || 0) + 1)
@@ -15,7 +15,7 @@ export function getStaticLabWorkingLevelDurationHours(
     ?? lab.levels.find(entry => entry.level === completedLevel)
   if (!levelData) return null
 
-  const baseHours = parseDurationToHours(levelData.time)
+  const baseHours = parseDurationToHours(levelData.duration)
   if (!Number.isFinite(baseHours) || baseHours <= 0) return null
 
   const normalized = displayName.toLowerCase()

@@ -675,7 +675,10 @@ export const uwStoneChartData: UwStoneChartDataMap = {
           { level: 27, value: 'x4,544', cost: 1813 },
           { level: 28, value: 'x5,678', cost: 2269 },
           { level: 29, value: 'x7,078', cost: 2800 },
-          { level: 30, value: 'x9,119', cost: 4081 },
+          // 3406, not 4081: this stat's cost deltas climb by a constant 75 in
+          // the tail (306, 381, 456, 531), so the step into level 30 is 606 on
+          // 2800. The Effective Paths reference says 3406 as well.
+          { level: 30, value: 'x9,119', cost: 3406 },
         ],
       },
       {

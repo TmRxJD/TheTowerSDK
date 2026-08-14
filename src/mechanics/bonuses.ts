@@ -12,7 +12,7 @@
  * @param bonusPercent Value of the Golden Combo bonus upgrade, as a percentage.
  * @param kills Number of kills in the combo.
  */
-export function goldenComboBonus (bonusPercent: number, kills: number): number {
+export function goldenComboBonus(bonusPercent: number, kills: number): number {
   return (1 + bonusPercent / 100) ** kills - 1
 }
 
@@ -22,6 +22,6 @@ export function goldenComboBonus (bonusPercent: number, kills: number): number {
  * @param bonusPerSecond Value of the Charge Mines upgrade.
  * @param seconds Seconds spent charging.
  */
-export function mineChargeMultiplier (bonusPerSecond: number, seconds: number): number {
+export function mineChargeMultiplier(bonusPerSecond: number, seconds: number): number {
   return 1 + bonusPerSecond * seconds
 }

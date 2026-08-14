@@ -1,4 +1,6 @@
+import { LAB_RESEARCH_BY_INDEX } from '../data/labs-research'
 import { CARD_TEMPLATES } from '../data/cards'
+import { MAX_CAMPAIGN_TIER } from '../data/campaign-tier'
 import {
   WORKSHOP_ENHANCEMENT_IMPORT_CATALOG,
   WORKSHOP_IMPORT_CATALOG,
@@ -10,8 +12,8 @@ import {
   VAULT_POWER_IMPORT_CATALOG,
 } from '../data/player-stats'
 import {
-  resolveLabResearchDisplayName,
-  resolveLabResearchSlug,
+  findLabResearchDisplayName,
+  findLabResearchSlug,
 } from '../data/labs-display-overrides'
 import { MODULE_RARITIES } from '../data/module-levels'
 import {
@@ -27,9 +29,9 @@ import {
   parseModuleElsBonusPercent,
 } from '../mechanics/els-module-cluster'
 import { ELS_ATTACK_WORKSHOP_KEY, ELS_HEALTH_WORKSHOP_KEY } from '../mechanics/els-upgrade-path'
-import { resolveResearchLabLevel } from '../internal/shared-tool-inputs-from-research'
+import { computeResearchLabLevel } from '../internal/shared-tool-inputs-from-research'
 import {
-  createDefaultShardSplitterSnapshot,
+  buildDefaultShardSplitterSnapshot,
   type ModuleType,
 } from '../internal/shard-splitter-schema'
 import {
@@ -72,6 +74,7 @@ import { enrichElsPlannerFromLinkedSources } from '../internal/shared-tool-input
 import { formatCompact } from '../internal/tool-formatting'
 import { listUltimateWeaponCatalogRows } from './catalogs/ultimate-weapons'
 import { POWER_VAULT_SINGLE_PURCHASE_NODE_IDS } from './catalogs/vault-overrides'
+import { CARDS_SAVE_UNLOCKED_KEY } from './cards'
 
 const MODULE_PRIMARY_CATEGORIES: ModuleSaveSlotCategory[] = ['Cannon', 'Armor', 'Generator', 'Core']
 const MODULE_ASSIST_TYPE_TO_CATEGORY: Record<number, ModuleSaveSlotCategory> = {
@@ -90,7 +93,17 @@ const BOTRANGE_VAULT_NODE_IDS = ['botrange1', 'botrange2', 'botrange3', 'botrang
 const UW_STATS_PER_SLOT = 3
 const ECHO_LABS_UNLOCK_TIER = 4
 const ECHO_LABS_UNLOCK_WAVE = 90
-const DISSONANCE_TIER_COUNT = 21
+/**
+ * Dissonance covers every campaign tier, so it is read from the generated tier
+ * count rather than restated.
+ *
+ * This was hardcoded to 21 and went stale when the game added tiers 22-24, so
+ * the extraction loop stopped at 21 while the preview built its rows from
+ * MAX_CAMPAIGN_TIER. The Dissonance tab showed 24 tiers and the calculator
+ * could never hold the last three -- the numbers disagreed because only one of
+ * them was derived from the game data.
+ */
+const DISSONANCE_TIER_COUNT = MAX_CAMPAIGN_TIER
 /** In-game dissonance wave columns are stored per track in Unity `List<int>` arrays indexed by tier. */
 export const DISSONANCE_BOOST_SAVE_FIELD_BY_TYPE: Record<DissonanceTypeKey, string> = {
   attack: 'dissonanceDamageBoost',
@@ -171,15 +184,50 @@ function readSaveModuleItem(raw: unknown): {
   }
 }
 
+/**
+ * A card's slot in the save arrays.
+ *
+ * `CARD_IMPORT_CATALOG.index` is the save slot now, so this is a lookup rather
+ * than a translation. It was not always: the catalog numbered cards
+ * consecutively while the save leaves nine placeholder slots in place, so a
+ * catalog index read the wrong card once past the first gap.
+ */
+function resolveCardSaveIndex(slug: string): number | null {
+  const row = CARD_IMPORT_CATALOG.find(entry => entry.slug === slug)
+  return row ? row.index : null
+}
+
+/** How many slots the save's card arrays have, placeholders included. */
+function cardSaveSlotCount(): number {
+  return CARD_IMPORT_CATALOG.length
+}
+
+/**
+ * A card's level, or 0 when the player does not have the card.
+ *
+ * `cardLevel` is over-allocated and pads with **1**, not 0, so reading it
+ * without checking the unlock flag reports level 1 for every card never owned.
+ * The package guide calls this out: use the unlock flag when one exists.
+ */
 function readCardLevelBySlug(root: Record<string, unknown>, slug: string): number {
-  const cardIndex = CARD_IMPORT_CATALOG.find(row => row.slug === slug)?.index
+  const cardIndex = resolveCardSaveIndex(slug)
   if (cardIndex == null) return 0
-  const levels = readIndexedNumberArray(root.cardLevel, CARD_IMPORT_CATALOG.length)
+
+  const unlockedFlags = Array.isArray(root[CARDS_SAVE_UNLOCKED_KEY])
+    ? (root[CARDS_SAVE_UNLOCKED_KEY] as unknown[]).map(readSaveBoolean)
+    : null
+  // Only trust the flags when the save actually carries them; a save without
+  // the array must not have every card zeroed out.
+  if (unlockedFlags && unlockedFlags[cardIndex] !== true) return 0
+
+  // Sized to the save's own slot count, not the compacted catalog's 31, or
+  // every card past the last gap would be truncated away.
+  const levels = readIndexedNumberArray(root.cardLevel, cardSaveSlotCount())
   return Math.max(0, Math.floor(levels[cardIndex] ?? 0))
 }
 
 function readCardMasteryUnlockedBySlug(root: Record<string, unknown>, slug: string): boolean {
-  const cardIndex = CARD_IMPORT_CATALOG.find(row => row.slug === slug)?.index
+  const cardIndex = resolveCardSaveIndex(slug)
   if (cardIndex == null) return false
   const masteries = Array.isArray(root.cardMasteryUnlocked)
     ? root.cardMasteryUnlocked.map(readSaveBoolean)
@@ -226,7 +274,7 @@ function normalizeVaultPowerNodeLevel(input: {
   return Math.min(3, raw + 1)
 }
 
-export function deriveResearchLabLevelsFromSaveRoot(
+export function readResearchLabLevelsFromSaveRoot(
   root: Record<string, unknown>,
 ): Record<string, number> {
   const levels = readIndexedNumberArray(root.researchLevel, LAB_RESEARCH_IMPORT_CATALOG.length)
@@ -234,8 +282,8 @@ export function deriveResearchLabLevelsFromSaveRoot(
   levels.forEach((level, index) => {
     if (!Number.isFinite(level) || level <= 0) return
     const catalog = LAB_RESEARCH_IMPORT_CATALOG[index]
-    const displayName = resolveLabResearchDisplayName(index, catalog?.displayName ?? null)
-    const slug = resolveLabResearchSlug(index, catalog?.slug ?? null)
+    const displayName = findLabResearchDisplayName(index, catalog?.displayName ?? null)
+    const slug = findLabResearchSlug(index, catalog?.slug ?? null)
     const normalized = Math.max(0, Math.floor(level))
     if (displayName) out[displayName] = normalized
     if (slug) out[slug] = normalized
@@ -243,7 +291,7 @@ export function deriveResearchLabLevelsFromSaveRoot(
   return out
 }
 
-export function deriveWorkshopStatLevelsFromSaveRoot(
+export function readWorkshopStatLevelsFromSaveRoot(
   root: Record<string, unknown>,
 ): SharedWorkshopStatLevels {
   const levels: Record<string, number> = {}
@@ -277,7 +325,7 @@ export function deriveWorkshopStatLevelsFromSaveRoot(
   }
 }
 
-export function deriveVaultLevelsFromSaveRoot(root: Record<string, unknown>): SharedVaultLevels {
+export function readVaultLevelsFromSaveRoot(root: Record<string, unknown>): SharedVaultLevels {
   const powerLevels = toNumberArray(root.powerNodesLevel)
   const powerUnlocked = Array.isArray(root.powerNodesUnlocked)
     ? root.powerNodesUnlocked.map(readSaveBoolean)
@@ -317,7 +365,7 @@ export function deriveVaultLevelsFromSaveRoot(root: Record<string, unknown>): Sh
   }
 }
 
-export function deriveEnemyStatsCoreFromSaveRoot(
+export function readEnemyStatsCoreFromSaveRoot(
   root: Record<string, unknown>,
 ): Partial<SharedEnemyStatsCore> {
   const currentTier = coerceSaveNumber(root.currentTier)
@@ -377,7 +425,7 @@ function readEquippedElsModulePct(
   return { pct, rarity }
 }
 
-export function deriveGeneratorCpkSubstatAddsFromSaveRoot(
+export function readGeneratorCpkSubstatAdds(
   root: Record<string, unknown>,
 ): GeneratorCpkSubstatAdds {
   let primaryAdd = 0
@@ -420,7 +468,7 @@ export function deriveGeneratorCpkSubstatAddsFromSaveRoot(
   return { primaryAdd, assistAdd }
 }
 
-export function deriveEquippedGeneratorUniqueFromSaveRoot(
+export function readEquippedGeneratorUnique(
   root: Record<string, unknown>,
 ): string | null {
   const primaryRaw = root.moduleEquipped
@@ -436,7 +484,7 @@ export function deriveEquippedGeneratorUniqueFromSaveRoot(
   return null
 }
 
-export function deriveElsPlannerInputsFromSaveRoot(
+export function readElsPlannerInputsFromSaveRoot(
   root: Record<string, unknown>,
   researchLabLevels: Record<string, number> = {},
 ): Partial<SharedElsPlannerInputs> {
@@ -457,8 +505,8 @@ export function deriveElsPlannerInputsFromSaveRoot(
     : null
 
   const partial: Partial<SharedElsPlannerInputs> = {
-    elsLabAttackLevel: resolveResearchLabLevel(researchLabLevels, 'enemy_attack_level_skip', 20),
-    elsLabHealthLevel: resolveResearchLabLevel(researchLabLevels, 'enemy_health_level_skip', 20),
+    elsLabAttackLevel: computeResearchLabLevel(researchLabLevels, 'enemy_attack_level_skip', 20),
+    elsLabHealthLevel: computeResearchLabLevel(researchLabLevels, 'enemy_health_level_skip', 20),
     elsModulePrimaryAttackPct: primaryAttack.pct,
     elsModuleAssistAttackPct: assistAttack.pct,
     elsModulePrimaryHealthPct: primaryHealth.pct,
@@ -477,7 +525,7 @@ export function deriveElsPlannerInputsFromSaveRoot(
   return partial
 }
 
-export function deriveModuleProgressFromSaveRoot(
+export function readModuleProgressFromSaveRoot(
   root: Record<string, unknown>,
 ): Partial<SharedModuleProgressInputs> {
   const currentLevel: Record<string, number> = {}
@@ -525,8 +573,8 @@ export function deriveModuleProgressFromSaveRoot(
     return {}
   }
 
-  const cpkSubstats = deriveGeneratorCpkSubstatAddsFromSaveRoot(root)
-  const generatorEquippedUniqueId = deriveEquippedGeneratorUniqueFromSaveRoot(root)
+  const cpkSubstats = readGeneratorCpkSubstatAdds(root)
+  const generatorEquippedUniqueId = readEquippedGeneratorUnique(root)
 
   return {
     currentLevel,
@@ -541,7 +589,7 @@ export function deriveModuleProgressFromSaveRoot(
   }
 }
 
-export function deriveShardSplitterInputsFromSaveRoot(
+export function readShardSplitterInputsFromSaveRoot(
   root: Record<string, unknown>,
   moduleProgress: Partial<SharedModuleProgressInputs> = {},
 ): Partial<SharedShardSplitterInputs> {
@@ -552,7 +600,7 @@ export function deriveShardSplitterInputsFromSaveRoot(
     core: 'moduleCoreShards',
   } as const
 
-  const splitterByType = createDefaultShardSplitterSnapshot().splitterByType
+  const splitterByType = buildDefaultShardSplitterSnapshot().splitterByType
   let hasShardData = false
 
   for (const moduleType of ['cannon', 'defense', 'generator', 'core'] as const) {
@@ -585,7 +633,7 @@ export function deriveShardSplitterInputsFromSaveRoot(
 
   if (!hasShardData) return {}
 
-  const costsAssistEffPctByType = createDefaultShardSplitterSnapshot().costsAssistEffPctByType
+  const costsAssistEffPctByType = buildDefaultShardSplitterSnapshot().costsAssistEffPctByType
   for (const moduleType of ['cannon', 'defense', 'generator', 'core'] as const) {
     costsAssistEffPctByType[moduleType] = splitterByType[moduleType].assistEffPct
   }
@@ -593,7 +641,43 @@ export function deriveShardSplitterInputsFromSaveRoot(
   return { splitterByType, costsAssistEffPctByType }
 }
 
-export function deriveThornsCalculatorSettingsFromSaveRoot(
+/** A research lab's level straight off the save, by catalog slug. */
+function readResearchLevelBySlug(root: Record<string, unknown>, slug: string): number {
+  const record = LAB_RESEARCH_BY_INDEX.find(entry => entry.slug === slug)
+  if (!record) return 0
+  const levels = readIndexedNumberArray(root.researchLevel, LAB_RESEARCH_BY_INDEX.length)
+  return Math.max(0, Math.floor(levels[record.index] ?? 0))
+}
+
+/**
+ * A card's mastery level, which is a lab, not a flag.
+ *
+ * `cardMasteryUnlocked` only says the player has unlocked mastery for that
+ * card. The level then comes from that card's mastery research -- there is one
+ * per card, named "<Card> Mastery" in the catalog, so the pairing is derived
+ * from the card's own name rather than written down.
+ *
+ * This used to report 1 for "unlocked" and 0 otherwise, so a player with
+ * Plasma Cannon Mastery at 9 of 9 fed the thorns calculator a 1.
+ */
+function readCardMasteryLevelBySlug(root: Record<string, unknown>, slug: string): number {
+  if (!readCardMasteryUnlockedBySlug(root, slug)) return 0
+
+  const cardName = CARD_IMPORT_CATALOG.find(entry => entry.slug === slug)?.name
+  if (!cardName) return 0
+
+  const wanted = `${cardName} Mastery`.trim().toLowerCase()
+  const record = LAB_RESEARCH_BY_INDEX.find(
+    entry => String(entry.displayName ?? '').trim().toLowerCase() === wanted,
+  )
+  if (!record) return 0
+
+  const levels = readIndexedNumberArray(root.researchLevel, LAB_RESEARCH_BY_INDEX.length)
+  const level = levels[record.index] ?? 0
+  return Math.max(0, Math.floor(level))
+}
+
+export function readThornsCalculatorSettings(
   root: Record<string, unknown>,
 ): Partial<SharedThornsCalculatorSettings> {
   const thornLevel = readWorkshopLevelByTrackerKey(root, 'Thorn Damage')
@@ -608,7 +692,13 @@ export function deriveThornsCalculatorSettingsFromSaveRoot(
   if (thornLevel != null && thornLevel > 0) partial.baseThorns = thornLevel
   if (currentTier != null) partial.tier = Math.max(1, Math.floor(currentTier))
   if (pcLevel > 0) partial.pcLevel = clampInt(pcLevel, 0, 7)
-  if (pcMasteryUnlocked) partial.pcMasteryLevel = 1
+  if (pcMasteryUnlocked) partial.pcMasteryLevel = readCardMasteryLevelBySlug(root, 'pc')
+
+  // Wall Thorns is a lab, and the calculator's field takes the lab's level
+  // directly -- both run 1..20. Nothing derived it, so a player with it maxed
+  // still started at 1.
+  const wallThorns = readResearchLevelBySlug(root, 'wall_thorns')
+  if (wallThorns > 0) partial.startWallThorns = clampInt(wallThorns, 1, 20)
 
   if (tournamentJoined && tierBeforeTournament != null) {
     const tier = Math.floor(tierBeforeTournament)
@@ -620,11 +710,11 @@ export function deriveThornsCalculatorSettingsFromSaveRoot(
   return partial
 }
 
-export function deriveDamageReduxCalculatorSettingsFromSaveRoot(
+export function readDamageReduxCalculatorSettings(
   root: Record<string, unknown>,
   researchLabLevels: Record<string, number> = {},
 ): Partial<SharedDamageReduxCalculatorSettings> {
-  const chainThunderLab = resolveResearchLabLevel(researchLabLevels, 'chain_thunder', 30)
+  const chainThunderLab = computeResearchLabLevel(researchLabLevels, 'chain_thunder', 30)
   const clPlusLevel = readUwPlusLevel(root, 'Chain Lightning')
   const pcPct = readCardPercentBySlug(root, 'pc')
   const pcLevel = readCardLevelBySlug(root, 'pc')
@@ -645,11 +735,11 @@ export function deriveDamageReduxCalculatorSettingsFromSaveRoot(
   return partial
 }
 
-export function deriveBotMedalSplitterPlannerFromSaveRoot(
+export function readBotMedalSplitterPlanner(
   root: Record<string, unknown>,
   towerRange: number | null,
 ): Partial<SharedBotMedalSplitterPlanner> {
-  const vault = deriveVaultLevelsFromSaveRoot(root)
+  const vault = readVaultLevelsFromSaveRoot(root)
   const vaultBotRangeLevel = BOTRANGE_VAULT_NODE_IDS.filter(id => (vault.levels[id] ?? 0) > 0).length
   if (vaultBotRangeLevel <= 0 && (towerRange == null || towerRange <= 0)) return {}
 
@@ -666,7 +756,7 @@ export function deriveBotMedalSplitterPlannerFromSaveRoot(
   return { activePreset: 0, presets }
 }
 
-export function deriveUwCalcProgressFromSaveRoot(
+export function readUwCalcProgressFromSaveRoot(
   root: Record<string, unknown>,
 ): SharedToolInputsExtended['uwCalcProgress'] {
   const catalog = listUltimateWeaponCatalogRows()
@@ -768,7 +858,7 @@ export function readDissonanceCycleWavesFromSaveRoot(
   return { cycleWaves, layout }
 }
 
-export function readDissonanceBoostWavesByTypeFromSaveRoot(
+export function readDissonanceBoostWavesByType(
   root: Record<string, unknown>,
 ): Record<DissonanceTypeKey, number[]> {
   const wavesByType = {} as Record<DissonanceTypeKey, number[]>
@@ -860,10 +950,10 @@ export function buildDissonanceWaveInputsFromCycleWaves(
   return { waves, maxFlags, hasData }
 }
 
-export function deriveDissonanceCalculatorStateFromSaveRoot(
+export function readDissonanceCalculatorState(
   root: Record<string, unknown>,
 ): Partial<SharedDissonanceCalculatorState> {
-  const boostWavesByType = readDissonanceBoostWavesByTypeFromSaveRoot(root)
+  const boostWavesByType = readDissonanceBoostWavesByType(root)
   const wavesByTier: Record<string, DissonanceWaveInputs> = {}
   const maxByTier: Record<string, DissonanceMaxFlags> = {}
   let hasWaveData = false
@@ -892,7 +982,7 @@ export function deriveDissonanceCalculatorStateFromSaveRoot(
  * Bot synchronicity (slot ownership, targets, assignments) is tracker-local today.
  * No synchronicity fields are present in `player-data-catalog.ts` or test saves.
  */
-export function deriveBotsSynchronicityFromSaveRoot(
+export function readBotsSynchronicityFromSaveRoot(
   _root: Record<string, unknown>,
 ): Partial<SharedBotsSynchronicity> {
   return {}
@@ -945,7 +1035,7 @@ export function mergeSaveDerivedBotsSynchronicity(
   }
 }
 
-export function deriveLabsCalcByLabFromResearchLevels(
+export function readLabsCalcByLabFromResearchLevels(
   researchLabLevels: Record<string, number>,
 ): SharedToolInputsExtended['labsCalcByLab'] {
   const out: SharedToolInputsExtended['labsCalcByLab'] = {}
@@ -956,42 +1046,42 @@ export function deriveLabsCalcByLabFromResearchLevels(
   return out
 }
 
-export function extractExtendedSharedToolInputsFromSaveRoot(
+export function readExtendedSharedToolInputs(
   root: Record<string, unknown> | null | undefined,
   options?: { towerRangeMeters?: number | null },
 ): Partial<SharedToolInputsExtended> {
   if (!root) return {}
 
-  const researchLabLevels = deriveResearchLabLevelsFromSaveRoot(root)
-  const workshopStatLevels = deriveWorkshopStatLevelsFromSaveRoot(root)
-  const vaultLevels = deriveVaultLevelsFromSaveRoot(root)
-  const moduleProgress = deriveModuleProgressFromSaveRoot(root)
+  const researchLabLevels = readResearchLabLevelsFromSaveRoot(root)
+  const workshopStatLevels = readWorkshopStatLevelsFromSaveRoot(root)
+  const vaultLevels = readVaultLevelsFromSaveRoot(root)
+  const moduleProgress = readModuleProgressFromSaveRoot(root)
 
   let elsPlannerInputs = {
     ...defaultExtendedSharedToolInputs.elsPlannerInputs,
-    ...deriveElsPlannerInputsFromSaveRoot(root, researchLabLevels),
+    ...readElsPlannerInputsFromSaveRoot(root, researchLabLevels),
   }
   elsPlannerInputs = enrichElsPlannerFromLinkedSources(elsPlannerInputs, workshopStatLevels, vaultLevels)
 
-  const shardSplitter = deriveShardSplitterInputsFromSaveRoot(root, moduleProgress)
+  const shardSplitter = readShardSplitterInputsFromSaveRoot(root, moduleProgress)
   const thornsCalculatorSettings = {
     ...defaultExtendedSharedToolInputs.thornsCalculatorSettings,
-    ...deriveThornsCalculatorSettingsFromSaveRoot(root),
+    ...readThornsCalculatorSettings(root),
   }
   const damageReduxCalculatorSettings = {
     ...defaultExtendedSharedToolInputs.damageReduxCalculatorSettings,
-    ...deriveDamageReduxCalculatorSettingsFromSaveRoot(root, researchLabLevels),
+    ...readDamageReduxCalculatorSettings(root, researchLabLevels),
   }
 
-  const botMedalSplitter = deriveBotMedalSplitterPlannerFromSaveRoot(root, options?.towerRangeMeters ?? null)
-  const uwCalcProgress = deriveUwCalcProgressFromSaveRoot(root)
-  const labsCalcByLab = deriveLabsCalcByLabFromResearchLevels(researchLabLevels)
-  const dissonanceDerived = deriveDissonanceCalculatorStateFromSaveRoot(root)
-  const botsSynchronicityDerived = deriveBotsSynchronicityFromSaveRoot(root)
+  const botMedalSplitter = readBotMedalSplitterPlanner(root, options?.towerRangeMeters ?? null)
+  const uwCalcProgress = readUwCalcProgressFromSaveRoot(root)
+  const labsCalcByLab = readLabsCalcByLabFromResearchLevels(researchLabLevels)
+  const dissonanceDerived = readDissonanceCalculatorState(root)
+  const botsSynchronicityDerived = readBotsSynchronicityFromSaveRoot(root)
 
   const enemyStatsCore = {
     ...defaultExtendedSharedToolInputs.enemyStatsCore,
-    ...deriveEnemyStatsCoreFromSaveRoot(root),
+    ...readEnemyStatsCoreFromSaveRoot(root),
   }
 
   const moduleProgressInputs = {
@@ -1079,7 +1169,7 @@ export function mergeSaveDerivedExtendedSharedToolInputs(
   if (Object.keys(researchLabLevels).length > 0) {
     merged.labsCalcByLab = {
       ...merged.labsCalcByLab,
-      ...deriveLabsCalcByLabFromResearchLevels(researchLabLevels),
+      ...readLabsCalcByLabFromResearchLevels(researchLabLevels),
     }
   }
 

@@ -1,10 +1,10 @@
-import { labs as staticLabs } from './labs-static'
+import { LAB_CATALOG } from './labs-catalog'
 import { findLabResearchByIndex, findLabResearchBySlug } from './labs-research'
 import { normalizeToolLabCategory, normalizeToolLabLookupKey } from './labs'
 import {
-  resolveSiteLabCategoryForSaveIndex,
-  resolveSiteLabDisplayNameForSaveIndex,
-  resolveSiteLabSlugForSaveIndex,
+  findSiteLabCategoryForSaveIndex,
+  findSiteLabDisplayNameForSaveIndex,
+  findSiteLabSlugForSaveIndex,
 } from './labs-categories'
 
 export const LAB_RESEARCH_DISPLAY_NAME_OVERRIDES: Readonly<Record<number, string>> = {
@@ -40,13 +40,13 @@ function isUsableLabExtractedSlug(slug: string | null | undefined): boolean {
 }
 
 const STATIC_LAB_CATEGORY_BY_LOOKUP_KEY = new Map(
-  staticLabs.map(lab => [
+  LAB_CATALOG.map(lab => [
     normalizeToolLabLookupKey(lab.name),
     normalizeToolLabCategory(lab.category),
   ]),
 )
 
-export function resolveLabResearchDisplayName(
+export function findLabResearchDisplayName(
   saveIndex: number,
   extractedName: string | null | undefined,
 ): string | null {
@@ -54,26 +54,26 @@ export function resolveLabResearchDisplayName(
     return LAB_RESEARCH_DISPLAY_NAME_OVERRIDES[saveIndex]
   }
   if (isUsableLabExtractedName(extractedName)) return extractedName as string
-  const fromSite = resolveSiteLabDisplayNameForSaveIndex(saveIndex)
+  const fromSite = findSiteLabDisplayNameForSaveIndex(saveIndex)
   if (fromSite) return fromSite
   return findLabResearchByIndex(saveIndex)?.displayName ?? null
 }
 
-export function resolveLabResearchSlug(
+export function findLabResearchSlug(
   saveIndex: number,
   extractedSlug: string | null | undefined,
 ): string | null {
   if (isUsableLabExtractedSlug(extractedSlug)) {
     return findLabResearchBySlug(extractedSlug!)?.slug ?? extractedSlug as string
   }
-  const fromSite = resolveSiteLabSlugForSaveIndex(saveIndex)
+  const fromSite = findSiteLabSlugForSaveIndex(saveIndex)
   if (fromSite) {
     return findLabResearchBySlug(fromSite)?.slug ?? fromSite
   }
   return findLabResearchByIndex(saveIndex)?.slug ?? null
 }
 
-export function resolveLabResearchCategory(
+export function findLabResearchCategory(
   saveIndex: number,
   displayName: string | null,
   extractedCategory: string | null | undefined,
@@ -82,7 +82,7 @@ export function resolveLabResearchCategory(
     const fromStatic = STATIC_LAB_CATEGORY_BY_LOOKUP_KEY.get(normalizeToolLabLookupKey(displayName))
     if (fromStatic && fromStatic !== 'Other') return fromStatic
   }
-  const fromSite = resolveSiteLabCategoryForSaveIndex(saveIndex)
+  const fromSite = findSiteLabCategoryForSaveIndex(saveIndex)
   if (fromSite && fromSite !== 'Other') return fromSite
   if (extractedCategory) return normalizeToolLabCategory(extractedCategory)
   return null

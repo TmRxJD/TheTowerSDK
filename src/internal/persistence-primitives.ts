@@ -206,7 +206,7 @@ export function computeExponentialBackoffMs(input: {
   return Math.min(rawDelay, maxDelayMs)
 }
 
-export function createRetryScheduleState(nowMs = Date.now()): RetryScheduleState {
+export function buildRetryScheduleState(nowMs = Date.now()): RetryScheduleState {
   return {
     attemptCount: 0,
     nextRetryAt: nowMs,
@@ -218,7 +218,7 @@ export function parseRetryScheduleState(input: {
   nextRetryAt?: unknown
   nowMs?: number
 }): RetryScheduleState {
-  const fallback = createRetryScheduleState(input.nowMs)
+  const fallback = buildRetryScheduleState(input.nowMs)
   const parsedNextRetryAt = Number(input.nextRetryAt)
   return {
     attemptCount: normalizeRetryAttemptCount(input.attemptCount),
@@ -279,7 +279,7 @@ export function hasReachedRetryLimit(input: {
   return normalizeRetryAttemptCount(input.attemptCount) >= maxRetryCount
 }
 
-export function resolveRetryQueueDisposition(input: {
+export function getRetryQueueDisposition(input: {
   attemptCount?: unknown
   nextRetryAt?: unknown
   nowMs?: number
@@ -308,7 +308,7 @@ export function partitionRetryQueueItems<T>(input: {
   const exhaustedItems: T[] = []
 
   for (const item of input.items) {
-    const disposition = resolveRetryQueueDisposition({
+    const disposition = getRetryQueueDisposition({
       attemptCount: input.getAttemptCount(item),
       nextRetryAt: input.getNextRetryAt(item),
       nowMs: input.nowMs,

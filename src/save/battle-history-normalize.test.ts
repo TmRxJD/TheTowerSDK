@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { normalizeBattleHistorySaveEntry } from './battle-history-normalize'
-import { buildBattleReportStatFieldsFromSaveEntry } from './battle-report-fields'
-import { buildTrackerRunDataFromBattleHistoryEntry } from './battle-reports'
+import { buildBattleReportStatFields } from './battle-report-fields'
+import { buildTrackerRunData } from './battle-reports'
 
 describe('normalizeBattleHistorySaveEntry', () => {
   it('maps ThisRound snapshot keys onto legacy stitched-run keys', () => {
@@ -31,9 +31,9 @@ describe('normalizeBattleHistorySaveEntry', () => {
   })
 })
 
-describe('buildTrackerRunDataFromBattleHistoryEntry stitched import payload', () => {
+describe('buildTrackerRunData stitched import payload', () => {
   it('produces one unified local run object with extended stats before cloud split', () => {
-    const run = buildTrackerRunDataFromBattleHistoryEntry({
+    const run = buildTrackerRunData({
       tier: 21,
       wave: 7779,
       realTime: 25_223,
@@ -58,6 +58,6 @@ describe('buildTrackerRunDataFromBattleHistoryEntry stitched import payload', ()
     expect(run.destroyedInGoldenBot).toBeTruthy()
     expect(run.killsWithAmplifyBot).toBeTruthy()
     expect(run.guardianSummonedEnemies).toBeTruthy()
-    expect(buildBattleReportStatFieldsFromSaveEntry(run).totalEnemies).toBeTruthy()
+    expect(buildBattleReportStatFields(run).totalEnemies).toBeTruthy()
   })
 })

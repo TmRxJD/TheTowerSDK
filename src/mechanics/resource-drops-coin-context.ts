@@ -1,5 +1,5 @@
 import { normalizeSharedCardsProgressInputs, type SharedCardsProgressInputs } from '../internal/cards-progress-inputs'
-import { findLabResearchBySlug, resolveResearchLabLevel } from '../data/index'
+import { computeResearchLabLevel, findLabResearchBySlug } from '../data/index'
 import type {
   SharedBotMedalSplitterPlanner,
   SharedLabsCalcByLab,
@@ -9,8 +9,8 @@ import type {
 } from '../internal/shared-tool-inputs-extended'
 import type { SharedModuleEfficiencyLabs } from '../internal/shared-tool-inputs'
 import {
+  getUptimeCoreStateFromSharedInputs,
   mergeSharedUptimeInputs,
-  resolveUptimeCoreStateFromSharedInputs,
   type SharedUptimeInputs,
   syncUptimeFromUwProgressLevels,
   type UwProgressLevels,
@@ -23,10 +23,10 @@ import { computeModuleCoinsKillBonusFromHub } from './resource-drops-coin-module
 import {
   blackHoleDigestorCpkBonusPct,
   compressorRarityFromGeneratorUnique,
+  computeGeneratorUniqueRarityBonus,
   expectedFreeUpgradesPerWave,
+  findEquippedGeneratorUnique,
   goldenBotCoverageWithSingularityHarness,
-  resolveEquippedGeneratorUniqueFromModuleProgress,
-  resolveGeneratorUniqueRarityBonus,
   singularityHarnessRangeBonusMeters,
 } from './resource-drops-coin-generator-modules'
 import { introSprintZeroCoinWaveCap } from './resource-drops-coin-intro-sprint'
@@ -81,7 +81,7 @@ function resolveLabLevelFromSources(
 ): number {
   const research = findLabResearchBySlug(slug)
   const maxLevel = research?.levelMax ?? 100
-  const fromResearch = resolveResearchLabLevel(researchLabLevels, slug, maxLevel)
+  const fromResearch = computeResearchLabLevel(researchLabLevels, slug, maxLevel)
   const calcKeys = [slug, research?.displayName, research?.slug].filter(
     (key): key is string => typeof key === 'string' && key.length > 0,
   )
@@ -164,7 +164,7 @@ function resolveTowerRangeMeters(
 
 function mergeGeneratorUniqueIntoUptime(
   uptime: SharedUptimeInputs,
-  generatorUnique: ReturnType<typeof resolveEquippedGeneratorUniqueFromModuleProgress>,
+  generatorUnique: ReturnType<typeof findEquippedGeneratorUnique>,
 ): SharedUptimeInputs {
   if (!generatorUnique) return uptime
   if (generatorUnique.templateId === 'galaxy-compressor') {
@@ -177,7 +177,7 @@ function mergeGeneratorUniqueIntoUptime(
 }
 
 function resolveSingularityHarnessBonus(
-  generatorUnique: ReturnType<typeof resolveEquippedGeneratorUniqueFromModuleProgress>,
+  generatorUnique: ReturnType<typeof findEquippedGeneratorUnique>,
   botMedalPlanner?: SharedBotMedalSplitterPlanner,
 ): number {
   if (generatorUnique?.templateId === 'singularity-harness') {
@@ -209,13 +209,13 @@ export function assembleResourceDropsCoinSimulationInput(
 ): ResourceDropsCoinSimulationInput {
   const cardsProgress = normalizeSharedCardsProgressInputs(sources.cardsProgress)
   const uwWeapons = Object.values(uwStoneChartData)
-  const generatorUnique = resolveEquippedGeneratorUniqueFromModuleProgress(sources.moduleProgressInputs)
+  const generatorUnique = findEquippedGeneratorUnique(sources.moduleProgressInputs)
   const mergedUptimeBase = mergeSharedUptimeInputs(
     sources.uptimeInputs,
     syncUptimeFromUwProgressLevels(sources.uwCalcProgress, uwWeapons, sources.uptimeInputs),
   )
   const mergedUptime = mergeGeneratorUniqueIntoUptime(mergedUptimeBase, generatorUnique)
-  const uptimeState = resolveUptimeCoreStateFromSharedInputs(mergedUptime)
+  const uptimeState = getUptimeCoreStateFromSharedInputs(mergedUptime)
   const enemyDrops = assembleEnemyDropsSimulationInput({
     ...sources,
     uptimeInputs: mergedUptime,
@@ -256,7 +256,7 @@ export function assembleResourceDropsCoinSimulationInput(
 
   const freeUpgradesEnhancementLevel = readWorkshopEnhancementLevel(workshop, 'free_upgrades')
   const bhdPct = generatorUnique?.templateId === 'black-hole-digestor'
-    ? resolveGeneratorUniqueRarityBonus('black-hole-digestor', generatorUnique.rarity)
+    ? computeGeneratorUniqueRarityBonus('black-hole-digestor', generatorUnique.rarity)
     : 0
   const bhdCpkBonusPct = blackHoleDigestorCpkBonusPct(
     bhdPct,

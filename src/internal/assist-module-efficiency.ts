@@ -21,7 +21,7 @@ export function clampAssistMultiplierEfficiencyPct(value: unknown): number {
   return Math.max(0, Math.min(MAX_ASSIST_MULTIPLIER_EFFICIENCY_PCT, numeric))
 }
 
-export function resolveAssistMultiplierEfficiencyPct(
+export function computeAssistMultiplierEfficiencyPct(
   assistSlotEfficiencyPct: unknown,
   assistLabLevel = 0,
 ): number {
@@ -34,5 +34,5 @@ export function assistMultiplierEfficiencyFactor(
   assistSlotEfficiencyPct: unknown,
   assistLabLevel = 0,
 ): number {
-  return resolveAssistMultiplierEfficiencyPct(assistSlotEfficiencyPct, assistLabLevel) / 100
+  return computeAssistMultiplierEfficiencyPct(assistSlotEfficiencyPct, assistLabLevel) / 100
 }

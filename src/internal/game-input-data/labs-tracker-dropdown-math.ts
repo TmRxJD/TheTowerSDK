@@ -25,7 +25,7 @@ function findLabRecordByName(labName: string): ToolLabRecord | undefined {
   )
 }
 
-export function resolveLabsTrackerMaxLevel(labName: string | null | undefined): number {
+export function computeLabsTrackerMaxLevel(labName: string | null | undefined): number {
   if (!labName?.trim()) return 0
   const lab = findLabRecordByName(labName)
   return lab ? getLabMaxLevel(lab) : 30
@@ -146,7 +146,7 @@ export function buildLabsNamePickerOptionSubtitle(
   return entries[clamped]?.type || undefined
 }
 
-export function resolveLabsNamePickerIndex(
+export function computeLabsNamePickerIndex(
   labName: unknown,
   typeFilter: string | undefined,
   includeLabNames: readonly string[] = [],
@@ -157,7 +157,7 @@ export function resolveLabsNamePickerIndex(
   return entries.findIndex(entry => entry.name === labName)
 }
 
-export function resolveLabsNamePickerByIndex(
+export function findLabsNamePickerByIndex(
   index: number,
   typeFilter: string | undefined,
   includeLabNames: readonly string[] = [],
@@ -174,7 +174,7 @@ function resolveLevelBounds(
   minOverride?: number,
   maxOverride?: number,
 ): { min: number; max: number } {
-  const max = maxOverride ?? resolveLabsTrackerMaxLevel(labName)
+  const max = maxOverride ?? computeLabsTrackerMaxLevel(labName)
   if (mode === 'next') {
     return { min: minOverride ?? 1, max: Math.max(1, max) }
   }
@@ -198,6 +198,6 @@ export function buildLabsTrackerLevelEntries(
   })
 }
 
-export function buildLabsTrackerLevelOptionLabel(level: number): string {
+export function formatLabsTrackerLevelOptionLabel(level: number): string {
   return String(Math.max(0, Math.floor(Number(level) || 0)))
 }

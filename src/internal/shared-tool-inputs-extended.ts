@@ -38,7 +38,7 @@ import {
   type ThornsCalcsSettings,
 } from './calculator-local-state-schemas'
 import {
-  createDefaultShardSplitterSnapshot,
+  buildDefaultShardSplitterSnapshot,
   type SplitterByType,
   splitterByTypeSchema,
   type SplitterData,
@@ -213,8 +213,8 @@ export const sharedShardSplitterInputsSchema = z.object({
 export type SharedShardSplitterInputs = z.infer<typeof sharedShardSplitterInputsSchema>
 
 export const defaultSharedShardSplitterInputs: Readonly<SharedShardSplitterInputs> = {
-  splitterByType: createDefaultShardSplitterSnapshot().splitterByType,
-  costsAssistEffPctByType: createDefaultShardSplitterSnapshot().costsAssistEffPctByType,
+  splitterByType: buildDefaultShardSplitterSnapshot().splitterByType,
+  costsAssistEffPctByType: buildDefaultShardSplitterSnapshot().costsAssistEffPctByType,
 }
 
 export const sharedLabsCalcByLabSchema = z.record(z.string(), labCalcRangeSchema)
@@ -492,7 +492,7 @@ function serializeTierSelection(value: TierSelectionInput): number | string {
   return typeof value === 'number' ? value : value
 }
 
-export function extractSharedEnemyStatsCore(state: Pick<
+export function readSharedEnemyStatsCore(state: Pick<
   EnemyStatsCalcsLocalState,
   | 'tierSelection'
   | 'wave'
@@ -515,7 +515,7 @@ export function extractSharedEnemyStatsCore(state: Pick<
   }
 }
 
-export function extractSharedElsPlannerInputs(state: Pick<
+export function readSharedElsPlannerInputs(state: Pick<
   EnemyStatsCalcsLocalState,
   | 'elsAttackLevel'
   | 'elsHealthLevel'
@@ -568,7 +568,7 @@ export function extractSharedElsPlannerInputs(state: Pick<
   }
 }
 
-export function extractSharedThornsCalculatorSettings(settings: ThornsCalcsSettings): SharedThornsCalculatorSettings {
+export function readSharedThornsCalculatorSettings(settings: ThornsCalcsSettings): SharedThornsCalculatorSettings {
   return {
     baseThorns: settings.baseThorns,
     tier: settings.tier,
@@ -580,7 +580,7 @@ export function extractSharedThornsCalculatorSettings(settings: ThornsCalcsSetti
   }
 }
 
-export function extractSharedDamageReduxCalculatorSettings(
+export function readSharedDamageReduxCalculatorSettings(
   state: DamageReduxCalcsLocalState,
 ): SharedDamageReduxCalculatorSettings {
   const {
@@ -601,7 +601,7 @@ export function extractSharedDamageReduxCalculatorSettings(
   return settings
 }
 
-export function extractSharedDissonanceCalculatorState(
+export function readSharedDissonanceCalculatorState(
   state: Pick<DissonanceCalcsLocalState, 'echoLabsLocked' | 'wavesByTier' | 'maxByTier'>,
 ): SharedDissonanceCalculatorState {
   return {
@@ -615,7 +615,7 @@ export function extractSharedDissonanceCalculatorState(
   }
 }
 
-export function extractSharedBotMedalSplitterPlanner(input: {
+export function readSharedBotMedalSplitterPlanner(input: {
   activePreset: number
   plannerTab: 'allocation' | 'inputs'
   editorBotLabel: string
@@ -729,10 +729,10 @@ export function normalizeExtendedSharedToolInputs(value: unknown): SharedToolInp
       cashCurrentLevels: normalizeNumberRecord(workshop.cashCurrentLevels),
       cashTargetLevels: normalizeNumberRecord(workshop.cashTargetLevels),
     },
-    enemyStatsCore: extractSharedEnemyStatsCore(normalizedEnemy),
+    enemyStatsCore: readSharedEnemyStatsCore(normalizedEnemy),
     enemyDropsInputs: normalizeSharedEnemyDropsInputs(enemyDrops),
     cardsProgressInputs: normalizeSharedCardsProgressInputs(cardsProgress),
-    elsPlannerInputs: extractSharedElsPlannerInputs(normalizedEnemy),
+    elsPlannerInputs: readSharedElsPlannerInputs(normalizedEnemy),
     vaultLevels: {
       levels: normalizeNumberRecord(vault.levels),
       spentKeys: clampInt(vault.spentKeys, 0, 0, 999999),
@@ -751,14 +751,14 @@ export function normalizeExtendedSharedToolInputs(value: unknown): SharedToolInp
         : {}),
     },
     shardSplitterInputs: {
-      splitterByType: createDefaultShardSplitterSnapshot().splitterByType,
-      costsAssistEffPctByType: createDefaultShardSplitterSnapshot().costsAssistEffPctByType,
+      splitterByType: buildDefaultShardSplitterSnapshot().splitterByType,
+      costsAssistEffPctByType: buildDefaultShardSplitterSnapshot().costsAssistEffPctByType,
     },
     uwCalcProgress: normalizeNestedNumberRecord(source.uwCalcProgress),
     labsCalcByLab: sharedLabsCalcByLabSchema.catch({}).parse(source.labsCalcByLab ?? {}),
-    thornsCalculatorSettings: extractSharedThornsCalculatorSettings(normalizedThorns),
-    damageReduxCalculatorSettings: extractSharedDamageReduxCalculatorSettings(normalizedDamageRedux),
-    dissonanceCalculatorState: extractSharedDissonanceCalculatorState(normalizedDissonance),
+    thornsCalculatorSettings: readSharedThornsCalculatorSettings(normalizedThorns),
+    damageReduxCalculatorSettings: readSharedDamageReduxCalculatorSettings(normalizedDamageRedux),
+    dissonanceCalculatorState: readSharedDissonanceCalculatorState(normalizedDissonance),
     botMedalSplitterPlanner: defaultSharedBotMedalSplitterPlanner,
     botsSynchronicity: {
       enabled: synchronicity.enabled === true,

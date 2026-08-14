@@ -1,12 +1,14 @@
 import type { ModuleCategory } from '../data/modules'
 import { decodeModuleSaveEffect } from './module-effects-decode'
 import {
+  findModuleSaveEffectLabel,
   MODULE_SAVE_EFFECT_ID_LABELS,
-  resolveModuleSaveEffectLabel,
 } from './module-effects-registry'
 import {
+  findModuleSubstatDefinition,
   MODULE_SUBSTAT_BASE_RARITIES,
   MODULE_SUBSTAT_CANONICAL_DATA,
+  MODULE_SUBSTATS_MISSING_FROM_CHART,
   type ModuleSubstatCanonicalRarity,
 } from '../data/module-substats'
 
@@ -27,22 +29,19 @@ const CATEGORY_TO_CANONICAL: Record<ModuleCategory, CanonicalCategory> = {
   Core: 'Core',
 }
 
-/** Extra core substats present in-game but missing from the tracker chart table. */
-const EXTRA_CORE_SUBSTATS = ['Death Wave - Quantity'] as const
+/**
+ * Extra core substats present in-game but missing from the tracker chart table.
+ *
+ * Kept applied to every category's id map, not just Core, because these ids are
+ * persisted: narrowing it now would be a data change, not a tidy-up.
+ */
+const EXTRA_CORE_SUBSTATS = MODULE_SUBSTATS_MISSING_FROM_CHART.Core.map(entry => entry.label)
 
 function getCanonicalDefinition(category: ModuleCategory, label: string) {
-  const canonical = CATEGORY_TO_CANONICAL[category]
-  if (label === 'Death Wave - Quantity') {
-    return {
-      label,
-      valuesByRarity: { Epic: '+1', Legendary: '+2', Mythic: '+3', Ancestral: '+4' } as const,
-      availableRarities: ['Epic', 'Legendary', 'Mythic', 'Ancestral'] as const,
-    }
-  }
-  return MODULE_SUBSTAT_CANONICAL_DATA[canonical].substats.find(definition => definition.label === label)
+  return findModuleSubstatDefinition(CATEGORY_TO_CANONICAL[category], label)
 }
 
-export { MODULE_SAVE_EFFECT_ID_LABELS, resolveModuleSaveEffectLabel }
+export { MODULE_SAVE_EFFECT_ID_LABELS, findModuleSaveEffectLabel }
 
 export interface DecodedModuleSaveSubstat {
   slotIndex: number

@@ -9,13 +9,13 @@ import {
   type SharedToolInputs,
 } from './shared-tool-inputs'
 import { pickNonDefaultRecordFields } from './shared-tool-inputs-hub-merge'
-import { extractSharedUptimeInputs } from './shared-uptime-inputs'
+import { readSharedUptimeInputs } from './shared-uptime-inputs'
 
 /**
  * Expand sparse persisted hub state into a fully resolved payload for UI and simulation.
  * Missing keys receive site defaults only at read time.
  */
-export function resolveSharedToolInputs(stored: Record<string, unknown>): SharedToolInputs {
+export function getSharedToolInputs(stored: Record<string, unknown>): SharedToolInputs {
   const { enemyStatsCore: _ec, perkPreferences: _pp, uptimeInputs: _ui, ...restDefaults } = defaultSharedToolInputs
   const { enemyStatsCore: _ecExt, ...extendedRest } = normalizeExtendedSharedToolInputs({
     ...defaultExtendedSharedToolInputs,
@@ -28,7 +28,7 @@ export function resolveSharedToolInputs(stored: Record<string, unknown>): Shared
       ...defaultSharedToolInputs.perkPreferences,
       ...(isPlainObject(stored.perkPreferences) ? stored.perkPreferences : {}),
     },
-    uptimeInputs: extractSharedUptimeInputs(
+    uptimeInputs: readSharedUptimeInputs(
       isPlainObject(stored.uptimeInputs) ? stored.uptimeInputs : {},
     ),
     ...extendedRest,
@@ -61,7 +61,7 @@ export function compactSharedToolInputsForStorage(resolved: SharedToolInputs): R
   )
   if (Object.keys(enemyStatsCore).length) out.enemyStatsCore = enemyStatsCore
 
-  const uptimeResolved = extractSharedUptimeInputs({})
+  const uptimeResolved = readSharedUptimeInputs({})
   const uptimeStored = pickNonDefaultRecordFields(
     normalized.uptimeInputs as unknown as Record<string, unknown>,
     uptimeResolved as unknown as Record<string, unknown>,

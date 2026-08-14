@@ -1,11 +1,11 @@
 import { RELIC_TEMPLATES } from '../data/relics'
 import { IMPORT_CATALOG_META, RELIC_IMPORT_CATALOG } from './catalogs/indexes'
-import { listRelicCatalogRows, resolveRelicLabel } from './catalogs/relics'
+import { findRelicLabel, listRelicCatalogRows } from './catalogs/relics'
 import {
   buildRelicTemplateIdLookup,
-  resolveRelicTemplateIdFromSaveIndex,
+  findRelicTemplateIdFromSaveIndex,
 } from './catalogs/relic-template-match'
-import { extractCollectedThemeNamesFromSaveRoot } from './themes'
+import { readCollectedThemeNamesFromSaveRoot } from './themes'
 import { coerceSaveArray, toNumberArrayPreserveLength } from './workshop'
 import { readSaveBoolean, readSaveEnumValue } from './read-values'
 export const RELICS_SAVE_PROFILE_KEY = 'profileRelics'
@@ -80,7 +80,7 @@ function buildUnlockedSet(profileIndices: number[], unlockedFlags: boolean[]): S
   return unlocked
 }
 
-export function extractRelicsFromSaveRoot(root: Record<string, unknown> | null): RelicsSaveExtract | null {
+export function readRelicsFromSaveRoot(root: Record<string, unknown> | null): RelicsSaveExtract | null {
   if (!root) return null
 
   const warnings: string[] = []
@@ -120,7 +120,7 @@ export function extractRelicsFromSaveRoot(root: Record<string, unknown> | null):
   const relics: RelicSaveRow[] = Array.from({ length: slotCount }, (_, index) => ({
     index,
     name: catalog[index]?.name ?? null,
-    label: resolveRelicLabel(index) ?? `Relic ${index + 1}`,
+    label: findRelicLabel(index) ?? `Relic ${index + 1}`,
     description: catalog[index]?.description ?? null,
     unlocked: unlockedSet.has(index),
     onProfile: profileRelicIndices.includes(index),
@@ -140,8 +140,8 @@ export function listUnlockedRelics(extract: RelicsSaveExtract): RelicSaveRow[] {
 
 const RELIC_TEMPLATE_ID_LOOKUP = buildRelicTemplateIdLookup(RELIC_TEMPLATES)
 
-export function resolveRelicTemplateIdForSaveIndex(saveIndex: number): string | null {
-  return resolveRelicTemplateIdFromSaveIndex(saveIndex, RELIC_TEMPLATES, RELIC_TEMPLATE_ID_LOOKUP)
+export function findRelicTemplateIdForSaveIndex(saveIndex: number): string | null {
+  return findRelicTemplateIdFromSaveIndex(saveIndex, RELIC_TEMPLATES, RELIC_TEMPLATE_ID_LOOKUP)
 }
 
 export interface RelicsTrackerSaveImportPayload {
@@ -159,7 +159,7 @@ export function buildRelicsTrackerImportPayload(extract: RelicsSaveExtract): Rel
   const seen = new Set<string>()
 
   for (const relic of unlockedRelics) {
-    const templateId = resolveRelicTemplateIdForSaveIndex(relic.index)
+    const templateId = findRelicTemplateIdForSaveIndex(relic.index)
     if (!templateId) {
       unmatchedSaveIndices.push(relic.index)
       continue
@@ -177,9 +177,9 @@ export function buildRelicsTrackerImportPayload(extract: RelicsSaveExtract): Rel
 export function buildRelicsTrackerImportPayloadFromSaveRoot(
   root: Record<string, unknown> | null,
 ): RelicsTrackerSaveImportPayload | null {
-  const extract = extractRelicsFromSaveRoot(root)
+  const extract = readRelicsFromSaveRoot(root)
   const relicPart = extract ? buildRelicsTrackerImportPayload(extract) : null
-  const collectedThemeNames = extractCollectedThemeNamesFromSaveRoot(root)
+  const collectedThemeNames = readCollectedThemeNamesFromSaveRoot(root)
   if (!relicPart && collectedThemeNames.length === 0) return null
   return {
     collectedRelicIds: relicPart?.collectedRelicIds ?? [],
@@ -193,5 +193,5 @@ export function canImportRelicsToTracker(
   root: Record<string, unknown> | null = null,
 ): boolean {
   if (extract && buildRelicsTrackerImportPayload(extract)) return true
-  return extractCollectedThemeNamesFromSaveRoot(root).length > 0
+  return readCollectedThemeNamesFromSaveRoot(root).length > 0
 }

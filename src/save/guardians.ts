@@ -1,12 +1,12 @@
 import { IMPORT_CATALOG_META } from './catalogs/indexes'
 import {
+  findGuardianChipCatalogRowBySlotIndex,
+  findGuardianChipTrackerKeyBySlotIndex,
+  getGuardianChipSlotLabel,
+  getGuardianSkinLabel,
   listGuardianChipCatalogRows,
   listGuardianChipSlotCatalogRows,
   listGuardianSkinCatalogRows,
-  resolveGuardianChipCatalogRowBySlotIndex,
-  resolveGuardianChipSlotLabel,
-  resolveGuardianChipTrackerKeyBySlotIndex,
-  resolveGuardianSkinLabel,
 } from './catalogs/guardians'
 import {
   buildGuardianDefinitions,
@@ -84,14 +84,14 @@ function buildChipRow(
   chipLevels: number[],
   equippedSlotByChipIndex: Map<number, number>,
 ): GuardianChipSaveRow {
-  const catalog = resolveGuardianChipCatalogRowBySlotIndex(slotIndex)
+  const catalog = findGuardianChipCatalogRowBySlotIndex(slotIndex)
   const statLevels = sliceChipStatLevels(chipLevels, slotIndex)
   const hasProgress = statLevels.some(level => level > 0)
   return {
     slotIndex,
     chipType: catalog?.chipType ?? null,
-    trackerKey: resolveGuardianChipTrackerKeyBySlotIndex(slotIndex),
-    label: resolveGuardianChipSlotLabel(slotIndex),
+    trackerKey: findGuardianChipTrackerKeyBySlotIndex(slotIndex),
+    label: getGuardianChipSlotLabel(slotIndex),
     unlocked: chipUnlocked[slotIndex] === true || hasProgress,
     statLevels,
     equippedSlot: equippedSlotByChipIndex.get(slotIndex) ?? null,
@@ -107,8 +107,8 @@ function buildEquippedChipRows(
     return [{
       equipSlot,
       slotIndex,
-      label: resolveGuardianChipSlotLabel(slotIndex),
-      trackerKey: resolveGuardianChipTrackerKeyBySlotIndex(slotIndex),
+      label: getGuardianChipSlotLabel(slotIndex),
+      trackerKey: findGuardianChipTrackerKeyBySlotIndex(slotIndex),
       statLevels: sliceChipStatLevels(chipLevels, slotIndex),
     }]
   })
@@ -122,13 +122,13 @@ function buildSkinRows(skinUnlocked: boolean[], skinIndex: number | null): Guard
   )
   return Array.from({ length: slotCount }, (_, index) => ({
     index,
-    label: resolveGuardianSkinLabel(index),
+    label: getGuardianSkinLabel(index),
     unlocked: skinUnlocked[index] ?? false,
     selected: skinIndex === index,
   }))
 }
 
-export function extractGuardiansFromSaveRoot(root: Record<string, unknown> | null): GuardiansSaveExtract | null {
+export function readGuardiansFromSaveRoot(root: Record<string, unknown> | null): GuardiansSaveExtract | null {
   if (!root) return null
 
   const warnings: string[] = []

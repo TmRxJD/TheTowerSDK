@@ -125,3 +125,43 @@ export const MODULE_SUBSTAT_CANONICAL_DATA: Record<ModuleSubstatCanonicalCategor
     ],
   },
 }
+
+/**
+ * Core substats the game has that the in-game chart table does not list.
+ *
+ * The chart is what the tracker mirrors, so a substat missing from it is
+ * missing from `MODULE_SUBSTAT_CANONICAL_DATA` too — and a lookup by label
+ * then returns `undefined`, which reads downstream as a value of zero for a
+ * substat the player is actually carrying.
+ *
+ * Death Wave - Quantity is the only one. Its ceiling is the game's own: the
+ * module cluster field `deathWaveQuantity` is declared `[Range(0, 4)]`, which
+ * is Ancestral at `+4`. The Effective Paths sheet stops at `+3` and offers no
+ * Epic roll; where the two disagree the dump is the authority.
+ */
+export const MODULE_SUBSTATS_MISSING_FROM_CHART: Readonly<
+  Record<ModuleSubstatCanonicalCategory, readonly ModuleSubstatCanonicalDefinition[]>
+> = {
+  Cannon: [],
+  Defense: [],
+  Generator: [],
+  Core: [
+    substat('Death Wave - Quantity', {
+      Epic: '+1', Legendary: '+2', Mythic: '+3', Ancestral: '+4',
+    }),
+  ],
+}
+
+/**
+ * A substat definition by category and label, including the ones the in-game
+ * chart omits. Prefer this over indexing `MODULE_SUBSTAT_CANONICAL_DATA`.
+ */
+export function findModuleSubstatDefinition(
+  category: ModuleSubstatCanonicalCategory,
+  label: string,
+): ModuleSubstatCanonicalDefinition | undefined {
+  return MODULE_SUBSTAT_CANONICAL_DATA[category]?.substats
+    .find(definition => definition.label === label)
+    ?? MODULE_SUBSTATS_MISSING_FROM_CHART[category]
+      ?.find(definition => definition.label === label)
+}

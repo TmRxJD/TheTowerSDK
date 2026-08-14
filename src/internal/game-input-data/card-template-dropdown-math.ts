@@ -34,13 +34,13 @@ export function buildCardTemplatePickerOptionSubtitle(index: number, excludeTemp
   return typeof description === 'string' ? description : undefined
 }
 
-export function resolveCardTemplatePickerIndex(templateId: unknown, excludeTemplateIds: readonly string[] = []): number {
+export function computeCardTemplatePickerIndex(templateId: unknown, excludeTemplateIds: readonly string[] = []): number {
   if (typeof templateId !== 'string' || !templateId) return -1
   const templates = filterCardTemplatesForPicker(excludeTemplateIds)
   return templates.findIndex(template => template.id === templateId)
 }
 
-export function resolveCardTemplatePickerByIndex(index: number, excludeTemplateIds: readonly string[] = []): string | null {
+export function findCardTemplatePickerByIndex(index: number, excludeTemplateIds: readonly string[] = []): string | null {
   const templates = filterCardTemplatesForPicker(excludeTemplateIds)
   const clamped = Math.max(0, Math.min(templates.length - 1, Math.floor(Number(index) || 0)))
   return templates[clamped]?.id ?? null

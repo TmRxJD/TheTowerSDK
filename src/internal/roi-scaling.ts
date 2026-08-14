@@ -7,7 +7,7 @@
  */
 
 /** Smallest positive cost among candidates; falls back to 1 when none exist. */
-export function resolveRoiReferenceCost(costs: readonly number[]): number {
+export function computeRoiReferenceCost(costs: readonly number[]): number {
   let min = Infinity
   for (const cost of costs) {
     if (Number.isFinite(cost) && cost > 0 && cost < min) {

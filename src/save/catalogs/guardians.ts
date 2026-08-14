@@ -37,12 +37,12 @@ function activeChipRows(): readonly ActiveGuardianChipRow[] {
   return GUARDIAN_CHIP_IMPORT_CATALOG as readonly ActiveGuardianChipRow[]
 }
 
-export function resolveGuardianChipCatalogRow(index: number): ActiveGuardianChipRow | null {
+export function findGuardianChipCatalogRow(index: number): ActiveGuardianChipRow | null {
   return activeChipRows()[index] ?? null
 }
 
-export function resolveGuardianChipLabel(index: number): string {
-  const catalog = resolveGuardianChipCatalogRow(index)
+export function getGuardianChipLabel(index: number): string {
+  const catalog = findGuardianChipCatalogRow(index)
   if (!catalog) return `Chip ${index + 1}`
 
   if (catalog.label?.trim()) return catalog.label
@@ -59,17 +59,17 @@ export function resolveGuardianChipLabel(index: number): string {
   return catalog.chipType ?? `Chip ${index + 1}`
 }
 
-export function resolveGuardianChipTrackerKey(index: number): string | null {
-  return resolveGuardianChipCatalogRow(index)?.trackerKey ?? null
+export function findGuardianChipTrackerKey(index: number): string | null {
+  return findGuardianChipCatalogRow(index)?.trackerKey ?? null
 }
 
-export function resolveGuardianSkinCatalogRow(index: number): GuardianSkinCatalogRow | null {
+export function findGuardianSkinCatalogRow(index: number): GuardianSkinCatalogRow | null {
   const rows = GUARDIAN_SKIN_IMPORT_CATALOG as readonly GuardianSkinCatalogRow[]
   return rows[index] ?? null
 }
 
-export function resolveGuardianSkinLabel(index: number): string {
-  return resolveGuardianSkinCatalogRow(index)?.label ?? `Skin ${index + 1}`
+export function getGuardianSkinLabel(index: number): string {
+  return findGuardianSkinCatalogRow(index)?.label ?? `Skin ${index + 1}`
 }
 
 export function listGuardianChipCatalogRows(): readonly ActiveGuardianChipRow[] {
@@ -80,18 +80,18 @@ export function listGuardianChipSlotCatalogRows(): typeof GUARDIAN_CHIP_SLOT_CAT
   return GUARDIAN_CHIP_SLOT_CATALOG
 }
 
-export function resolveGuardianChipCatalogRowBySlotIndex(slotIndex: number): ActiveGuardianChipRow | null {
+export function findGuardianChipCatalogRowBySlotIndex(slotIndex: number): ActiveGuardianChipRow | null {
   return listGuardianChipCatalogRows().find(row => row.slotIndex === slotIndex) ?? null
 }
 
-export function resolveGuardianChipSlotLabel(slotIndex: number): string {
+export function getGuardianChipSlotLabel(slotIndex: number): string {
   const slotRow = GUARDIAN_CHIP_SLOT_CATALOG[slotIndex]
   if (slotRow?.label?.trim()) return slotRow.label
-  return resolveGuardianChipCatalogRowBySlotIndex(slotIndex)?.label ?? `Chip ${slotIndex + 1}`
+  return findGuardianChipCatalogRowBySlotIndex(slotIndex)?.label ?? `Chip ${slotIndex + 1}`
 }
 
-export function resolveGuardianChipTrackerKeyBySlotIndex(slotIndex: number): string | null {
-  return resolveGuardianChipCatalogRowBySlotIndex(slotIndex)?.trackerKey ?? null
+export function findGuardianChipTrackerKeyBySlotIndex(slotIndex: number): string | null {
+  return findGuardianChipCatalogRowBySlotIndex(slotIndex)?.trackerKey ?? null
 }
 
 export function listGuardianSkinCatalogRows(): readonly GuardianSkinCatalogRow[] {

@@ -18,27 +18,27 @@ const UW_WEAPON_NAME_TO_CHART_KEY: Readonly<Record<string, string>> = {
   'Chain Lightning': 'chain_lightning',
 }
 
-export function resolveUwChartKeyFromWeaponName(weaponName: string): string | null {
+export function findUwChartKeyFromWeaponName(weaponName: string): string | null {
   return UW_WEAPON_NAME_TO_CHART_KEY[weaponName] ?? null
 }
 
 /** Canonical field label shared by every UW stat level dropdown (tracker, calculators, uptime). */
 export function buildUwStatFieldLabel(weaponName: string, statDisplayName: string): string {
-  const spec = resolveUwStatSpec(weaponName, statDisplayName)
+  const spec = findUwStatSpec(weaponName, statDisplayName)
   if (!spec) return `${weaponName} - ${statDisplayName}`
   return `${weaponName} - ${spec.statName}`
 }
 
 /** First stone level option for resets / empty-state defaults. */
-export function resolveDefaultUwStatStoneLevel(weaponName: string, statDisplayName: string): number {
-  const spec = resolveUwStatSpec(weaponName, statDisplayName)
+export function computeDefaultUwStatStoneLevel(weaponName: string, statDisplayName: string): number {
+  const spec = findUwStatSpec(weaponName, statDisplayName)
   if (!spec) return 0
   const entries = buildUwStatLevelEntries(spec)
   return entries[0]?.value ?? 0
 }
 
-export function resolveUwStatSpec(weaponName: string, statDisplayName: string): UwStatSpec | null {
-  const weaponKey = resolveUwChartKeyFromWeaponName(weaponName)
+export function findUwStatSpec(weaponName: string, statDisplayName: string): UwStatSpec | null {
+  const weaponKey = findUwChartKeyFromWeaponName(weaponName)
   if (!weaponKey) return null
 
   const weapon = uwStoneChartData[weaponKey]
@@ -82,7 +82,7 @@ export function parseUwStatNumericValue(raw: string | number): number {
  * Uptime stores UW fields as stone level indices (tracker sync + unified dropdown).
  * Legacy saves may store the resolved stat value (seconds/qty/angle) directly.
  */
-export function resolveUwStatStoredValue(
+export function computeUwStatStoredValue(
   spec: UwStatSpec,
   stored: number | null | undefined,
 ): number {

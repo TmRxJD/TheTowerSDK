@@ -21,12 +21,12 @@ export interface RelicCatalogRow {
 const relicRows = (): readonly RelicCatalogRow[] =>
   RELIC_IMPORT_CATALOG as unknown as readonly RelicCatalogRow[]
 
-export function resolveRelicCatalogRow(index: number): RelicCatalogRow | null {
+export function findRelicCatalogRow(index: number): RelicCatalogRow | null {
   return relicRows()[index] ?? null
 }
 
-export function resolveRelicLabel(index: number): string | null {
-  return resolveRelicCatalogRow(index)?.label ?? null
+export function findRelicLabel(index: number): string | null {
+  return findRelicCatalogRow(index)?.label ?? null
 }
 
 export function listRelicCatalogRows(): readonly RelicCatalogRow[] {

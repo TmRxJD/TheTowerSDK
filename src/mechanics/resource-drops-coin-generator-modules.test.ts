@@ -3,10 +3,10 @@ import { describe, expect, it } from 'vitest'
 import {
   blackHoleDigestorCpkBonusPct,
   compressorRarityFromGeneratorUnique,
+  computeGeneratorUniqueRarityBonus,
   expectedFreeUpgradesPerWave,
   generatorUniqueTemplateFromEffectId,
   goldenBotCoverageWithSingularityHarness,
-  resolveGeneratorUniqueRarityBonus,
   singularityHarnessRangeBonusMeters,
 } from './resource-drops-coin-generator-modules'
 import { estimateFetchCoinsFromRunCpm } from './resource-drops-coin-fetch'
@@ -23,7 +23,7 @@ describe('resource-drops-coin-generator-modules', () => {
   })
 
   it('resolves BHD and SH rarity bonuses', () => {
-    expect(resolveGeneratorUniqueRarityBonus('black-hole-digestor', 'Ancestral')).toBe(10)
+    expect(computeGeneratorUniqueRarityBonus('black-hole-digestor', 'Ancestral')).toBe(10)
     expect(singularityHarnessRangeBonusMeters('Mythic')).toBe(11)
     expect(blackHoleDigestorCpkBonusPct(10, 2)).toBe(20)
   })

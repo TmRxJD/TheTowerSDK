@@ -3,7 +3,7 @@ import {
   LAB_RESEARCH_SLUG_TO_INDEX,
   type LabResearchRecord,
 } from './labs-research'
-import { generatedLabs } from './labs-levels'
+import { LAB_CATALOG } from './labs-catalog'
 import { normalizeToolLabCategory } from './labs'
 
 export const SITE_LAB_SLUG_ALIASES: Readonly<Record<string, string>> = {
@@ -21,10 +21,61 @@ export const SITE_LAB_SLUG_ALIASES: Readonly<Record<string, string>> = {
   scatter_amp: 'lightning_amplifier_scatter',
   chain_lightning_shock_chance: 'shock_chance',
   chain_lightning_shock_multiplier: 'shock_multiplier',
-  bot_bot_cooldown: 'amplify_bot_cooldown',
-  bot_bot_duration: 'amplify_bot_duration',
+  // `amp_bot_*` is shorthand the site used for Amplify Bot; it is not a slug in
+  // the research catalog, so mapping it across is right.
   amp_bot_cooldown: 'amplify_bot_cooldown',
   amp_bot_duration: 'amplify_bot_duration',
+  // `bot_bot_*` is NOT shorthand. Bot Bot and Amplify Bot are separate bots with
+  // separate labs -- the catalog carries "Bot Bot - Cooldown" and "Amplify Bot -
+  // Cooldown" as distinct records. Aliasing them made Bot Bot read Amplify Bot's
+  // research levels, so do not add that back.
+  //
+  // Nor does a lab belong here just because its level table is filed under
+  // another name -- see LAB_TABLE_NAME_ALIASES below. This map also decides
+  // which slug a save index resolves to, and putting a table name in it made
+  // two card masteries resolve to a slug the research catalog does not have,
+  // which failed the import preview audit.
+}
+
+/**
+ * Canonical slug -> the name its level table is filed under in the catalog.
+ *
+ * Distinct from SITE_LAB_SLUG_ALIASES, which is about which slug a *save index*
+ * means. These two card masteries are only ever mispointed: the data has always
+ * been there, under a different spelling. Aliased rather than renamed because
+ * the table names are load-bearing elsewhere -- the AI acronym map, the chart
+ * registry and the towerai knowledge base all key off them -- and "Berzerker"
+ * is the spelling the card carries even where the research catalog says
+ * "Berserker".
+ */
+const LAB_TABLE_NAME_ALIASES: Readonly<Record<string, string>> = {
+  berserker_mastery: 'Berzerker Mastery',
+  recovery_package_mastery: 'Recovery Package Chance Mastery',
+}
+
+/**
+ * Canonical slug -> the name the generated level table happens to use.
+ *
+ * The level tables were generated with the site's older names for some labs, so
+ * a lab the research catalog calls `coins_wave` has its costs stored under
+ * `coins_per_wave`. The tracker asks by the catalog slug, missed, and rendered
+ * the row with a real level and max but 0 for every time, gem and coin column --
+ * which reads as "this lab is free" rather than "we could not find its costs".
+ *
+ * Derived by inverting SITE_LAB_SLUG_ALIASES, plus the handful of tables filed
+ * under a display name rather than a slug, so there is one list and not three.
+ */
+export const LAB_LEVEL_TABLE_NAME_BY_SLUG: Readonly<Record<string, string>> = {
+  ...Object.fromEntries(
+    Object.entries(SITE_LAB_SLUG_ALIASES).map(([siteSlug, canonicalSlug]) => [canonicalSlug, siteSlug]),
+  ),
+  ...LAB_TABLE_NAME_ALIASES,
+}
+
+/** Names to try, in order, when looking a lab's level table up by slug. */
+export function labLevelTableLookupNames(slug: string): string[] {
+  const alias = LAB_LEVEL_TABLE_NAME_BY_SLUG[slug]
+  return alias && alias !== slug ? [slug, alias] : [slug]
 }
 
 const SPECIAL_SITE_LAB_LABELS: Readonly<Record<string, string>> = {
@@ -64,12 +115,12 @@ function buildSaveIndexToSiteSlug(): ReadonlyMap<number, string> {
 const SAVE_INDEX_TO_SITE_SLUG = buildSaveIndexToSiteSlug()
 
 const SITE_LAB_CATEGORY_BY_SLUG = new Map(
-  generatedLabs
-    .filter(lab => lab.type)
-    .map(lab => [lab.name, normalizeToolLabCategory(lab.type)]),
+  LAB_CATALOG
+    .filter(lab => lab.category)
+    .map(lab => [lab.name, normalizeToolLabCategory(lab.category)]),
 )
 
-export function resolveSiteLabCategoryForSaveIndex(saveIndex: number): string | null {
+export function findSiteLabCategoryForSaveIndex(saveIndex: number): string | null {
   const siteSlug = SAVE_INDEX_TO_SITE_SLUG.get(saveIndex)
   if (!siteSlug) return null
   const canonical = resolveCanonicalSiteSlug(siteSlug)
@@ -78,11 +129,11 @@ export function resolveSiteLabCategoryForSaveIndex(saveIndex: number): string | 
     ?? null
 }
 
-export function resolveSiteLabSlugForSaveIndex(saveIndex: number): string | null {
+export function findSiteLabSlugForSaveIndex(saveIndex: number): string | null {
   return SAVE_INDEX_TO_SITE_SLUG.get(saveIndex) ?? null
 }
 
-export function resolveSiteLabDisplayNameForSaveIndex(saveIndex: number): string | null {
+export function findSiteLabDisplayNameForSaveIndex(saveIndex: number): string | null {
   const siteSlug = SAVE_INDEX_TO_SITE_SLUG.get(saveIndex)
   if (!siteSlug) return null
   const research = lookupResearch(siteSlug)
@@ -90,7 +141,7 @@ export function resolveSiteLabDisplayNameForSaveIndex(saveIndex: number): string
   return slugToDisplayLabel(siteSlug)
 }
 
-export function resolveSiteLabSlugFromApiName(apiSlug: string): { saveIndex: number; saveSlug: string } | null {
+export function findSiteLabSlugFromApiName(apiSlug: string): { saveIndex: number; saveSlug: string } | null {
   const canonical = resolveCanonicalSiteSlug(apiSlug)
   const index = LAB_RESEARCH_SLUG_TO_INDEX[canonical]
   if (index === undefined) return null

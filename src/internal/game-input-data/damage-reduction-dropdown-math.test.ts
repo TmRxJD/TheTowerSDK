@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import { evaluateDropdownOptions } from './dropdown-evaluator'
 import {
   buildDamageReductionBotBonusEntries,
-  buildDamageReductionBotBonusOptionLabel,
   buildDamageReductionCfReductionEntries,
   buildDamageReductionCfReductionOptionLabel,
   buildDamageReductionClPlusLevelEntries,
@@ -11,6 +10,7 @@ import {
   buildDamageReductionFlameBotOptionLabel,
   buildDamageReductionNmpReductionEntries,
   buildDamageReductionPrimordialCollapseEntries,
+  formatDamageReductionBotBonusOptionLabel,
 } from './damage-reduction-dropdown-math'
 
 describe('damage reduction dropdown math', () => {
@@ -21,7 +21,7 @@ describe('damage reduction dropdown math', () => {
     expect(entries[1]).toEqual({ value: 1.05, baseValue: 0 })
     expect(entries.at(-1)).toEqual({ value: 2, baseValue: 19 })
     expect(entries).toHaveLength(21)
-    expect(buildDamageReductionBotBonusOptionLabel(1.05)).toBe('1.05x')
+    expect(formatDamageReductionBotBonusOptionLabel(1.05)).toBe('1.05x')
   })
 
   it('sources flame bot reduction from Flame Bot stat table', () => {

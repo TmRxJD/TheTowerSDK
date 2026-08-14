@@ -1,4 +1,4 @@
-import { createNormalizerPersistenceSchema } from './local-persistence-types'
+import { buildNormalizerPersistenceSchema } from './local-persistence-types'
 
 export type TournamentPerformanceLocalState = {
   selectedLeagues: string[]
@@ -26,4 +26,4 @@ export function normalizeTournamentPerformanceLocalState(
   }
 }
 
-export const tournamentPerformanceLocalPersistenceSchema = createNormalizerPersistenceSchema(normalizeTournamentPerformanceLocalState)
+export const tournamentPerformanceLocalPersistenceSchema = buildNormalizerPersistenceSchema(normalizeTournamentPerformanceLocalState)

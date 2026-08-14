@@ -23,25 +23,29 @@ TypeScript, one runtime dependency (`zod`), MIT licensed.
 ### Use the game data
 
 ```ts
-import { generatedLabs } from 'thetowersdk/data'
+import { LAB_CATALOG } from 'thetowersdk/data'
 
-const costToMax = (lab) => (lab.levels ?? []).reduce((sum, level) => sum + (level.cost ?? 0), 0)
+const costToMax = (lab) => lab.levels.reduce((sum, level) => sum + level.cost, 0)
 
-const priciest = generatedLabs
+const priciest = LAB_CATALOG
   .map((lab) => ({ name: lab.name, total: costToMax(lab) }))
   .sort((a, b) => b.total - a.total)[0]
 ```
+
+Every `cost` is a plain number of coins. There is no scaling factor to apply and no currency field
+to read first — a lab that costs 1.1 quadrillion is `1.1e15`, so you can add two labs together
+without checking where either came from.
 
 ### Read a save file
 
 ```ts
 import { readFile } from 'node:fs/promises'
 import { decodePlayerInfoSaveBytes } from 'thetowersdk/node'
-import { extractLabsFromSaveRoot } from 'thetowersdk/save'
+import { readLabsFromSaveRoot } from 'thetowersdk/save'
 
 const { parsedRoot } = decodePlayerInfoSaveBytes(await readFile('playerInfo.dat'))
 
-const labs = extractLabsFromSaveRoot(parsedRoot)
+const labs = readLabsFromSaveRoot(parsedRoot)
 console.log(`${labs.researchedCount} researched, ${labs.maxedCount} maxed`)
 ```
 
@@ -56,7 +60,7 @@ playerInfo.dat ──decodePlayerInfoSaveBytes()──► save root (plain objec
                                                      │
                      ┌───────────────────────────────┼──────────────────────────────┐
                      ▼                               ▼                              ▼
-           extractLabsFromSaveRoot()   extractModulesFromSaveRoot()   discoverSaveImportTrackers()
+           readLabsFromSaveRoot()   readModulesFromSaveRoot()   discoverSaveImportTrackers()
                      │                               │                              │
                      ▼                               ▼                              ▼
                typed lab data                 typed module data          "what's in this save?"
@@ -76,6 +80,7 @@ can run as many as you like over the same root.
 | `thetowersdk/node` | The save decoder | Node — [see below](#decoding-in-a-browser) |
 | `thetowersdk/formatting` | Number and duration formatting matching the game | Yes |
 | `thetowersdk/mechanics` | Game formulas — see [below](#formulas) | Yes |
+| `thetowersdk/wiki` | Fandom wikitext → Markdown — see [below](#reading-the-community-wiki) | Yes |
 
 `import { … } from 'thetowersdk'` re-exports `data`, `save` and `formatting` together. Prefer the
 subpaths in real projects so your bundler can drop what you don't use.
@@ -91,18 +96,18 @@ import { formatDuration } from 'thetowersdk/formatting'
 
 | Function | Returns |
 |---|---|
-| `extractLabsFromSaveRoot` | Research levels, what's maxed, the active queue |
-| `extractWorkshopFromSaveRoot` | Upgrade levels, enhancements, saved presets |
-| `extractModulesFromSaveRoot` | Owned modules, rarities, substats, equipped |
-| `extractCardsFromSaveRoot` | Card levels, copies, mastery, equipped slots |
-| `extractGuardiansFromSaveRoot` | Guardian levels and upgrades |
-| `extractBotsFromSaveRoot` | Bot levels, plus/sync unlocks, medals spent |
-| `extractUltimateWeaponsFromSaveRoot` | UW levels, unlocks, plus-levels, stones |
-| `extractVaultFromSaveRoot` | Vault power tree progress |
-| `extractRelicsFromSaveRoot` | Owned relics |
-| `extractCollectedThemeNamesFromSaveRoot` | Unlocked themes |
-| `extractLifetimeFromSaveRoot` | Lifetime totals |
-| `extractDissonanceFromSaveRoot` | Dissonance echo progress |
+| `readLabsFromSaveRoot` | Research levels, what's maxed, the active queue |
+| `readWorkshopFromSaveRoot` | Upgrade levels, enhancements, saved presets |
+| `readModulesFromSaveRoot` | Owned modules, rarities, substats, equipped |
+| `readCardsFromSaveRoot` | Card levels, copies, mastery, equipped slots |
+| `readGuardiansFromSaveRoot` | Guardian levels and upgrades |
+| `readBotsFromSaveRoot` | Bot levels, plus/sync unlocks, medals spent |
+| `readUltimateWeaponsFromSaveRoot` | UW levels, unlocks, plus-levels, stones |
+| `readVaultFromSaveRoot` | Vault power tree progress |
+| `readRelicsFromSaveRoot` | Owned relics |
+| `readCollectedThemeNamesFromSaveRoot` | Unlocked themes |
+| `readLifetimeFromSaveRoot` | Lifetime totals |
+| `readDissonanceFromSaveRoot` | Dissonance echo progress |
 | `listImportableBattleRuns` | Run history |
 
 Plus perks, "killed by" and per-run battle report fields — see [`src/save/index.ts`](src/save/index.ts).
@@ -113,7 +118,7 @@ Extractors return `null` when a save has no data for that feature, rather than t
 saves degrade instead of failing:
 
 ```ts
-const labs = extractLabsFromSaveRoot(parsedRoot)
+const labs = readLabsFromSaveRoot(parsedRoot)
 if (!labs) return
 
 if (labs.warnings.length) {
@@ -141,7 +146,7 @@ Useful for showing someone what you found before doing anything with it.
 Every completed run the game kept is available, with all of its stored fields:
 
 ```ts
-import { listImportableBattleRuns, buildBattleReportStatFieldsFromSaveEntry } from 'thetowersdk/save'
+import { listImportableBattleRuns, buildBattleReportStatFields } from 'thetowersdk/save'
 
 const runs = listImportableBattleRuns(parsedRoot)
 
@@ -151,7 +156,7 @@ const runs = listImportableBattleRuns(parsedRoot)
 console.log(Object.keys(runs[0]))
 
 // Or the same run flattened into named stat fields.
-const stats = buildBattleReportStatFieldsFromSaveEntry(runs[0])
+const stats = buildBattleReportStatFields(runs[0])
 ```
 
 `listImportableBattleRuns` hands back the decoded entries themselves, not a filtered view, so you
@@ -178,6 +183,32 @@ readSaveIntList(parsedRoot.someList) // number[]
 Worked out a field that isn't covered? A PR adding an extractor is very welcome.
 
 ---
+
+## Reading the community wiki
+
+The Tower's wiki is on Fandom, which serves **wikitext** rather than anything you can render:
+templates, infoboxes, `[[File:…]]` links and vertical wikitables. This converts it to Markdown.
+
+```ts
+import { fetchFandomPageAsMarkdown } from 'thetowersdk/wiki'
+
+const markdown = await fetchFandomPageAsMarkdown('Cards')
+```
+
+Or the halves separately, if you fetch pages your own way — from a cache, a mirror, or a build step:
+
+```ts
+import { convertFandomWikitextToMarkdown, resolveFandomFileImages } from 'thetowersdk/wiki'
+
+const markdown = convertFandomWikitextToMarkdown(wikitext, { pageTitle: 'Cards' })
+```
+
+A page that does not exist returns `200 OK` with a `missing` marker rather than a 404, so
+`fetchFandomWikitext` throws on it instead of returning an empty page.
+
+**The conversion ships here; the wiki's content does not.** Wiki text is CC-BY-SA and this package
+is MIT, so fetch what you need and honour the wiki's licence in whatever you ship. It is a
+volunteer-run wiki — cache what you fetch, and space out requests when pulling many pages.
 
 ## Getting a save file
 
@@ -233,15 +264,27 @@ npx tsx examples/02-read-a-save-file.ts ~/playerInfo.dat
 
 ## Names and acronyms
 
-The game and the community use a lot of shorthand, and some of it is ambiguous — `SR` is both Shrink
-Ray and Solar Reflector. The SDK ships a glossary so you do not have to guess:
+The game and the community use a lot of shorthand, and plenty of it collides. `CF` is Chrono Field
+to one player and critical factor to another; `GC` is Galaxy Compressor or glass cannon. The SDK
+ships a glossary of 233 terms so you do not have to guess:
 
 ```ts
-import { lookupGlossary, expandAcronym } from 'thetowersdk/data'
+import { lookupGlossary, expandAcronym, listAmbiguousGlossaryTerms } from 'thetowersdk/data'
 
-expandAcronym('ILM')     // 'Inner Land Mines'
-lookupGlossary('SR')     // two entries; check `domain` to pick one
+expandAcronym('CF')      // 'Chrono Field'
+expandAcronym('GC')      // 'Galaxy Compressor'
+
+lookupGlossary('CF')[0]  // { term, kind, domain: 'ultimate-weapon', expansion, definition }
+listAmbiguousGlossaryTerms()   // 13 terms that resolve to more than one thing
 ```
+
+Each entry carries a `domain`, which is usually enough to pick the one you meant. Usually, not
+always: `SR` returns both Shrink Ray and Solar Reflector and *both* are modules, so for the terms in
+`listAmbiguousGlossaryTerms()` you need the `expansion` rather than the domain.
+
+The glossary only covers what the game calls things. Community shorthand that never became a game
+name — critical factor for `CF`, glass cannon for `GC` — is not in it, so `expandAcronym` gives you
+the game's meaning and nothing else.
 
 Names in it are generated from the same catalogs the SDK ships, and every acronym is checked against
 those names, so a term cannot appear unless it is real.
@@ -283,6 +326,102 @@ import { computeWaveBaseHealth, abilityDamage, goldenComboBonus } from 'thetower
 
 ---
 
+## Effective Paths
+
+[Effective Paths][ep] is the community spreadsheet that works out the cheapest order to buy things
+in — which lab, workshop stat or module to put your next coins into for the most effect. Its authors
+take the numbers from the developers, which is why the SDK already checks its own tables against it:
+see [`src/data/fixtures/README.md`](src/data/fixtures/README.md).
+
+The solver is ported. Four models, each with the sheet's own paths:
+
+| Model | Planner | Paths |
+|---|---|---|
+| eHP | `planEffectiveHealthPath` | `lab-time` · `lab-coins` · `stone` · `coin` |
+| eRegen | `planEffectiveRegenPath` | `lab-time` · `lab-coins` |
+| eDamage | `planEffectiveDamagePath` | `lab-time` · `lab-coins` · `stone` · `coin` · `keys` |
+| eEcon | `planEffectiveEconomyPath` | `time` · `coin` · `stone` |
+| eEcon Discount | `planEffectiveEconomyDiscountPath` | its own, ranking coins **saved** |
+
+The lab path appears twice everywhere because the sheet prices the same candidates two ways — in
+research days or in coins — and which one binds depends on the player.
+
+```ts
+import {
+  planEffectiveDamagePath,
+  ZERO_EFFECTIVE_DAMAGE_LEVELS,
+  zeroEffectiveDamageConfig,
+} from 'thetowersdk/mechanics'
+
+const plan = planEffectiveDamagePath({
+  config: zeroEffectiveDamageConfig(),   // build this from a save or a tracker
+  levels: ZERO_EFFECTIVE_DAMAGE_LEVELS,  // where the player is now
+  variant: 'lab-time',
+  steps: 25,
+})
+
+plan.steps      // what to buy, in order, with cost, gain and ROI
+plan.excluded   // what it did not offer, and why
+plan.issues     // why it could not plan at all — empty on every plan that ran
+```
+
+### An empty plan always says why
+
+The four families — damage, eHP, economy and regen — check their levels before planning and refuse
+rather than compute against a record they cannot use. When that happens `steps` is empty and
+`issues` names the offending key and what was wrong with it: a `NaN`, a missing entry, a level
+stored as text.
+
+```ts
+if (plan.issues.length > 0) {
+  // Not "this player has nothing worth buying" — "these levels are unusable".
+  console.error(plan.issues) // [{ path: 'time.coinsKillBonus', message: '…' }]
+}
+```
+
+A `NaN` level makes every gain `NaN`; every candidate then compares false against every other and
+the greedy loop returns an empty path, which is indistinguishable from a fully-upgraded account.
+Levels are validated once per plan rather than inside the evaluation loop, which runs many times
+over inputs that do not change.
+
+Levels are held to **completeness and finiteness, not magnitude**. Negative and fractional levels
+are accepted, because the source model contains them.
+
+### `excluded` is half the answer
+
+Every planner reports the candidates it passed over, each with a reason: `already at its cap of 99`,
+`the weapon is not unlocked`, `priced at 0 for level 12, which is not a cost`. **A candidate is
+planned, or it is explained — never neither.**
+
+A path that stops after one step usually means every other candidate is at its cap. Read`excluded` before treating a short path as an error.
+
+Passing a variant a planner does not publish throws, naming the ones it does. Note that `lab` is a
+damage *band* while `lab-time` is a *variant*.
+
+### Discount is a different quantity
+
+`planEffectiveEconomyDiscountPath` ranks coins **saved**, not coins earned, so it is not comparable
+to the others and has its own entry point. `planEffectiveEconomyPath` refuses `discount` and says so
+rather than returning a table of zeroes.
+
+### Checking it against the sheet
+
+The port cites the cell behind every rule it implements — `eEcon!E6`, `eDamage Coins!EZ2` — and those
+citations are enumerated by a test that checks the tab exists. If you are changing a formula, read
+the cell first. `docs/EFFECTIVE_PATHS_ORACLE.md` in the tracker repo describes how, and which of the
+spreadsheet API's answers are misleading: a spilled range reads as *empty* while `COUNTA` sees a
+hundred rows of it.
+
+The MCP server's `plan_effective_path` tool runs any of this without a scratch script — see
+[`mcp/README.md`](mcp/README.md).
+
+[`docs/EFFECTIVE_PATHS.md`](docs/EFFECTIVE_PATHS.md) is the longer version: how a config differs from
+levels, why the damage and economy levels are banded, and what a step guarantees.
+
+[ep]: https://docs.google.com/spreadsheets/d/1YwZtKP6B4WYhRba5T6APJ1YxKNdfnIGQnprgnxmO7zc/edit
+
+---
+
 ## Accuracy
 
 Data tables are exact values, keyed to a specific game version — see `V283_GAME_DATA_META`.
@@ -311,7 +450,7 @@ tools you've built.
 
 ## Credits
 
-**Matthew** (`matteweon` on Discord) — the
+**Mattew** (`matteweon` on Discord) — the
 [Effective Paths](https://docs.google.com/spreadsheets/d/1YwZtKP6B4WYhRba5T6APJ1YxKNdfnIGQnprgnxmO7zc)
 spreadsheets for The Tower. A large amount of the reference data here, especially the cost, mastery
 and substat tables, was compiled with the help of that work.

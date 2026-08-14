@@ -20,17 +20,17 @@ export function buildWorkshopCalcSectionEntries(): readonly GameDropdownOptionEn
   }))
 }
 
-export function buildWorkshopCalcSectionOptionLabel(index: number): string {
+export function formatWorkshopCalcSectionOptionLabel(index: number): string {
   const clamped = Math.max(0, Math.min(WORKSHOP_CALC_SECTIONS.length - 1, Math.floor(Number(index) || 0)))
   return WORKSHOP_CALC_SECTIONS[clamped]?.label ?? String(index)
 }
 
-export function resolveWorkshopCalcSectionIndex(section: WorkshopCategory | null | undefined): number {
+export function computeWorkshopCalcSectionIndex(section: WorkshopCategory | null | undefined): number {
   const idx = WORKSHOP_CALC_SECTIONS.findIndex(entry => entry.value === (section ?? 'attack'))
   return idx >= 0 ? idx : 0
 }
 
-export function resolveWorkshopCalcSectionByIndex(index: number): WorkshopCategory {
+export function getWorkshopCalcSectionByIndex(index: number): WorkshopCategory {
   const clamped = Math.max(0, Math.min(WORKSHOP_CALC_SECTIONS.length - 1, Math.floor(Number(index) || 0)))
   return WORKSHOP_CALC_SECTIONS[clamped]?.value ?? 'attack'
 }
@@ -67,7 +67,7 @@ export function buildWorkshopCalcStatOptionLabel(
   return options[clamped]?.label ?? String(index)
 }
 
-export function resolveWorkshopCalcStatIndex(
+export function computeWorkshopCalcStatIndex(
   statKey: string | null | undefined,
   tab: WorkshopCalcTab,
   section: WorkshopCategory,
@@ -77,7 +77,7 @@ export function resolveWorkshopCalcStatIndex(
   return idx >= 0 ? idx : 0
 }
 
-export function resolveWorkshopCalcStatByIndex(
+export function getWorkshopCalcStatByIndex(
   index: number,
   tab: WorkshopCalcTab,
   section: WorkshopCategory,
@@ -117,6 +117,6 @@ export function buildWorkshopCalcDiscountEntries(profile: WorkshopDiscountProfil
   ]
 }
 
-export function buildWorkshopCalcDiscountOptionLabel(pct: number): string {
+export function formatWorkshopCalcDiscountOptionLabel(pct: number): string {
   return `${Number(pct).toFixed(1)}%`
 }

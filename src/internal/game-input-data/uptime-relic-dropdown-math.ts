@@ -38,17 +38,17 @@ export function buildUptimeMvnModeEntries(): readonly GameDropdownOptionEntry[] 
   return UPTIME_MVN_MODES.map((mode, index) => ({ value: index, baseValue: index, meta: { mode } }))
 }
 
-export function buildUptimeMvnModeOptionLabel(index: number): string {
+export function formatUptimeMvnModeOptionLabel(index: number): string {
   const mode = UPTIME_MVN_MODES[Math.max(0, Math.min(UPTIME_MVN_MODES.length - 1, Math.floor(Number(index) || 0)))] ?? 'Disabled'
   return MVN_MODE_LABELS[mode]
 }
 
-export function resolveUptimeMvnModeIndex(mode: MVNMode | null | undefined): number {
+export function computeUptimeMvnModeIndex(mode: MVNMode | null | undefined): number {
   const idx = UPTIME_MVN_MODES.indexOf(mode ?? 'Disabled')
   return idx >= 0 ? idx : 0
 }
 
-export function resolveUptimeMvnModeByIndex(index: number): MVNMode {
+export function getUptimeMvnModeByIndex(index: number): MVNMode {
   const clamped = Math.max(0, Math.min(UPTIME_MVN_MODES.length - 1, Math.floor(Number(index) || 0)))
   return UPTIME_MVN_MODES[clamped] ?? 'Disabled'
 }
@@ -57,17 +57,17 @@ export function buildUptimeCompressorEntries(): readonly GameDropdownOptionEntry
   return UPTIME_COMPRESSOR_MODES.map((mode, index) => ({ value: index, baseValue: index, meta: { mode } }))
 }
 
-export function buildUptimeCompressorOptionLabel(index: number): string {
+export function formatUptimeCompressorOptionLabel(index: number): string {
   const mode = UPTIME_COMPRESSOR_MODES[Math.max(0, Math.min(UPTIME_COMPRESSOR_MODES.length - 1, Math.floor(Number(index) || 0)))] ?? 'Disabled'
   return COMPRESSOR_MODE_LABELS[mode]
 }
 
-export function resolveUptimeCompressorIndex(mode: Compressor | null | undefined): number {
+export function computeUptimeCompressorIndex(mode: Compressor | null | undefined): number {
   const idx = UPTIME_COMPRESSOR_MODES.indexOf(mode ?? 'Disabled')
   return idx >= 0 ? idx : 0
 }
 
-export function resolveUptimeCompressorByIndex(index: number): Compressor {
+export function getUptimeCompressorByIndex(index: number): Compressor {
   const clamped = Math.max(0, Math.min(UPTIME_COMPRESSOR_MODES.length - 1, Math.floor(Number(index) || 0)))
   return UPTIME_COMPRESSOR_MODES[clamped] ?? 'Disabled'
 }
@@ -79,7 +79,7 @@ export function buildUptimeWavesPerBossEntries(): readonly GameDropdownOptionEnt
   })
 }
 
-export function buildUptimeWavesPerBossOptionLabel(waves: number): string {
+export function formatUptimeWavesPerBossOptionLabel(waves: number): string {
   return String(waves)
 }
 

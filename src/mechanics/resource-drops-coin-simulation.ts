@@ -2,14 +2,14 @@ import { CARD_TEMPLATES, type CardTemplate } from '../data/index'
 import { MAX_CAMPAIGN_TIER } from '../data/index'
 import { findLabResearchBySlug } from '../data/index'
 import {
+  computeLabValueAtLevel,
   getSharedToolLabs,
-  resolveLabValueAtLevel,
   type ToolLabRecord,
 } from '../data/index'
 import {
   buildUwStatLevelEntries,
+  findUwStatSpec,
   parseUwStatNumericValue,
-  resolveUwStatSpec,
 } from '../internal/game-input-data/uw-stat-dropdown-math'
 import { BOT_UPGRADES_DATA } from '../data/index'
 import { WORKSHOP_DATA } from '../data/index'
@@ -22,18 +22,18 @@ import {
 } from './enemy-drops-simulation'
 import { clamp } from './math'
 import {
-  calculateUptimeRatio,
   computeDurations,
   computeEffectiveCooldowns,
+  computeUptimeRatio,
   type UptimeCoreState,
 } from '../internal/uptime-core'
 import {
   enemySpawnRateCapFromWaveAcceleratorChart,
-  resolveWaveAcceleratorMasteryForSpawnCap,
+  findWaveAcceleratorMasteryForSpawnCap,
   waveAcceleratorSpawnRateChartColumn,
 } from './wave-accelerator-spawn-rate-cap'
 import { WAVE_ACCELERATOR_SPAWN_RATE_ROWS } from '../data/chart-tables'
-import { resolvePackCoinMultFromIapToggles, type ResourceDropsCoinIapToggles } from './resource-drops-coin-iap'
+import { computePackCoinMultFromIapToggles, type ResourceDropsCoinIapToggles } from './resource-drops-coin-iap'
 import { allCoinBonusesPerkMult } from './resource-drops-coin-perks'
 import {
   estimateFetchCoinsFromRunCpm,
@@ -309,14 +309,14 @@ function findLabRecordBySlug(slug: string): ToolLabRecord | undefined {
   return getSharedToolLabs().find(lab => lab.name === slug || lab.name === research.slug)
 }
 
-export function resolveLabCoinMultiplier(slug: string, level: number): number {
+export function computeLabCoinMultiplier(slug: string, level: number): number {
   const lab = findLabRecordBySlug(slug)
   if (!lab || level <= 0) return slug === RESOURCE_DROPS_COIN_LAB_SLUGS.gtBonus ? 0 : 1
-  return resolveLabValueAtLevel(lab, Math.floor(level))
+  return computeLabValueAtLevel(lab, Math.floor(level))
 }
 
 function uwStoneStatMult(weaponName: string, statName: string, level: number): number {
-  const spec = resolveUwStatSpec(weaponName, statName)
+  const spec = findUwStatSpec(weaponName, statName)
   if (!spec) return 1
   const entries = buildUwStatLevelEntries(spec)
   const clamped = Math.max(0, Math.floor(level))
@@ -326,14 +326,14 @@ function uwStoneStatMult(weaponName: string, statName: string, level: number): n
   return Math.max(1, last?.baseValue ?? 1)
 }
 
-export function resolveGoldenTowerCoinMult(stoneMultiplierLevel: number, gtBonusLabLevel: number): number {
+export function computeGoldenTowerCoinMult(stoneMultiplierLevel: number, gtBonusLabLevel: number): number {
   const stoneMult = uwStoneStatMult('Golden Tower', 'Multiplier', stoneMultiplierLevel)
-  const labBonus = resolveLabCoinMultiplier(RESOURCE_DROPS_COIN_LAB_SLUGS.gtBonus, gtBonusLabLevel)
+  const labBonus = computeLabCoinMultiplier(RESOURCE_DROPS_COIN_LAB_SLUGS.gtBonus, gtBonusLabLevel)
   return stoneMult + labBonus
 }
 
-export function resolvePackCoinMult(toggles: ResourceDropsCoinIapToggles): number {
-  return resolvePackCoinMultFromIapToggles(toggles)
+export function computePackCoinMult(toggles: ResourceDropsCoinIapToggles): number {
+  return computePackCoinMultFromIapToggles(toggles)
 }
 
 /** Golden Tower+ combo bonus — `(1 + 0.0003 × (level + 1))^kills − 1`, distributed as a run multiplier. */
@@ -387,13 +387,13 @@ function resolveUwUptimeRatios(
   const cds = computeEffectiveCooldowns(uptime)
   const durations = computeDurations(uptime)
 
-  const gtUptimeRatio = calculateUptimeRatio(durations.gt, cds.gt)
-  const bhUptimeRatio = calculateUptimeRatio(durations.bh, cds.bh)
-  const dwUptimeRatio = calculateUptimeRatio(durations.dw, cds.dw)
+  const gtUptimeRatio = computeUptimeRatio(durations.gt, cds.gt)
+  const bhUptimeRatio = computeUptimeRatio(durations.bh, cds.bh)
+  const dwUptimeRatio = computeUptimeRatio(durations.dw, cds.dw)
   const slUptimeRatio = clamp(durations.sl / 100, 0, 1)
   const gbCd = parseBotStatSeconds('Golden Bot', 'Cooldown', uptime.gbCdLevel ?? 0)
   const gbDur = parseBotStatSeconds('Golden Bot', 'Duration', uptime.gbDurLevel ?? 0)
-  const gbUptimeRatio = calculateUptimeRatio(gbDur, gbCd)
+  const gbUptimeRatio = computeUptimeRatio(gbDur, gbCd)
 
   return {
     gtUptimeRatio,
@@ -456,11 +456,11 @@ export function buildResourceDropsCoinMultipliers(
     * cardMasteryMulti('coins', input.coinsCardLevel, input.coinsCardMastery)
   const themeMult = themePassiveCoinMult(input)
   const relicMult = 1 + Math.max(0, Number(input.relicCoinBonusPct) || 0) / 100
-  const packMult = resolvePackCoinMult(input.iapToggles)
+  const packMult = computePackCoinMult(input.iapToggles)
   const tradeOffCoinMult = coinTradeOffPerkMult(input.hasCoinTradeOffPerk, input.improveTradeOffLabPct)
   const perkCoinMult = allCoinBonusesPerkMult(input.allCoinPerkLevel, input.standardPerkBonusPct)
   const workshopCoinsKillMult = readWorkshopUtilityValue(COINS_KILL_WORKSHOP_KEY, input.coinsKillWorkshopLevel)
-  const coinsKillLabMult = resolveLabCoinMultiplier(RESOURCE_DROPS_COIN_LAB_SLUGS.coinsKill, input.coinsKillLabLevel)
+  const coinsKillLabMult = computeLabCoinMultiplier(RESOURCE_DROPS_COIN_LAB_SLUGS.coinsKill, input.coinsKillLabLevel)
   const moduleBonus = Math.max(0, Number(input.moduleCoinsKillBonus) || 0)
   const bhdBonusPct = Math.max(0, Number(input.bhdCpkBonusPct) || 0)
   const vaultMult = vaultCoinskillMult(input.vaultCoinskillLevel)
@@ -478,7 +478,7 @@ export function buildResourceDropsCoinMultipliers(
   const bhdMult = bhdBonusPct > 0 ? 1 + bhdBonusPct / 100 : 1
   const baselineKillMult = globalMult * coinBonusEnhancement * cpkCore * bhdMult
 
-  const coinsWaveLabMult = resolveLabCoinMultiplier(RESOURCE_DROPS_COIN_LAB_SLUGS.coinsWave, input.coinsWaveLabLevel)
+  const coinsWaveLabMult = computeLabCoinMultiplier(RESOURCE_DROPS_COIN_LAB_SLUGS.coinsWave, input.coinsWaveLabLevel)
   const cpwWorkshop = readWorkshopUtilityValue(COINS_WAVE_WORKSHOP_KEY, input.coinsWaveWorkshopLevel)
   const coinsPerWaveMult = cpwWorkshop * globalMult * coinsWaveLabMult
 
@@ -489,10 +489,10 @@ export function buildResourceDropsCoinMultipliers(
     input.targetWave,
   )
 
-  const gtCoinMult = resolveGoldenTowerCoinMult(input.uwLevels.gtMultiplierLevel, input.gtBonusLabLevel)
-  const bhCoinMult = resolveLabCoinMultiplier(RESOURCE_DROPS_COIN_LAB_SLUGS.bhCoin, input.bhCoinLabLevel)
-  const dwCoinMult = resolveLabCoinMultiplier(RESOURCE_DROPS_COIN_LAB_SLUGS.dwCoin, input.dwCoinLabLevel)
-  const slCoinMult = resolveLabCoinMultiplier(RESOURCE_DROPS_COIN_LAB_SLUGS.slCoin, input.slCoinLabLevel)
+  const gtCoinMult = computeGoldenTowerCoinMult(input.uwLevels.gtMultiplierLevel, input.gtBonusLabLevel)
+  const bhCoinMult = computeLabCoinMultiplier(RESOURCE_DROPS_COIN_LAB_SLUGS.bhCoin, input.bhCoinLabLevel)
+  const dwCoinMult = computeLabCoinMultiplier(RESOURCE_DROPS_COIN_LAB_SLUGS.dwCoin, input.dwCoinLabLevel)
+  const slCoinMult = computeLabCoinMultiplier(RESOURCE_DROPS_COIN_LAB_SLUGS.slCoin, input.slCoinLabLevel)
 
   const goldenBotBase = input.useGoldenBotCoinBonus
     ? parseBotStatMultiplier('Golden Bot', 'Bonus', input.goldenBotBonusLevel)
@@ -553,7 +553,7 @@ function estimateKillsDuringGoldenTowerWindow(
 ): number {
   if (!input.uptime || gtUptimeRatio <= 0) return 0
   const ctx = buildWaveContext(input)
-  const waMastery = resolveWaveAcceleratorMasteryForSpawnCap(input.waveAcceleratorMasteryLevel)
+  const waMastery = findWaveAcceleratorMasteryForSpawnCap(input.waveAcceleratorMasteryLevel)
   const midWave = Math.max(1, Math.floor(ctx.targetWave / 2))
   const killsPerWave = killsPerWaveAt(midWave, ctx.enemyBalanceMult, waMastery)
   const gtDur = computeDurations(input.uptime).gt
@@ -656,7 +656,7 @@ export function simulateResourceDropsCoins(
   const ctx = buildWaveContext(input)
   const multipliers = buildResourceDropsCoinMultipliers(input)
   const targetWave = ctx.targetWave
-  const waMastery = resolveWaveAcceleratorMasteryForSpawnCap(input.waveAcceleratorMasteryLevel)
+  const waMastery = findWaveAcceleratorMasteryForSpawnCap(input.waveAcceleratorMasteryLevel)
 
   const introCap = Math.max(0, Math.floor(Number(input.introSprintZeroCoinWaveCap) || 0))
   const { totalKills, rawKillCoins } = accumulateResourceDropsKillYields({

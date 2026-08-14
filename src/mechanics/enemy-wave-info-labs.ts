@@ -2,7 +2,7 @@
  * Enemy research labs on Wave Info rows.
  *
  * Each lab level adds −value% to that row (e.g. common enemy health: −0.4% per level).
- * Uses the same `resolveLabValueAtLevel` totals as the Labs calculator chart.
+ * Uses the same `computeLabValueAtLevel` totals as the Labs calculator chart.
  *
  * Boss HP reads persisted workshop table float: `waveBase × 20 × (1 + tf/−100)`.
  * LabCalculations writes tf as `benefitPct × labValue × hpFixedMult(20)`.
@@ -49,7 +49,7 @@ export const WAVE_INFO_ENEMY_LAB_SLUG_BY_TYPE: Partial<
   Commander: { health: 'vampire_enemy_health', attack: 'vampire_enemy_attack' },
 }
 
-export function resolveEnemyLabLevelFromMap(
+export function computeEnemyLabLevelFromMap(
   slug: string,
   labLevels: Readonly<Record<string, number>>,
   extraKeys: readonly string[] = [],
@@ -92,7 +92,7 @@ export function waveInfoEnemyLabMultiplierForRow(
   const slug = waveInfoEnemyLabSlugForRow(enemyType, stat)
   if (!slug) return 1
 
-  const level = resolveEnemyLabLevelFromMap(slug, labLevels)
+  const level = computeEnemyLabLevelFromMap(slug, labLevels)
   if (level <= 0) return 1
 
   const totalReductionPct = labBenefitAtLevel(slug, level)
@@ -120,7 +120,7 @@ export function waveInfoBossHpTableFloat(
   labBenefitAtLevel: (slug: string, level: number) => number,
   bossHealthLabValuePerLevel: number,
 ): number {
-  const level = resolveEnemyLabLevelFromMap('boss_health', labLevels)
+  const level = computeEnemyLabLevelFromMap('boss_health', labLevels)
   if (level <= 0) return 0
   const benefitPct = labBenefitAtLevel('boss_health', level)
   if (!Number.isFinite(benefitPct) || benefitPct <= 0) return 0

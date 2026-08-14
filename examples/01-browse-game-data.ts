@@ -8,7 +8,7 @@
  * Run it:
  *   npx tsx examples/01-browse-game-data.ts
  */
-import { generatedLabs, type GeneratedLabRecord } from 'thetowersdk/data'
+import { type GeneratedLabRecord, generatedLabs } from 'thetowersdk/data'
 
 console.log(`The game has ${generatedLabs.length} labs.\n`)
 
@@ -25,8 +25,8 @@ const totalCostToMax = (lab: GeneratedLabRecord): number =>
   (lab.levels ?? []).reduce((sum, level) => sum + (level.cost ?? 0), 0)
 
 const ranked = generatedLabs
-  .map((lab) => ({ name: lab.name, type: lab.type ?? '-', total: totalCostToMax(lab) }))
-  .filter((lab) => lab.total > 0)
+  .map(lab => ({ name: lab.name, type: lab.type ?? '-', total: totalCostToMax(lab) }))
+  .filter(lab => lab.total > 0)
   .sort((a, b) => b.total - a.total)
 
 console.log('10 most expensive labs to max (sum of all level costs):')

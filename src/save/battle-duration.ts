@@ -102,7 +102,7 @@ function normalizeDurationMagnitude(value: number, options?: { forceTicks?: bool
 /**
  * Reads battle-history duration fields (`gameTime`, `realTime`, etc.) from NRBF JSON shapes.
  */
-export function extractDurationSecondsFromSave(raw: unknown): number | null {
+export function readDurationSecondsFromSave(raw: unknown): number | null {
   if (raw === null || raw === undefined) {
     return null
   }

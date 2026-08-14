@@ -8,10 +8,10 @@ import { ENEMY_BALANCE_MASTERY_ROWS } from '../data/chart-tables'
 import { type FetchUpgrade, guardianUpgrades } from '../data/index'
 import {
   FETCH_LOOT_OUTCOME_WEIGHTS,
+  getEnemyDropsLabBenefits,
   getExpectedBossRerollShardsPerKill,
   getFetchRerollShardCount,
   getShatterShards,
-  resolveEnemyDropsLabBenefits,
 } from './enemy-drops-game-data'
 import { findLabResearchBySlug } from '../data/index'
 import {
@@ -21,34 +21,34 @@ import {
 } from '../data/index'
 import {
   computeWorkshopCostTotal,
-  resolveWorkshopTotalDiscountPercent,
+  computeWorkshopTotalDiscountPercent,
 } from '../data/index'
 import { getWorkshopCostsByKey } from '../data/index'
 import { bossWaveIntervalForTier, DEFAULT_BOSS_WAVE_INTERVAL } from '../data/enemies'
 import { clamp } from './math'
 import { clampCardGameLevel, clampCardMasteryLevel } from './enemy-drops-context'
 import { formatCompact } from '../internal/tool-formatting'
-import { computeEconomyScaledRoiPct, resolveRoiReferenceCost } from '../internal/roi-scaling'
+import { computeEconomyScaledRoiPct, computeRoiReferenceCost } from '../internal/roi-scaling'
 
 /** Skipped-wave resource multiplier from Wave Skip card description. */
 export const WAVE_SKIP_SKIPPED_WAVE_MULT = 1.10
 
 export { DEFAULT_BOSS_WAVE_INTERVAL } from '../data/enemies'
 
-export function resolveBossWaveInterval(wavesPerBoss: number | null | undefined): number {
+export function computeBossWaveInterval(wavesPerBoss: number | null | undefined): number {
   const parsed = Math.floor(Number(wavesPerBoss))
   if (!Number.isFinite(parsed) || parsed <= 0) return DEFAULT_BOSS_WAVE_INTERVAL
   return clamp(parsed, 1, 10)
 }
 
 /** Boss spawn interval by tier — see {@link BOSS_WAVE_SPAWN_ROWS} in `enemies.ts`. */
-export function resolveBossWaveIntervalFromTier(tier: number): number {
+export function computeBossWaveIntervalFromTier(tier: number): number {
   return bossWaveIntervalForTier(tier)
 }
 
 /** Boss spawn interval (waves per boss) for tiers 1–24. */
 export const BOSS_WAVE_INTERVAL_BY_TIER: readonly number[] = Array.from({ length: MAX_CAMPAIGN_TIER + 1 }, (_, tier) =>
-  tier < 1 ? 0 : resolveBossWaveIntervalFromTier(tier),
+  tier < 1 ? 0 : computeBossWaveIntervalFromTier(tier),
 )
 
 export interface EnemyDropsSimulationInput {
@@ -198,7 +198,7 @@ type EnemyDropsRoiDraft = {
 }
 
 function finalizeEnemyDropsRoiRows(drafts: EnemyDropsRoiDraft[]): EnemyDropsRoiRow[] {
-  const referenceCost = resolveRoiReferenceCost(drafts.map(draft => draft.cost))
+  const referenceCost = computeRoiReferenceCost(drafts.map(draft => draft.cost))
   const rows = drafts.map(draft => ({
     id: draft.id,
     label: draft.label,
@@ -254,7 +254,7 @@ function cellsPerKillUpgradeCoinCost(
 ): number {
   const costs = getWorkshopCostsByKey('WSP_CELLS_PER_KILL_BONUS')
   if (!costs?.length) return 0
-  const discount = resolveWorkshopTotalDiscountPercent(utilityDiscountPct, vaultDiscountPct)
+  const discount = computeWorkshopTotalDiscountPercent(utilityDiscountPct, vaultDiscountPct)
   return computeWorkshopCostTotal(costs, fromLevel, toLevel, discount)
 }
 
@@ -311,7 +311,7 @@ export function buildWaveContext(input: EnemyDropsSimulationInput): EnemyDropsWa
   const skipChance = cardLevelPercent('ws', wsLevel)
   const expectedSkips = waveSkipExpectedSkipsPerProc(wsMastery)
   const wsMult = waveSkipResourceMultiplier(skipChance, expectedSkips)
-  const bossInterval = resolveBossWaveInterval(input.wavesPerBoss)
+  const bossInterval = computeBossWaveInterval(input.wavesPerBoss)
   const bossCount = Math.floor(targetWave / bossInterval)
 
   return {
@@ -333,7 +333,7 @@ export function simulateEnemyDropYields(
   input: EnemyDropsSimulationInput,
 ): EnemyDropsYieldBreakdown {
   const ctx = buildWaveContext(input)
-  const labs = resolveEnemyDropsLabBenefits(input)
+  const labs = getEnemyDropsLabBenefits(input)
 
   const eliteKills = ctx.targetWave * ctx.avgEliteKillsPerWave * ctx.enemyBalanceMult
   const baseCellsPerElite = ctx.avgEliteCellDropsPerKill * ctx.cellsPerKillMult + labs.deathWaveCellsBonus
@@ -410,7 +410,7 @@ function cumulativeFetchStatCost(
 /** Fetch find-chance proc model — each proc rolls one loot table entry. */
 export function simulateFetchDrops(input: EnemyDropsSimulationInput): FetchResourceBreakdown {
   const ctx = buildWaveContext(input)
-  const labs = resolveEnemyDropsLabBenefits(input)
+  const labs = getEnemyDropsLabBenefits(input)
 
   const cdRow = fetchUpgradeAtLevel(input.fetchCooldownLevel)
   const findRow = fetchUpgradeAtLevel(input.fetchFindChanceLevel)
@@ -572,11 +572,11 @@ export function buildRerollShardsLabRoiRows(
   for (let level = start; level < maxLevel; level += 1) {
     const currentPerBoss = getExpectedBossRerollShardsPerKill(
       ctx.tier,
-      resolveEnemyDropsLabBenefits({ ...input, rerollShardsLabLevel: level }).rerollShardsBenefit,
+      getEnemyDropsLabBenefits({ ...input, rerollShardsLabLevel: level }).rerollShardsBenefit,
     )
     const nextPerBoss = getExpectedBossRerollShardsPerKill(
       ctx.tier,
-      resolveEnemyDropsLabBenefits({ ...input, rerollShardsLabLevel: level + 1 }).rerollShardsBenefit,
+      getEnemyDropsLabBenefits({ ...input, rerollShardsLabLevel: level + 1 }).rerollShardsBenefit,
     )
     const currentTotal = ctx.bossCount * currentPerBoss * ctx.waveSkipResourceMult
     const marginalGain = ctx.bossCount * (nextPerBoss - currentPerBoss) * ctx.waveSkipResourceMult
@@ -651,4 +651,4 @@ export {
   getRareModuleDropChance,
 } from './enemy-drops-game-data'
 
-export { resolveTierNumber } from './enemy-drops-context'
+export { computeTierNumber } from './enemy-drops-context'

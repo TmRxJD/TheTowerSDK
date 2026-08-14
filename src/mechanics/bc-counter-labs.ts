@@ -6,13 +6,13 @@
  */
 import { SITE_LAB_SLUG_ALIASES } from '../data/index'
 import { findLabResearchBySlug } from '../data/index'
-import { getSharedToolLabs, resolveLabValueAtLevel, type ToolLabRecord } from '../data/index'
+import { computeLabValueAtLevel, getSharedToolLabs, type ToolLabRecord } from '../data/index'
 import type { TournamentLeague } from '../data/index'
 import {
   type BattleConditionSelection,
   BC_TIER_MIN,
   getBattleConditionLevel,
-  resolveWaveInfoBattleConditions,
+  getWaveInfoBattleConditions,
   WAVE_INFO_RESISTANCE_BC_COUNTER_LAB_SLUGS,
 } from './battle-condition-config'
 import {
@@ -24,7 +24,7 @@ import {
 import { getTotalBcModifierFraction } from './battle-conditions'
 import { clamp } from './math'
 import { getTierBattleConditionLevel } from '../data/index'
-import { deriveCampaignElsReductionHeatLevel } from './tournament-heat-bc'
+import { computeCampaignElsReductionHeatLevel } from './tournament-heat-bc'
 
 /** In-game tooltip: each ELS / Skip-Reduction-Subtract BC level removes 0.5% skip per level (before labs). */
 export const ELS_BC_SKIP_REDUCTION_PCT_PER_LEVEL = 0.5
@@ -64,7 +64,7 @@ function findToolLabBySlug(slug: string): ToolLabRecord | undefined {
 function resolveLabMitigationPct(slug: string, level: number, maxLevel: number): number {
   const lab = findToolLabBySlug(slug)
   if (!lab) return 0
-  return resolveLabValueAtLevel(lab, clamp(Math.floor(level), 0, maxLevel))
+  return computeLabValueAtLevel(lab, clamp(Math.floor(level), 0, maxLevel))
 }
 
 export function bcCounterLabBenefitIncreaseAtLevel(slug: string, level: number): number {
@@ -145,7 +145,7 @@ export function effectiveElsReductionBcLevel(
   return computeElsBcSkipReductionDisplayPct(tierLevel, bcCounterLabLevels)
 }
 
-export function resolveBcCounterLabBenefitIncreaseFraction(
+export function getBcCounterLabBenefitIncreaseFraction(
   counterLabSlug: string,
   specificLevel: number,
   bcCounterLabLevels: Readonly<Record<string, number>>,
@@ -167,7 +167,7 @@ export function resolveBcCounterLabBenefitIncreaseFraction(
 }
 
 /** Global + specific BC counter-lab mitigation % (multiplicative). */
-export function resolveBcCounterLabMitigationPct(
+export function computeBcCounterLabMitigationPct(
   counterLabSlug: string,
   specificLevel: number,
   bcCounterLabLevels: Readonly<Record<string, number>>,
@@ -215,7 +215,7 @@ function resolveElsSkipAdjustments(
   const bcBenefit = workshopSkipLookup
     ? elsWorkshopBcBenefitIncreases(bcCounterLabLevels)
     : elsInRunBcBenefitIncreases(bcCounterLabLevels)
-  const resolved = resolveWaveInfoBattleConditions(
+  const resolved = getWaveInfoBattleConditions(
     tier,
     tournament,
     tournamentLeague,
@@ -229,7 +229,7 @@ function resolveElsSkipAdjustments(
 
   let elsReductionLevel = elsFromConditions > 0 ? elsFromConditions : elsFromTier
   if (workshopSkipLookup && !tournament && tier >= BC_TIER_MIN) {
-    elsReductionLevel = deriveCampaignElsReductionHeatLevel(tier, wave)
+    elsReductionLevel = computeCampaignElsReductionHeatLevel(tier, wave)
   }
 
   return {
@@ -367,7 +367,7 @@ export function inferWorkshopSkipPctFromSkipCount(
 }
 
 /** Workshop skip % from UI skip % or inferred from a tracked skip counter. */
-export function resolveWorkshopSkipPctFromSkipInput(
+export function computeWorkshopSkipPctFromSkipInput(
   wave: number,
   skipPct: number,
   skipCount: number | null | undefined,
@@ -392,7 +392,7 @@ export function resolveWorkshopSkipPctFromSkipInput(
 }
 
 /** Enemy stat level for wave-base lookup with BC counter labs applied. */
-export function resolveEnemyStatLevelWithBcLabs(
+export function computeEnemyStatLevelWithBcLabs(
   wave: number,
   skipPct: number,
   skipCount: number | null | undefined,
@@ -407,7 +407,7 @@ export function resolveEnemyStatLevelWithBcLabs(
     // Enemy stats are looked up at (current wave − skips already banked this run).
     return Math.max(1, w - Math.max(0, Math.floor(skipCount)))
   }
-  const workshopPct = resolveWorkshopSkipPctFromSkipInput(
+  const workshopPct = computeWorkshopSkipPctFromSkipInput(
     w,
     skipPct,
     skipCount,

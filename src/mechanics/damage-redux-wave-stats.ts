@@ -59,7 +59,7 @@ function enabledBattleConditionNames(
 }
 
 /** Basic-enemy wave HP/damage for Damage Reduction (raw wave base — perks applied separately). */
-export function resolveDamageReduxBasicWaveStats(input: DamageReduxWaveStatsInput): {
+export function getDamageReduxBasicWaveStats(input: DamageReduxWaveStatsInput): {
   tier: number
   wave: number
   hp: number

@@ -1,4 +1,4 @@
-import { calculateUptimeRatio } from '../internal/uptime-core'
+import { computeUptimeRatio } from '../internal/uptime-core'
 
 /** Weight profiles for natural-sync decisions (lab, secondary admission, plan objective). */
 export const BOT_MEDAL_SYNC_SCORE_WEIGHTS = {
@@ -113,7 +113,7 @@ export function computeDutyCycleOvershootPenalty(input: {
 
   let penalty = 0
   for (const row of input.rows) {
-    const duty = calculateUptimeRatio(row.durationSeconds, row.cooldownSeconds)
+    const duty = computeUptimeRatio(row.durationSeconds, row.cooldownSeconds)
     if (duty <= targetDuty) continue
     const weight = row.synced ? 2.5 : 1.2
     penalty += (duty - targetDuty) * weight

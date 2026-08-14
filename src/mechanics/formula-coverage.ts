@@ -1,3 +1,10 @@
+/**
+ * How closely each mechanic's formula reproduces the game.
+ *
+ * Published so a consumer can tell how much weight a given number carries:
+ * `confirmed` means checked against the game's own implementation, `partial`
+ * means correct within stated limits, with those limits listed in `gaps`.
+ */
 export type FormulaStatus = 'confirmed' | 'inferred' | 'partial' | 'missing'
 
 export interface MechanicCoverage {

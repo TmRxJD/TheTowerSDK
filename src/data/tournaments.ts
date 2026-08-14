@@ -66,7 +66,7 @@ export interface TournamentLeagueRewardTable {
 
 export type TournamentBattleConditionDefinition = TierBattleConditionDefinition
 
-function createLeagueDefinition(
+function buildLeagueDefinition(
   league: TournamentLeague,
   order: number,
   rewardCurrencies: readonly string[],
@@ -79,7 +79,7 @@ function createLeagueDefinition(
   }
 }
 
-function createPromotionRule(
+function buildPromotionRule(
   league: TournamentLeague,
   promotesTo: TournamentLeague | null,
   demotedRankMin: number | null,
@@ -96,7 +96,7 @@ function createPromotionRule(
   }
 }
 
-function createHeatProfile(
+function buildHeatProfile(
   league: TournamentLeague,
   moreBossesEveryWaves: number,
   randomBattleConditionCount: number,
@@ -111,7 +111,7 @@ function createHeatProfile(
   }
 }
 
-function createRewardRow(
+function buildRewardRow(
   league: TournamentLeague,
   rank: string,
   gems: number,
@@ -192,96 +192,96 @@ export const TOURNAMENT_TICKET_MODEL = {
 } as const satisfies TournamentTicketModel
 
 export const TOURNAMENT_LEAGUES = [
-  createLeagueDefinition('Copper', 1, ['Gems', 'Power Stones']),
-  createLeagueDefinition('Silver', 2, ['Gems', 'Power Stones']),
-  createLeagueDefinition('Gold', 3, ['Gems', 'Power Stones']),
-  createLeagueDefinition('Platinum', 4, ['Gems', 'Power Stones']),
-  createLeagueDefinition('Champion', 5, ['Gems', 'Power Stones']),
-  createLeagueDefinition('Legend', 6, ['Gems', 'Power Stones', 'Keys']),
+  buildLeagueDefinition('Copper', 1, ['Gems', 'Power Stones']),
+  buildLeagueDefinition('Silver', 2, ['Gems', 'Power Stones']),
+  buildLeagueDefinition('Gold', 3, ['Gems', 'Power Stones']),
+  buildLeagueDefinition('Platinum', 4, ['Gems', 'Power Stones']),
+  buildLeagueDefinition('Champion', 5, ['Gems', 'Power Stones']),
+  buildLeagueDefinition('Legend', 6, ['Gems', 'Power Stones', 'Keys']),
 ] as const satisfies readonly TournamentLeagueDefinition[]
 
 export const TOURNAMENT_PROMOTION_RULES = [
-  createPromotionRule('Copper', 'Silver', null, null, true),
-  createPromotionRule('Silver', 'Gold', null, null, true),
-  createPromotionRule('Gold', 'Platinum', null, null, false),
-  createPromotionRule('Platinum', 'Champion', 25, 'Gold', false),
-  createPromotionRule('Champion', 'Legend', 25, 'Platinum', false),
-  createPromotionRule('Legend', null, 25, 'Champion', false),
+  buildPromotionRule('Copper', 'Silver', null, null, true),
+  buildPromotionRule('Silver', 'Gold', null, null, true),
+  buildPromotionRule('Gold', 'Platinum', null, null, false),
+  buildPromotionRule('Platinum', 'Champion', 25, 'Gold', false),
+  buildPromotionRule('Champion', 'Legend', 25, 'Platinum', false),
+  buildPromotionRule('Legend', null, 25, 'Champion', false),
 ] as const satisfies readonly TournamentPromotionRule[]
 
 export const TOURNAMENT_HEAT_PROFILES = [
-  createHeatProfile('Copper', 10, 0),
-  createHeatProfile('Silver', 9, 1),
-  createHeatProfile('Gold', 8, 2, ['Enemy Level Skip Reduction 10%']),
-  createHeatProfile('Platinum', 7, 3, ['Enemy Level Skip Reduction 20%', 'Death Defy Down or Energy Shields Down']),
-  createHeatProfile('Champion', 6, 4, ['Enemy Level Skip Reduction 30%', 'Death Defy Down or Energy Shields Down']),
-  createHeatProfile('Legend', 5, 5, ['Enemy Level Skip Reduction 50%', 'Death Defy Down or Energy Shields Down']),
+  buildHeatProfile('Copper', 10, 0),
+  buildHeatProfile('Silver', 9, 1),
+  buildHeatProfile('Gold', 8, 2, ['Enemy Level Skip Reduction 10%']),
+  buildHeatProfile('Platinum', 7, 3, ['Enemy Level Skip Reduction 20%', 'Death Defy Down or Energy Shields Down']),
+  buildHeatProfile('Champion', 6, 4, ['Enemy Level Skip Reduction 30%', 'Death Defy Down or Energy Shields Down']),
+  buildHeatProfile('Legend', 5, 5, ['Enemy Level Skip Reduction 50%', 'Death Defy Down or Energy Shields Down']),
 ] as const satisfies readonly TournamentHeatProfile[]
 
 export const TOURNAMENT_BATTLE_CONDITION_DEFINITIONS =
   TIER_BATTLE_CONDITION_DEFINITIONS as readonly TournamentBattleConditionDefinition[]
 
 export const TOURNAMENT_REWARD_ROWS = [
-  createRewardRow('Copper', '1', 100, 20),
-  createRewardRow('Copper', '2', 80, 18),
-  createRewardRow('Copper', '3 - 4', 65, 16),
-  createRewardRow('Copper', '5 - 6', 50, 12),
-  createRewardRow('Copper', '7 - 8', 45, 10),
-  createRewardRow('Copper', '9 - 10', 40, 9),
-  createRewardRow('Copper', '11 - 12', 30, 8),
-  createRewardRow('Copper', '13 - 15', 20, 7),
-  createRewardRow('Copper', '16 - 22', 15, 6),
-  createRewardRow('Copper', '23 - 30', 10, 5),
-  createRewardRow('Silver', '1', 200, 40),
-  createRewardRow('Silver', '2', 150, 35),
-  createRewardRow('Silver', '3 - 4', 100, 30),
-  createRewardRow('Silver', '5 - 6', 75, 20),
-  createRewardRow('Silver', '7 - 8', 65, 19),
-  createRewardRow('Silver', '9 - 10', 60, 18),
-  createRewardRow('Silver', '11 - 12', 55, 17),
-  createRewardRow('Silver', '13 - 15', 50, 16),
-  createRewardRow('Silver', '16 - 22', 45, 14),
-  createRewardRow('Silver', '23 - 30', 40, 12),
-  createRewardRow('Gold', '1', 300, 80),
-  createRewardRow('Gold', '2', 250, 70),
-  createRewardRow('Gold', '3 - 4', 200, 60),
-  createRewardRow('Gold', '5 - 6', 150, 40),
-  createRewardRow('Gold', '7 - 8', 125, 30),
-  createRewardRow('Gold', '9 - 10', 100, 28),
-  createRewardRow('Gold', '11 - 12', 90, 26),
-  createRewardRow('Gold', '13 - 15', 80, 24),
-  createRewardRow('Gold', '16 - 22', 70, 22),
-  createRewardRow('Gold', '23 - 30', 50, 20),
-  createRewardRow('Platinum', '1', 400, 160),
-  createRewardRow('Platinum', '2', 350, 140),
-  createRewardRow('Platinum', '3 - 4', 300, 120),
-  createRewardRow('Platinum', '5 - 6', 250, 70),
-  createRewardRow('Platinum', '7 - 8', 225, 65),
-  createRewardRow('Platinum', '9 - 10', 200, 60),
-  createRewardRow('Platinum', '11 - 12', 175, 56),
-  createRewardRow('Platinum', '13 - 15', 150, 53),
-  createRewardRow('Platinum', '16 - 24', 125, 50),
-  createRewardRow('Platinum', '25 - 30', 100, 20),
-  createRewardRow('Champion', '1', 600, 320),
-  createRewardRow('Champion', '2', 500, 300),
-  createRewardRow('Champion', '3 - 4', 400, 280),
-  createRewardRow('Champion', '5 - 6', 350, 200),
-  createRewardRow('Champion', '7 - 8', 325, 175),
-  createRewardRow('Champion', '9 - 10', 300, 150),
-  createRewardRow('Champion', '11 - 12', 275, 125),
-  createRewardRow('Champion', '13 - 15', 250, 100),
-  createRewardRow('Champion', '16 - 24', 200, 90),
-  createRewardRow('Champion', '25 - 30', 150, 20),
-  createRewardRow('Legend', '1', 800, 425, 25),
-  createRewardRow('Legend', '2', 700, 400, 20),
-  createRewardRow('Legend', '3 - 4', 600, 375, 15),
-  createRewardRow('Legend', '5 - 6', 500, 350, 10),
-  createRewardRow('Legend', '7 - 8', 475, 325, 8),
-  createRewardRow('Legend', '9 - 10', 450, 300, 6),
-  createRewardRow('Legend', '11 - 12', 425, 275, 4),
-  createRewardRow('Legend', '13 - 15', 400, 250, 2),
-  createRewardRow('Legend', '16 - 24', 375, 225, 0),
-  createRewardRow('Legend', '25 - 30', 200, 120, 0),
+  buildRewardRow('Copper', '1', 100, 20),
+  buildRewardRow('Copper', '2', 80, 18),
+  buildRewardRow('Copper', '3 - 4', 65, 16),
+  buildRewardRow('Copper', '5 - 6', 50, 12),
+  buildRewardRow('Copper', '7 - 8', 45, 10),
+  buildRewardRow('Copper', '9 - 10', 40, 9),
+  buildRewardRow('Copper', '11 - 12', 30, 8),
+  buildRewardRow('Copper', '13 - 15', 20, 7),
+  buildRewardRow('Copper', '16 - 22', 15, 6),
+  buildRewardRow('Copper', '23 - 30', 10, 5),
+  buildRewardRow('Silver', '1', 200, 40),
+  buildRewardRow('Silver', '2', 150, 35),
+  buildRewardRow('Silver', '3 - 4', 100, 30),
+  buildRewardRow('Silver', '5 - 6', 75, 20),
+  buildRewardRow('Silver', '7 - 8', 65, 19),
+  buildRewardRow('Silver', '9 - 10', 60, 18),
+  buildRewardRow('Silver', '11 - 12', 55, 17),
+  buildRewardRow('Silver', '13 - 15', 50, 16),
+  buildRewardRow('Silver', '16 - 22', 45, 14),
+  buildRewardRow('Silver', '23 - 30', 40, 12),
+  buildRewardRow('Gold', '1', 300, 80),
+  buildRewardRow('Gold', '2', 250, 70),
+  buildRewardRow('Gold', '3 - 4', 200, 60),
+  buildRewardRow('Gold', '5 - 6', 150, 40),
+  buildRewardRow('Gold', '7 - 8', 125, 30),
+  buildRewardRow('Gold', '9 - 10', 100, 28),
+  buildRewardRow('Gold', '11 - 12', 90, 26),
+  buildRewardRow('Gold', '13 - 15', 80, 24),
+  buildRewardRow('Gold', '16 - 22', 70, 22),
+  buildRewardRow('Gold', '23 - 30', 50, 20),
+  buildRewardRow('Platinum', '1', 400, 160),
+  buildRewardRow('Platinum', '2', 350, 140),
+  buildRewardRow('Platinum', '3 - 4', 300, 120),
+  buildRewardRow('Platinum', '5 - 6', 250, 70),
+  buildRewardRow('Platinum', '7 - 8', 225, 65),
+  buildRewardRow('Platinum', '9 - 10', 200, 60),
+  buildRewardRow('Platinum', '11 - 12', 175, 56),
+  buildRewardRow('Platinum', '13 - 15', 150, 53),
+  buildRewardRow('Platinum', '16 - 24', 125, 50),
+  buildRewardRow('Platinum', '25 - 30', 100, 20),
+  buildRewardRow('Champion', '1', 600, 320),
+  buildRewardRow('Champion', '2', 500, 300),
+  buildRewardRow('Champion', '3 - 4', 400, 280),
+  buildRewardRow('Champion', '5 - 6', 350, 200),
+  buildRewardRow('Champion', '7 - 8', 325, 175),
+  buildRewardRow('Champion', '9 - 10', 300, 150),
+  buildRewardRow('Champion', '11 - 12', 275, 125),
+  buildRewardRow('Champion', '13 - 15', 250, 100),
+  buildRewardRow('Champion', '16 - 24', 200, 90),
+  buildRewardRow('Champion', '25 - 30', 150, 20),
+  buildRewardRow('Legend', '1', 800, 425, 25),
+  buildRewardRow('Legend', '2', 700, 400, 20),
+  buildRewardRow('Legend', '3 - 4', 600, 375, 15),
+  buildRewardRow('Legend', '5 - 6', 500, 350, 10),
+  buildRewardRow('Legend', '7 - 8', 475, 325, 8),
+  buildRewardRow('Legend', '9 - 10', 450, 300, 6),
+  buildRewardRow('Legend', '11 - 12', 425, 275, 4),
+  buildRewardRow('Legend', '13 - 15', 400, 250, 2),
+  buildRewardRow('Legend', '16 - 24', 375, 225, 0),
+  buildRewardRow('Legend', '25 - 30', 200, 120, 0),
 ] as const satisfies readonly TournamentRewardRow[]
 
 export const TOURNAMENT_REWARD_TABLES = TOURNAMENT_LEAGUES.map(league => ({
@@ -299,7 +299,7 @@ export function getTournamentRewardsForLeague(league: TournamentLeague): readonl
 
 /**
  * @deprecated Misnamed legacy map — values are league ELS max levels ÷ 100, not flat skip subtracts.
- * Use `GUARANTEED_ELS_REDUCTION_MAX` from `tournament-heat-bc` and `deriveElsReductionHeatLevel`.
+ * Use `GUARANTEED_ELS_REDUCTION_MAX` from `tournament-heat-bc` and `computeElsReductionHeatLevel`.
  */
 export const TOURNAMENT_ENEMY_LEVEL_SKIP_HEAT_SUBTRACT: Readonly<Record<TournamentLeague, number>> = {
   Copper: 0,
@@ -402,7 +402,7 @@ export interface ResolvedTier {
   selection: TierSelectionInput
 }
 
-export function resolveTierSelection(selection: TierSelectionInput): ResolvedTier {
+export function getTierSelection(selection: TierSelectionInput): ResolvedTier {
   if (isTournamentLeague(selection)) {
     return {
       tier: getTournamentLeagueTierBase(selection),

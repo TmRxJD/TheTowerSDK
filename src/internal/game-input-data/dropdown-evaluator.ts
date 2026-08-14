@@ -2,7 +2,7 @@ import { normalizeSharedCardsProgressInputs, type SharedCardsProgressInputs } fr
 import { computeWaveTimeSecondsFromWaCard } from '../../mechanics/enemy-drops-context'
 import { syncUptimeBotsFromTracker, syncUptimeGuardiansFromTracker } from '../shared-uptime-inputs'
 import { syncUptimeResearchLabsFromTracker } from '../shared-tool-inputs-from-research'
-import { GAME_DATA_REGISTRY, type GameDataKey, resolveRegistryGameDataKey } from './game-data-registry'
+import { findRegistryGameDataKey, GAME_DATA_REGISTRY, type GameDataKey } from './game-data-registry'
 import {
   BOT_GAME_INPUT_SPEC_BY_KEY,
   type BotGameDataKey,
@@ -31,7 +31,7 @@ import {
 } from './research-lab-dropdown-math'
 import {
   buildWorkshopEnhancementLevelEntries,
-  buildWorkshopEnhancementOptionLabel,
+  formatWorkshopEnhancementOptionLabel,
 } from './workshop-enhancement-dropdown-math'
 import {
   buildGuardianStatLevelEntries,
@@ -49,27 +49,27 @@ import {
 } from './workshop-stat-dropdown-math'
 import {
   buildModuleLevelEntries,
-  buildModuleLevelOptionLabel,
   buildModuleQuantityEntries,
-  buildModuleQuantityOptionLabel,
   buildModuleRarityLevelEntries,
-  buildModuleRarityOptionLabel,
   buildModuleSubstatRarityEntries,
-  buildModuleSubstatRarityOptionLabel,
+  formatModuleLevelOptionLabel,
+  formatModuleQuantityOptionLabel,
+  formatModuleRarityOptionLabel,
+  formatModuleSubstatRarityOptionLabel,
 } from './module-dropdown-math'
 import {
   buildModuleDiscountEntries,
-  buildModuleDiscountOptionLabel,
+  formatModuleDiscountOptionLabel,
 } from './module-calculator-dropdown-math'
 import {
   buildModuleAssistEfficiencyEntries,
   buildModuleAssistEfficiencyOptionLabel,
   buildUptimeCompressorEntries,
-  buildUptimeCompressorOptionLabel,
   buildUptimeMvnModeEntries,
-  buildUptimeMvnModeOptionLabel,
   buildUptimeWavesPerBossEntries,
-  buildUptimeWavesPerBossOptionLabel,
+  formatUptimeCompressorOptionLabel,
+  formatUptimeMvnModeOptionLabel,
+  formatUptimeWavesPerBossOptionLabel,
 } from './uptime-relic-dropdown-math'
 import {
   buildUptimeSubstatPickEntries,
@@ -79,31 +79,31 @@ import {
 } from './uptime-substat-dropdown-math'
 import {
   buildElsAssistSubstatEfficiencyEntries,
-  buildElsAssistSubstatEfficiencyOptionLabel,
   buildElsModuleSubstatRarityEntries,
   buildElsModuleSubstatRarityOptionLabel,
   buildElsVaultStarEntries,
-  buildElsVaultStarOptionLabel,
   buildElsWorkshopEnhancementDiscountEntries,
-  buildElsWorkshopEnhancementDiscountOptionLabel,
   buildElsWorkshopUtilityDiscountEntries,
-  buildElsWorkshopUtilityDiscountOptionLabel,
   buildElsWorkshopVaultDiscountEntries,
-  buildElsWorkshopVaultDiscountOptionLabel,
   type ElsModuleSubstatLabel,
+  formatElsAssistSubstatEfficiencyOptionLabel,
+  formatElsVaultStarOptionLabel,
+  formatElsWorkshopEnhancementDiscountOptionLabel,
+  formatElsWorkshopUtilityDiscountOptionLabel,
+  formatElsWorkshopVaultDiscountOptionLabel,
 } from './els-dropdown-math'
 import { evaluateExtendedDropdownOptions, isExtendedDropdownKey } from './extended-dropdown-evaluators'
 import {
   buildBotLevelOptionLabel,
 } from './bot-dropdown-math'
 import {
-  buildGuardianLevelOptionLabel,
+  formatGuardianLevelOptionLabel,
   readGuardianUpgradeDisplayAtSourceLevel,
 } from './guardian-dropdown-math'
 import {
   buildGameDropdownHubContext,
+  computeBotGameInputLab,
   type GameDropdownHubContext,
-  resolveBotGameInputLab,
 } from './hub-context'
 import type { StandardDropdownOption } from './types'
 import type { SharedToolInputs } from '../shared-tool-inputs'
@@ -120,7 +120,7 @@ function evaluateBotGameInputOptions(
   const spec = BOT_GAME_INPUT_SPEC_BY_KEY[key]
   if (!spec) return []
 
-  const labLevel = resolveBotGameInputLab(context, key, spec.kind)
+  const labLevel = computeBotGameInputLab(context, key, spec.kind)
   const registryItem = (GAME_DATA_REGISTRY as Record<string, typeof GAME_DATA_REGISTRY[keyof typeof GAME_DATA_REGISTRY] | undefined>)[key]
   if (!registryItem) return []
 
@@ -185,7 +185,7 @@ function evaluateGuardianGameInputOptions(key: GuardianGameDataKey): StandardDro
 
   return registryItem.data.map((entry: { value: number; baseValue: number }) => ({
     value: entry.value,
-    label: buildGuardianLevelOptionLabel(
+    label: formatGuardianLevelOptionLabel(
       readGuardianUpgradeDisplayAtSourceLevel(spec.mapping, spec.kind, entry.value),
     ),
   }))
@@ -207,7 +207,7 @@ function evaluateWorkshopEnhancementLevelOptions(context: GameDropdownHubContext
 
   return buildWorkshopEnhancementLevelEntries(enhancementKey).map(entry => ({
     value: entry.value,
-    label: buildWorkshopEnhancementOptionLabel(entry.value),
+    label: formatWorkshopEnhancementOptionLabel(entry.value),
   }))
 }
 
@@ -261,7 +261,7 @@ function evaluateWorkshopTierLevelOptions(context: GameDropdownHubContext): Stan
 function evaluateModuleRarityOptions(context: GameDropdownHubContext): StandardDropdownOption[] {
   return buildModuleRarityLevelEntries(context.moduleTemplateId).map(entry => ({
     value: entry.value,
-    label: buildModuleRarityOptionLabel(entry.value),
+    label: formatModuleRarityOptionLabel(entry.value),
   }))
 }
 
@@ -271,28 +271,28 @@ function evaluateModuleLevelOptions(context: GameDropdownHubContext): StandardDr
 
   return buildModuleLevelEntries(moduleRarity).map(entry => ({
     value: entry.value,
-    label: buildModuleLevelOptionLabel(entry.value),
+    label: formatModuleLevelOptionLabel(entry.value),
   }))
 }
 
 function evaluateModuleQuantityOptions(): StandardDropdownOption[] {
   return buildModuleQuantityEntries().map(entry => ({
     value: entry.value,
-    label: buildModuleQuantityOptionLabel(entry.value),
+    label: formatModuleQuantityOptionLabel(entry.value),
   }))
 }
 
 function evaluateModuleSubstatRarityOptions(context: GameDropdownHubContext): StandardDropdownOption[] {
   return buildModuleSubstatRarityEntries(context.moduleMaxRarity).map(entry => ({
     value: entry.value,
-    label: buildModuleSubstatRarityOptionLabel(entry.value),
+    label: formatModuleSubstatRarityOptionLabel(entry.value),
   }))
 }
 
 function evaluateModuleDiscountOptions(): StandardDropdownOption[] {
   return buildModuleDiscountEntries().map(entry => ({
     value: entry.value,
-    label: buildModuleDiscountOptionLabel(entry.value),
+    label: formatModuleDiscountOptionLabel(entry.value),
   }))
 }
 
@@ -320,21 +320,21 @@ function evaluateUptimeSubstatPickOptions(context: GameDropdownHubContext): Stan
 function evaluateUptimeMvnModeOptions(): StandardDropdownOption[] {
   return buildUptimeMvnModeEntries().map(entry => ({
     value: entry.value,
-    label: buildUptimeMvnModeOptionLabel(entry.value),
+    label: formatUptimeMvnModeOptionLabel(entry.value),
   }))
 }
 
 function evaluateUptimeCompressorOptions(): StandardDropdownOption[] {
   return buildUptimeCompressorEntries().map(entry => ({
     value: entry.value,
-    label: buildUptimeCompressorOptionLabel(entry.value),
+    label: formatUptimeCompressorOptionLabel(entry.value),
   }))
 }
 
 function evaluateUptimeWavesPerBossOptions(): StandardDropdownOption[] {
   return buildUptimeWavesPerBossEntries().map(entry => ({
     value: entry.value,
-    label: buildUptimeWavesPerBossOptionLabel(entry.value),
+    label: formatUptimeWavesPerBossOptionLabel(entry.value),
   }))
 }
 
@@ -359,35 +359,35 @@ function evaluateElsModuleSubstatRarityOptions(context: GameDropdownHubContext):
 function evaluateElsWorkshopUtilityDiscountOptions(): StandardDropdownOption[] {
   return buildElsWorkshopUtilityDiscountEntries().map(entry => ({
     value: entry.value,
-    label: buildElsWorkshopUtilityDiscountOptionLabel(entry.value),
+    label: formatElsWorkshopUtilityDiscountOptionLabel(entry.value),
   }))
 }
 
 function evaluateElsWorkshopEnhancementDiscountOptions(): StandardDropdownOption[] {
   return buildElsWorkshopEnhancementDiscountEntries().map(entry => ({
     value: entry.value,
-    label: buildElsWorkshopEnhancementDiscountOptionLabel(entry.value),
+    label: formatElsWorkshopEnhancementDiscountOptionLabel(entry.value),
   }))
 }
 
 function evaluateElsWorkshopVaultDiscountOptions(): StandardDropdownOption[] {
   return buildElsWorkshopVaultDiscountEntries().map(entry => ({
     value: entry.value,
-    label: buildElsWorkshopVaultDiscountOptionLabel(entry.value),
+    label: formatElsWorkshopVaultDiscountOptionLabel(entry.value),
   }))
 }
 
 function evaluateElsVaultStarOptions(): StandardDropdownOption[] {
   return buildElsVaultStarEntries().map(entry => ({
     value: entry.value,
-    label: buildElsVaultStarOptionLabel(entry.value),
+    label: formatElsVaultStarOptionLabel(entry.value),
   }))
 }
 
 function evaluateElsAssistSubstatEfficiencyOptions(): StandardDropdownOption[] {
   return buildElsAssistSubstatEfficiencyEntries().map(entry => ({
     value: entry.value,
-    label: buildElsAssistSubstatEfficiencyOptionLabel(entry.value),
+    label: formatElsAssistSubstatEfficiencyOptionLabel(entry.value),
   }))
 }
 
@@ -512,7 +512,7 @@ export function evaluateDropdownOptions(
   key: GameDataKey | string,
   hubContext: GameDropdownHubContext | SharedToolInputs,
 ): StandardDropdownOption[] {
-  const resolvedKey = resolveRegistryGameDataKey(String(key))
+  const resolvedKey = findRegistryGameDataKey(String(key))
   if (!resolvedKey) return []
 
   const context = 'uptimeInputs' in hubContext
@@ -570,7 +570,7 @@ export function evaluateDropdownOptions(
   return evaluateByRegistryKey(resolvedKey, context)
 }
 
-export function resolveGameInputDisplayLabel(
+export function findGameInputDisplayLabel(
   key: GameDataKey | string,
   value: number | null | undefined,
   hubContext: GameDropdownHubContext | SharedToolInputs,

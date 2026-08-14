@@ -10,10 +10,10 @@
  *
  * @example
  * import { decodePlayerInfoSaveBytes } from 'thetowersdk/node'
- * import { extractLabsFromSaveRoot } from 'thetowersdk/save'
+ * import { readLabsFromSaveRoot } from 'thetowersdk/save'
  *
  * const { parsedRoot } = decodePlayerInfoSaveBytes(bytes)
- * const labs = extractLabsFromSaveRoot(parsedRoot)
+ * const labs = readLabsFromSaveRoot(parsedRoot)
  */
 
 // Reading raw values out of a save root, for fields the SDK does not model yet
@@ -34,6 +34,8 @@ export * from './ultimate-weapons'
 export * from './vault'
 export * from './themes'
 export * from './dissonance'
+export * from './favorite-labs'
+export * from './effective-paths-settings'
 export * from './lifetime'
 export * from './killed-by'
 

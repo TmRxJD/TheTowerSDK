@@ -4,10 +4,10 @@ import { isDissonanceEchoResearchLabSlug } from './dissonance-echo-lab-keys'
 import { findLabResearchByDisplayName, findLabResearchBySlug } from '../../data/index'
 import { SITE_LAB_SLUG_ALIASES } from '../../data/index'
 import {
+  computeLabValueAtLevel,
   getLabMaxLevel,
   getSharedToolLabs,
   isLabsTrackerResearchLabName,
-  resolveLabValueAtLevel,
   type ToolLabRecord,
 } from '../../data/index'
 import type { GameDropdownOptionEntry } from './types'
@@ -61,7 +61,7 @@ function resolvePlainResearchLabMaxLevel(slug: string): number {
   return research?.levelMax ?? 30
 }
 
-export function resolveResearchLabMaxLevel(slug: string): number {
+export function computeResearchLabMaxLevel(slug: string): number {
   if (slug === IMPROVE_TRADE_OFF_LAB_SLUG) return MAX_IMPROVE_TRADE_OFF_LAB_LEVEL
   if (slug === 'battle_condition_reduction') return MAX_BC_GLOBAL_REDUCTION_LAB_LEVEL
   if (isBcCounterResearchLabSlug(slug)) {
@@ -71,14 +71,14 @@ export function resolveResearchLabMaxLevel(slug: string): number {
 }
 
 export function buildResearchLabLevelEntries(slug: string): readonly GameDropdownOptionEntry[] {
-  const maxLevel = resolveResearchLabMaxLevel(slug)
+  const maxLevel = computeResearchLabMaxLevel(slug)
   return Array.from({ length: maxLevel + 1 }, (_, value) => ({ value, baseValue: value }))
 }
 
 function formatBcCounterLabMitigationPct(slug: string, level: number): number {
   const lab = findLabRecord(slug)
   if (!lab || level <= 0) return 0
-  const raw = resolveLabValueAtLevel(lab, level)
+  const raw = computeLabValueAtLevel(lab, level)
   if (slug === 'battle_condition_reduction') return raw
   return raw < 1 ? raw : raw * 0.01
 }
@@ -88,7 +88,7 @@ export function buildResearchLabOptionLabel(slug: string, level: number): string
 
   if (slug === IMPROVE_TRADE_OFF_LAB_SLUG) {
     const lab = findLabRecord(slug)
-    const pct = lab ? resolveLabValueAtLevel(lab, level) : level
+    const pct = lab ? computeLabValueAtLevel(lab, level) : level
     return `+${pct}%`
   }
 
@@ -106,7 +106,7 @@ export function buildResearchLabOptionLabel(slug: string, level: number): string
 }
 
 /** Resolve a labs-tracker lab name/display label to a research slug for parametric dropdowns. */
-export function resolveResearchLabSlugFromLabName(labName: string | null | undefined): string | null {
+export function findResearchLabSlugFromLabName(labName: string | null | undefined): string | null {
   if (!labName || !labName.trim()) return null
   if (!isLabsTrackerResearchLabName(labName)) return null
 

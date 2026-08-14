@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   botMedalAmplifyDamageHitSignal,
-  resolveBotMedalRowDamageHitSignal,
+  computeBotMedalRowDamageHitSignal,
 } from './bot-medal-hit-signal'
 
 describe('botMedalAmplifyDamageHitSignal', () => {
@@ -27,16 +27,16 @@ describe('botMedalAmplifyDamageHitSignal', () => {
   })
 })
 
-describe('resolveBotMedalRowDamageHitSignal', () => {
+describe('computeBotMedalRowDamageHitSignal', () => {
   it('passes through non-amplify bots', () => {
-    expect(resolveBotMedalRowDamageHitSignal({
+    expect(computeBotMedalRowDamageHitSignal({
       botLabel: 'Golden Bot',
       baseNumber: 4.2,
     })).toBe(4.2)
   })
 
   it('routes amplify bot through hit multiplier chain', () => {
-    expect(resolveBotMedalRowDamageHitSignal({
+    expect(computeBotMedalRowDamageHitSignal({
       botLabel: 'Amplify Bot',
       baseNumber: 2,
       flameDebuffCoverageFraction: 1,

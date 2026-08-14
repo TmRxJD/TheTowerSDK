@@ -1,9 +1,9 @@
-import { extractDurationSecondsFromSave, formatBattleDurationFromSaveSeconds } from './battle-duration'
-import { buildBattleReportStatFieldsFromSaveEntry } from './battle-report-fields'
+import { formatBattleDurationFromSaveSeconds, readDurationSecondsFromSave } from './battle-duration'
+import { buildBattleReportStatFields } from './battle-report-fields'
 import { normalizeBattleHistorySaveEntry } from './battle-history-normalize'
 import { parseDurationToHours, parseSaveDateTimeToMs } from '../formatting/index'
 import { listImportableBattleRuns } from './battle-history'
-import { resolveKilledByFromSave } from './killed-by'
+import { getKilledByFromSave } from './killed-by'
 import { normalizeTrackerDateText, normalizeTrackerTimeText } from '../internal/tracker-cloud-schemas'
 import { formatCompact } from '../internal/tool-formatting'
 
@@ -147,7 +147,7 @@ export function normalizeBattleRunDateForDedup(value: unknown): string {
 
 /** Normalize duration text or raw save values to the canonical battle-import format. */
 export function normalizeBattleRunDurationForDedup(value: unknown): string {
-  const secondsFromRaw = extractDurationSecondsFromSave(value)
+  const secondsFromRaw = readDurationSecondsFromSave(value)
   if (secondsFromRaw != null) {
     return formatBattleDurationFromSaveSeconds(secondsFromRaw)
   }
@@ -181,7 +181,7 @@ export function buildBattleRunDedupKeyFromBattleEntry(entry: Record<string, unkn
   )
 }
 
-export function buildTrackerRunDataFromBattleHistoryEntry(
+export function buildTrackerRunData(
   entry: Record<string, unknown>,
   context?: { notePrefix?: string },
 ): Record<string, unknown> {
@@ -189,7 +189,7 @@ export function buildTrackerRunDataFromBattleHistoryEntry(
   const battleTimestampMs = parseSaveDateTimeToMs(normalizedEntry.battleDate ?? normalizedEntry.runDate)
   const { runDate, runTime } = normalizeBattleRunDateTimeForDedup(battleTimestampMs)
   const uploadDate = new Date()
-  const durationSeconds = extractDurationSecondsFromSave(normalizedEntry.realTime) ?? 0
+  const durationSeconds = readDurationSecondsFromSave(normalizedEntry.realTime) ?? 0
   const duration = formatBattleDurationFromSaveSeconds(durationSeconds)
   const isTournament = normalizedEntry.isTournament === true
   const notePrefix = context?.notePrefix ?? 'Imported from battle history'
@@ -208,7 +208,7 @@ export function buildTrackerRunDataFromBattleHistoryEntry(
     rerollShards: formatCompact(readNumber(normalizedEntry.rerollShardsEarned)),
     totalDice: formatCompact(readNumber(normalizedEntry.rerollShardsEarned)),
     dice: formatCompact(readNumber(normalizedEntry.rerollShardsEarned)),
-    killedBy: resolveKilledByFromSave(normalizedEntry.killedBy).slice(0, 20),
+    killedBy: getKilledByFromSave(normalizedEntry.killedBy).slice(0, 20),
     note: `${notePrefix} - ${isTournament ? 'Tournament' : 'Regular'} run - Tower: ${selectedTower}`,
     notes: `${notePrefix} - ${isTournament ? 'Tournament' : 'Regular'} run - Tower: ${selectedTower}`,
     date: toIsoDate(uploadDate),
@@ -217,7 +217,7 @@ export function buildTrackerRunDataFromBattleHistoryEntry(
     battleDate: normalizedEntry.battleDate ?? normalizedEntry.runDate,
     reportTimestamp: battleTimestampMs != null ? String(battleTimestampMs) : undefined,
     type: isTournament ? 'Tournament' : 'Farming',
-    ...buildBattleReportStatFieldsFromSaveEntry(normalizedEntry),
+    ...buildBattleReportStatFields(normalizedEntry),
     verified: true,
   }
 }
@@ -250,7 +250,7 @@ export function planBattleReportImport(
       continue
     }
     existingKeys.add(key)
-    importable.push(buildTrackerRunDataFromBattleHistoryEntry(entry))
+    importable.push(buildTrackerRunData(entry))
   }
 
   return {

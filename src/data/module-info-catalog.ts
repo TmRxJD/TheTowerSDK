@@ -75,7 +75,7 @@ function resolveIdentityFromIconName(iconName: string, category: ModuleCategory)
   return null
 }
 
-export function resolveModuleInfoIdentity(infoIndex: number): ModuleInfoIdentity | null {
+export function findModuleInfoIdentity(infoIndex: number): ModuleInfoIdentity | null {
   const override = MODULE_INFO_INDEX_IDENTITY_OVERRIDES[infoIndex]
   if (override) {
     const template = findModuleTemplateByDisplayName(override.name, override.category)
@@ -109,12 +109,12 @@ export function resolveModuleInfoIdentity(infoIndex: number): ModuleInfoIdentity
   return null
 }
 
-export function resolveModuleInfoCatalogRow(infoIndex: number): ModuleInfoCatalogRow | null {
+export function findModuleInfoCatalogRow(infoIndex: number): ModuleInfoCatalogRow | null {
   return MODULE_INFO_CATALOG.find(row => row.infoIndex === infoIndex) ?? null
 }
 
-export function resolveModuleInfoLabel(infoIndex: number): string | null {
-  return resolveModuleInfoIdentity(infoIndex)?.name ?? resolveModuleInfoCatalogRow(infoIndex)?.name ?? null
+export function findModuleInfoLabel(infoIndex: number): string | null {
+  return findModuleInfoIdentity(infoIndex)?.name ?? findModuleInfoCatalogRow(infoIndex)?.name ?? null
 }
 
 export function listModuleInfoCatalogRows(): readonly ModuleInfoCatalogRow[] {

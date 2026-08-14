@@ -1,0 +1,33 @@
+/**
+ * Effective Paths — the regen path's own levels.
+ *
+ * Split out of `effective-paths-regen-plan.ts` so the level schema can name
+ * them without importing the planner: the planner now checks its levels before
+ * planning, and with the definitions still in the planner that was a cycle.
+ * It did not fail subtly — `ZERO_EFFECTIVE_REGEN_LEVELS` was `undefined` at
+ * schema-build time and the whole regen suite stopped loading.
+ *
+ * The damage and economy models already keep their levels in a
+ * `*-levels.ts` of their own; this makes regen the third rather than the
+ * exception.
+ */
+
+/** The levels the regen path reads, over and above the eHP ones it shares. */
+export interface EffectiveRegenLevels {
+  /** Tower Regen lab. */
+  healthRegen: number
+  /** Wall Regen lab. */
+  wallRegen: number
+  /** Health Regen Mastery lab. */
+  healthRegenMastery: number
+  /** Second Wind Mastery lab. */
+  secondWindMastery: number
+}
+
+/** Every regen level at zero. */
+export const ZERO_EFFECTIVE_REGEN_LEVELS: EffectiveRegenLevels = {
+  healthRegen: 0,
+  wallRegen: 0,
+  healthRegenMastery: 0,
+  secondWindMastery: 0,
+}

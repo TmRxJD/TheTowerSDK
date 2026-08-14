@@ -37,7 +37,7 @@ export const UW_SAVE_PLUS_ON_KEY = 'ultimateWeaponPlusOn'
 export const UW_SAVE_WEAPON_UNLOCKED_INDEX_KEY = 'ultimateWeaponUnlockedIndex'
 export const UW_SAVE_TOGGLE_COUNT_KEY = 'ultimateToggleCount'
 
-export function resolveUltimateWeaponSaveSlotNames(): readonly string[] {
+export function getUltimateWeaponSaveSlotNames(): readonly string[] {
   const catalog = listUltimateWeaponCatalogRows()
   if (catalog.length > 0) {
     return catalog.map(row => row.name).filter((name): name is Exclude<typeof name, null | undefined> => name != null)
@@ -59,8 +59,8 @@ export const UW_SAVE_SLOT_WEAPON_NAMES_LEGACY = [
 ] as const
 
 export const UW_SAVE_SLOT_WEAPON_NAMES = (
-  resolveUltimateWeaponSaveSlotNames().length > 0
-    ? resolveUltimateWeaponSaveSlotNames()
+  getUltimateWeaponSaveSlotNames().length > 0
+    ? getUltimateWeaponSaveSlotNames()
     : UW_SAVE_SLOT_WEAPON_NAMES_LEGACY
 ) as readonly string[]
 
@@ -136,16 +136,16 @@ export function mapUwWeaponValueToUltimateWeaponData(weapon: UwWeaponValue): Ult
 }
 
 /** Canonical weapon catalog for import previews and stat-name resolution. */
-export function buildUltimateWeaponCatalogFromStoneChart(): UltimateWeaponData[] {
+export function buildUltimateWeaponCatalog(): UltimateWeaponData[] {
   return Object.values(uwStoneChartData).map(mapUwWeaponValueToUltimateWeaponData)
 }
 
 /** Stone-chart catalog when the UW tracker store has not hydrated weapon metadata yet. */
-export function resolveUltimateWeaponCatalogForHubSync(
+export function getUltimateWeaponCatalogForHubSync(
   storeWeapons: UltimateWeaponData[] = [],
 ): UltimateWeaponData[] {
   if (storeWeapons.length > 0) return storeWeapons
-  const catalog = buildUltimateWeaponCatalogFromStoneChart()
+  const catalog = buildUltimateWeaponCatalog()
   if (catalog.length > 0) return catalog
   return UW_SAVE_SLOT_WEAPON_NAMES.map(name => ({
     name,
@@ -183,7 +183,7 @@ function chunkBaseStatLevels(levels: number[], slotCount: number): number[][] {
   return chunks
 }
 
-export function extractUltimateWeaponsFromSaveRoot(parsedRoot: unknown): UltimateWeaponsSaveExtract | null {
+export function readUltimateWeaponsFromSaveRoot(parsedRoot: unknown): UltimateWeaponsSaveExtract | null {
   if (!parsedRoot || typeof parsedRoot !== 'object') return null
 
   const root = parsedRoot as Record<string, unknown>
@@ -270,7 +270,7 @@ export function buildUltimateWeaponsImportWeaponPreviews(
   extract: UltimateWeaponsSaveExtract,
   storeWeapons: UltimateWeaponData[] = [],
 ): UltimateWeaponsImportWeaponPreview[] {
-  const catalog = buildUltimateWeaponCatalogFromStoneChart()
+  const catalog = buildUltimateWeaponCatalog()
   const weapons = catalog.length ? catalog : storeWeapons
 
   return extract.slots.map(slot => {

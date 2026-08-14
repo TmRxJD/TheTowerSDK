@@ -1,4 +1,4 @@
-import { createNormalizerPersistenceSchema } from './local-persistence-types'
+import { buildNormalizerPersistenceSchema } from './local-persistence-types'
 import { MAX_CAMPAIGN_TIER } from '../data/campaign-tier'
 
 export const DISSONANCE_TYPE_KEYS = ['attack', 'defense', 'utility', 'uw'] as const
@@ -143,4 +143,4 @@ export function normalizeDissonanceCalcsLocalState(
   }
 }
 
-export const dissonanceCalcsLocalPersistenceSchema = createNormalizerPersistenceSchema(normalizeDissonanceCalcsLocalState)
+export const dissonanceCalcsLocalPersistenceSchema = buildNormalizerPersistenceSchema(normalizeDissonanceCalcsLocalState)

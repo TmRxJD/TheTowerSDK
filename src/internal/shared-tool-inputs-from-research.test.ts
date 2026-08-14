@@ -1,25 +1,25 @@
 import { describe, expect, it } from 'vitest'
 import {
-  deriveLabsEconomyFromResearchLevels,
-  deriveModuleEconomyFromResearchLevels,
-  deriveNamedCalculatorLabsFromResearchLevels,
-  deriveWorkshopDiscountsFromResearchLevels,
-  enrichSharedToolInputsFromResearchLevels,
-  resolveResearchLabLevel,
+  computeResearchLabLevel,
+  enrichSharedToolInputs,
+  readLabsEconomyFromResearchLevels,
+  readModuleEconomyFromResearchLevels,
+  readNamedCalculatorLabs,
+  readWorkshopDiscounts,
   syncUptimeResearchLabsFromTracker,
 } from './shared-tool-inputs-from-research'
 import { defaultSharedToolInputs } from './shared-tool-inputs'
 
-describe('resolveResearchLabLevel', () => {
+describe('computeResearchLabLevel', () => {
   it('matches catalog display names and site aliases', () => {
     const levels = {
       'Labs Speed': 12,
       'Labs Coin Discount': 8,
       'Workshop Attack Discount': 5,
     }
-    expect(resolveResearchLabLevel(levels, 'labs_speed')).toBe(12)
-    expect(resolveResearchLabLevel(levels, 'labs_coin_discount')).toBe(8)
-    expect(resolveResearchLabLevel(levels, 'workshop_attack_discount')).toBe(5)
+    expect(computeResearchLabLevel(levels, 'labs_speed')).toBe(12)
+    expect(computeResearchLabLevel(levels, 'labs_coin_discount')).toBe(8)
+    expect(computeResearchLabLevel(levels, 'workshop_attack_discount')).toBe(5)
   })
 
   it('matches dissonant echo slugs by display-name override keys', () => {
@@ -29,7 +29,7 @@ describe('resolveResearchLabLevel', () => {
       'Dissonant Echo - Utility': 2,
       'Dissonant Echo - Ultimate Weapons': 1,
     }
-    const named = deriveNamedCalculatorLabsFromResearchLevels(levels)
+    const named = readNamedCalculatorLabs(levels)
     expect(named.echoLabLevels.attack).toBe(3)
     expect(named.echoLabLevels.defense).toBe(4)
     expect(named.echoLabLevels.utility).toBe(2)
@@ -37,9 +37,9 @@ describe('resolveResearchLabLevel', () => {
   })
 })
 
-describe('deriveLabsEconomyFromResearchLevels', () => {
+describe('readLabsEconomyFromResearchLevels', () => {
   it('maps lab speed and coin discount without clobbering relic settings', () => {
-    const result = deriveLabsEconomyFromResearchLevels(
+    const result = readLabsEconomyFromResearchLevels(
       { 'Labs Speed': 15, 'Labs Coin Discount': 6 },
       { labRelic: 4, speedUp: 2, gemDiscount: 1.5 },
     )
@@ -51,9 +51,9 @@ describe('deriveLabsEconomyFromResearchLevels', () => {
   })
 })
 
-describe('deriveModuleEconomyFromResearchLevels', () => {
+describe('readModuleEconomyFromResearchLevels', () => {
   it('maps module coin/shard discounts and assist efficiency labs', () => {
-    const result = deriveModuleEconomyFromResearchLevels({
+    const result = readModuleEconomyFromResearchLevels({
       'Module Coin Cost': 12,
       'Module Shard Cost': 8,
       'Assist Module Bonus - Cannon': 5,
@@ -68,9 +68,9 @@ describe('deriveModuleEconomyFromResearchLevels', () => {
   })
 })
 
-describe('deriveWorkshopDiscountsFromResearchLevels', () => {
+describe('readWorkshopDiscounts', () => {
   it('maps workshop and enhancement discount researches', () => {
-    const result = deriveWorkshopDiscountsFromResearchLevels({
+    const result = readWorkshopDiscounts({
       'Workshop Attack Discount': 10,
       'Workshop Defense Discount': 11,
       'Workshop Utility Discount': 12,
@@ -102,9 +102,9 @@ describe('syncUptimeResearchLabsFromTracker', () => {
   })
 })
 
-describe('enrichSharedToolInputsFromResearchLevels', () => {
+describe('enrichSharedToolInputs', () => {
   it('preserves explicit workshop discounts when preserveExplicitWorkshopDiscounts is set', () => {
-    const enriched = enrichSharedToolInputsFromResearchLevels({
+    const enriched = enrichSharedToolInputs({
       ...defaultSharedToolInputs,
       workshopDiscounts: {
         ...defaultSharedToolInputs.workshopDiscounts,
@@ -125,7 +125,7 @@ describe('enrichSharedToolInputsFromResearchLevels', () => {
   })
 
   it('fills economy and named calculator labs from researchLabLevels', () => {
-    const enriched = enrichSharedToolInputsFromResearchLevels({
+    const enriched = enrichSharedToolInputs({
       ...defaultSharedToolInputs,
       researchLabLevels: {
         'Labs Speed': 20,
@@ -140,7 +140,12 @@ describe('enrichSharedToolInputsFromResearchLevels', () => {
     expect(enriched.labsEconomy.labDiscount).toBe(9)
     expect(enriched.namedCalculatorLabs.improveTradeOffLabLevel).toBe(4)
     expect(enriched.namedCalculatorLabs.bcReductionLabLevel).toBe(7)
-    expect(enriched.namedCalculatorLabs.bcLabLevel).toBe(8)
+    // The thorns calculator's "BC Reduction Lab Level" is Battle Condition
+    // Reduction. It used to read Ultimate Weapon Durations, so a player with BC
+    // Reduction maxed saw their UW durations instead.
+    expect(enriched.namedCalculatorLabs.bcLabLevel).toBe(7)
+    // Uptime derives its own bcLabLevel and still reads Ultimate Weapon
+    // Durations -- a different field that happens to share a name.
     expect(enriched.uptimeInputs.bcLabLevel).toBe(8)
   })
 })

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { buildStandardTierBattleConditions } from './battle-condition-config'
 import {
   computeEffectiveEnemySkipPctWithBcLabs,
-  resolveEnemyStatLevelWithBcLabs,
+  computeEnemyStatLevelWithBcLabs,
 } from './bc-counter-labs'
 import { getEnemyStatsAtWave } from './enemy-stats-simplified'
 
@@ -49,8 +49,8 @@ describe('BC counter lab visibility', () => {
     const conditions = buildStandardTierBattleConditions(17)
     const wave = 1500
     const skipPct = 75
-    const s0 = resolveEnemyStatLevelWithBcLabs(wave, skipPct, null, lowBc, 17, false, null, conditions)
-    const s10 = resolveEnemyStatLevelWithBcLabs(wave, skipPct, null, highBc, 17, false, null, conditions)
+    const s0 = computeEnemyStatLevelWithBcLabs(wave, skipPct, null, lowBc, 17, false, null, conditions)
+    const s10 = computeEnemyStatLevelWithBcLabs(wave, skipPct, null, highBc, 17, false, null, conditions)
     expect(s10).not.toBe(s0)
   })
 })

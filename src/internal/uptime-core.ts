@@ -1,13 +1,13 @@
 import { clampAssistMultiplierEfficiencyPct } from './assist-module-efficiency'
 import { guardianUpgrades } from '../data/guardian-upgrades'
-import { resolveUwStatSpec, resolveUwStatStoredValue } from './game-input-data/uw-stat-dropdown-math'
+import { computeUwStatStoredValue, findUwStatSpec } from './game-input-data/uw-stat-dropdown-math'
 import { UPTIME_UW_FIELD_MAP } from './shared-uptime-inputs'
 
 export type Compressor = 'Disabled' | 'Epic' | 'Legendary' | 'Mythic' | 'Ancestral'
 export type RarityPick = 'None' | 'Rare' | 'Epic' | 'Legendary' | 'Mythic' | 'Ancestral'
 export type MVNMode = 'Disabled' | 'Epic' | 'Legendary' | 'Mythic' | 'Ancestral'
 
-export function resolveUptimeUwInputNumericValue(
+export function computeUptimeUwInputNumericValue(
   levelKey: string,
   stored: number | null | undefined,
 ): number {
@@ -20,9 +20,9 @@ export function resolveUptimeUwInputNumericValue(
     else continue
 
     if (!statName) continue
-    const spec = resolveUwStatSpec(mapping.weaponName, statName)
+    const spec = findUwStatSpec(mapping.weaponName, statName)
     if (!spec) return Number(stored) || 0
-    return resolveUwStatStoredValue(spec, stored)
+    return computeUwStatStoredValue(spec, stored)
   }
   return Number(stored) || 0
 }
@@ -183,7 +183,7 @@ function bankersRound(n: number): number {
   return floor % 2 === 0 ? floor : floor + 1
 }
 
-export function calculateUptimeRatio(duration: number, cooldown: number): number {
+export function computeUptimeRatio(duration: number, cooldown: number): number {
   const normalizedDuration = Math.max(0, Number(duration) || 0)
   const normalizedCooldown = Math.max(0, Number(cooldown) || 0)
   if (normalizedCooldown <= 0) {
@@ -406,13 +406,13 @@ export function computeEffectiveCooldowns(uptime: UptimeCoreState) {
   }
 
   const base = {
-    gt: resolveUptimeUwInputNumericValue('gtCdLevel', uptime.gtCdLevel),
-    dw: resolveUptimeUwInputNumericValue('dwCdLevel', uptime.dwCdLevel),
-    bh: resolveUptimeUwInputNumericValue('bhCdLevel', uptime.bhCdLevel),
-    ps: resolveUptimeUwInputNumericValue('psCdLevel', uptime.psCdLevel),
-    cf: resolveUptimeUwInputNumericValue('cfCdLevel', uptime.cfCdLevel),
-    sm: resolveUptimeUwInputNumericValue('smCdLevel', uptime.smCdLevel),
-    ilm: resolveUptimeUwInputNumericValue('ilmCdLevel', uptime.ilmCdLevel),
+    gt: computeUptimeUwInputNumericValue('gtCdLevel', uptime.gtCdLevel),
+    dw: computeUptimeUwInputNumericValue('dwCdLevel', uptime.dwCdLevel),
+    bh: computeUptimeUwInputNumericValue('bhCdLevel', uptime.bhCdLevel),
+    ps: computeUptimeUwInputNumericValue('psCdLevel', uptime.psCdLevel),
+    cf: computeUptimeUwInputNumericValue('cfCdLevel', uptime.cfCdLevel),
+    sm: computeUptimeUwInputNumericValue('smCdLevel', uptime.smCdLevel),
+    ilm: computeUptimeUwInputNumericValue('ilmCdLevel', uptime.ilmCdLevel),
     gb: gbBaseCd,
     ab: abBaseCd,
     bb: bbBaseCd,
@@ -510,24 +510,24 @@ export function computeEffectiveCooldowns(uptime: UptimeCoreState) {
 }
 
 export function computeDurations(uptime: UptimeCoreState) {
-  const gtBase = Math.max(0, resolveUptimeUwInputNumericValue('gtDurLevel', uptime.gtDurLevel))
+  const gtBase = Math.max(0, computeUptimeUwInputNumericValue('gtDurLevel', uptime.gtDurLevel))
   const bcReduceSec = (uptime.tournament && uptime.uwBc)
     ? 10 * (1 - 0.02 * (Math.max(0, Math.min(10, uptime.bcLabLevel || 0))))
     : 0
   const gtDur = Math.max(0, gtBase + (Number(uptime.gtDurLab) || 0) + durBonusFor(uptime, 'gt') - bcReduceSec)
-  const bhBase = Math.max(0, resolveUptimeUwInputNumericValue('bhDurLevel', uptime.bhDurLevel))
+  const bhBase = Math.max(0, computeUptimeUwInputNumericValue('bhDurLevel', uptime.bhDurLevel))
   const bhDur = Math.max(0, bhBase + durBonusFor(uptime, 'bh') + (uptime.bhPerk ? 12 : 0) - bcReduceSec)
-  const dwWaves = (Math.max(1, resolveUptimeUwInputNumericValue('dwBaseWavesLevel', uptime.dwBaseWavesLevel))) + dwQtyBonus(uptime) + (uptime.dwPerk ? 1 : 0)
+  const dwWaves = (Math.max(1, computeUptimeUwInputNumericValue('dwBaseWavesLevel', uptime.dwBaseWavesLevel))) + dwQtyBonus(uptime) + (uptime.dwPerk ? 1 : 0)
   const dwDur = Math.max(0, dwWaves * 4)
-  const psBase = Math.max(0, resolveUptimeUwInputNumericValue('psDurLevel', uptime.psDurLevel))
+  const psBase = Math.max(0, computeUptimeUwInputNumericValue('psDurLevel', uptime.psDurLevel))
   const psDur = Math.max(0, psBase + durBonusFor(uptime, 'ps') - bcReduceSec)
-  const cfBase = Math.max(0, resolveUptimeUwInputNumericValue('cfDurLevel', uptime.cfDurLevel))
+  const cfBase = Math.max(0, computeUptimeUwInputNumericValue('cfDurLevel', uptime.cfDurLevel))
   const cfDur = Math.max(0, cfBase + durBonusFor(uptime, 'cf') + (Number(uptime.cfDurLab) || 0) + (uptime.cfDurPerk ? 5 : 0) - bcReduceSec)
-  const smBaseQty = Math.max(SMART_MISSILES_MIN_QTY, resolveUptimeUwInputNumericValue('smQtyLevel', uptime.smQtyLevel))
+  const smBaseQty = Math.max(SMART_MISSILES_MIN_QTY, computeUptimeUwInputNumericValue('smQtyLevel', uptime.smQtyLevel))
   const smWaves = smBaseQty + smQtyBonus(uptime) + (uptime.smQtyPerk ? 4 : 0)
   const smDur = Math.max(0, (smWaves / 5) * 2)
-  const slAngle = Math.max(0, resolveUptimeUwInputNumericValue('slAngleLevel', uptime.slAngleLevel)) + slAngleBonus(uptime)
-  const slQty = Math.max(0, resolveUptimeUwInputNumericValue('slQtyLevel', uptime.slQtyLevel))
+  const slAngle = Math.max(0, computeUptimeUwInputNumericValue('slAngleLevel', uptime.slAngleLevel)) + slAngleBonus(uptime)
+  const slQty = Math.max(0, computeUptimeUwInputNumericValue('slQtyLevel', uptime.slQtyLevel))
   const slUptime = Math.min(100, (slAngle * slQty) / 360 * 100)
   const gbBaseDur = Math.max(0, Number(uptime.gbDurLevel) || 0)
   const gbDurBonus = Math.min(20, Number(uptime.gbDurLab) || 0) * 0.5

@@ -32,12 +32,14 @@ export const indexedEntrySchema = z.object({
 
 // --- tables -----------------------------------------------------------------
 
-export const generatedLabSchema = z.object({
+export const labCatalogRecordSchema = z.object({
   name: z.string(),
-  type: z.string().optional(),
+  category: z.string().nullable(),
+  description: z.string().optional(),
+  unit: z.enum(['percent', 'flat', 'duration', 'multi']).optional(),
   base: z.number().optional(),
-  value: z.unknown().optional(),
-  levels: z.array(levelRowSchema).optional(),
+  value: z.union([z.number(), z.record(z.string(), z.number())]).optional(),
+  levels: z.array(levelRowSchema),
 })
 
 export const workshopDataRowSchema = z.object({
@@ -77,7 +79,7 @@ export const fieldCatalogEntrySchema = z.object({
  * `record` validates each value, `object` validates the export itself.
  */
 export const DATA_TABLE_SCHEMAS = {
-  generatedLabs: { kind: 'array', schema: generatedLabSchema },
+  LAB_CATALOG: { kind: 'array', schema: labCatalogRecordSchema },
   WORKSHOP_DATA: { kind: 'recordOfRecords', schema: workshopDataRowSchema },
   REFERENCE_TABLES: { kind: 'record', schema: referenceTableSchema },
   RELIC_IMPORT_CATALOG: { kind: 'array', schema: relicCatalogEntrySchema },

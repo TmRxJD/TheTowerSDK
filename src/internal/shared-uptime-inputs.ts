@@ -293,7 +293,7 @@ function findGuardianStatIndex(guardianLabel: string, statName: string): number 
   return guardian.statOrder.findIndex(name => name.toLowerCase().includes(normalizedTarget))
 }
 
-export function extractSharedUptimeInputs(data: Record<string, unknown>): SharedUptimeInputs {
+export function readSharedUptimeInputs(data: Record<string, unknown>): SharedUptimeInputs {
   const raw = {
     gtCdLevel: toNullableNumber(data['gtCdLevel']),
     gtCdStat: toRarity(data['gtCdStat']),
@@ -410,7 +410,7 @@ export function applySharedUptimeInputs(
 }
 
 /** Merge shared hub uptime fields onto uptime calculator defaults and build core state. */
-export function resolveUptimeCoreStateFromSharedInputs(
+export function getUptimeCoreStateFromSharedInputs(
   inputs: SharedUptimeInputs,
   baseRecord?: Record<string, unknown>,
 ): UptimeCoreState {
@@ -452,7 +452,7 @@ export function migrateLegacyUptimeLabLevels(labLevels: Record<string, number> |
   for (const [key, value] of Object.entries(labLevels)) {
     if (!(key in out)) out[key] = value
   }
-  return extractSharedUptimeInputs(out)
+  return readSharedUptimeInputs(out)
 }
 
 export function syncUptimeBotsFromTracker(
@@ -488,7 +488,7 @@ export function syncUptimeBotsFromTracker(
     }
   }
 
-  return extractSharedUptimeInputs(next)
+  return readSharedUptimeInputs(next)
 }
 
 export function syncTrackerBotsFromUptime(
@@ -577,7 +577,7 @@ export function syncUptimeGuardiansFromTracker(
     }
   }
 
-  return extractSharedUptimeInputs(next)
+  return readSharedUptimeInputs(next)
 }
 
 export function syncTrackerGuardiansFromUptime(
@@ -627,7 +627,7 @@ function findUwStatIndex(weapon: UwWeaponValue, statName: string): number {
   return (weapon.stats || []).indexOf(stat)
 }
 
-export function extractUwProgressLevels(
+export function readUwProgressLevels(
   progress: Record<string, { starts?: Record<number, number> }>,
   weapons: UwWeaponValue[],
 ): UwProgressLevels {
@@ -725,7 +725,7 @@ export function syncUptimeFromUwProgressLevels(
     applyStat(mapping.angleStatName, mapping.angleLevelKey, mapping.angleStatKey, mapping.angleAssistKey)
   }
 
-  return extractSharedUptimeInputs(next)
+  return readSharedUptimeInputs(next)
 }
 
 export function syncUptimeUwFromTracker(
@@ -757,7 +757,7 @@ export function syncUptimeUwFromTracker(
     applyStat(mapping.angleStatName, mapping.angleLevelKey, mapping.angleStatKey, mapping.angleAssistKey)
   }
 
-  return extractSharedUptimeInputs(next)
+  return readSharedUptimeInputs(next)
 }
 
 export function syncTrackerUwFromUptime(
@@ -807,7 +807,7 @@ export function overlaySharedUptimeInputsFromTracker(
   botLabLevels: Record<string, Record<string, number>> = {},
 ): SharedUptimeInputs {
   return {
-    ...extractSharedUptimeInputs(base),
+    ...readSharedUptimeInputs(base),
     ...syncUptimeBotsFromTracker(botLevels, botLabLevels),
   }
 }
@@ -820,7 +820,7 @@ export function buildSharedUptimeInputsFromSources(input: {
   uwProgress?: Record<string, { starts?: Record<number, number> }>
   uwWeapons?: UwWeaponValue[]
 }): SharedUptimeInputs {
-  let merged = input.uptimeData ? extractSharedUptimeInputs(input.uptimeData) : {}
+  let merged = input.uptimeData ? readSharedUptimeInputs(input.uptimeData) : {}
   if (input.botLevels) {
     merged = overlaySharedUptimeInputsFromTracker(
       merged,
@@ -842,5 +842,5 @@ export function collectUwProgressLevelsFromUptime(
   weapons: UwWeaponValue[],
 ): UwProgressLevels {
   const progress = syncTrackerUwFromUptime(uptime, {}, weapons)
-  return extractUwProgressLevels(progress, weapons)
+  return readUwProgressLevels(progress, weapons)
 }

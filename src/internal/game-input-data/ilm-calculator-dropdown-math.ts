@@ -26,7 +26,7 @@ export function buildIlmAmplifyBotBonusLevelEntries(): readonly GameDropdownOpti
   return entries
 }
 
-export function buildIlmAmplifyBotBonusLevelOptionLabel(level: number): string {
+export function formatIlmAmplifyBotBonusLevelOptionLabel(level: number): string {
   const match = buildIlmAmplifyBotBonusLevelOptions().find(option => option.value === level)
   return match?.title ?? `Level ${level}`
 }
@@ -39,13 +39,13 @@ export function buildIlmModuleSubstatRarityEntries(): readonly GameDropdownOptio
   }))
 }
 
-export function buildIlmModuleSubstatRarityOptionLabel(index: number): string {
+export function formatIlmModuleSubstatRarityOptionLabel(index: number): string {
   const options = buildIlmModuleSubstatRarityOptions()
   const clamped = Math.max(0, Math.min(options.length - 1, Math.floor(Number(index) || 0)))
   return options[clamped]?.title ?? String(index)
 }
 
-export function resolveIlmModuleSubstatRarityIndex(
+export function computeIlmModuleSubstatRarityIndex(
   choice: IlmModuleSubstatRarityChoice | null | undefined,
 ): number {
   const options = buildIlmModuleSubstatRarityOptions()
@@ -53,7 +53,7 @@ export function resolveIlmModuleSubstatRarityIndex(
   return idx >= 0 ? idx : 0
 }
 
-export function resolveIlmModuleSubstatRarityByIndex(index: number): IlmModuleSubstatRarityChoice {
+export function getIlmModuleSubstatRarityByIndex(index: number): IlmModuleSubstatRarityChoice {
   const options = buildIlmModuleSubstatRarityOptions()
   const clamped = Math.max(0, Math.min(options.length - 1, Math.floor(Number(index) || 0)))
   return options[clamped]?.value ?? ILM_MODULE_SUBSTAT_NONE
@@ -78,7 +78,7 @@ export function buildIlmUniqueModuleRarityOptionLabel(
   return options[clamped]?.title ?? String(index)
 }
 
-export function resolveIlmUniqueModuleRarityIndex(
+export function computeIlmUniqueModuleRarityIndex(
   moduleId: IlmUniqueModuleId,
   choice: IlmUniqueModuleRarityChoice | null | undefined,
 ): number {
@@ -87,7 +87,7 @@ export function resolveIlmUniqueModuleRarityIndex(
   return idx >= 0 ? idx : 0
 }
 
-export function resolveIlmUniqueModuleRarityByIndex(
+export function getIlmUniqueModuleRarityByIndex(
   moduleId: IlmUniqueModuleId,
   index: number,
 ): IlmUniqueModuleRarityChoice {
@@ -105,7 +105,7 @@ export function buildIlmShockStackEntries(maxStack = 99): readonly GameDropdownO
   return shockStackEntriesCache
 }
 
-export function buildIlmShockStackOptionLabel(stack: number): string {
+export function formatIlmShockStackOptionLabel(stack: number): string {
   return stack === 0 ? 'No stacks' : `${stack} stack${stack === 1 ? '' : 's'}`
 }
 

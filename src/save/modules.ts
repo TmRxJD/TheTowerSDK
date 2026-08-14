@@ -2,7 +2,7 @@ import type { ModuleCategory, ModuleRarityLabel } from '../data/modules'
 import { MODULE_TEMPLATES } from '../data/modules'
 import { MODULE_RARITIES } from '../data/module-levels'
 import { IMPORT_CATALOG_META } from './catalogs/indexes'
-import { resolveModuleInfoIdentity } from '../data/module-info-catalog'
+import { findModuleInfoIdentity } from '../data/module-info-catalog'
 import { buildModuleEquippedSubstatsFromSave, buildModuleSaveSubstatSlotPreviews, decodeSingleModuleSaveSubstat } from './module-effects-ids'
 import { coerceSaveNumber } from './read-values'
 
@@ -246,10 +246,10 @@ export function isOwnedModuleSaveItem(
 
 function lookupInfoIndexMapping(infoIndex: number | null): { initials: string; category: ModuleCategory; name: string } | null {
   if (infoIndex === null) return null
-  return resolveModuleInfoIdentity(infoIndex)
+  return findModuleInfoIdentity(infoIndex)
 }
 
-export function extractModulesFromSaveRoot(parsedRoot: unknown): ModulesSaveExtract | null {
+export function readModulesFromSaveRoot(parsedRoot: unknown): ModulesSaveExtract | null {
   if (!parsedRoot || typeof parsedRoot !== 'object') return null
 
   const root = parsedRoot as Record<string, unknown>
@@ -402,7 +402,7 @@ export function extractModulesFromSaveRoot(parsedRoot: unknown): ModulesSaveExtr
   return { shards, equipped, inventory, warnings }
 }
 
-export function resolveModuleIdFromSaveItem(
+export function findModuleIdFromSaveItem(
   item: Pick<ModulesSaveEquippedItem | ModulesSaveInventoryItem, 'mappedInitials' | 'category'>,
   templates: readonly ModuleTemplateLike[],
 ): string | null {
@@ -443,7 +443,7 @@ export function buildModulesInventoryImportPreviews(
   return extract.inventory
     .filter(item => item.infoIndex === null || !equippedInfoIndexes.has(item.infoIndex))
     .map(item => {
-      const moduleId = resolveModuleIdFromSaveItem(item, templates)
+      const moduleId = findModuleIdFromSaveItem(item, templates)
       return {
         recordIndex: item.recordIndex,
         category: item.category,
@@ -473,7 +473,7 @@ export function buildModulesEquippedImportPreviews(
   templates: readonly ModuleTemplateLike[],
 ): ModulesEquippedImportSlotPreview[] {
   return extract.equipped.map(item => {
-    const moduleId = resolveModuleIdFromSaveItem(item, templates)
+    const moduleId = findModuleIdFromSaveItem(item, templates)
     const substats = buildModuleImportSubstatPreviews(item.category, item.effects)
     return {
       slotKey: item.slotKey,
@@ -491,7 +491,7 @@ export function buildModulesEquippedImportPreviews(
   })
 }
 
-export function parseModuleTrackerEntryFieldsFromSaveRarity(
+export function parseModuleTrackerEntryFields(
   rarityLabel: string | null,
 ): Pick<ModuleTrackerEntry, 'rarity' | 'level'> | null {
   if (!rarityLabel?.trim()) return null
@@ -549,10 +549,10 @@ export function buildModulesTrackerInventoryImportPayload(
   const grouped = new Map<string, { rarity: ModuleRarityLabel; level: number; count: number }>()
 
   for (const item of extract.inventory) {
-    const moduleId = resolveModuleIdFromSaveItem(item, templates)
+    const moduleId = findModuleIdFromSaveItem(item, templates)
     if (!moduleId || !item.rarityLabel) continue
 
-    const parsed = parseModuleTrackerEntryFieldsFromSaveRarity(item.rarityLabel)
+    const parsed = parseModuleTrackerEntryFields(item.rarityLabel)
     if (!parsed) continue
 
     const existing = grouped.get(moduleId)

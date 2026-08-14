@@ -13,16 +13,16 @@ import type { TournamentLeague } from '../data/tournaments'
 import { WAVE_INFO_WORKSHOP_OFFSETS, WAVE_INFO_WORKSHOP_SCALE } from './wave-info-enemy-constants'
 import { getTotalBcModifierFraction } from './battle-conditions'
 import {
-  deriveElsReductionHeatLevel,
-  deriveRandomHeatBcLevel,
+  computeElsReductionHeatLevel,
+  computeRandomHeatBcLevel,
   tournamentLeagueHasHeat,
 } from './tournament-heat-bc'
 export {
-  deriveBossUltimateHeatFactor,
-  deriveCampaignElsReductionHeatLevel,
-  deriveElsReductionHeatLevel,
-  deriveMoreBossesHeatLevel,
-  deriveRandomHeatBcLevel,
+  computeBossUltimateHeatFactor,
+  computeCampaignElsReductionHeatLevel,
+  computeElsReductionHeatLevel,
+  computeMoreBossesHeatLevel,
+  computeRandomHeatBcLevel,
   getHeatEffectivenessPercent,
   getTournamentHeatProfile,
   GUARANTEED_ELS_REDUCTION_MAX,
@@ -197,8 +197,8 @@ function applyHeatDerivedBattleConditions(
     return conditions.map(row => ({ ...row }))
   }
 
-  const elsLevel = deriveElsReductionHeatLevel(league, wave)
-  const randomLevel = deriveRandomHeatBcLevel(league, wave)
+  const elsLevel = computeElsReductionHeatLevel(league, wave)
+  const randomLevel = computeRandomHeatBcLevel(league, wave)
 
   return conditions.map(row => {
     if (row.name === 'ELS Reduction') {
@@ -256,7 +256,7 @@ export function mergeEnemyStatsBattleConditions(
   return [...byName.values()]
 }
 
-export function resolveBattleConditions(
+export function getBattleConditions(
   tier: number,
   tournament: boolean,
   league: TournamentLeague | null,
@@ -276,7 +276,7 @@ export function resolveBattleConditions(
 }
 
 /** Full tier BC set for Wave Info / skip stat level — not limited to UI panel BCs. */
-export function resolveWaveInfoBattleConditions(
+export function getWaveInfoBattleConditions(
   tier: number,
   tournament: boolean,
   league: TournamentLeague | null,
@@ -299,7 +299,7 @@ function labBenefitIncreaseFraction(raw: number): number {
   return raw >= 1 ? raw * 0.01 : raw
 }
 
-export function resolveBcBenefitIncreaseFractions(
+export function getBcBenefitIncreaseFractions(
   counterLabSlug: string | undefined,
   bcLabLevels: Readonly<Record<string, number>>,
   labBenefitIncreaseAtLevel: (slug: string, level: number) => number,
@@ -326,7 +326,7 @@ export function getEffectiveBcLevel(
   labBenefitIncreaseAtLevel: (slug: string, level: number) => number,
 ): number {
   if (bcLevel <= 0) return 0
-  const { global, specific } = resolveBcBenefitIncreaseFractions(
+  const { global, specific } = getBcBenefitIncreaseFractions(
     counterLabSlug,
     bcLabLevels,
     labBenefitIncreaseAtLevel,

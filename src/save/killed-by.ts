@@ -179,7 +179,7 @@ function tryParseEnumMemberFromTypeName(typeName: string): string | null {
  * Reads the integer enum index from a battle-history `killedBy` field.
  * Returns null when the value is missing or not a recognized shape.
  */
-export function extractKilledByEnumIndex(raw: unknown): number | null {
+export function readKilledByEnumIndex(raw: unknown): number | null {
   if (raw === null || raw === undefined) {
     return null
   }
@@ -233,7 +233,7 @@ export function enemyDisplayNameFromSaveEnumIndex(index: number): string {
  * Resolves a battle-history `killedBy` value (enum object, index, or string) to the
  * canonical display name used elsewhere in the tracker. Does not affect OCR parsing.
  */
-export function resolveKilledByFromSave(raw: unknown, fallback = 'Apathy'): string {
+export function getKilledByFromSave(raw: unknown, fallback = 'Apathy'): string {
   if (typeof raw === 'string') {
     const trimmed = raw.trim()
     return trimmed ? normalizeKilledByDisplayLabel(trimmed) : fallback
@@ -246,7 +246,7 @@ export function resolveKilledByFromSave(raw: unknown, fallback = 'Apathy'): stri
     }
   }
 
-  const index = extractKilledByEnumIndex(raw)
+  const index = readKilledByEnumIndex(raw)
   if (index === null) {
     return fallback
   }

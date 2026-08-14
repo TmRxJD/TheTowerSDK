@@ -1,17 +1,17 @@
 import {
   buildLevelOptions,
+  findRarityLabel,
   getLevelCapForRarity,
   MODULE_RARITIES,
   type ModuleRarity,
-  resolveRarityLabel,
 } from '../../data/index'
 import { getModuleTemplate, type ModuleTemplate } from '../../data/index'
 import { MODULE_SUBSTAT_BASE_RARITIES, type ModuleSubstatCanonicalRarity } from '../../data/index'
 import type { GameDropdownOptionEntry } from './types'
 
-export function resolveModuleRarityIndex(rarity: string | null | undefined): number {
+export function computeModuleRarityIndex(rarity: string | null | undefined): number {
   if (!rarity) return 0
-  const resolved = resolveRarityLabel(rarity)
+  const resolved = findRarityLabel(rarity)
   if (resolved) {
     const idx = MODULE_RARITIES.indexOf(resolved)
     if (idx >= 0) return idx
@@ -20,22 +20,22 @@ export function resolveModuleRarityIndex(rarity: string | null | undefined): num
   return directIdx >= 0 ? directIdx : 0
 }
 
-export function resolveModuleRarityByIndex(index: number): ModuleRarity {
+export function getModuleRarityByIndex(index: number): ModuleRarity {
   const clamped = Math.max(0, Math.min(MODULE_RARITIES.length - 1, Math.floor(Number(index) || 0)))
   return MODULE_RARITIES[clamped]
 }
 
 function moduleRarityRank(rarity: string | null | undefined): number {
   if (!rarity) return 0
-  const resolved = resolveRarityLabel(rarity)
-  if (resolved) return resolveModuleRarityIndex(resolved)
-  return resolveModuleRarityIndex(rarity)
+  const resolved = findRarityLabel(rarity)
+  if (resolved) return computeModuleRarityIndex(resolved)
+  return computeModuleRarityIndex(rarity)
 }
 
 export function normalizeModuleSubstatRarity(
   rarity: string | null | undefined,
 ): ModuleSubstatCanonicalRarity | null {
-  const resolved = resolveRarityLabel(rarity)
+  const resolved = findRarityLabel(rarity)
   if (!resolved) return null
   const base = MODULE_SUBSTAT_BASE_RARITIES.find(candidate => resolved.startsWith(candidate))
   return base ?? null
@@ -43,8 +43,8 @@ export function normalizeModuleSubstatRarity(
 
 export function allowedModuleRaritiesForTemplate(template?: ModuleTemplate | null): readonly ModuleRarity[] {
   if (!template) return MODULE_RARITIES
-  const minIndex = resolveModuleRarityIndex(template.minRarity)
-  const maxIndex = resolveModuleRarityIndex(template.maxRarity)
+  const minIndex = computeModuleRarityIndex(template.minRarity)
+  const maxIndex = computeModuleRarityIndex(template.maxRarity)
   const allowed = MODULE_RARITIES.slice(minIndex, maxIndex + 1)
   const result: ModuleRarity[] = []
 
@@ -82,8 +82,8 @@ export function allowedModuleRaritiesForTemplate(template?: ModuleTemplate | nul
 
 export function buildAllModuleRarityLevelEntries(): readonly GameDropdownOptionEntry[] {
   return MODULE_RARITIES.map(rarity => ({
-    value: resolveModuleRarityIndex(rarity),
-    baseValue: resolveModuleRarityIndex(rarity),
+    value: computeModuleRarityIndex(rarity),
+    baseValue: computeModuleRarityIndex(rarity),
   }))
 }
 
@@ -94,13 +94,13 @@ export function buildModuleRarityLevelEntries(moduleTemplateId?: string | null):
   if (!template) return buildAllModuleRarityLevelEntries()
 
   return allowedModuleRaritiesForTemplate(template).map(rarity => ({
-    value: resolveModuleRarityIndex(rarity),
-    baseValue: resolveModuleRarityIndex(rarity),
+    value: computeModuleRarityIndex(rarity),
+    baseValue: computeModuleRarityIndex(rarity),
   }))
 }
 
-export function buildModuleRarityOptionLabel(rarityIndex: number): string {
-  const rarity = resolveModuleRarityByIndex(rarityIndex)
+export function formatModuleRarityOptionLabel(rarityIndex: number): string {
+  const rarity = getModuleRarityByIndex(rarityIndex)
   return rarity.startsWith('Ancestral ') && rarity !== 'Ancestral' ? `${rarity}★` : rarity
 }
 
@@ -109,7 +109,7 @@ export function buildModuleLevelEntries(moduleRarity: string): readonly GameDrop
   return buildLevelOptions(cap, 1).map(level => ({ value: level, baseValue: level }))
 }
 
-export function buildModuleLevelOptionLabel(level: number): string {
+export function formatModuleLevelOptionLabel(level: number): string {
   return String(level)
 }
 
@@ -120,7 +120,7 @@ export function buildModuleQuantityEntries(): readonly GameDropdownOptionEntry[]
   })
 }
 
-export function buildModuleQuantityOptionLabel(quantity: number): string {
+export function formatModuleQuantityOptionLabel(quantity: number): string {
   return String(quantity)
 }
 
@@ -133,16 +133,16 @@ export function buildModuleSubstatRarityEntries(
     .map((rarity, index) => ({ value: index, baseValue: index }))
 }
 
-export function buildModuleSubstatRarityOptionLabel(rarityIndex: number): string {
+export function formatModuleSubstatRarityOptionLabel(rarityIndex: number): string {
   return MODULE_SUBSTAT_BASE_RARITIES[rarityIndex] ?? String(rarityIndex)
 }
 
-export function resolveModuleSubstatRarityByIndex(index: number): ModuleSubstatCanonicalRarity {
+export function getModuleSubstatRarityByIndex(index: number): ModuleSubstatCanonicalRarity {
   const clamped = Math.max(0, Math.min(MODULE_SUBSTAT_BASE_RARITIES.length - 1, Math.floor(Number(index) || 0)))
   return MODULE_SUBSTAT_BASE_RARITIES[clamped]
 }
 
-export function resolveModuleSubstatRarityIndex(rarity: string | null | undefined): number {
+export function computeModuleSubstatRarityIndex(rarity: string | null | undefined): number {
   const normalized = normalizeModuleSubstatRarity(rarity)
   if (!normalized) return 0
   const idx = MODULE_SUBSTAT_BASE_RARITIES.indexOf(normalized)

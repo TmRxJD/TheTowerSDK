@@ -7,7 +7,7 @@ import {
   getBotStatBoundsByIndex,
   getBotStatValues,
 } from '../data/bots'
-import { createNormalizerPersistenceSchema } from './local-persistence-types'
+import { buildNormalizerPersistenceSchema } from './local-persistence-types'
 
 export const BOTS_MEDAL_SPLITTER_TAB = 'medal-splitter'
 
@@ -237,4 +237,4 @@ export function normalizeBotsCalcsLocalState(
   }
 }
 
-export const botsCalcsLocalPersistenceSchema = createNormalizerPersistenceSchema(normalizeBotsCalcsLocalState)
+export const botsCalcsLocalPersistenceSchema = buildNormalizerPersistenceSchema(normalizeBotsCalcsLocalState)

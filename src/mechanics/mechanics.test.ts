@@ -4,7 +4,7 @@ import { botTowerFactor, getFlameBotDamageReduction, getThunderBotLinger } from 
 import {
   applyTierBattleConditionsToSkipChance,
   buildLevelSkipChanceRaw,
-  calculateLevelSkipChance,
+  computeLevelSkipChance,
   deterministicSkipLevelsFromChance,
   enemyStatLevelFromRunWave,
   estimatedEnemyStatLevelFromSkip,
@@ -37,13 +37,13 @@ import {
   waveInfoDisplayMultipliers,
 } from './enemy-stat-display'
 import {
-  deriveElsReductionHeatLevel,
+  computeElsReductionHeatLevel,
   GUARANTEED_ELS_REDUCTION_MAX,
 } from './tournament-heat-bc'
 import {
+  getTierSelection,
   getTournamentLeagueTierBase,
   normalizeTierSelection,
-  resolveTierSelection,
 } from '../data/index'
 import { getBasicEnemyWaveStats } from '../internal/enemy-wave-stats'
 import { getEnemyWaveStats, getWaveBaseStats } from './enemy-wave-stats'
@@ -86,7 +86,7 @@ import { knockbackImpulseApplied } from './knockback'
 import { titanShockAttackSpeedDivider } from './crowd-control'
 import {
   applyDamageReductionStats,
-  calculateDamageReductionResult,
+  computeDamageReductionResult,
 } from './damage-reduction'
 import {
   getOutOfRoundOrbSpeedPreview,
@@ -163,7 +163,7 @@ describe('mechanics/enemy-level-skip', () => {
   })
 
   it('chance clamps to [0, 1]', () => {
-    const high = calculateLevelSkipChance({
+    const high = computeLevelSkipChance({
       kind: 'attack',
       utilityLevel: 1300,
       enemyLevelSkipEnhancement: 10,
@@ -214,11 +214,11 @@ describe('mechanics/enemy-level-skip', () => {
   })
 
   it('tournament ELS Reduction ramps with wave (heat complement of resistance retention)', () => {
-    expect(deriveElsReductionHeatLevel('Legend', 0)).toBe(3) // 50 × (100 − 95)%
-    expect(deriveElsReductionHeatLevel('Legend', 350)).toBe(25) // 50 × 50% @ wave 350 t14
-    expect(deriveElsReductionHeatLevel('Legend', 1000)).toBe(48) // 50 × (100 − 5)%
-    expect(deriveElsReductionHeatLevel('Legend', 100)).toBeLessThan(
-      deriveElsReductionHeatLevel('Legend', 500),
+    expect(computeElsReductionHeatLevel('Legend', 0)).toBe(3) // 50 × (100 − 95)%
+    expect(computeElsReductionHeatLevel('Legend', 350)).toBe(25) // 50 × 50% @ wave 350 t14
+    expect(computeElsReductionHeatLevel('Legend', 1000)).toBe(48) // 50 × (100 − 5)%
+    expect(computeElsReductionHeatLevel('Legend', 100)).toBeLessThan(
+      computeElsReductionHeatLevel('Legend', 500),
     )
     const adjusted = applyTierBattleConditionsToSkipChance(0.88, {
       elsReductionLevel: 48,
@@ -526,7 +526,7 @@ describe('tournaments/tier selection', () => {
   })
 
   it('resolves league selections as tournament runs', () => {
-    const champion = resolveTierSelection('Champion')
+    const champion = getTierSelection('Champion')
     expect(champion.tournament).toBe(true)
     expect(champion.tier).toBe(12)
     expect(champion.league).toBe('Champion')
@@ -534,14 +534,14 @@ describe('tournaments/tier selection', () => {
   })
 
   it('migrates legacy t11/t14/t17 aliases to leagues', () => {
-    expect(resolveTierSelection(normalizeTierSelection('t11')).league).toBe('Champion')
-    expect(resolveTierSelection(normalizeTierSelection('t14')).league).toBe('Legend')
-    expect(resolveTierSelection(normalizeTierSelection('t17')).league).toBe('Legend')
+    expect(getTierSelection(normalizeTierSelection('t11')).league).toBe('Champion')
+    expect(getTierSelection(normalizeTierSelection('t14')).league).toBe('Legend')
+    expect(getTierSelection(normalizeTierSelection('t17')).league).toBe('Legend')
   })
 
   it('prefers explicit standard tier over legacy tournamentLeague field', () => {
     expect(normalizeTierSelection(12, 'Legend')).toBe(12)
-    expect(resolveTierSelection(normalizeTierSelection(12, 'Legend')).tournament).toBe(false)
+    expect(getTierSelection(normalizeTierSelection(12, 'Legend')).tournament).toBe(false)
     expect(normalizeTierSelection(undefined, 'Legend')).toBe('Legend')
   })
 })
@@ -824,7 +824,7 @@ describe('mechanics/damage-reduction', () => {
   })
 
   it('uses precomputed flame bot mult when provided', () => {
-    const dmg = calculateDamageReductionResult({
+    const dmg = computeDamageReductionResult({
       rawDamage: 100,
       flameBotDamageMult: 0.5,
     })

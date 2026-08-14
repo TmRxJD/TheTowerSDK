@@ -14,6 +14,7 @@
  * Register it with your agent as a stdio server. See mcp/README.md.
  */
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
@@ -22,7 +23,7 @@ const require = createRequire(import.meta.url)
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 
 /** Prefer the built package; fall back to a sibling install. */
-function loadSdk () {
+function loadSdk() {
   const candidates = [path.join(HERE, '..', 'dist'), path.join(HERE, '..', '..', 'thetowersdk', 'dist')]
   for (const base of candidates) {
     if (!fs.existsSync(path.join(base, 'index.js'))) continue
@@ -32,15 +33,74 @@ function loadSdk () {
       node: require(path.join(base, 'node', 'index.js')),
       mechanics: require(path.join(base, 'mechanics', 'index.js')),
       formatting: require(path.join(base, 'formatting', 'index.js')),
+      wiki: require(path.join(base, 'wiki', 'index.js')),
     }
   }
   throw new Error('thetowersdk build not found — run `pnpm build` first')
 }
 
 const sdk = loadSdk()
+
+/**
+ * Wiki pages, cached on disk between calls.
+ *
+ * Two reasons, and the second is the important one. It is a volunteer-run wiki
+ * and an agent reading six pages to answer one question should not fetch six
+ * pages twice. And an agent that has already looked something up should not be
+ * tempted to guess the second time because the lookup felt expensive.
+ */
+const WIKI_CACHE_DIR = path.join(os.tmpdir(), 'thetowersdk-wiki-cache')
+
+/**
+ * An offline library of pages, when one is available.
+ *
+ * `TOWER_WIKI_DIR` points at a directory of `slug.md` files — either a set
+ * fetched ahead of time, or a content package installed separately. It is read
+ * before the network, so an agent with no connection still gets the game
+ * knowledge, and an agent with one does not spend a request on a page that has
+ * not changed.
+ *
+ * It exists because the pages cannot ship inside this package: wiki text is
+ * CC-BY-SA and this package is MIT, so the content has to travel under its own
+ * licence, separately.
+ */
+const WIKI_LOCAL_DIR = process.env.TOWER_WIKI_DIR ?? null
+
+const wikiSlug = title => title.replace(/[^a-z0-9]+/gi, '-').toLowerCase().replace(/^-|-$/g, '')
+
+function localWikiPage(title) {
+  if (!WIKI_LOCAL_DIR) return null
+  const file = path.join(WIKI_LOCAL_DIR, `${wikiSlug(title)}.md`)
+  return fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : null
+}
+
+async function wikiPageMarkdown(title, { refresh = false } = {}) {
+  if (!refresh) {
+    const local = localWikiPage(title)
+    if (local) return { markdown: local, source: 'local' }
+
+    const cacheFile = path.join(WIKI_CACHE_DIR, `${wikiSlug(title)}.md`)
+    if (fs.existsSync(cacheFile)) {
+      return { markdown: fs.readFileSync(cacheFile, 'utf8'), source: 'cache' }
+    }
+  }
+
+  const markdown = await sdk.wiki.fetchFandomPageAsMarkdown(title)
+  fs.mkdirSync(WIKI_CACHE_DIR, { recursive: true })
+  fs.writeFileSync(path.join(WIKI_CACHE_DIR, `${wikiSlug(title)}.md`), markdown, 'utf8')
+  return { markdown, source: 'fandom' }
+}
+
+/** Titles available offline, so `wiki_search` can answer without a network. */
+function localWikiTitles() {
+  if (!WIKI_LOCAL_DIR || !fs.existsSync(WIKI_LOCAL_DIR)) return []
+  return fs.readdirSync(WIKI_LOCAL_DIR)
+    .filter(name => name.endsWith('.md'))
+    .map(name => name.replace(/\.md$/, ''))
+}
 /** Read, not hard-coded, so it cannot drift from the package on a release. */
 const { version: VERSION } = require(path.join(HERE, '..', 'package.json'))
-const ENTRIES = ['data', 'save', 'node', 'mechanics', 'formatting']
+const ENTRIES = ['data', 'save', 'node', 'mechanics', 'formatting', 'wiki']
 
 /** Values are often huge tables; never return one whole by accident. */
 const preview = (value, limit = 40) => {
@@ -53,7 +113,7 @@ const preview = (value, limit = 40) => {
       kind: 'object',
       keyCount: keys.length,
       keys: keys.slice(0, limit),
-      sample: Object.fromEntries(keys.slice(0, 5).map((k) => [k, value[k]])),
+      sample: Object.fromEntries(keys.slice(0, 5).map(k => [k, value[k]])),
     }
   }
   return { kind: typeof value, value }
@@ -76,12 +136,12 @@ const TOOLS = {
       const mod = sdk[entry]
       if (!mod) return { error: `no entry point "${entry}"`, entries: ENTRIES }
       let names = Object.keys(mod).sort()
-      if (filter) names = names.filter((n) => n.toLowerCase().includes(String(filter).toLowerCase()))
+      if (filter) names = names.filter(n => n.toLowerCase().includes(String(filter).toLowerCase()))
       return {
         entry,
         total: Object.keys(mod).length,
         matched: names.length,
-        exports: names.slice(0, 300).map((name) => ({
+        exports: names.slice(0, 300).map(name => ({
           name,
           type: Array.isArray(mod[name]) ? `array(${mod[name].length})` : typeof mod[name],
         })),
@@ -128,7 +188,7 @@ const TOOLS = {
         gzip: wasGzip,
         rootKeys: Object.keys(parsedRoot).length,
         battleRuns: battleRunCount,
-        trackers: discovered.trackers.map((t) => ({ label: t.label, count: t.count, summary: t.summary })),
+        trackers: discovered.trackers.map(t => ({ label: t.label, count: t.count, summary: t.summary })),
       }
     },
   },
@@ -140,7 +200,7 @@ const TOOLS = {
     inputSchema: {
       type: 'object',
       properties: {
-        extractor: { type: 'string', description: 'e.g. extractLabsFromSaveRoot' },
+        extractor: { type: 'string', description: 'e.g. readLabsFromSaveRoot' },
         path: { type: 'string', description: 'Absolute path to playerInfo.dat' },
       },
       required: ['extractor', 'path'],
@@ -155,6 +215,117 @@ const TOOLS = {
       const result = fn(parsedRoot)
       if (result === null) return { extractor, result: null, note: 'this save has no data for that feature' }
       return { extractor, warnings: result?.warnings ?? [], ...preview(result) }
+    },
+  },
+
+  wiki_page: {
+    description:
+      'Read a page of The Tower community wiki as Markdown. USE THIS BEFORE describing how any game '
+      + 'mechanic works. The SDK models the game; it does not explain it, and a formula that looks '
+      + 'self-evident from a table has more than once meant something else. Cheap, cached, and '
+      + 'always better than inferring. Try `wiki_search` first if you are unsure of the exact title.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', description: 'Exact page title, e.g. "Cards" or "Ultimate Weapons"' },
+        section: {
+          type: 'string',
+          description: 'Case-insensitive heading to return alone, when the page is long',
+        },
+        refresh: { type: 'boolean', description: 'Bypass the cache and refetch' },
+      },
+      required: ['title'],
+    },
+    run: async ({ title, section, refresh }) => {
+      let page
+      try {
+        page = await wikiPageMarkdown(title, { refresh: Boolean(refresh) })
+      } catch (error) {
+        // A wrong title is the common case and is recoverable; say so rather
+        // than letting it read as "the wiki has nothing on this".
+        return {
+          error: error instanceof Error ? error.message : String(error),
+          hint: 'titles are case- and spelling-sensitive; run wiki_search to find the real one',
+        }
+      }
+
+      const headings = [...page.markdown.matchAll(/^#{1,3} (.+)$/gm)].map(m => m[1].trim())
+      if (!section) {
+        return {
+          title,
+          source: page.source,
+          sections: headings,
+          markdown: page.markdown.slice(0, 12000),
+          truncated: page.markdown.length > 12000,
+          licence: 'Wiki text is CC-BY-SA. Attribute it if you reproduce it.',
+        }
+      }
+
+      const wanted = String(section).toLowerCase()
+      const lines = page.markdown.split('\n')
+      const start = lines.findIndex(
+        line => /^#{1,3} /.test(line) && line.replace(/^#+ /, '').trim().toLowerCase().includes(wanted),
+      )
+      if (start === -1) return { title, error: `no section matching "${section}"`, sections: headings }
+
+      const depth = (lines[start].match(/^#+/) ?? ['#'])[0].length
+      let end = lines.length
+      for (let i = start + 1; i < lines.length; i += 1) {
+        const match = lines[i].match(/^(#+) /)
+        if (match && match[1].length <= depth) { end = i; break }
+      }
+      return { title, section: lines[start].replace(/^#+ /, ''), markdown: lines.slice(start, end).join('\n') }
+    },
+  },
+
+  wiki_search: {
+    description:
+      'Search the community wiki for pages about a mechanic, and get their exact titles back. Use '
+      + 'this when you do not know what a page is called, rather than guessing a title or searching '
+      + 'the open web.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'What you want to understand, e.g. "wave skip"' },
+        limit: { type: 'number', description: 'How many titles to return (default 10)' },
+      },
+      required: ['query'],
+    },
+    run: async ({ query, limit }) => {
+      const wanted = String(query).toLowerCase()
+      const offline = localWikiTitles().filter(slug => slug.includes(wanted.replace(/\s+/g, '-')))
+      if (offline.length > 0) {
+        // A local library answers without a request, and its slugs are the
+        // titles `wiki_page` will find, so the pair stays usable offline.
+        return {
+          query,
+          source: 'local',
+          results: offline.slice(0, Math.min(Number(limit) || 10, 25)).map(title => ({ title })),
+          next: 'pass one of these titles to wiki_page',
+        }
+      }
+
+      const params = new URLSearchParams({
+        action: 'query',
+        format: 'json',
+        list: 'search',
+        srsearch: String(query),
+        srlimit: String(Math.min(Number(limit) || 10, 25)),
+      })
+      const response = await fetch(`${sdk.wiki.FANDOM_API_URL}?${params}`)
+      if (!response.ok) return { error: `Fandom API HTTP ${response.status}` }
+
+      const payload = await response.json()
+      const hits = payload?.query?.search ?? []
+      return {
+        query,
+        results: hits.map(hit => ({
+          title: hit.title,
+          // Snippets carry search-highlight markup; strip it so the text reads.
+          snippet: String(hit.snippet ?? '').replace(/<[^>]*>/g, ''),
+        })),
+        next: 'pass one of these titles to wiki_page',
+      }
     },
   },
 
@@ -176,7 +347,7 @@ const TOOLS = {
     },
     run: ({ term, domain }) => {
       const matches = sdk.data.lookupGlossary?.(term) ?? []
-      const filtered = domain ? matches.filter((entry) => entry.domain === domain) : matches
+      const filtered = domain ? matches.filter(entry => entry.domain === domain) : matches
       if (!filtered.length) {
         return {
           term,
@@ -185,6 +356,116 @@ const TOOLS = {
         }
       }
       return { term, found: true, ambiguous: filtered.length > 1, meanings: filtered }
+    },
+  },
+
+  plan_effective_path: {
+    description:
+      'Plan an Effective Paths route and show what it left out and why. Every planner reports both '
+      + 'the steps it chose and the candidates it passed over with a reason, so an empty or '
+      + 'surprising path can be read rather than guessed at — a path that stops after one step '
+      + 'usually means everything else is already at its cap, and this says so.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        family: {
+          type: 'string',
+          enum: ['damage', 'economy', 'health', 'regen'],
+          description: 'Which model to plan',
+        },
+        variant: {
+          type: 'string',
+          description:
+            'The path. damage: lab-time, lab-coins, stone, coin, keys. economy: time, coin, stone. '
+            + 'health: lab-time, lab-coins, stone, coin. regen: lab-time, lab-coins. '
+            + 'A variant a planner does not publish is refused by name rather than planning nothing',
+        },
+        steps: { type: 'number', description: 'How many steps to plan (default 10)' },
+        levels: {
+          type: 'object',
+          description:
+            'Starting levels, merged over all-zero. Shape matches the family\'s levels type — use '
+            + 'get_export on ZERO_EFFECTIVE_DAMAGE_LEVELS or ZERO_EFFECTIVE_ECONOMY_LEVELS to see it',
+        },
+      },
+      required: ['family', 'variant'],
+    },
+    run: ({ family, variant, steps, levels }) => {
+      const m = sdk.mechanics
+      const count = steps ?? 10
+
+      /** Merge a caller's partial levels over the model's zero. */
+      const merge = zero => {
+        const merged = { ...zero }
+        for (const [key, value] of Object.entries(levels ?? {})) {
+          merged[key] = merged[key] && typeof merged[key] === 'object'
+            ? { ...merged[key], ...value }
+            : value
+        }
+        return merged
+      }
+
+      const plans = {
+        damage: () => m.planEffectiveDamagePath({
+          config: m.zeroEffectiveDamageConfig(),
+          levels: merge(m.ZERO_EFFECTIVE_DAMAGE_LEVELS),
+          variant,
+          steps: count,
+        }),
+        economy: () => m.planEffectiveEconomyPath({
+          config: m.zeroEffectiveEconomyConfig(),
+          levels: merge(m.ZERO_EFFECTIVE_ECONOMY_LEVELS),
+          variant,
+          steps: count,
+          workshopEnhancementsUnlocked: true,
+        }),
+        health: () => m.planEffectiveHealthPath({
+          config: m.zeroEffectiveHealthConfig(),
+          levels: merge(m.ZERO_EFFECTIVE_HEALTH_LEVELS),
+          variant,
+          steps: count,
+        }),
+        regen: () => {
+          const regen = m.zeroEffectiveRegenConfigSource()
+          return m.planEffectiveRegenPath({
+            config: {
+              healthRegen: regen.healthRegen,
+              card: regen.card,
+              hasSecondWindMastery: regen.hasSecondWindMastery,
+            },
+            eHealth: m.zeroEffectiveHealthConfig(),
+            levels: merge({ ...m.ZERO_EFFECTIVE_HEALTH_LEVELS, ...m.ZERO_EFFECTIVE_REGEN_LEVELS }),
+            variant,
+            steps: count,
+          })
+        },
+      }
+
+      if (!plans[family]) {
+        return { error: `no family "${family}"`, families: Object.keys(plans) }
+      }
+
+      let plan
+      try {
+        plan = plans[family]()
+      }
+      catch (error) {
+        // The variant guards throw by name and list what they do publish, so
+        // the message is more use than a generic failure.
+        return { error: String(error instanceof Error ? error.message : error) }
+      }
+
+      return {
+        family,
+        variant,
+        note:
+          'Planned from a zero config, so the values are shaped rather than real — this is for '
+          + 'reading which candidates a variant offers and why others are out, not for advice.',
+        steps: plan.steps.map(step => ({
+          step: step.step, name: step.name, level: step.level, cost: step.cost, roi: step.roi,
+        })),
+        excluded: plan.excluded,
+      }
     },
   },
 
@@ -207,14 +488,14 @@ const TOOLS = {
 }
 
 /** Zod internals are circular; keep only what is readable. */
-function replacer (key, value) {
+function replacer(key, value) {
   if (key === '_def' || key === 'parent') return undefined
   return value
 }
 
 // ---- stdio JSON-RPC --------------------------------------------------------
 
-const send = (msg) => process.stdout.write(`${JSON.stringify(msg)}\n`)
+const send = msg => process.stdout.write(`${JSON.stringify(msg)}\n`)
 
 const handlers = {
   initialize: () => ({
@@ -229,11 +510,15 @@ const handlers = {
       inputSchema: t.inputSchema,
     })),
   }),
-  'tools/call': ({ name, arguments: args }) => {
+  // Awaited: the wiki tools fetch, and a returned promise would serialise as
+  // `{}` — an empty answer that reads like "the wiki has nothing" rather than
+  // like a bug. Synchronous tools are unaffected.
+  'tools/call': async ({ name, arguments: args }) => {
     const tool = TOOLS[name]
     if (!tool) return { isError: true, content: [{ type: 'text', text: `unknown tool: ${name}` }] }
     try {
-      return { content: [{ type: 'text', text: JSON.stringify(tool.run(args ?? {}), null, 2) }] }
+      const result = await tool.run(args ?? {})
+      return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] }
     } catch (error) {
       return { isError: true, content: [{ type: 'text', text: `${name} failed: ${error.message}` }] }
     }
@@ -241,7 +526,7 @@ const handlers = {
 }
 
 let buffer = ''
-process.stdin.on('data', (chunk) => {
+process.stdin.on('data', chunk => {
   buffer += chunk
   let newline
   while ((newline = buffer.indexOf('\n')) !== -1) {
@@ -264,10 +549,15 @@ process.stdin.on('data', (chunk) => {
       }
       continue
     }
-    try {
-      send({ jsonrpc: '2.0', id: request.id, result: handler(request.params ?? {}) })
-    } catch (error) {
-      send({ jsonrpc: '2.0', id: request.id, error: { code: -32603, message: error.message } })
-    }
+    // `handler` may be async — resolve before replying, and keep rejections on
+    // the same error path a throw already took.
+    Promise.resolve()
+      .then(() => handler(request.params ?? {}))
+      .then(result => send({ jsonrpc: '2.0', id: request.id, result }))
+      .catch(error => send({
+        jsonrpc: '2.0',
+        id: request.id,
+        error: { code: -32603, message: error.message },
+      }))
   }
 })

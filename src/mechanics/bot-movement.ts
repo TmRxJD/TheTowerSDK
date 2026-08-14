@@ -60,7 +60,7 @@ export function stepBotMovementTowardDestination(
   }
 }
 
-export function createInitialBotMovementState(
+export function buildInitialBotMovementState(
   rng: UnityRandom,
   maxDistanceDisplayMeters: number,
   radiusPercentage: number,

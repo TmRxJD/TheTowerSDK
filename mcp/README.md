@@ -36,8 +36,42 @@ Claude Code: `claude mcp add thetowersdk -- node ./node_modules/thetowersdk/mcp/
 | `describe_schema` | The declared shape of a data table, rather than one inferred from a sample row. |
 | `decode_save` | Decode a `playerInfo.dat` and summarise what's in it. |
 | `run_extractor` | Run one `extract*FromSaveRoot` against a save, with its warnings. |
+| `plan_effective_path` | Plan an Effective Paths route, with the candidates it left out and why. |
+| `wiki_search` | Find the community wiki's real page titles for a mechanic. |
+| `wiki_page` | Read a wiki page as Markdown, whole or one section. |
 
 Everything is read-only. `decode_save` and `run_extractor` read the file you name and nothing else.
+
+## Reading the wiki
+
+The SDK supplies data and formulas, not documentation of game behaviour. Confirm how a mechanic
+works against the wiki before describing it.
+
+```
+wiki_search { query: "wave skip" }               page titles matching a topic
+wiki_page   { title: "Cards" }                   sections, plus the page
+wiki_page   { title: "Cards", section: "Costs" } one section
+```
+
+Pages are cached in the OS temp directory after the first read. An unknown title returns an error
+object naming `wiki_search` rather than throwing.
+
+### Working offline
+
+Set `TOWER_WIKI_DIR` to a directory of `slug.md` files and both tools read it **before** the
+network — so an agent with no connection still has the game knowledge:
+
+```bash
+TOWER_WIKI_DIR=/path/to/wiki-pages pnpm mcp
+```
+
+Every response reports `source: "local" | "cache" | "fandom"`, so a local page that may be stale is
+distinguishable from a fresh fetch.
+
+This is the integration point for a separate content package. Wiki text is **CC-BY-SA** and this
+package is MIT, so pages are fetched rather than bundled; content distributed under its own licence
+can be installed alongside and pointed at with `TOWER_WIKI_DIR`. Attribute the wiki if you reproduce
+its text.
 
 ## Notes
 
@@ -49,3 +83,18 @@ one thing — `SR` is both Shrink Ray and Solar Reflector — so pass `domain` w
 
 Results are previewed rather than returned whole. Some tables here have thousands of rows, and
 pulling one into context wholesale is rarely what you wanted.
+
+`plan_effective_path` plans from a **zero config**, so its numbers are shaped rather than real. It is
+for reading which candidates a variant offers and why the others are out — not for advice. Two things
+it is good at:
+
+- **Why a path is short.** Every planner reports the candidates it passed over with a reason, so
+  "one step and then nothing" resolves to *everything else is already at its cap* rather than to a
+  guess. A candidate is planned, or it is explained; never neither.
+- **Which variants exist.** Pass a wrong one and the planner refuses by name and lists what it does
+  publish. `lab` is a damage *band* and `lab-time` is a *variant*, one character apart, and passing
+  the band used to plan nothing at all in silence.
+
+All four families are here — `damage`, `economy`, `health`, `regen` — since `zeroEffectiveHealthConfig`
+gave the last two a complete config to start from. An unknown family is answered with the list of
+real ones rather than a failure.

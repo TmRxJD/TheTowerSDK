@@ -1,11 +1,11 @@
 import { formatModuleSaveEffectDisplayValue } from './module-effects-display'
-import { type ResolvedModuleEffect, resolveModuleEffect } from '../data/module-effect-resolver'
+import { findModuleEffect, type ResolvedModuleEffect } from '../data/module-effect-resolver'
 import {
+  findModuleSaveEffectCategory,
+  findModuleSaveEffectLabel,
+  getModuleSaveEffectTier,
   isKnownModuleSaveEffectId,
   type ModuleSaveSlotCategory,
-  resolveModuleSaveEffectCategory,
-  resolveModuleSaveEffectLabel,
-  resolveModuleSaveEffectTier,
 } from './module-effects-registry'
 import type { ModuleSubstatCanonicalRarity } from '../data/module-substats'
 
@@ -49,7 +49,7 @@ export function decodeSingleEffectId(
 ): DecodedSubstat | null {
   if (!effectId) return null
 
-  const resolved = resolveModuleEffect(effectId)
+  const resolved = findModuleEffect(effectId)
   if (!resolved) {
     return {
       effectId,
@@ -63,13 +63,13 @@ export function decodeSingleEffectId(
     }
   }
 
-  const expectedCategory = resolveModuleSaveEffectCategory(effectId)
+  const expectedCategory = findModuleSaveEffectCategory(effectId)
   let error: string | undefined
   if (expectedCategory && expectedCategory !== category) {
     error = `Effect ${effectId} belongs to ${expectedCategory}, not ${category}`
   }
 
-  const tier = resolveModuleSaveEffectTier(effectId)
+  const tier = getModuleSaveEffectTier(effectId)
 
   return {
     effectId,
@@ -119,7 +119,7 @@ export function decodeModuleSaveEffect(
   const decoded = decodeSingleEffectId(effectId, category)
   if (!decoded) return null
 
-  const resolved = resolveModuleEffect(effectId)
+  const resolved = findModuleEffect(effectId)
 
   return {
     effectId: decoded.effectId,
@@ -134,7 +134,7 @@ export function decodeModuleSaveEffect(
   }
 }
 
-export function resolveModuleEffectForSlot(
+export function findModuleEffectForSlot(
   effectId: number,
   category: ModuleSaveSlotCategory,
 ): ResolvedModuleEffect | null {
@@ -145,7 +145,7 @@ export function resolveModuleEffectForSlot(
     label: decoded.label,
     category,
     rarityName: decoded.rarity,
-    rarityValue: resolveModuleEffect(effectId)?.rarityValue ?? 0,
+    rarityValue: findModuleEffect(effectId)?.rarityValue ?? 0,
     benefitValue: decoded.benefitValue,
     benefitType: decoded.benefitType,
     moduleType: decoded.moduleType,
@@ -153,4 +153,4 @@ export function resolveModuleEffectForSlot(
   }
 }
 
-export { isKnownModuleSaveEffectId, resolveModuleSaveEffectLabel, resolveModuleSaveEffectTier }
+export { isKnownModuleSaveEffectId, findModuleSaveEffectLabel, getModuleSaveEffectTier }

@@ -7,11 +7,12 @@ import {
 import { normalizeLabsTrackerLabLevelMap } from '../internal/labs-persistence'
 import { LAB_RESEARCH_IMPORT_CATALOG, RESEARCH_CATEGORY_ENUM } from '../data/player-stats'
 import {
-  resolveLabResearchCategory,
-  resolveLabResearchDisplayName,
-  resolveLabResearchSlug,
+  findLabResearchCategory,
+  findLabResearchDisplayName,
+  findLabResearchSlug,
 } from '../data/labs-display-overrides'
 import { coerceSaveNumber, toNumberArray } from './read-values'
+import { readFavoriteLabSlugsFromSaveRoot, saveHasFavoriteLabs } from './favorite-labs'
 
 export const LABS_SAVE_UNLOCKED_KEY = 'labsUnlocked'
 export const LABS_SAVE_RESEARCH_LEVEL_KEY = 'researchLevel'
@@ -57,6 +58,10 @@ export interface LabsSaveExtract {
   maxedCount: number
   namedResearchCount: number
   hiddenUnnamedCount: number
+  /** Slugs the player starred in game, from the save's `favoriteLabs` indices. */
+  favoriteLabs: string[]
+  /** False when the save predates the field, so favourites must not be overwritten. */
+  hasFavoriteLabs: boolean
   warnings: string[]
 }
 
@@ -64,12 +69,12 @@ function readSaveBoolean(value: unknown): boolean {
   return value === true
 }
 
-export function resolveLabResearchLevelMax(index: number): number {
+export function computeLabResearchLevelMax(index: number): number {
   return findLabResearchByIndex(index)?.levelMax ?? 99
 }
 
 export function isLabResearchMaxed(index: number, level: number): boolean {
-  return level >= resolveLabResearchLevelMax(index)
+  return level >= computeLabResearchLevelMax(index)
 }
 
 function readResearchRow(
@@ -79,9 +84,9 @@ function readResearchRow(
   labSpeedLevel = 0,
 ): LabResearchSaveRow {
   const catalog = LAB_RESEARCH_IMPORT_CATALOG[index]
-  const displayName = resolveLabResearchDisplayName(index, catalog?.displayName ?? null)
-  const slug = resolveLabResearchSlug(index, catalog?.slug ?? null)
-  const category = resolveLabResearchCategory(index, displayName, catalog?.category ?? null)
+  const displayName = findLabResearchDisplayName(index, catalog?.displayName ?? null)
+  const slug = findLabResearchSlug(index, catalog?.slug ?? null)
+  const category = findLabResearchCategory(index, displayName, catalog?.category ?? null)
   return {
     index,
     level,
@@ -94,7 +99,7 @@ function readResearchRow(
   }
 }
 
-export function extractLabsFromSaveRoot(root: Record<string, unknown> | null): LabsSaveExtract | null {
+export function readLabsFromSaveRoot(root: Record<string, unknown> | null): LabsSaveExtract | null {
   if (!root) return null
 
   const warnings: string[] = []
@@ -164,6 +169,8 @@ export function extractLabsFromSaveRoot(root: Record<string, unknown> | null): L
     maxedCount,
     namedResearchCount,
     hiddenUnnamedCount,
+    favoriteLabs: readFavoriteLabSlugsFromSaveRoot(root),
+    hasFavoriteLabs: saveHasFavoriteLabs(root),
     warnings,
   }
 }
@@ -204,7 +211,7 @@ export function buildCategoryGroupedLabImportRows(researches: LabResearchSaveRow
   for (const row of researches) {
     if (!row.displayName) continue
     const category = researchCategoryLabel(row.category)
-    const levelMax = resolveLabResearchLevelMax(row.index)
+    const levelMax = computeLabResearchLevelMax(row.index)
     const displayRow: LabImportDisplayRow = {
       saveIndex: row.index,
       category,
@@ -240,6 +247,13 @@ export interface LabsTrackerSaveImportPayload {
     startedAt: number | null
   }>
   labSpeedUps: Record<string, number>
+  /**
+   * Starred labs, or null when the save has no favourites field at all.
+   *
+   * Null and [] mean different things: [] is "the player has no favourites and
+   * you should clear yours", null is "this save cannot say, keep what you have".
+   */
+  favoriteLabs: string[] | null
 }
 
 export function buildLabsTrackerImportPayload(extract: LabsSaveExtract): LabsTrackerSaveImportPayload {
@@ -287,5 +301,8 @@ export function buildLabsTrackerImportPayload(extract: LabsSaveExtract): LabsTra
     currentLabLevels,
     activeSlots,
     labSpeedUps,
+    favoriteLabs: extract.hasFavoriteLabs
+      ? extract.favoriteLabs.filter(slug => isLabsTrackerResearchLabName(slug))
+      : null,
   }
 }

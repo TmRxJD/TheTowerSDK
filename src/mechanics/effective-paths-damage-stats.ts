@@ -1,0 +1,496 @@
+/**
+ * Effective Paths — the `EPD_*` damage stat layer.
+ *
+ * Ports of the named damage LAMBDAs in the community "Effective Paths"
+ * spreadsheet. Same conventions as `effective-paths-hp.ts`: percentages arrive
+ * as decimal fractions, a `has*` flag guards its own group, and the sheet's own
+ * decomposition is kept so a reader can line the code up against it.
+ *
+ * These feed two of the composition's factors — `Crit` and `BulletDmgMulti` —
+ * and both are products of several of them, so an error in one is easy to lose
+ * in the total. Each is checked against the live sheet.
+ *
+ * Credit for the original formulas belongs to the Effective Paths maintainers —
+ * see `effective-paths-credits.ts`.
+ */
+
+// ---------------------------------------------------------------------------
+// Critical hits
+// ---------------------------------------------------------------------------
+
+export interface CriticalChanceInput {
+  /** Critical Chance workshop level; a point a level, over a 1% base. */
+  workshopLevel: number
+  hasCriticalChanceCard: boolean
+  /** The card's level, worth a point each over a 4% base. */
+  cardLevel: number
+  hasCardMastery: boolean
+  /** Card mastery level, 0-based as the sheet indexes it. */
+  masteryLevel: number
+  relicPct: number
+  vaultPct: number
+  /** Combined primary and assist substat, already scaled by assist capacity. */
+  substat: number
+}
+
+/**
+ * `EPD_CRIT_CHANCE` — critical chance, as a fraction.
+ *
+ * Purely additive: workshop, relic, vault, substats and the card all
+ * contribute percentage points. Not clamped here — {@link criticalMultiplier}
+ * is where the sheet caps it at 1.
+ */
+export function criticalChance(input: CriticalChanceInput): number {
+  const workshop = 0.01 + 0.01 * input.workshopLevel
+  const card = input.hasCriticalChanceCard
+    ? 0.04 + 0.01 * input.cardLevel
+      + (input.hasCardMastery ? 0.01 * (1 + input.masteryLevel) : 0)
+    : 0
+  return workshop + input.relicPct + input.vaultPct + input.substat + card
+}
+
+export interface CriticalInput {
+  /** Critical chance, as a fraction. */
+  criticalChance: number
+  /** Critical factor — the multiplier a crit applies. */
+  criticalFactor: number
+  /** Super crit chance, as a fraction of crits. */
+  superCritChance: number
+  /** Super crit multiplier. */
+  superCritMultiplier: number
+  /**
+   * The Being Annihilator substat count, which the sheet passes as 5 when the
+   * module has it and 0 when it does not.
+   *
+   * It makes super crits streak: once one lands, the next shot is a super crit
+   * too, so the average shot is worth more than the independent case.
+   */
+  beingAnnihilator: number
+}
+
+/**
+ * `EPD_CRITICAL` — the average damage multiplier from critical hits.
+ *
+ * Without Being Annihilator this is the plain expectation over one shot. With
+ * it, the sheet models a two-state chain — either in a streak or not — and
+ * weights the two by their stationary probabilities.
+ */
+export function criticalMultiplier(input: CriticalInput): number {
+  const chance = Math.min(1, input.criticalChance)
+  const normal = (1 - chance)
+    + chance * input.criticalFactor * (1 - input.superCritChance)
+    + chance * input.criticalFactor * input.superCritChance * input.superCritMultiplier
+
+  const streak = input.beingAnnihilator
+  const streakChance = chance * input.superCritChance
+  const inStreak = streak * streakChance
+  const notInStreak = 1 / (1 + inStreak)
+  const streakShare = inStreak / (1 + inStreak)
+  const streakCrit = input.criticalFactor * input.superCritMultiplier
+
+  return notInStreak * normal + streakShare * streakCrit
+}
+
+/**
+ * `EPD_UWCRITICAL` — the critical multiplier ultimate weapons get.
+ *
+ * A different shape entirely: ultimate weapons take the crit and the super
+ * crit as two independent multiplicative bonuses rather than an expectation
+ * over one shot, and neither is clamped.
+ */
+export function ultimateWeaponCriticalMultiplier(input: Omit<CriticalInput, 'beingAnnihilator'>): number {
+  return (1 + input.criticalChance * input.criticalFactor)
+    * (1 + input.criticalChance * input.superCritChance * input.superCritMultiplier)
+}
+
+// ---------------------------------------------------------------------------
+// Multishot
+// ---------------------------------------------------------------------------
+
+/** `EPD_MSC` — multishot chance. Half a point a workshop level. */
+export function multishotChance(workshopLevel: number, substat: number, vaultPct: number): number {
+  return (workshopLevel * 0.005 + substat) * (1 + vaultPct)
+}
+
+/**
+ * `EPD_MST` — multishot targets.
+ *
+ * A whole number of targets over a base of 2, so a partial substat is floored
+ * rather than rounded — half a target does not exist.
+ */
+export function multishotTargets(workshopLevel: number, substat: number): number {
+  return 2 + workshopLevel + Math.floor(substat)
+}
+
+/** `EPD_MULTISHOT` — the damage multiplier from multishot. */
+export function multishotMultiplier(chance: number, targets: number): number {
+  return 1 + chance * (targets - 1)
+}
+
+// ---------------------------------------------------------------------------
+// Bounce shot
+// ---------------------------------------------------------------------------
+
+/** `EPD_BSC` — bounce shot chance. Eight tenths of a point a workshop level. */
+export function bounceShotChance(workshopLevel: number, substat: number, vaultPct: number): number {
+  return (workshopLevel * 0.008 + substat) * (1 + vaultPct)
+}
+
+/**
+ * `EPD_BST` — bounce shot targets, over a base of 1.
+ *
+ * The sheet's version carries a `VaultBonus` binding that references a name it
+ * has no parameter for. `LET` is lazy and nothing reads it, so it never
+ * evaluates — and the result is right regardless, because bounce shot targets
+ * take no vault bonus. Only the chance does.
+ */
+export function bounceShotTargets(workshopLevel: number, perk: number, substat: number): number {
+  return 1 + workshopLevel + perk + Math.floor(substat)
+}
+
+/**
+ * `EPD_BOUNCESHOT` — the damage multiplier from bounce shot.
+ *
+ * Each bounce has to land for the next to be possible, so bounce `k` is worth
+ * `(chance × astral)^k` and the series is summed rather than multiplied.
+ */
+export function bounceShotMultiplier(
+  chance: number,
+  targets: number,
+  astralDeliverance: number,
+): number {
+  const perBounce = chance * (1 + astralDeliverance)
+  let total = 0
+  for (let bounce = 1; bounce <= Math.floor(targets); bounce++) {
+    total += Math.pow(perBounce, bounce)
+  }
+  return 1 + total
+}
+
+// ---------------------------------------------------------------------------
+// Rapid fire
+// ---------------------------------------------------------------------------
+
+/** `EPD_RFC` — rapid fire chance. Four tenths of a point a workshop level. */
+export function rapidFireChance(workshopLevel: number, substat: number, vaultPct: number): number {
+  return (workshopLevel * 0.004 + substat) * (1 + vaultPct)
+}
+
+/** `EPD_RFD` — rapid fire duration in seconds, over a 0.6s base. */
+export function rapidFireDuration(workshopLevel: number, substat: number): number {
+  return 0.6 + workshopLevel * 0.05 + substat
+}
+
+/**
+ * `EPD_RAPIDFIRE` — the damage multiplier from rapid fire.
+ *
+ * Rapid fire quadruples the fire rate while it lasts, so the multiplier is the
+ * time-weighted average of firing at 4× and at 1×. `bps` is bullets per
+ * second, which decides how much of the time is spent in it.
+ */
+export function rapidFireMultiplier(chance: number, duration: number, bulletsPerSecond: number): number {
+  const active = chance * duration * bulletsPerSecond
+  return (1 + 4 * active) / (1 + active)
+}
+
+// ---------------------------------------------------------------------------
+// Attack speed, range and damage per meter
+// ---------------------------------------------------------------------------
+
+export interface AttackSpeedInput {
+  /** Attack Speed workshop level; 5% a level over a base of 1. */
+  workshopLevel: number
+  /** Workshop enhancement level; 1% a level. */
+  enhancementLevel: number
+  /** Attack Speed lab level; 2% a level. */
+  labLevel: number
+  hasAttackSpeedCard: boolean
+  cardLevel: number
+  hasCardMastery: boolean
+  masteryLevel: number
+  substat: number
+  relicPct: number
+  vaultPct: number
+}
+
+/**
+ * `EPD_ASPD` — attacks per second.
+ *
+ * The substat is added *inside* the enhancement, relic and vault multipliers
+ * but outside the workshop/lab/card product, which is the sheet's own grouping
+ * and not the obvious one.
+ */
+export function attackSpeed(input: AttackSpeedInput): number {
+  const workshop = 1 + 0.05 * input.workshopLevel
+  const lab = 1 + 0.02 * input.labLevel
+  const card = input.hasAttackSpeedCard
+    ? (1.1 + input.cardLevel * 0.15)
+      * (input.hasCardMastery ? 1 + 0.03 * (1 + input.masteryLevel) : 1)
+    : 1
+
+  return (workshop * lab * card + input.substat)
+    * (1 + 0.01 * input.enhancementLevel)
+    * (1 + input.relicPct)
+    * (1 + input.vaultPct)
+}
+
+export interface DamagePerMeterInput {
+  /** Resolved Damage / Meter workshop value, before the sheet's ÷1000. */
+  workshopValue: number
+  enhancementLevel: number
+  /** Damage / Meter lab level; 2% a level. */
+  labLevel: number
+  substat: number
+  relicPct: number
+  vaultPct: number
+  /** The Range card mastery, worth 20% a level. */
+  hasRangeMastery: boolean
+  masteryLevel: number
+}
+
+/**
+ * `EPD_DPM` — damage per meter.
+ *
+ * The workshop table for this stat is stored a thousand times larger than the
+ * value the formula wants, so the divide is part of the stat rather than a
+ * units quirk of the table.
+ */
+export function damagePerMeter(input: DamagePerMeterInput): number {
+  const workshop = input.workshopValue / 1000
+  const lab = 1 + 0.02 * input.labLevel
+  const mastery = input.hasRangeMastery ? 1 + 0.2 * (1 + input.masteryLevel) : 1
+
+  return (workshop * lab + input.substat)
+    * (1 + 0.01 * input.enhancementLevel)
+    * (1 + input.relicPct)
+    * (1 + input.vaultPct)
+    * mastery
+}
+
+/**
+ * `FUDDSMATH_RANGE` — the sheet's correction for range past 80 metres.
+ *
+ * Range stops paying for itself the further out it goes: everything above 80m
+ * is discounted on a straight line up to 16% at 220m, and past 220m it stops
+ * counting at all. The two `ROUND(…, 4)` calls are the sheet's, and they
+ * matter — dropping them moves the answer in the fourth decimal.
+ */
+export function effectiveRangeMetres(range: number): number {
+  const capped = Math.min(range, 220)
+  const overflow = Math.max(capped - 80, 0)
+  const ratio = Math.round((overflow / (220 - 80)) * 1e4) / 1e4
+  const discount = Math.round(ratio * 0.16 * 1e4) / 1e4
+  return range * (1 - discount)
+}
+
+/** `EPD_RANGE` — attack range in metres, after the range correction. */
+export function attackRange(input: {
+  /** Attack Range workshop level; half a metre a level over a 30m base. */
+  workshopLevel: number
+  hasRangeCard: boolean
+  cardLevel: number
+  /** Range lab level; 2% a level. */
+  labLevel: number
+  substat: number
+}): number {
+  const workshop = 30 + 0.5 * input.workshopLevel
+  const card = input.hasRangeCard ? 1.1 + 0.05 * input.cardLevel : 1
+  const lab = 1 + 0.02 * input.labLevel
+  return effectiveRangeMetres(workshop * card * lab + input.substat)
+}
+
+/**
+ * `EPD_RANGEDPM` — what range and damage/meter are worth together.
+ *
+ * Damage per meter only pays on enemies killed away from the tower, so the
+ * player's estimate of how far out they die scales the whole term.
+ */
+export function rangeDamageMultiplier(
+  range: number,
+  damagePerMeterValue: number,
+  killAtRangeShare: number,
+): number {
+  return 1 + range * damagePerMeterValue * killAtRangeShare
+}
+
+// ---------------------------------------------------------------------------
+// Rend armour, perks and the area-of-effect card
+// ---------------------------------------------------------------------------
+
+/**
+ * `EPD_MAXREND` — the maximum rend armour multiplier.
+ *
+ * Without the rend armour ultimate weapon this is 1, not 0 — it multiplies
+ * damage, so the identity is one.
+ */
+export function maxRendArmourMultiplier(input: {
+  hasRend: boolean
+  /** Max Rend Armor Multiplier lab level; a quarter a level. */
+  labLevel: number
+  substat: number
+  enhancementLevel: number
+}): number {
+  if (!input.hasRend) return 1
+  return (8 + input.substat + input.labLevel * 0.25) * (1 + input.enhancementLevel * 0.01)
+}
+
+/**
+ * `EPD_SPB` — what the damage perk is worth.
+ *
+ * 15% a stack, raised by the Standard Perks Bonus lab. The eHP side writes the
+ * same shape inline with its own per-stat rate.
+ */
+export function damagePerkMultiplier(
+  hasPerk: boolean,
+  standardPerksBonusLabLevel: number,
+  quantity: number,
+): number {
+  if (!hasPerk) return 1
+  return (1 + 0.15 * quantity) * (1 + standardPerksBonusLabLevel / 100)
+}
+
+/** The Area of Effect card's bonus by level — the sheet's own literal table. */
+const AOE_CARD_LEVELS = [0.05, 0.08, 0.11, 0.14, 0.17, 0.2, 0.25]
+
+/**
+ * `EPD_AOE_CARD_BOOST` — the Area of Effect card's multiplier.
+ *
+ * Not a formula: the sheet indexes a literal seven-entry table, and the last
+ * step is 5 points where every other step is 3.
+ *
+ * The level is clamped into the table rather than falling out of it. That is
+ * the sheet's own behaviour at the bottom — `INDEX(table, 0)` yields the whole
+ * table, which collapses to its first entry — and it is right for the game
+ * too: an equipped card is at least level 1, so `hasCard` is what decides
+ * whether the boost applies, not the level.
+ */
+export function areaOfEffectCardBoost(hasCard: boolean, cardLevel: number): number {
+  if (!hasCard) return 1
+  const index = Math.min(
+    AOE_CARD_LEVELS.length - 1, Math.max(0, Math.floor(cardLevel) - 1),
+  )
+  return 1 + AOE_CARD_LEVELS[index]
+}
+
+// ---------------------------------------------------------------------------
+// Super Tower and the shockwave
+// ---------------------------------------------------------------------------
+
+/**
+ * `EPD_SUPERTOWER_BONUS` — what the Super Tower card is worth.
+ *
+ * `2.1 + 0.4 × level`, and then a tenth more at level 7 — the sheet writes
+ * that as a string comparison against the card's own `"Lvl 7"` label, and it
+ * does fire: level 6 gives 4.5 and level 7 gives 5, not 4.9.
+ */
+export function superTowerBonus(cardLevel: number, labLevel: number): number {
+  const card = 2.1 + cardLevel * 0.4 + (cardLevel === 7 ? 0.1 : 0)
+  return card * (1 + 0.03 * labLevel)
+}
+
+/** `EPD_SUPERTOWER_COOLDOWN` — seconds between Super Towers, from 45 down. */
+export function superTowerCooldown(hasMastery: boolean, masteryLevel: number): number {
+  return 45 - 3 * (hasMastery ? 1 + masteryLevel : 0)
+}
+
+/**
+ * `EP_UW_SL_COVERAGE` — the share of the field Spotlight covers.
+ *
+ * Each spotlight covers its own angle plus the width of the smallest enemy,
+ * out of a full 360°, and the total cannot pass 100%.
+ */
+export function spotlightCoverage(quantity: number, angleDegrees: number): number {
+  const ENEMY_MIN_SIZE_DEGREES = 4
+  return Math.min(1, quantity * (angleDegrees + ENEMY_MIN_SIZE_DEGREES) / 360)
+}
+
+/**
+ * `EPD_SUPERTOWER_EFFECTIVE_BONUS` — the Super Tower card's damage multiplier.
+ *
+ * The card fires for 15 seconds out of every cooldown, so its bonus is
+ * pro-rated by how much of the time it is up. The mastery adds 35% of the
+ * bonus *above 1* again — `1 + 35% × (bonus − 1)` — but only over the part of
+ * the field Spotlight lights.
+ *
+ * The sheet's version declares a `has_sl` parameter and ignores it, reading
+ * `eDamage!$BH$33` instead. Every one of its five call sites passes that same
+ * cell in, so it cannot change an answer the sheet produces — but the function
+ * is not callable with the parameter meaning anything. This takes it and means
+ * it, which is the same thing for every call the sheet makes.
+ */
+export function superTowerEffectiveBonus(input: {
+  hasCard: boolean
+  hasMastery: boolean
+  bonus: number
+  cooldownSeconds: number
+  hasSpotlight: boolean
+  spotlightQuantity: number
+  spotlightAngleDegrees: number
+}): number {
+  if (!input.hasCard) return 1
+
+  const masteryBonus = input.hasMastery ? 1 + 0.35 * (input.bonus - 1) : 1
+  const coverage = input.hasSpotlight
+    ? spotlightCoverage(input.spotlightQuantity, input.spotlightAngleDegrees)
+    : 0
+  const withSpotlight = input.bonus * (1 + (masteryBonus - 1) * coverage)
+
+  return 1 + (15 * (withSpotlight - 1)) / input.cooldownSeconds
+}
+
+/**
+ * `EPD_SUPERTOWER_EFFECTIVE_UWBONUS` — what Super Tower's mastery gives
+ * ultimate weapons.
+ *
+ * The card and its mastery hit different things: the **card** multiplies bullet
+ * damage, and the **mastery** passes 35% of that multiplier to ultimate
+ * weapons. So the weapons' multiplier is `35% × bonus` outright, and the `− 1`
+ * turns it into a bonus above 1 for the same `15 / cooldown` pro-rating
+ * {@link superTowerEffectiveBonus} uses. The two look like they disagree and
+ * do not — they are computing different quantities.
+ *
+ * The multiplier cannot land below 1 in practice. A mastery can only be
+ * unlocked on a maxed card, so `hasMastery` implies card level 7, and
+ * {@link superTowerBonus} returns at least 5 there — `35% × 5 = 1.75`.
+ */
+export function superTowerEffectiveUltimateBonus(input: {
+  hasCard: boolean
+  hasMastery: boolean
+  bonus: number
+  cooldownSeconds: number
+}): number {
+  if (!input.hasCard || !input.hasMastery) return 1
+  return 1 + (15 * (0.35 * input.bonus - 1)) / input.cooldownSeconds
+}
+
+/**
+ * `EPD_SHOCKWAVE_DAMAGE` — what the shockwave adds to the cannon's damage.
+ *
+ * The shockwave repeats on a frequency the workshop shortens and the vault and
+ * substats shorten further, floored at 7 seconds before the wave's own size is
+ * added back. Faster shockwaves mean more of the cannon's bonus lands, hence
+ * the `7 / frequency` ratio.
+ *
+ * With no cannon bonus at all there is nothing to spread, and the sheet
+ * returns 1 rather than dividing.
+ */
+export function shockwaveDamage(input: {
+  /** The cannon assist bonus this spreads — the sheet's `acp`. */
+  cannonBonus: number
+  sizeWorkshopLevel: number
+  sizeLabLevel: number
+  frequencyWorkshopLevel: number
+  /** Vault and substat both shorten the frequency, so both arrive negative. */
+  frequencyVault: number
+  frequencySubstat: number
+}): number {
+  if (input.cannonBonus === 0) return 1
+
+  const size = (0.6 + 0.05 * input.sizeWorkshopLevel) + input.sizeLabLevel / 20
+  const workshopFrequency = 20 - 0.15 * input.frequencyWorkshopLevel
+  const frequency = Math.max(
+    7, workshopFrequency + input.frequencyVault + input.frequencySubstat,
+  ) + size / 2
+
+  return 1 + (input.cannonBonus - 1) * (7 / frequency)
+}

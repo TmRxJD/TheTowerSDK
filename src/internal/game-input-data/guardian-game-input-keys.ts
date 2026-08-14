@@ -6,14 +6,14 @@ import {
 
   buildGuardianGameInputLevelEntries,
 
-  type GuardianGameInputKind,
+  getGuardianGameInputPrefix,
 
-  resolveGuardianGameInputPrefix,
+  type GuardianGameInputKind,
 
 } from './guardian-dropdown-math'
 import {
+  findGuardianParametricStatSpec,
   type GuardianStatSpec,
-  resolveGuardianParametricStatSpec,
 } from './guardian-stat-dropdown-math'
 
 export type GuardianTrackerDropdownBinding =
@@ -115,7 +115,7 @@ export const GUARDIAN_GAME_INPUT_SPECS: readonly GuardianGameInputSpec[] = UPTIM
 
     .map(kind => ({
 
-      key: `${resolveGuardianGameInputPrefix(mapping.guardianKey)}_${guardianKindToKeySuffix(kind)}` as GuardianGameDataKey,
+      key: `${getGuardianGameInputPrefix(mapping.guardianKey)}_${guardianKindToKeySuffix(kind)}` as GuardianGameDataKey,
 
       mapping,
 
@@ -167,7 +167,7 @@ function findGuardianStatIndexExact(guardianLabel: string, statName: string): nu
 }
 
 
-export function resolveGuardianStatGameDataKey(
+export function findGuardianStatGameDataKey(
 
   guardianLabel: string,
 
@@ -188,7 +188,7 @@ export function resolveGuardianStatGameDataKey(
 
     if (doubleIndex >= 0 && statIndex === doubleIndex) {
 
-      return `${resolveGuardianGameInputPrefix(mapping.guardianKey)}_double_find_level` as GuardianGameDataKey
+      return `${getGuardianGameInputPrefix(mapping.guardianKey)}_double_find_level` as GuardianGameDataKey
 
     }
 
@@ -203,7 +203,7 @@ export function resolveGuardianStatGameDataKey(
 
     if (findIndex >= 0 && statIndex === findIndex) {
 
-      return `${resolveGuardianGameInputPrefix(mapping.guardianKey)}_find_level` as GuardianGameDataKey
+      return `${getGuardianGameInputPrefix(mapping.guardianKey)}_find_level` as GuardianGameDataKey
 
     }
 
@@ -218,7 +218,7 @@ export function resolveGuardianStatGameDataKey(
 
     if (cdIndex >= 0 && statIndex === cdIndex) {
 
-      return `${resolveGuardianGameInputPrefix(mapping.guardianKey)}_cd_level` as GuardianGameDataKey
+      return `${getGuardianGameInputPrefix(mapping.guardianKey)}_cd_level` as GuardianGameDataKey
 
     }
 
@@ -233,7 +233,7 @@ export function resolveGuardianStatGameDataKey(
 
     if (durIndex >= 0 && statIndex === durIndex) {
 
-      return `${resolveGuardianGameInputPrefix(mapping.guardianKey)}_dur_level` as GuardianGameDataKey
+      return `${getGuardianGameInputPrefix(mapping.guardianKey)}_dur_level` as GuardianGameDataKey
 
     }
 
@@ -245,14 +245,14 @@ export function resolveGuardianStatGameDataKey(
 }
 
 
-export function resolveGuardianTrackerDropdownBinding(
+export function findGuardianTrackerDropdownBinding(
   guardianLabel: string,
   statName: string,
 ): GuardianTrackerDropdownBinding | null {
-  const explicit = resolveGuardianStatGameDataKey(guardianLabel, statName)
+  const explicit = findGuardianStatGameDataKey(guardianLabel, statName)
   if (explicit) return { dataKey: explicit }
 
-  const spec = resolveGuardianParametricStatSpec(guardianLabel, statName)
+  const spec = findGuardianParametricStatSpec(guardianLabel, statName)
   if (spec) return { dataKey: 'guardian_stat_level', guardianStatSpec: spec }
 
   return null
@@ -260,7 +260,7 @@ export function resolveGuardianTrackerDropdownBinding(
 
 export function isUptimeLinkedGuardianStat(guardianLabel: string, statName: string): boolean {
 
-  return resolveGuardianStatGameDataKey(guardianLabel, statName) != null
+  return findGuardianStatGameDataKey(guardianLabel, statName) != null
 
 }
 

@@ -3,17 +3,17 @@ import type { StandardDropdownOption } from './types'
 import type { GameDataKey } from './game-data-registry'
 import {
   buildElsFocusEntries,
-  buildElsFocusOptionLabel,
   buildEnemyTierSelectionEntries,
-  buildEnemyTierSelectionOptionLabel,
+  formatElsFocusOptionLabel,
+  formatEnemyTierSelectionOptionLabel,
 } from './enemy-tier-dropdown-math'
 import {
   buildGenericLabLevelEntries,
   buildGenericLabLevelOptionLabel,
   buildModuleLabEfficiencyEntries,
-  buildModuleLabEfficiencyOptionLabel,
   buildModuleTypeCategoryEntries,
-  buildModuleTypeCategoryOptionLabel,
+  formatModuleLabEfficiencyOptionLabel,
+  formatModuleTypeCategoryOptionLabel,
 } from './module-type-dropdown-math'
 import {
   buildModuleStoneCostEntries,
@@ -22,67 +22,67 @@ import {
 } from './module-stone-dropdown-math'
 import {
   buildThornsBcGlobalLabEntries,
-  buildThornsBcGlobalLabOptionLabel,
   buildThornsBcReductionLabEntries,
-  buildThornsBcReductionLabOptionLabel,
   buildThornsHeatWaveEntries,
   buildThornsHeatWaveOptionLabel,
   buildThornsPlasmaCannonLevelEntries,
-  buildThornsPlasmaCannonLevelOptionLabel,
   buildThornsPlasmaCannonMasteryEntries,
-  buildThornsPlasmaCannonMasteryOptionLabel,
   buildThornsTierEntries,
-  buildThornsTierOptionLabel,
   buildThornsWallThornsEntries,
-  buildThornsWallThornsOptionLabel,
+  formatThornsBcGlobalLabOptionLabel,
+  formatThornsBcReductionLabOptionLabel,
+  formatThornsPlasmaCannonLevelOptionLabel,
+  formatThornsPlasmaCannonMasteryOptionLabel,
+  formatThornsTierOptionLabel,
+  formatThornsWallThornsOptionLabel,
 } from './thorns-dropdown-math'
 import {
   buildWorkshopCalcDiscountEntries,
-  buildWorkshopCalcDiscountOptionLabel,
   buildWorkshopCalcSectionEntries,
-  buildWorkshopCalcSectionOptionLabel,
   buildWorkshopCalcStatEntries,
   buildWorkshopCalcStatOptionLabel,
+  formatWorkshopCalcDiscountOptionLabel,
+  formatWorkshopCalcSectionOptionLabel,
   type WorkshopCalcTab,
   type WorkshopCategory,
   type WorkshopDiscountProfile,
 } from './workshop-calculator-dropdown-math'
 import {
   buildDamageReductionAvgClHitsEntries,
-  buildDamageReductionAvgClHitsOptionLabel,
   buildDamageReductionBotBonusEntries,
-  buildDamageReductionBotBonusOptionLabel,
   buildDamageReductionCfReductionEntries,
   buildDamageReductionCfReductionOptionLabel,
   buildDamageReductionClPlusLevelEntries,
-  buildDamageReductionClPlusLevelOptionLabel,
   buildDamageReductionCtLevelEntries,
-  buildDamageReductionCtLevelOptionLabel,
   buildDamageReductionFlameBotEntries,
   buildDamageReductionFlameBotOptionLabel,
   buildDamageReductionNmpOrbHitsEntries,
-  buildDamageReductionNmpOrbHitsOptionLabel,
   buildDamageReductionNmpReductionEntries,
-  buildDamageReductionNmpReductionOptionLabel,
   buildDamageReductionPrimordialCollapseEntries,
-  buildDamageReductionPrimordialCollapseOptionLabel,
+  formatDamageReductionAvgClHitsOptionLabel,
+  formatDamageReductionBotBonusOptionLabel,
+  formatDamageReductionClPlusLevelOptionLabel,
+  formatDamageReductionCtLevelOptionLabel,
+  formatDamageReductionNmpOrbHitsOptionLabel,
+  formatDamageReductionNmpReductionOptionLabel,
+  formatDamageReductionPrimordialCollapseOptionLabel,
 } from './damage-reduction-dropdown-math'
 import {
   buildIlmAmplifyBotBonusLevelEntries,
-  buildIlmAmplifyBotBonusLevelOptionLabel,
   buildIlmModuleSubstatRarityEntries,
-  buildIlmModuleSubstatRarityOptionLabel,
   buildIlmShockStackEntries,
-  buildIlmShockStackOptionLabel,
   buildIlmUniqueModuleRarityEntries,
   buildIlmUniqueModuleRarityOptionLabel,
+  formatIlmAmplifyBotBonusLevelOptionLabel,
+  formatIlmModuleSubstatRarityOptionLabel,
+  formatIlmShockStackOptionLabel,
 } from './ilm-calculator-dropdown-math'
 import { ILM_UNIQUE_MODULE_IDS, type IlmUniqueModuleId } from '../../mechanics/ilm-calculator-options'
 import {
   buildCardCopiesOwnedEntries,
-  buildCardCopiesOwnedOptionLabel,
   buildCardEquippedSlotsEntries,
-  buildCardEquippedSlotsOptionLabel,
+  formatCardCopiesOwnedOptionLabel,
+  formatCardEquippedSlotsOptionLabel,
 } from './cards-dropdown-math'
 import {
   buildModuleTemplatePickerEntries,
@@ -95,39 +95,39 @@ import {
   buildBotsTrackerSortEntries,
   buildBotsTrackerSortOptionLabel,
   buildCardTrackerSortEntries,
-  buildCardTrackerSortOptionLabel,
   buildGuardiansTrackerSortEntries,
   buildGuardiansTrackerSortOptionLabel,
   buildLabsSpeedupEntries,
-  buildLabsSpeedupOptionLabel,
   buildLabsTrackerSortEntries,
-  buildLabsTrackerSortOptionLabel,
   buildLabsTypeFilterEntries,
   buildLabsTypeFilterOptionLabel,
   buildLifetimeAveragePeriodEntries,
-  buildLifetimeAveragePeriodOptionLabel,
   buildLifetimeChartLineTypeEntries,
-  buildLifetimeChartLineTypeOptionLabel,
   buildModuleTrackerRarityFilterEntries,
-  buildModuleTrackerRarityFilterOptionLabel,
   buildModuleTrackerSortEntries,
-  buildModuleTrackerSortOptionLabel,
   buildModuleTrackerTypeFilterEntries,
-  buildModuleTrackerTypeFilterOptionLabel,
   buildRelicsBonusSortEntries,
-  buildRelicsBonusSortOptionLabel,
   buildRelicsThemesSortEntries,
-  buildRelicsThemesSortOptionLabel,
   buildUwOverviewViewEntries,
-  buildUwOverviewViewOptionLabel,
   buildUwTrackerSortEntries,
   buildUwTrackerSortOptionLabel,
   buildWorkshopOverviewLayoutEntries,
-  buildWorkshopOverviewLayoutOptionLabel,
   buildWorkshopTrackerCategoryFilterEntries,
-  buildWorkshopTrackerCategoryFilterOptionLabel,
   buildWorkshopTrackerSortEntries,
   buildWorkshopTrackerSortOptionLabel,
+  formatCardTrackerSortOptionLabel,
+  formatLabsSpeedupOptionLabel,
+  formatLabsTrackerSortOptionLabel,
+  formatLifetimeAveragePeriodOptionLabel,
+  formatLifetimeChartLineTypeOptionLabel,
+  formatModuleTrackerRarityFilterOptionLabel,
+  formatModuleTrackerSortOptionLabel,
+  formatModuleTrackerTypeFilterOptionLabel,
+  formatRelicsBonusSortOptionLabel,
+  formatRelicsThemesSortOptionLabel,
+  formatUwOverviewViewOptionLabel,
+  formatWorkshopOverviewLayoutOptionLabel,
+  formatWorkshopTrackerCategoryFilterOptionLabel,
 } from './tracker-ui-dropdown-math'
 import {
   buildCardTemplatePickerEntries,
@@ -144,7 +144,7 @@ import {
 import {
   buildLabsNamePickerStandardOptions,
   buildLabsTrackerLevelEntries,
-  buildLabsTrackerLevelOptionLabel,
+  formatLabsTrackerLevelOptionLabel,
   type LabsTrackerLevelMode,
 } from './labs-tracker-dropdown-math'
 import {
@@ -217,84 +217,68 @@ export function isExtendedDropdownKey(key: string): boolean {
   return EXTENDED_DROPDOWN_KEYS.has(key)
 }
 
-export function evaluateExtendedDropdownOptions(
+/**
+ * The `thorns_*` keys, which belong to one calculator and share nothing
+ * with the rest of the switch they were written in.
+ */
+function evaluateThornsDropdown(
   key: GameDataKey,
   context: GameDropdownHubContext,
 ): StandardDropdownOption[] {
   switch (key) {
-    case 'enemy_tier_selection':
-      return buildEnemyTierSelectionEntries().map(entry => ({
-        value: entry.value,
-        label: buildEnemyTierSelectionOptionLabel(entry.value),
-      }))
-    case 'els_focus':
-      return buildElsFocusEntries().map(entry => ({
-        value: entry.value,
-        label: buildElsFocusOptionLabel(entry.value),
-      }))
-    case 'module_type_category':
-      return buildModuleTypeCategoryEntries().map(entry => ({
-        value: entry.value,
-        label: buildModuleTypeCategoryOptionLabel(entry.value),
-      }))
-    case 'module_lab_efficiency_level':
-      return buildModuleLabEfficiencyEntries().map(entry => ({
-        value: entry.value,
-        label: buildModuleLabEfficiencyOptionLabel(entry.value),
-      }))
-    case 'module_stone_cost_level': {
-      const profile = (context.moduleStoneCostProfile ?? 'current') as ModuleStoneCostProfile
-      return buildModuleStoneCostEntries(profile).map(entry => ({
-        value: entry.value,
-        label: buildModuleStoneCostOptionLabel(entry.value, profile),
-      }))
-    }
-    case 'generic_lab_level': {
-      const maxLevel = context.genericLabLevelMax ?? 0
-      return buildGenericLabLevelEntries(maxLevel).map(entry => ({
-        value: entry.value,
-        label: buildGenericLabLevelOptionLabel(entry.value, maxLevel),
-      }))
-    }
     case 'thorns_tier':
       return buildThornsTierEntries().map(entry => ({
         value: entry.value,
-        label: buildThornsTierOptionLabel(entry.value),
+        label: formatThornsTierOptionLabel(entry.value),
       }))
     case 'thorns_plasma_cannon_level':
       return buildThornsPlasmaCannonLevelEntries().map(entry => ({
         value: entry.value,
-        label: buildThornsPlasmaCannonLevelOptionLabel(entry.value),
+        label: formatThornsPlasmaCannonLevelOptionLabel(entry.value),
       }))
     case 'thorns_plasma_cannon_mastery':
       return buildThornsPlasmaCannonMasteryEntries().map(entry => ({
         value: entry.value,
-        label: buildThornsPlasmaCannonMasteryOptionLabel(entry.value),
+        label: formatThornsPlasmaCannonMasteryOptionLabel(entry.value),
       }))
     case 'thorns_bc_global_lab_level':
       return buildThornsBcGlobalLabEntries().map(entry => ({
         value: entry.value,
-        label: buildThornsBcGlobalLabOptionLabel(entry.value),
+        label: formatThornsBcGlobalLabOptionLabel(entry.value),
       }))
     case 'thorns_bc_reduction_lab_level':
       return buildThornsBcReductionLabEntries().map(entry => ({
         value: entry.value,
-        label: buildThornsBcReductionLabOptionLabel(entry.value),
+        label: formatThornsBcReductionLabOptionLabel(entry.value),
       }))
     case 'thorns_wall_thorns_level':
       return buildThornsWallThornsEntries().map(entry => ({
         value: entry.value,
-        label: buildThornsWallThornsOptionLabel(entry.value),
+        label: formatThornsWallThornsOptionLabel(entry.value),
       }))
     case 'thorns_heat_wave':
       return buildThornsHeatWaveEntries(context.thornsTournamentTier).map(entry => ({
         value: entry.value,
         label: buildThornsHeatWaveOptionLabel(entry.value, context.thornsTournamentTier),
       }))
+    default:
+      return []
+  }
+}
+
+/**
+ * The `workshop_calc_*` keys, which belong to one calculator and share nothing
+ * with the rest of the switch they were written in.
+ */
+function evaluateWorkshopCalcDropdown(
+  key: GameDataKey,
+  context: GameDropdownHubContext,
+): StandardDropdownOption[] {
+  switch (key) {
     case 'workshop_calc_section':
       return buildWorkshopCalcSectionEntries().map(entry => ({
         value: entry.value,
-        label: buildWorkshopCalcSectionOptionLabel(entry.value),
+        label: formatWorkshopCalcSectionOptionLabel(entry.value),
       }))
     case 'workshop_calc_stat': {
       const tab = (context.workshopCalcTab ?? 'workshop') as WorkshopCalcTab
@@ -308,9 +292,23 @@ export function evaluateExtendedDropdownOptions(
       const profile = (context.workshopDiscountProfile ?? 'workshop') as WorkshopDiscountProfile
       return buildWorkshopCalcDiscountEntries(profile).map(entry => ({
         value: entry.value,
-        label: buildWorkshopCalcDiscountOptionLabel(entry.value),
+        label: formatWorkshopCalcDiscountOptionLabel(entry.value),
       }))
     }
+    default:
+      return []
+  }
+}
+
+/**
+ * The `damage_reduction_*` keys, which belong to one calculator and share nothing
+ * with the rest of the switch they were written in.
+ */
+function evaluateDamageReductionDropdown(
+  key: GameDataKey,
+  context: GameDropdownHubContext,
+): StandardDropdownOption[] {
+  switch (key) {
     case 'damage_reduction_cf_reduction':
       return buildDamageReductionCfReductionEntries().map(entry => ({
         value: entry.value,
@@ -326,47 +324,61 @@ export function evaluateExtendedDropdownOptions(
     case 'damage_reduction_bot_bonus':
       return buildDamageReductionBotBonusEntries().map(entry => ({
         value: entry.value,
-        label: buildDamageReductionBotBonusOptionLabel(entry.value),
+        label: formatDamageReductionBotBonusOptionLabel(entry.value),
       }))
     case 'damage_reduction_nmp_reduction':
       return buildDamageReductionNmpReductionEntries().map(entry => ({
         value: entry.value,
-        label: buildDamageReductionNmpReductionOptionLabel(entry.value),
+        label: formatDamageReductionNmpReductionOptionLabel(entry.value),
       }))
     case 'damage_reduction_nmp_orb_hits':
       return buildDamageReductionNmpOrbHitsEntries().map(entry => ({
         value: entry.value,
-        label: buildDamageReductionNmpOrbHitsOptionLabel(entry.value),
+        label: formatDamageReductionNmpOrbHitsOptionLabel(entry.value),
       }))
     case 'damage_reduction_primordial_collapse':
       return buildDamageReductionPrimordialCollapseEntries().map(entry => ({
         value: entry.value,
-        label: buildDamageReductionPrimordialCollapseOptionLabel(entry.value),
+        label: formatDamageReductionPrimordialCollapseOptionLabel(entry.value),
       }))
     case 'damage_reduction_ct_level':
       return buildDamageReductionCtLevelEntries().map(entry => ({
         value: entry.value,
-        label: buildDamageReductionCtLevelOptionLabel(entry.value),
+        label: formatDamageReductionCtLevelOptionLabel(entry.value),
       }))
     case 'damage_reduction_cl_plus_level':
       return buildDamageReductionClPlusLevelEntries().map(entry => ({
         value: entry.value,
-        label: buildDamageReductionClPlusLevelOptionLabel(entry.value),
+        label: formatDamageReductionClPlusLevelOptionLabel(entry.value),
       }))
     case 'damage_reduction_avg_cl_hits':
       return buildDamageReductionAvgClHitsEntries().map(entry => ({
         value: entry.value,
-        label: buildDamageReductionAvgClHitsOptionLabel(entry.value),
+        label: formatDamageReductionAvgClHitsOptionLabel(entry.value),
       }))
+    default:
+      return []
+  }
+}
+
+/**
+ * The `ilm_*` keys, which belong to one calculator and share nothing
+ * with the rest of the switch they were written in.
+ */
+function evaluateInnerLandMineDropdown(
+  key: GameDataKey,
+  context: GameDropdownHubContext,
+): StandardDropdownOption[] {
+  switch (key) {
     case 'ilm_amplify_bot_level':
       return buildIlmAmplifyBotBonusLevelEntries().map(entry => ({
         value: entry.value,
-        label: buildIlmAmplifyBotBonusLevelOptionLabel(entry.value),
+        label: formatIlmAmplifyBotBonusLevelOptionLabel(entry.value),
       }))
     case 'ilm_module_substat_rarity':
       return buildIlmModuleSubstatRarityEntries().map(entry => ({
         value: entry.value,
-        label: buildIlmModuleSubstatRarityOptionLabel(entry.value),
+        label: formatIlmModuleSubstatRarityOptionLabel(entry.value),
       }))
     case 'ilm_unique_module_rarity': {
       const moduleId = (context.ilmUniqueModuleId ?? ILM_UNIQUE_MODULE_IDS.dimensionCore) as IlmUniqueModuleId
@@ -378,42 +390,67 @@ export function evaluateExtendedDropdownOptions(
     case 'ilm_shock_stack':
       return buildIlmShockStackEntries().map(entry => ({
         value: entry.value,
-        label: buildIlmShockStackOptionLabel(entry.value),
+        label: formatIlmShockStackOptionLabel(entry.value),
       }))
+    default:
+      return []
+  }
+}
+
+/** Key families with an evaluator of their own, tried before the switch. */
+const EXTENDED_DROPDOWN_FAMILIES: ReadonlyArray<{
+  prefix: string
+  evaluate: (key: GameDataKey, context: GameDropdownHubContext) => StandardDropdownOption[]
+}> = [
+  { prefix: 'thorns_', evaluate: evaluateThornsDropdown },
+  { prefix: 'workshop_calc_', evaluate: evaluateWorkshopCalcDropdown },
+  { prefix: 'damage_reduction_', evaluate: evaluateDamageReductionDropdown },
+  { prefix: 'ilm_', evaluate: evaluateInnerLandMineDropdown },
+]
+
+/**
+ * Tracker table controls — the sorts, filters and pickers a tracker page
+ * shows. They share no prefix, so the dispatcher matches them by name.
+ */
+function evaluateTrackerUiDropdown(
+  key: GameDataKey,
+  context: GameDropdownHubContext,
+): StandardDropdownOption[] {
+  switch (key) {
     case 'card_copies_owned':
       return buildCardCopiesOwnedEntries(context.cardCopiesMax ?? 80).map(entry => ({
         value: entry.value,
-        label: buildCardCopiesOwnedOptionLabel(entry.value),
+        label: formatCardCopiesOwnedOptionLabel(entry.value),
       }))
     case 'card_equipped_slots':
       return buildCardEquippedSlotsEntries(context.cardEquippedSlotsMax ?? 27).map(entry => ({
         value: entry.value,
-        label: buildCardEquippedSlotsOptionLabel(entry.value),
+        label: formatCardEquippedSlotsOptionLabel(entry.value),
       }))
     case 'module_tracker_type_filter':
       return buildModuleTrackerTypeFilterEntries().map(entry => ({
         value: entry.value,
-        label: buildModuleTrackerTypeFilterOptionLabel(entry.value),
+        label: formatModuleTrackerTypeFilterOptionLabel(entry.value),
       }))
     case 'module_tracker_rarity_filter':
       return buildModuleTrackerRarityFilterEntries().map(entry => ({
         value: entry.value,
-        label: buildModuleTrackerRarityFilterOptionLabel(entry.value),
+        label: formatModuleTrackerRarityFilterOptionLabel(entry.value),
       }))
     case 'module_tracker_sort':
       return buildModuleTrackerSortEntries().map(entry => ({
         value: entry.value,
-        label: buildModuleTrackerSortOptionLabel(entry.value),
+        label: formatModuleTrackerSortOptionLabel(entry.value),
       }))
     case 'card_tracker_sort':
       return buildCardTrackerSortEntries().map(entry => ({
         value: entry.value,
-        label: buildCardTrackerSortOptionLabel(entry.value),
+        label: formatCardTrackerSortOptionLabel(entry.value),
       }))
     case 'labs_tracker_sort':
       return buildLabsTrackerSortEntries().map(entry => ({
         value: entry.value,
-        label: buildLabsTrackerSortOptionLabel(entry.value),
+        label: formatLabsTrackerSortOptionLabel(entry.value),
       }))
     case 'module_template_picker':
       return buildModuleTemplatePickerEntries(context.moduleTypeFilter).map(entry => ({
@@ -454,7 +491,7 @@ export function evaluateExtendedDropdownOptions(
     case 'workshop_tracker_category_filter':
       return buildWorkshopTrackerCategoryFilterEntries().map(entry => ({
         value: entry.value,
-        label: buildWorkshopTrackerCategoryFilterOptionLabel(entry.value),
+        label: formatWorkshopTrackerCategoryFilterOptionLabel(entry.value),
       }))
     case 'workshop_tracker_sort':
       return buildWorkshopTrackerSortEntries(context.workshopTrackerSortProfile ?? 'workshop', context.includeCustomSortOption ?? false).map(entry => ({
@@ -464,7 +501,7 @@ export function evaluateExtendedDropdownOptions(
     case 'workshop_overview_layout':
       return buildWorkshopOverviewLayoutEntries().map(entry => ({
         value: entry.value,
-        label: buildWorkshopOverviewLayoutOptionLabel(entry.value),
+        label: formatWorkshopOverviewLayoutOptionLabel(entry.value),
       }))
     case 'bots_tracker_sort':
       return buildBotsTrackerSortEntries(context.includeCustomSortOption ?? false).map(entry => ({
@@ -489,22 +526,96 @@ export function evaluateExtendedDropdownOptions(
     case 'uw_overview_view':
       return buildUwOverviewViewEntries().map(entry => ({
         value: entry.value,
-        label: buildUwOverviewViewOptionLabel(entry.value),
+        label: formatUwOverviewViewOptionLabel(entry.value),
       }))
     case 'relics_bonus_sort':
       return buildRelicsBonusSortEntries().map(entry => ({
         value: entry.value,
-        label: buildRelicsBonusSortOptionLabel(entry.value),
+        label: formatRelicsBonusSortOptionLabel(entry.value),
       }))
     case 'relics_themes_sort':
       return buildRelicsThemesSortEntries().map(entry => ({
         value: entry.value,
-        label: buildRelicsThemesSortOptionLabel(entry.value),
+        label: formatRelicsThemesSortOptionLabel(entry.value),
       }))
+    default:
+      return []
+  }
+}
+
+const TRACKER_UI_DROPDOWN_KEYS: ReadonlySet<string> = new Set([
+  'card_copies_owned',
+  'card_equipped_slots',
+  'module_tracker_type_filter',
+  'module_tracker_rarity_filter',
+  'module_tracker_sort',
+  'card_tracker_sort',
+  'labs_tracker_sort',
+  'module_template_picker',
+  'card_template_picker',
+  'module_equipped_picker',
+  'module_substat_type_picker',
+  'workshop_tracker_category_filter',
+  'workshop_tracker_sort',
+  'workshop_overview_layout',
+  'bots_tracker_sort',
+  'bots_tracker_preset',
+  'guardians_tracker_sort',
+  'uw_tracker_sort',
+  'uw_overview_view',
+  'relics_bonus_sort',
+  'relics_themes_sort',
+])
+
+export function evaluateExtendedDropdownOptions(
+  key: GameDataKey,
+  context: GameDropdownHubContext,
+): StandardDropdownOption[] {
+  for (const family of EXTENDED_DROPDOWN_FAMILIES) {
+    if (key.startsWith(family.prefix)) return family.evaluate(key, context)
+  }
+
+  if (TRACKER_UI_DROPDOWN_KEYS.has(key)) return evaluateTrackerUiDropdown(key, context)
+
+  switch (key) {
+    case 'enemy_tier_selection':
+      return buildEnemyTierSelectionEntries().map(entry => ({
+        value: entry.value,
+        label: formatEnemyTierSelectionOptionLabel(entry.value),
+      }))
+    case 'els_focus':
+      return buildElsFocusEntries().map(entry => ({
+        value: entry.value,
+        label: formatElsFocusOptionLabel(entry.value),
+      }))
+    case 'module_type_category':
+      return buildModuleTypeCategoryEntries().map(entry => ({
+        value: entry.value,
+        label: formatModuleTypeCategoryOptionLabel(entry.value),
+      }))
+    case 'module_lab_efficiency_level':
+      return buildModuleLabEfficiencyEntries().map(entry => ({
+        value: entry.value,
+        label: formatModuleLabEfficiencyOptionLabel(entry.value),
+      }))
+    case 'module_stone_cost_level': {
+      const profile = (context.moduleStoneCostProfile ?? 'current') as ModuleStoneCostProfile
+      return buildModuleStoneCostEntries(profile).map(entry => ({
+        value: entry.value,
+        label: buildModuleStoneCostOptionLabel(entry.value, profile),
+      }))
+    }
+    case 'generic_lab_level': {
+      const maxLevel = context.genericLabLevelMax ?? 0
+      return buildGenericLabLevelEntries(maxLevel).map(entry => ({
+        value: entry.value,
+        label: buildGenericLabLevelOptionLabel(entry.value, maxLevel),
+      }))
+    }
     case 'labs_speedup_multiplier':
       return buildLabsSpeedupEntries().map(entry => ({
         value: entry.value,
-        label: buildLabsSpeedupOptionLabel(entry.value),
+        label: formatLabsSpeedupOptionLabel(entry.value),
       }))
     case 'labs_type_filter':
       return buildLabsTypeFilterEntries(context.labsTypeFilterOptions ?? ['All']).map(entry => ({
@@ -527,18 +638,18 @@ export function evaluateExtendedDropdownOptions(
         context.labsTrackerLevelMax,
       ).map(entry => ({
         value: entry.value,
-        label: buildLabsTrackerLevelOptionLabel(entry.value),
+        label: formatLabsTrackerLevelOptionLabel(entry.value),
       }))
     }
     case 'lifetime_average_period':
       return buildLifetimeAveragePeriodEntries().map(entry => ({
         value: entry.value,
-        label: buildLifetimeAveragePeriodOptionLabel(entry.value),
+        label: formatLifetimeAveragePeriodOptionLabel(entry.value),
       }))
     case 'lifetime_chart_line_type':
       return buildLifetimeChartLineTypeEntries().map(entry => ({
         value: entry.value,
-        label: buildLifetimeChartLineTypeOptionLabel(entry.value),
+        label: formatLifetimeChartLineTypeOptionLabel(entry.value),
       }))
     case 'ui_dynamic_dropdown':
       return buildUiDynamicDropdownEntries(context.uiDynamicDropdownOptions ?? []).map(entry => ({

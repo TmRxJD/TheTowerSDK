@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import {
   allBotPlusUnlockedForSync,
   BOT_PLUS_LEVEL_LOCKED,
+  getBotMedalPlannerFocusWeights,
   normalizeBotMedalPlannerFocusOrder,
-  resolveBotMedalPlannerFocusWeights,
 } from './bot-medal-planner-focus'
 
 describe('bot medal planner focus', () => {
@@ -13,7 +13,7 @@ describe('bot medal planner focus', () => {
   })
 
   it('boosts range weight when range is top priority', () => {
-    const weights = resolveBotMedalPlannerFocusWeights(['range', 'overlap'])
+    const weights = getBotMedalPlannerFocusWeights(['range', 'overlap'])
     expect(weights.range).toBeGreaterThan(weights.uptime)
     expect(weights.range).toBeGreaterThan(1)
   })

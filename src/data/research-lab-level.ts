@@ -13,7 +13,7 @@ function normalizeLookupKey(value: string): string {
  * Resolve a research lab level from tracker display-name keyed levels.
  * Matches slug, canonical slug, catalog displayName, and fuzzy display-name equality.
  */
-export function resolveResearchLabLevel(
+export function computeResearchLabLevel(
   researchLabLevels: Record<string, number>,
   slug: string,
   maxLevel = 99,

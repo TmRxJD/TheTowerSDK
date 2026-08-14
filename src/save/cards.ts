@@ -43,7 +43,7 @@ const CARD_NAME_TO_SLUG = (() => {
   return map
 })()
 
-export function resolveCardCatalogFromSaveIndex(saveIndex: number): {
+export function findCardCatalogFromSaveIndex(saveIndex: number): {
   slug: string | null
   name: string | null
 } {
@@ -123,7 +123,7 @@ function readCardRow(
   active: boolean[],
   masteries: boolean[],
 ): CardSaveRow {
-  const catalog = resolveCardCatalogFromSaveIndex(index)
+  const catalog = findCardCatalogFromSaveIndex(index)
   return {
     index,
     slug: catalog.slug,
@@ -150,32 +150,32 @@ function clampCardSaveLevel(level: number): number {
 }
 
 /** cardCount in save is spare copies toward the next star, not lifetime total. */
-export function resolveCardSaveCumulativeCopies(level: number, spareCount: number): number {
+export function computeCardSaveCumulativeCopies(level: number, spareCount: number): number {
   const clampedLevel = clampCardSaveLevel(level)
   const base = CARD_SAVE_LEVEL_COPY_REQUIREMENTS[clampedLevel] ?? 0
   const spare = Math.max(0, Math.floor(spareCount))
   return Math.min(CARD_MAX_COPIES, base + spare)
 }
 
-export function resolveCardSaveCopyTarget(level: number): number {
+export function computeCardSaveCopyTarget(level: number): number {
   const clampedLevel = clampCardSaveLevel(level)
   if (clampedLevel >= 7) return CARD_MAX_COPIES
   return CARD_SAVE_LEVEL_COPY_REQUIREMENTS[clampedLevel + 1] ?? CARD_MAX_COPIES
 }
 
 export function formatCardSaveCopiesText(level: number, spareCount: number): string {
-  const copies = resolveCardSaveCumulativeCopies(level, spareCount)
-  const target = resolveCardSaveCopyTarget(level)
+  const copies = computeCardSaveCumulativeCopies(level, spareCount)
+  const target = computeCardSaveCopyTarget(level)
   return `Copies ${copies} / ${target}`
 }
 
-export function resolveCardSaveRowCopies(card: Pick<CardSaveRow, 'level' | 'count'>): {
+export function getCardSaveRowCopies(card: Pick<CardSaveRow, 'level' | 'count'>): {
   cumulativeCopies: number
   copyTarget: number
   copiesText: string
 } {
-  const cumulativeCopies = resolveCardSaveCumulativeCopies(card.level, card.count)
-  const copyTarget = resolveCardSaveCopyTarget(card.level)
+  const cumulativeCopies = computeCardSaveCumulativeCopies(card.level, card.count)
+  const copyTarget = computeCardSaveCopyTarget(card.level)
   return {
     cumulativeCopies,
     copyTarget,
@@ -183,7 +183,7 @@ export function resolveCardSaveRowCopies(card: Pick<CardSaveRow, 'level' | 'coun
   }
 }
 
-export function extractCardsFromSaveRoot(root: Record<string, unknown> | null): CardsSaveExtract | null {
+export function readCardsFromSaveRoot(root: Record<string, unknown> | null): CardsSaveExtract | null {
   if (!root) return null
 
   const warnings: string[] = []
@@ -259,7 +259,7 @@ export interface CardsTrackerSaveImportPayload {
 
 function resolveCardId(card: CardSaveRow): string | null {
   if (card.slug) return card.slug
-  return resolveCardCatalogFromSaveIndex(card.index).slug
+  return findCardCatalogFromSaveIndex(card.index).slug
 }
 
 export function buildCardsTrackerImportPayload(extract: CardsSaveExtract): CardsTrackerSaveImportPayload | null {
@@ -272,7 +272,7 @@ export function buildCardsTrackerImportPayload(extract: CardsSaveExtract): Cards
       cardId,
       level: Math.max(0, Math.floor(card.level)),
       mastery: card.masteryUnlocked ? 1 : 0,
-      quantity: resolveCardSaveCumulativeCopies(card.level, card.count),
+      quantity: computeCardSaveCumulativeCopies(card.level, card.count),
     })
   }
 

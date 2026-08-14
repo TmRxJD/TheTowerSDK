@@ -1,4 +1,4 @@
-import { createNormalizerPersistenceSchema } from './local-persistence-types'
+import { buildNormalizerPersistenceSchema } from './local-persistence-types'
 
 export const DEFAULT_UPTIME_CHART_ORDER = ['gb', 'ab', 'fb', 'tb', 'dw', 'gt', 'bh', 'ps', 'cf', 'sm', 'ilm', 'attack', 'ally', 'bounty', 'fetch', 'summon'] as const
 
@@ -43,4 +43,4 @@ export function normalizeUptimeChartLocalState(
   }
 }
 
-export const uptimeChartLocalPersistenceSchema = createNormalizerPersistenceSchema(normalizeUptimeChartLocalState)
+export const uptimeChartLocalPersistenceSchema = buildNormalizerPersistenceSchema(normalizeUptimeChartLocalState)

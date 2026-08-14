@@ -30,7 +30,7 @@ export type AbilityDamageInput = {
  * Every input is the value the game displays mid-run, i.e. already including
  * perks, cards and labs. Don't apply those yourself.
  */
-export function abilityDamage ({
+export function abilityDamage({
   damagePercent,
   damage,
   critFactor,

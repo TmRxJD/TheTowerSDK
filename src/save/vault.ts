@@ -117,7 +117,7 @@ function buildHarmonyRows(unlocked: boolean[]): VaultNodeSaveRow[] {
   })
 }
 
-export function extractVaultFromSaveRoot(root: Record<string, unknown> | null): VaultSaveExtract | null {
+export function readVaultFromSaveRoot(root: Record<string, unknown> | null): VaultSaveExtract | null {
   if (!root) return null
 
   const warnings: string[] = []

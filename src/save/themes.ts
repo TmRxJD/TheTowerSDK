@@ -34,7 +34,7 @@ function isThemeUnlockedInSave(
 }
 
 /** Theme names as used by the Relics tracker `collectedThemes` map (catalog label). */
-export function extractCollectedThemeNamesFromSaveRoot(
+export function readCollectedThemeNamesFromSaveRoot(
   root: Record<string, unknown> | null,
 ): string[] {
   if (!root) return []

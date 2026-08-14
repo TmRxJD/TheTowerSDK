@@ -2214,4 +2214,3 @@ export function getWorkshopCostsByKey(key: string): number[] | null {
   const sortedLevelKeys = Object.keys(levels).map(entry => Number(entry)).filter(entry => Number.isFinite(entry)).sort((a, b) => a - b)
   return sortedLevelKeys.map(level => Number(levels[level] || 0))
 }
-

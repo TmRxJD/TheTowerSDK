@@ -7,12 +7,12 @@ import {
   normalizeWorkshopSectionDiscountPercent,
 } from '../data/workshop-discount-normalize'
 import {
-  createDefaultShardSplitterSnapshot,
+  buildDefaultShardSplitterSnapshot,
   type ModuleType,
   normalizeShardSplitterSnapshot,
   type SplitterByType,
 } from './shard-splitter-schema'
-import { createNormalizerPersistenceSchema } from './local-persistence-types'
+import { buildNormalizerPersistenceSchema } from './local-persistence-types'
 
 export type LabCalcRange = {
   current: number | null
@@ -173,7 +173,7 @@ export function normalizeLabsCalcsLocalState(input: unknown, base: LabsCalcsLoca
   })
 }
 
-const DEFAULT_CORE_SNAPSHOT = createDefaultShardSplitterSnapshot()
+const DEFAULT_CORE_SNAPSHOT = buildDefaultShardSplitterSnapshot()
 
 const DEFAULT_COLUMNS: ShardSplitterColumns = {
   splitOrder: [
@@ -847,12 +847,12 @@ export function normalizeThornsCalcsLocalState(
   }
 }
 
-export const labsCalcsLocalPersistenceSchema = createNormalizerPersistenceSchema(normalizeLabsCalcsLocalState)
-export const shardSplitterLocalPersistenceSchema = createNormalizerPersistenceSchema(normalizeShardSplitterLocalState)
-export const modulesCalcsLocalPersistenceSchema = createNormalizerPersistenceSchema(normalizeModulesCalcsLocalState)
-export const damageReduxCalcsLocalPersistenceSchema = createNormalizerPersistenceSchema(normalizeDamageReduxCalcsLocalState)
-export const workshopCalcsLocalPersistenceSchema = createNormalizerPersistenceSchema(normalizeWorkshopCalcsLocalState)
-export const thornsCalcsLocalPersistenceSchema = createNormalizerPersistenceSchema(normalizeThornsCalcsLocalState)
+export const labsCalcsLocalPersistenceSchema = buildNormalizerPersistenceSchema(normalizeLabsCalcsLocalState)
+export const shardSplitterLocalPersistenceSchema = buildNormalizerPersistenceSchema(normalizeShardSplitterLocalState)
+export const modulesCalcsLocalPersistenceSchema = buildNormalizerPersistenceSchema(normalizeModulesCalcsLocalState)
+export const damageReduxCalcsLocalPersistenceSchema = buildNormalizerPersistenceSchema(normalizeDamageReduxCalcsLocalState)
+export const workshopCalcsLocalPersistenceSchema = buildNormalizerPersistenceSchema(normalizeWorkshopCalcsLocalState)
+export const thornsCalcsLocalPersistenceSchema = buildNormalizerPersistenceSchema(normalizeThornsCalcsLocalState)
 
 export * from './bot-medal-splitter-local-state'
 export * from './bot-medal-planner-focus'

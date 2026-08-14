@@ -1,6 +1,6 @@
 {
   "name": "thetowersdk",
-  "version": "0.1.1",
+  "version": "0.4.0",
   "description": "Game data and save-file reading for The Tower — build your own calculators and tools.",
   "license": "MIT",
   "author": "TmRxJD (https://github.com/TmRxJD)",
@@ -77,6 +77,11 @@
       "require": "./dist/mechanics/index.js",
       "default": "./dist/mechanics/index.js"
     },
+    "./wiki": {
+      "types": "./dist/wiki/index.d.ts",
+      "require": "./dist/wiki/index.js",
+      "default": "./dist/wiki/index.js"
+    },
     "./internal/*": {
       "types": "./dist/*.d.ts",
       "require": "./dist/*.js",
@@ -100,6 +105,9 @@
       ],
       "mechanics": [
         "dist/mechanics/index.d.ts"
+      ],
+      "wiki": [
+        "dist/wiki/index.d.ts"
       ],
       "internal/*": [
         "dist/*.d.ts"

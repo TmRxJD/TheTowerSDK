@@ -3,7 +3,7 @@ import { BOT_UPGRADES_DATA } from '../data/bots'
 import { BOT_IMPORT_CATALOG } from './catalogs/indexes'
 import { listRelicCatalogRows } from './catalogs/relics'
 import { listUltimateWeaponCatalogRows } from './catalogs/ultimate-weapons'
-import { getSharedToolLabs, resolveLabValueAtLevel } from '../data/labs'
+import { computeLabValueAtLevel, getSharedToolLabs } from '../data/labs'
 import { decodeModuleSaveEffect, type ModuleSaveSlotCategory } from './module-effects-decode'
 import { MODULE_RARITIES } from '../data/module-levels'
 import {
@@ -13,13 +13,13 @@ import {
   readSaveEnumValue,
   toNumberArray,
 } from './read-values'
-import { derivePerkPreferencesFromSaveRoot } from './perks'
+import { readPerkPreferencesFromSaveRoot } from './perks'
 import {
-  deriveResearchLabLevelsFromSaveRoot,
-  extractExtendedSharedToolInputsFromSaveRoot,
   mergeSaveDerivedExtendedSharedToolInputs,
+  readExtendedSharedToolInputs,
+  readResearchLabLevelsFromSaveRoot,
 } from './shared-tool-inputs-from-save-extended'
-import { enrichSharedToolInputsFromResearchLevels } from '../internal/shared-tool-inputs-from-research'
+import { enrichSharedToolInputs } from '../internal/shared-tool-inputs-from-research'
 import {
   defaultSharedToolInputs,
   mergeNumberRecords,
@@ -81,7 +81,7 @@ function isPerkActive(perkLevels: number[], index: number): boolean {
   return (perkLevels[index] ?? 0) >= 1
 }
 
-export function deriveTradeOffPerksFromSaveRoot(root: Record<string, unknown>): SharedTradeOffPerks {
+export function readTradeOffPerksFromSaveRoot(root: Record<string, unknown>): SharedTradeOffPerks {
   const perkLevels = readIndexedNumberArray(root.perkLevel, 64)
   return {
     perkEnemyHpMinus50: isPerkActive(perkLevels, TRADE_OFF_PERK_LEVEL_INDICES.perkEnemyHpMinus50),
@@ -93,7 +93,7 @@ export function deriveTradeOffPerksFromSaveRoot(root: Record<string, unknown>): 
   }
 }
 
-export function deriveLabRelicPctFromSaveRoot(root: Record<string, unknown>): number {
+export function readLabRelicPctFromSaveRoot(root: Record<string, unknown>): number {
   const profileIndices = new Set(
     toNumberArray(root.profileRelics).filter(index => index >= 0),
   )
@@ -110,19 +110,19 @@ export function deriveLabRelicPctFromSaveRoot(root: Record<string, unknown>): nu
   return Math.max(0, total)
 }
 
-export function deriveGemDiscountMultiplierFromSaveRoot(root: Record<string, unknown>): number {
+export function readGemDiscountMultiplier(root: Record<string, unknown>): number {
   const completed = coerceSaveNumber(root.researchesComplete)
   const count = Math.max(0, Math.floor(completed ?? 0))
   return roundToDisplayPrecision(1 + count * GEM_DISCOUNT_PER_COMPLETED_RESEARCH) || 1
 }
 
-export function deriveLabSpeedUpFromSaveRoot(root: Record<string, unknown>): number {
+export function readLabSpeedUpFromSaveRoot(root: Record<string, unknown>): number {
   const speeds = toNumberArray(root.labSpeedUpSpeed)
   if (speeds.length === 0) return 1
   return Math.max(1, ...speeds.map(value => Math.floor(value)))
 }
 
-export function deriveTowerRangeMetersFromSaveRoot(root: Record<string, unknown>): number | null {
+export function readTowerRangeMetersFromSaveRoot(root: Record<string, unknown>): number | null {
   const workshopLevels = readIndexedNumberArray(root.upgradeWorkshopLevel, 32)
   const workshopRangeLevel = workshopLevels[RANGE_WORKSHOP_UPGRADE_INDEX] ?? 0
   const rangeLevelSelected = Math.max(0, Math.floor(coerceSaveNumber(root.rangeLevelSelected) ?? 0))
@@ -130,7 +130,7 @@ export function deriveTowerRangeMetersFromSaveRoot(root: Record<string, unknown>
   const rangeLab = getSharedToolLabs().find(lab => lab.name === 'range')
   if (!rangeLab) return null
 
-  const rangeLabBenefit = resolveLabValueAtLevel(rangeLab, rangeLevelSelected)
+  const rangeLabBenefit = computeLabValueAtLevel(rangeLab, rangeLevelSelected)
   if (!Number.isFinite(rangeLabBenefit) || rangeLabBenefit <= 0) return null
 
   const internal = getOutOfRoundMaxDistance({
@@ -140,7 +140,7 @@ export function deriveTowerRangeMetersFromSaveRoot(root: Record<string, unknown>
   return clampInt(Math.round(internal * 10), 0, 1000)
 }
 
-export function deriveBotBotBonusMultiplierFromSaveRoot(root: Record<string, unknown>): number {
+export function readBotBotBonusMultiplier(root: Record<string, unknown>): number {
   const botBotIndex = BOT_IMPORT_CATALOG.findIndex(row => row.name === 'Bot Bot')
   if (botBotIndex < 0) return 0
 
@@ -161,7 +161,7 @@ export function deriveBotBotBonusMultiplierFromSaveRoot(root: Record<string, unk
   return parseMultiplierValue(String(rawValue))
 }
 
-export function deriveDeathWaveBaseWavesFromSaveRoot(root: Record<string, unknown>): number | null {
+export function readDeathWaveBaseWavesFromSaveRoot(root: Record<string, unknown>): number | null {
   const catalog = listUltimateWeaponCatalogRows()
   const deathWaveSlot = catalog.findIndex(row => row.name === 'Death Wave')
   if (deathWaveSlot < 0) return null
@@ -245,7 +245,7 @@ function collectEquippedModuleSubstats(root: Record<string, unknown>): Array<{
   return rows
 }
 
-export function deriveUptimeModuleRaritiesFromSaveRoot(root: Record<string, unknown>): Partial<SharedUptimeInputs> {
+export function readUptimeModuleRaritiesFromSaveRoot(root: Record<string, unknown>): Partial<SharedUptimeInputs> {
   const substats = collectEquippedModuleSubstats(root)
   const derived: Partial<SharedUptimeInputs> = {}
 
@@ -308,22 +308,22 @@ function cloneLevelTargets(levels: Record<string, number[]>): Record<string, num
   )
 }
 
-export function extractSharedToolInputsFromSaveRoot(
+export function readSharedToolInputsFromSaveRoot(
   root: Record<string, unknown> | null | undefined,
 ): Partial<SharedToolInputs> {
   if (!root) return {}
 
   const labsEconomy = {
-    labRelic: deriveLabRelicPctFromSaveRoot(root),
-    gemDiscount: deriveGemDiscountMultiplierFromSaveRoot(root),
-    speedUp: deriveLabSpeedUpFromSaveRoot(root),
+    labRelic: readLabRelicPctFromSaveRoot(root),
+    gemDiscount: readGemDiscountMultiplier(root),
+    speedUp: readLabSpeedUpFromSaveRoot(root),
   }
 
-  const towerRange = deriveTowerRangeMetersFromSaveRoot(root)
-  const dwBaseWavesLevel = deriveDeathWaveBaseWavesFromSaveRoot(root)
-  const uptimeModuleRarities = deriveUptimeModuleRaritiesFromSaveRoot(root)
-  const researchLabLevels = deriveResearchLabLevelsFromSaveRoot(root)
-  const extended = extractExtendedSharedToolInputsFromSaveRoot(root, { towerRangeMeters: towerRange })
+  const towerRange = readTowerRangeMetersFromSaveRoot(root)
+  const dwBaseWavesLevel = readDeathWaveBaseWavesFromSaveRoot(root)
+  const uptimeModuleRarities = readUptimeModuleRaritiesFromSaveRoot(root)
+  const researchLabLevels = readResearchLabLevelsFromSaveRoot(root)
+  const extended = readExtendedSharedToolInputs(root, { towerRangeMeters: towerRange })
 
   const uptimeInputs: Partial<SharedUptimeInputs> = {
     ...uptimeModuleRarities,
@@ -337,14 +337,14 @@ export function extractSharedToolInputsFromSaveRoot(
       ...labsEconomy,
     },
     researchLabLevels,
-    tradeOffPerks: deriveTradeOffPerksFromSaveRoot(root),
+    tradeOffPerks: readTradeOffPerksFromSaveRoot(root),
     towerRange: towerRange ?? 0,
     namedCalculatorLabs: {
       ...defaultSharedToolInputs.namedCalculatorLabs,
-      botBotBonusMultiplier: deriveBotBotBonusMultiplierFromSaveRoot(root),
+      botBotBonusMultiplier: readBotBotBonusMultiplier(root),
     },
     uptimeInputs,
-    perkPreferences: derivePerkPreferencesFromSaveRoot(root),
+    perkPreferences: readPerkPreferencesFromSaveRoot(root),
     ...extended,
   }
 }
@@ -437,5 +437,5 @@ export function mergeSaveDerivedSharedToolInputs(
     perkPreferences: saveDerived.perkPreferences ?? base.perkPreferences,
   })
 
-  return enrichSharedToolInputsFromResearchLevels(merged)
+  return enrichSharedToolInputs(merged)
 }

@@ -82,7 +82,7 @@ export function buildBotLevelOptionLabel(
   }
 }
 
-export function resolveUptimeLabFieldName(
+export function findUptimeLabFieldName(
   mapping: UptimeBotFieldMap,
   kind: BotGameInputKind,
 ): string | null {
@@ -98,7 +98,7 @@ export function resolveUptimeLabFieldName(
   }
 }
 
-export function resolveBotLabStatName(
+export function findBotLabStatName(
   mapping: UptimeBotFieldMap,
   kind: BotGameInputKind,
 ): string | null {
