@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.1
+
+Stop shipping the monorepo docs-gen/doctor/kernel chain through `builders` so the
+published package no longer requires `@tmrxjd/governance-engine` at install time.
+
 ## 0.5.0
 
 Labs catalog refresh, card gem costs, Effective Paths economy stone mastery / UW cooldown helpers,

@@ -12,7 +12,6 @@ import {
   emitPlannerCodegen,
   type PlannerCitation,
 } from '../planner-engine/codegen'
-import { generateMechanicsDocs, type DocsGenOptions, type DocsGenResult } from '../docs-gen'
 
 export const TOWER_PREMADE_BUILDER_IDS = [
   'tower.builder.sdk-graph-mutate',
@@ -45,8 +44,14 @@ export function runPlannerCodegenEmit(opts: { family: string; repoRoot?: string 
   return emitPlannerCodegen(opts.family, { repoRoot: opts.repoRoot })
 }
 
-export function runMechanicsDocsGen(opts: DocsGenOptions = {}): DocsGenResult {
-  return generateMechanicsDocs(opts)
+/**
+ * Docs generation lives in monorepo-only `docs-gen` (needs governance/doctor).
+ * Call via `packages/sdk/src/mechanics/docs-gen` or the mechanics-trust CLI — not the published barrel.
+ */
+export function runMechanicsDocsGen(): never {
+  throw new Error(
+    'runMechanicsDocsGen is monorepo-only — import generateMechanicsDocs from packages/sdk/src/mechanics/docs-gen',
+  )
 }
 
 /** Catalog of known save → tracker payload builder export names (documentation SoT). */
@@ -87,5 +92,4 @@ export {
   applySdkGraphMutations,
   applyEpGraphMutations,
   collectPlannerCitations,
-  generateMechanicsDocs,
 }
