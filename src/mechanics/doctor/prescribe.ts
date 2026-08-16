@@ -1,0 +1,233 @@
+import {
+  AUTO_PATCH_KINDS,
+  type DoctorIssue,
+  type DoctorPatch,
+  type DoctorPatchPlan,
+  type DoctorReport,
+  DoctorPatchPlanSchema,
+} from './schema'
+import { buildSheetDriftMutateOps } from '../sdk-graph/sheet-drift-mutate'
+
+/**
+ * Map diagnosis issues → patch plan. Safe kinds are autoApplicable; inventive kinds requireHuman.
+ */
+export function prescribeDoctor(report: DoctorReport): DoctorPatchPlan {
+  const patches: DoctorPatch[] = []
+  const seen = new Set<string>()
+
+  const add = (patch: DoctorPatch) => {
+    if (seen.has(patch.id)) return
+    seen.add(patch.id)
+    patches.push(patch)
+  }
+
+  const byCategory = (cat: DoctorIssue['category']) =>
+    report.issues.filter(i => i.category === cat)
+
+  // Debug / symbols missing → recompile debug graph
+  if (
+    report.issues.some(i =>
+      i.category === 'symbols'
+      || i.category === 'debugGraph'
+      || i.id.startsWith('code-symbol-missing-debug')
+      || i.id.startsWith('symbols:missing-debug'),
+    )
+  ) {
+    add({
+      id: 'patch:debug-compile',
+      kind: 'debugPatch',
+      autoApplicable: true,
+      requiresHuman: false,
+      reason: 'Rebuild Debug Graph from mechanics sources so codeSymbols resolve',
+      issueIds: report.issues
+        .filter(i => i.category === 'symbols' || i.category === 'debugGraph' || i.id.includes('debug'))
+        .map(i => i.id),
+      script: 'scripts/mechanics-trust/compile-debug-graph.mjs',
+      scriptArgs: [],
+    })
+  }
+
+  // Silent coverage / missing inventories → reseed
+  if (report.issues.some(i => i.id.startsWith('coverage:') || i.id.startsWith('silent-gap:'))) {
+    add({
+      id: 'patch:seed-inventories',
+      kind: 'coveragePatch',
+      autoApplicable: true,
+      requiresHuman: false,
+      reason: 'Reseed coverage inventories so silent gaps become explicit unmodeled or linked',
+      issueIds: report.issues.filter(i => i.id.startsWith('coverage:') || i.id.startsWith('silent-gap:')).map(i => i.id),
+      script: 'scripts/mechanics-trust/seed-coverage-inventories.mjs',
+      scriptArgs: [],
+    })
+  }
+
+  // Docs / compile graphs when structural mechanics issues
+  if (byCategory('mechanicsGraph').some(i => i.severity === 'error')) {
+    add({
+      id: 'patch:sdk-graph-compile',
+      kind: 'docsPatch',
+      autoApplicable: true,
+      requiresHuman: false,
+      reason: 'Recompile EP + SDK graph docs from JSON SoT',
+      issueIds: byCategory('mechanicsGraph').map(i => i.id),
+      script: 'scripts/sdk-graph/compile-sdk-graph.mjs',
+      scriptArgs: [],
+    })
+  }
+
+  // Formula drift → disputed mutate
+  const driftFormula = report.issues.filter(i => i.id.startsWith('drift:formula:'))
+  if (driftFormula.length) {
+    const mismatches = driftFormula.map(i => ({
+      nodeId: i.nodeIds?.[0],
+      cell: (i.evidence as { cell?: string } | undefined)?.cell,
+      live: (i.evidence as { live?: unknown } | undefined)?.live ?? true,
+      expected: (i.evidence as { expected?: unknown } | undefined)?.expected,
+    }))
+    const ops = buildSheetDriftMutateOps(mismatches)
+    add({
+      id: 'patch:drift-disputed',
+      kind: 'driftStatusPatch',
+      autoApplicable: true,
+      requiresHuman: false,
+      reason: 'Mark sheet formula drift nodes disputed via trust-gated mutate',
+      issueIds: driftFormula.map(i => i.id),
+      scriptArgs: [],
+      mutateOps: ops,
+      mutateTarget: 'auto',
+    })
+  }
+
+  // Drift latest missing → prescribe running drift (docs info)
+  if (report.issues.some(i => i.id === 'drift:no-latest')) {
+    add({
+      id: 'patch:run-drift',
+      kind: 'docsPatch',
+      autoApplicable: true,
+      requiresHuman: false,
+      reason: 'Generate aggregate drift snapshot',
+      issueIds: ['drift:no-latest'],
+      script: 'scripts/mechanics-trust/drift-all.mjs',
+      scriptArgs: [],
+    })
+  }
+
+  // Provenance / verified-without-evidence → human research
+  for (const issue of report.issues.filter(i =>
+    i.id === 'verified-without-evidence' || i.category === 'provenance',
+  )) {
+    add({
+      id: `patch:research:${issue.id}`,
+      kind: 'provenanceResearch',
+      autoApplicable: false,
+      requiresHuman: true,
+      reason: issue.message,
+      issueIds: [issue.id],
+      scriptArgs: [],
+    })
+  }
+
+  // Planner cells unmodeled / silent → human or stub
+  for (const issue of report.issues.filter(i =>
+    i.category === 'planner' && i.severity === 'error' && !i.id.startsWith('coverage:'),
+  )) {
+    add({
+      id: `patch:planner:${issue.id}`,
+      kind: 'plannerPatch',
+      autoApplicable: false,
+      requiresHuman: true,
+      reason: `${issue.message} — do not invent formula; oracle + graph mutate`,
+      issueIds: [issue.id],
+      scriptArgs: [],
+    })
+  }
+
+  // Missing tests → prescribe only
+  for (const issue of byCategory('tests').filter(i => i.severity !== 'info')) {
+    add({
+      id: `patch:test:${issue.id}`,
+      kind: 'testPatch',
+      autoApplicable: false,
+      requiresHuman: true,
+      reason: issue.message,
+      issueIds: [issue.id],
+      scriptArgs: [],
+    })
+  }
+
+  // FS missing path → code / debug reseed
+  for (const issue of byCategory('fs')) {
+    add({
+      id: `patch:fs:${issue.id}`,
+      kind: 'codePatch',
+      autoApplicable: false,
+      requiresHuman: true,
+      reason: `${issue.message} — restore file or remove stale debug node via recompile after fix`,
+      issueIds: [issue.id],
+      scriptArgs: [],
+    })
+    add({
+      id: 'patch:debug-compile-after-fs',
+      kind: 'debugPatch',
+      autoApplicable: true,
+      requiresHuman: false,
+      reason: 'After FS restore, recompile debug graph',
+      issueIds: [issue.id],
+      script: 'scripts/mechanics-trust/compile-debug-graph.mjs',
+      scriptArgs: [],
+    })
+  }
+
+  // Stub graph markers for researching when --stubs (prescription marks autoApplicable false unless stubs flag at repair)
+  for (const issue of report.issues.filter(i => i.category === 'wiki' && i.severity === 'error')) {
+    add({
+      id: `patch:wiki:${issue.id}`,
+      kind: 'provenanceResearch',
+      autoApplicable: false,
+      requiresHuman: true,
+      reason: issue.message,
+      issueIds: [issue.id],
+      scriptArgs: [],
+    })
+  }
+
+  // Commit graph issues → reseed / sidecar annotate (never git rewrite)
+  if (byCategory('commit').some(i => i.id.startsWith('commit:warn:') || i.id === 'commit:empty-graph')) {
+    add({
+      id: 'patch:commit-graph-seed',
+      kind: 'commitGraphAnnotate',
+      autoApplicable: true,
+      requiresHuman: false,
+      reason: 'Reseed commit-graph from git log (sidecar); never amends commits',
+      issueIds: byCategory('commit').map(i => i.id),
+      script: 'scripts/mechanics-trust/seed-commit-graph.mjs',
+      scriptArgs: [],
+    })
+  }
+  for (const issue of byCategory('commit').filter(i =>
+    i.id.startsWith('commit:user-approved-missing-by:')
+    || i.id.startsWith('commit:missing-graph-ids:')
+    || i.id.startsWith('commit:ledger-mismatch'),
+  )) {
+    add({
+      id: `patch:commit-annotate:${issue.id}`,
+      kind: 'commitGraphAnnotate',
+      autoApplicable: true,
+      requiresHuman: false,
+      reason: 'Sidecar-annotate commit-graph node (disputed/trap) — never rewrite git history',
+      issueIds: [issue.id],
+      script: 'scripts/mechanics-trust/annotate-commit-graph.mjs',
+      scriptArgs: ['--issue', issue.id, ...(issue.nodeIds ?? []).flatMap(id => ['--node', id])],
+    })
+  }
+
+  const autoCount = patches.filter(p => p.autoApplicable && AUTO_PATCH_KINDS.has(p.kind)).length
+  const humanCount = patches.filter(p => p.requiresHuman || !p.autoApplicable).length
+
+  return DoctorPatchPlanSchema.parse({
+    generatedAt: new Date().toISOString(),
+    patches,
+    autoCount,
+    humanCount,
+  })
+}

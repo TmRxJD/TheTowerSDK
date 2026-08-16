@@ -303,7 +303,16 @@ API and the real game data instead of guessing at both.
 claude mcp add thetowersdk -- node ./node_modules/thetowersdk/mcp/server.mjs
 ```
 
-Any MCP client works — it speaks stdio. For one that reads a JSON config:
+Any MCP client works — it speaks stdio.
+
+**Tracker monorepo:** register the **slim pair** (not the full CI harness):
+
+| Server | Entry | Role |
+|---|---|---|
+| `tower` | `tools/tower-mcp/mechanics-server.mjs` | Mechanics (wiki, SDK graph, epaths) |
+| `tower-gov` | `tools/tower-mcp/gov-server.mjs` | CAP, Staging, Enforcement, Schema, Pointer, Confidence |
+
+Do **not** also register the standalone package MCP or `tools/tower-mcp/server.mjs` in the IDE — that overflows CallMcpTool and duplicates tools. After changing MCP config or `TOWER_SLIM_CATALOG_REV`, reload both servers. Standalone package consumers can still use this sdk-only entry:
 
 ```json
 {
@@ -324,6 +333,35 @@ Any MCP client works — it speaks stdio. For one that reads a JSON config:
 | `define_term` | What an acronym means, and whether it is ambiguous |
 | `plan_effective_path` | An Effective Path, with the candidates it left out and why |
 | `wiki_search` · `wiki_page` | How a mechanic actually behaves, from the community wiki |
+| `begin_mechanic_task` · `record_*` | Mechanics compliance session + map/ledger |
+| `sdk_graph_*` · `trust_coverage_report` · `trust_drift_check` | Mechanics graph SoT + TrustReport + drift aggregate |
+| `sdk_kernel_load` · `sdk_registry_get` · `mcp_contract` | Unified MechanicsContext + Registry TOC + MCP taxonomy |
+| `ep_graph_*` · sheet oracle tools | Effective Paths sheet-backed work (`sheet_info`, `eval_formula`, …) |
+
+Governance commits (`commit_*`, `enforcement_*`, `schema_*`, `pointer_*`) live on **`tower-gov`**, not on this mechanics server — see [`docs/AGENT_MCP_ONBOARDING.md`](../../docs/AGENT_MCP_ONBOARDING.md) and [`packages/governance-engine/README.md`](../governance-engine/README.md).
+
+Doctor / debug / sandbox tools are on the **full** CI harness (`tools/tower-mcp/server.mjs`) or CLIs (`pnpm sdk-doctor`, `pnpm debug-graph:*`, …), not the slim IDE `tower` catalog.
+
+### Mechanics trust & Debug Graph (monorepo)
+
+Agents must not claim accuracy — CI and load paths do:
+
+| Command | Role |
+|---|---|
+| `pnpm tower-mcp:mastery` | Fresh stdio MCP: every sdk tool happy + adversarial |
+| `pnpm mechanics-kernel` | Unified MechanicsContext / validate / registry / MCP contract / save / planner / lsp |
+| `pnpm save-graph:seed` | Rebuild Save Schema Graph from save modules + SAVE_*_KEY constants |
+| `pnpm mechanics-docs` | Generate `docs/mechanics-map/generated/*` from kernel/registry |
+| `pnpm mechanics-sandbox` | Instrumented non-destructive substrate checks |
+| `pnpm sdk-doctor` | SDK Doctor diagnose (trust + debug + drift snapshots) — see `docs/AGENT_SDK_DOCTOR_PROTOCOL.md` |
+| `pnpm mechanics-trust:check` | Strict TrustReport (invariants + coverage silent gaps + debug cross-check) |
+| `pnpm mechanics-trust:drift` | Sheets + wiki + save drift → `docs/mechanics-map/drift/latest.json` |
+| `pnpm debug-graph:compile` | Rebuild Debug Graph from recursive mechanics scan |
+| `pnpm mechanics-trust:seed-inventories` | Refresh sdk-modules / wiki / save coverage inventories |
+
+Contracts: `docs/AGENT_MECHANICS_CONSTITUTION.md`, `docs/AGENT_MECHANICS_TRUST_CONTRACT.md`, `docs/AGENT_MECHANICS_KERNEL_PROTOCOL.md`, `docs/AGENT_MCP_CONTRACT.md`, `docs/AGENT_DEBUG_GRAPH_PROTOCOL.md`.
+Wiki shorthand titles are remapped via `scripts/mechanics-trust/wiki-title-canonical.mjs`
+(e.g. `Coin Bonus` → `Workshop Enhancement/Utility/Coin Bonus`).
 
 Two of those change how an agent works on this domain:
 

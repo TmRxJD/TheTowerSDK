@@ -33,6 +33,7 @@ export const indexedEntrySchema = z.object({
 // --- tables -----------------------------------------------------------------
 
 export const labCatalogRecordSchema = z.object({
+  slug: z.string(),
   name: z.string(),
   category: z.string().nullable(),
   description: z.string().optional(),

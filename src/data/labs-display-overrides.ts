@@ -40,9 +40,9 @@ function isUsableLabExtractedSlug(slug: string | null | undefined): boolean {
 }
 
 const STATIC_LAB_CATEGORY_BY_LOOKUP_KEY = new Map(
-  LAB_CATALOG.map(lab => [
-    normalizeToolLabLookupKey(lab.name),
-    normalizeToolLabCategory(lab.category),
+  LAB_CATALOG.flatMap(lab => [
+    [normalizeToolLabLookupKey(lab.name), normalizeToolLabCategory(lab.category)] as const,
+    [normalizeToolLabLookupKey(lab.slug), normalizeToolLabCategory(lab.category)] as const,
   ]),
 )
 

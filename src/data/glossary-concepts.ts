@@ -1,11 +1,10 @@
 /**
- * Terms a tool builder meets that are not themselves catalog names: community
- * shorthand, and concepts the game models but never labels.
+ * Terms a tool builder meets that are not themselves catalog names: shorthand,
+ * and concepts the game models but never labels.
  *
  * Every `expansion` here must match a name that actually exists in the shipped
  * catalogs — `glossary.test.ts` enforces that, so an expansion cannot be guessed
- * at. Where the community shorthand is genuinely ambiguous, say so rather than
- * picking a winner.
+ * at. Definitions describe what the term is.
  */
 import type { GlossaryEntry } from './glossary-types'
 
@@ -24,60 +23,56 @@ export const GLOSSARY_CONCEPTS: readonly GlossaryEntry[] = [
     kind: 'acronym',
     domain: 'ultimate-weapon',
     expansion: 'Golden Tower',
-    definition: 'Community shorthand for the Golden Tower ultimate weapon.',
+    definition: 'Golden Tower ultimate weapon.',
   },
   {
     term: 'BH',
     kind: 'acronym',
     domain: 'ultimate-weapon',
     expansion: 'Black Hole',
-    definition: 'Community shorthand for the Black Hole ultimate weapon.',
+    definition: 'Black Hole ultimate weapon.',
   },
   {
     term: 'CL',
     kind: 'acronym',
     domain: 'ultimate-weapon',
     expansion: 'Chain Lightning',
-    definition: 'Community shorthand for the Chain Lightning ultimate weapon.',
+    definition: 'Chain Lightning ultimate weapon.',
   },
   {
     term: 'DW',
     kind: 'acronym',
     domain: 'ultimate-weapon',
     expansion: 'Death Wave',
-    definition: 'Community shorthand for the Death Wave ultimate weapon.',
+    definition: 'Death Wave ultimate weapon.',
   },
   {
     term: 'SM',
     kind: 'acronym',
     domain: 'ultimate-weapon',
     expansion: 'Smart Missiles',
-    definition: 'Community shorthand for the Smart Missiles ultimate weapon.',
+    definition: 'Smart Missiles ultimate weapon.',
   },
   {
     term: 'CF',
     kind: 'acronym',
     domain: 'ultimate-weapon',
     expansion: 'Chrono Field',
-    definition:
-      'Community shorthand for the Chrono Field ultimate weapon. The name is two words — '
-      + '"Chronofield" is not a game term.',
+    definition: 'Chrono Field ultimate weapon.',
   },
   {
     term: 'PS',
     kind: 'acronym',
     domain: 'ultimate-weapon',
     expansion: 'Poison Swamp',
-    definition: 'Community shorthand for the Poison Swamp ultimate weapon.',
+    definition: 'Poison Swamp ultimate weapon.',
   },
   {
     term: 'ILM',
     kind: 'acronym',
     domain: 'ultimate-weapon',
     expansion: 'Inner Land Mines',
-    definition:
-      'Community shorthand for the Inner Land Mines ultimate weapon. Distinct from the Land Mine '
-      + 'workshop stats, which are not an ultimate weapon.',
+    definition: 'Inner Land Mines ultimate weapon.',
   },
 
   // ── Workshop and enemy scaling ────────────────────────────────────────────
@@ -104,32 +99,29 @@ export const GLOSSARY_CONCEPTS: readonly GlossaryEntry[] = [
     kind: 'acronym',
     domain: 'card',
     expansion: 'Wave Accelerator',
-    definition: 'Community shorthand for the Wave Accelerator card.',
+    definition: 'Wave Accelerator card.',
   },
   {
     term: 'EO',
     kind: 'acronym',
     domain: 'card',
     expansion: 'Extra Orb',
-    definition:
-      'Community shorthand for the Extra Orb card. Its save field is `cardInnerOrb`, so the '
-      + 'internal name and the displayed name differ.',
+    definition: 'Extra Orb card (save field `cardInnerOrb`).',
   },
   {
     term: 'SLA',
     kind: 'acronym',
     domain: 'card',
     expansion: 'Slow Aura',
-    definition: 'Community shorthand for the Slow Aura card.',
+    definition: 'Slow Aura card.',
   },
   {
     term: 'EB',
     kind: 'acronym',
     domain: 'card',
     expansion: 'Enemy Balance',
-    definition:
-      'Community shorthand for the Enemy Balance card. Note `EB` is also the initials of the '
-      + 'Energy Barrier module — check the domain.',
+    definition: 'Enemy Balance card.',
+    ambiguous: true,
   },
 
   // ── Battle conditions and tournaments ─────────────────────────────────────

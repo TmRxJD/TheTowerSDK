@@ -18,12 +18,51 @@
  */
 
 import enhancementCosts from '../data/workshop-enhancement-costs.json'
+import { getWorkshopEnhancementDefinitions } from '../data/workshop-enhancement-tracker-definitions'
 
 interface EnhancementCostData {
   costs: Record<string, number[]>
 }
 
 const COSTS = (enhancementCosts as EnhancementCostData).costs
+
+/**
+ * Tracker codes (`WSP_CASH_BONUS`) → sheet display names (`Cash Bonus`).
+ *
+ * The workshop tracker keys by code; every Effective Paths formula and cost
+ * table keys by display name. Looking up spend by code alone reads as zero for
+ * every enhancement — the same silent failure that emptied Coin Bonus levels
+ * until `workshopEnhancementLevel` fixed the site adapters.
+ */
+const ENHANCEMENT_CODE_TO_LABEL: Readonly<Record<string, string>> = Object.fromEntries(
+  getWorkshopEnhancementDefinitions().map(stat => [stat.key, stat.label]),
+)
+
+/**
+ * An enhancement's level from a map that may use display names, tracker codes,
+ * or both.
+ */
+export function workshopEnhancementLevelFromMap(
+  levels: Readonly<Record<string, number>> | undefined,
+  displayName: string,
+): number {
+  if (!levels) return 0
+  const byName = levels[displayName]
+  if (typeof byName === 'number' && Number.isFinite(byName)) {
+    return Math.max(0, Math.floor(byName))
+  }
+  // Cost tables say `Damage/Meter`; the tracker label is `Damage / Meter`.
+  const compact = displayName.replace(/\s+/g, '')
+  for (const [key, value] of Object.entries(levels)) {
+    if (typeof value !== 'number' || !Number.isFinite(value)) continue
+    if (key.replace(/\s+/g, '') === compact) return Math.max(0, Math.floor(value))
+    const label = ENHANCEMENT_CODE_TO_LABEL[key]
+    if (label && label.replace(/\s+/g, '') === compact) {
+      return Math.max(0, Math.floor(value))
+    }
+  }
+  return 0
+}
 
 /** Which discount lab applies to an enhancement. */
 export type WorkshopEnhancementCategory = 'attack' | 'defense' | 'utility'
@@ -178,9 +217,31 @@ export function workshopEnhancementSpend(
   discounts: WorkshopEnhancementDiscounts = {},
 ): number {
   return WORKSHOP_ENHANCEMENT_SPEND_STATS.reduce(
-    (total, stat) => total + enhancementCoinSpend(stat, levels[stat] ?? 0, discounts),
+    (total, stat) =>
+      total + enhancementCoinSpend(stat, workshopEnhancementLevelFromMap(levels, stat), discounts),
     0,
   )
+}
+
+/**
+ * `WSPATTACK/DEFENSE/UTILITY_TOTAL_COINS_INVESTED` — coins sunk into a
+ * category's six workshop enhancements.
+ *
+ * Undiscounted, and cumulative to each stat's level. Verified against the live
+ * function at five level sets, exactly. Accepts tracker `WSP_*` codes as well
+ * as display names — see {@link workshopEnhancementLevelFromMap}.
+ */
+export function workshopEnhancementCoinsInvested(
+  category: WorkshopEnhancementCategory,
+  levels: Readonly<Record<string, number>>,
+): number {
+  let total = 0
+  for (const [stat, group] of Object.entries(WORKSHOP_ENHANCEMENT_CATEGORIES)) {
+    if (group !== category) continue
+    const level = workshopEnhancementLevelFromMap(levels, stat)
+    for (let at = 1; at <= level; at++) total += enhancementCoinCost(stat, at) ?? 0
+  }
+  return total
 }
 
 /**
@@ -188,8 +249,27 @@ export function workshopEnhancementSpend(
  *
  * `eHP Coins!CR` and `CS` gate Defense Absolute + and Wall Health + on the
  * running total; the other two eHP enhancements have no gate.
+ *
+ * Comparison on the eHP path is `spent < unlock` (unlocks at equality).
  */
 export const ENHANCEMENT_SPEND_UNLOCKS: Readonly<Record<string, number>> = {
   'Defense Absolute': 500_000_000_000,
   'Wall Health': 50_000_000_000_000,
+}
+
+/**
+ * Utility enhancement spend gates on the econ time/coin path — `eEcon!EO2` /
+ * `eEcon!EP2`.
+ *
+ * Wiki (CC-BY-SA, Workshop Enhancement/Utility/Coin Bonus and Free Upgrades):
+ * Coin Bonus needs 50B spent on Utility enhancements; Free Upgrades needs 5T.
+ *
+ * Sheet hide rows use `WSPUTILITY_TOTAL_COINS_INVESTED(...) <= threshold`, so
+ * the candidate appears only when spend is **strictly greater** than the
+ * threshold (Cash Bonus level 9 = 49.01B still hidden; level 10 = 55.54B opens
+ * Coin Bonus — oracle-checked).
+ */
+export const UTILITY_ENHANCEMENT_SPEND_UNLOCKS: Readonly<Record<string, number>> = {
+  'Coin Bonus': 50_000_000_000,
+  'Free Upgrades': 5_000_000_000_000,
 }

@@ -14,11 +14,17 @@ Everything here is about that one game. Nothing in this package is generic infra
 ## Two rules, before anything else
 
 1. **Look up the mechanic before you describe it.** This package gives values, not meaning. See
-   [Consult the wiki](#consult-the-wiki-before-describing-a-mechanic) — it is not optional and it is
-   one tool call.
+   [Consult the wiki](#consult-the-wiki-before-describing-a-mechanic) and the monorepo contract
+   [`docs/AGENT_GAME_MECHANICS_CONTRACT.md`](../../docs/AGENT_GAME_MECHANICS_CONTRACT.md) —
+   `begin_mechanic_task` is mandatory when MCP is available. It is not optional.
 2. **Find the export; do not invent one.** There are 2,007 exports across six entry points. Use the
    map below, then `list_exports` with a filter, then `get_export`. A plausible-looking name you
    guessed will not exist.
+
+**Never claim a mechanic change is finished** until the human tested and approved. Ledger statuses:
+`researching` | `implementing` | `awaiting_user` | `user_approved` | `blocked` — never `done`.
+Monorepo commits: [`docs/AGENT_COMMIT_SCHEMA.md`](../../docs/AGENT_COMMIT_SCHEMA.md) (`status/checkpoint` default).
+Living map: [`docs/mechanics-map/MAP.md`](../../docs/mechanics-map/MAP.md).
 
 ## Where things are
 
@@ -142,12 +148,22 @@ This package supplies the game's data and formulas. It does not document game be
 gives a value, not what that value means, when it applies, or what it interacts with. Confirm
 behaviour against the community wiki before describing it in code, comments or output.
 
-Via the MCP server (`mcp/server.mjs`):
+**Forced MCP workflow** (same for Cursor, Claude, Copilot):
 
 ```
-wiki_search { query: "wave skip" }                 find the page titles
-wiki_page   { title: "Wave Skip" }                 read it as Markdown
-wiki_page   { title: "Cards", section: "Costs" }   read one section
+begin_mechanic_task { mechanic, intent, relatedHints? }
+wiki_page   { title }     # every related title from the task — not one
+define_term { term }
+record_mechanic_note { token, mechanic, facts, sources, relatesTo? }
+record_work_status   { token, title, status, summary }
+```
+
+Also:
+
+```
+wiki_search { query: "wave skip" }
+wiki_page   { title: "Wave Skip" }
+wiki_page   { title: "Cards", section: "Costs" }
 ```
 
 In code, `fetchFandomPageAsMarkdown` from `thetowersdk/wiki` does the same. Without MCP, the wiki is
@@ -161,6 +177,9 @@ in the game's description text.
 **Offline use.** Set `TOWER_WIKI_DIR` to a directory of `slug.md` pages; both tools read it before
 the network. Every response reports `source: "local" | "cache" | "fandom"`, so a stale local page is
 distinguishable from a fresh fetch.
+
+**Living map.** Set `TOWER_MECHANICS_MAP_DIR` to override where `record_mechanic_note` writes
+(default: monorepo `docs/mechanics-map`).
 
 ### Wiki content and licensing
 

@@ -412,7 +412,7 @@ export interface EffectiveDamageConfig {
    */
   chronoFieldEnabled: boolean
 
-  /** `AL75` — whether the Shock Multiplier is unlocked at all. */
+  /** `AL75` — Chain Lightning owned and Chain Lightning Shock lab at level 1. */
   shockMultiplierUnlocked: boolean
   /** `AL69` — whether Rend Armour is in play. */
   hasRendArmour: boolean

@@ -27,6 +27,19 @@ import {
   maxStoneLevel,
 } from './effective-paths-assist-efficiency'
 import {
+  isStoneMasteryOwned,
+  STONE_MASTERY_COSTS,
+  STONE_MASTERY_MAX_LEVEL,
+  STONE_MASTERY_NAMES,
+  withStoneMasteriesActivated,
+} from './effective-paths-eecon-stone-mastery'
+import {
+  applyUwCdPurchases,
+  isUwCdCandidateVisible,
+  uwCdRemainingPurchases,
+  uwCdStoneCost,
+} from './effective-paths-eecon-uw-cd'
+import {
   ultimateWeaponMaxLevel,
   ultimateWeaponStoneCost,
 } from './effective-paths-edamage-costs'
@@ -38,6 +51,8 @@ import {
 import {
   enhancementCoinCost,
   enhancementMaxLevel,
+  UTILITY_ENHANCEMENT_SPEND_UNLOCKS,
+  workshopEnhancementCoinsInvested,
 } from './effective-paths-enhancement-costs'
 import type { WorkshopEnhancementDiscounts } from './effective-paths-enhancement-costs'
 import {
@@ -159,7 +174,58 @@ const WEAPON_GATED_CANDIDATES: Readonly<Record<string, keyof EffectiveEconomyCon
   'Black Hole Coin Bonus': 'blackHole',
   'Death Wave Coin Bonus': 'deathWave',
   'Spotlight Coin Bonus': 'spotlight',
-  'Gold Bot Duration': 'goldBot',
+  // Sheet name carries the hyphen; a typo here left Gold Bot ungated.
+  'Gold Bot - Duration': 'goldBot',
+}
+
+/**
+ * Time/coin candidates the sheet hides until a prerequisite is met.
+ *
+ * Read off `eEcon!DV2:ER2`. Same shape as the damage tab's lab prerequisites:
+ * unmet, their gain is ~0 and a zero still fills the path in tie-break order.
+ */
+const TIME_PATH_PREREQUISITES: Readonly<
+  Record<string, (config: EffectiveEconomyConfig) => boolean>
+> = {
+  // `AO7+AS7=0` — Galaxy Compressor unique (primary + assist).
+  'Recovery Package Chance': config => {
+    const u = config.uniques.galaxyCompressor
+    return u.primary + u.assist !== 0
+  },
+  // `AO6+AS6=0` on the Free Upgrades enhancement column.
+  'Free Upgrades': config => {
+    const u = config.uniques.blackHoleDigestor
+    return u.primary + u.assist !== 0
+  },
+  // `NOT(AZ32)` — card equipped and mastery unlocked (`AND(AZ31, IDS_CARD_MASTERY)`).
+  'Coins Mastery': config =>
+    Boolean(config.cards.coins.active && config.cards.coinsMastery.active),
+  // `AZ34` uses LEFT(AU34,9)="Extra Orb" plus cards-on and mastery.
+  'Extra Orb Mastery': config => Boolean(config.cards.extraOrbMastery.active),
+  'Wave Skip Mastery': config =>
+    Boolean(config.cards.waveSkip.active && config.cards.waveSkipMastery.active),
+  'Intro Sprint Mastery': config =>
+    Boolean(config.cards.introSprint.active && config.cards.introSprintMastery.active),
+  'Wave Accelerator Mastery': config => Boolean(config.cards.waveAcceleratorMastery.active),
+  // `NOT(AZ43)` or `NOT(OR(AZ45, AZ46))` — perks on, and Coins or Free Ups taken.
+  'Standard Perks Bonus': config =>
+    config.perksEquipped && (config.perks.coins || config.perks.freeUpgrades),
+  // `NOT(AND(AZ43, AZ47))` — perks on and the coin trade-off taken.
+  'Improve Trade-off Perks': config =>
+    config.perksEquipped && config.perks.coinsTradeOff,
+}
+
+/**
+ * Assist-efficiency candidates that need an assist module in the slot (`AP5` /
+ * `AP14` on both the time and stone tabs).
+ */
+const ASSIST_SLOT_GATES: Readonly<
+  Record<string, (config: EffectiveEconomyConfig) => boolean>
+> = {
+  'Assist Module Bonus - Generator': config => config.generator.hasAssist,
+  'Assist Module Substats - Generator': config => config.generator.hasAssist,
+  'Assist Module - Generator': config => config.generator.hasAssist,
+  'Assist Module Substats - Core': config => config.generator.coreHasAssist,
 }
 
 /**
@@ -171,6 +237,31 @@ const WEAPON_GATED_CANDIDATES: Readonly<Record<string, keyof EffectiveEconomyCon
  * player has no way to buy.
  */
 const GOLDEN_COMBO_MINIMUM_WEAPONS = 9
+
+/**
+ * Stone candidates that need their coin-bonus lab started first.
+ *
+ * Read off `eEcon Stones!DM2:EQ2`:
+ * - `DQ2` / `DR2` hide BH Duration and BH Cooldown on `BE20=0`
+ * - `DT2` / `DU2` hide SL Angle and SL Quantity on `BE21=0`
+ *
+ * `BE20` / `BE21` are `IDS_LAB_LEVEL` of Black Hole Coin Bonus and Spotlight
+ * Coin Bonus on the mirrored lab block (`eEcon!BD20` / `BD21`). Duration and
+ * angle stones do nothing for the econ model until those labs contribute, and
+ * a zero-gain candidate still fills the path in tie-break order.
+ */
+const STONE_COIN_LAB_GATES: Readonly<Record<string, keyof EffectiveEconomyLevels['time']>> = {
+  'BH Duration': 'blackHoleCoinBonus',
+  'BH Cooldown': 'blackHoleCoinBonus',
+  'SL Angle': 'spotlightCoinBonus',
+  'SL Quantity': 'spotlightCoinBonus',
+}
+
+/** Human names for {@link STONE_COIN_LAB_GATES} exclusion reasons. */
+const STONE_COIN_LAB_LABELS: Readonly<Record<string, string>> = {
+  blackHoleCoinBonus: 'Black Hole Coin Bonus',
+  spotlightCoinBonus: 'Spotlight Coin Bonus',
+}
 
 /** The three cooldowns `AZ17`, "Keep GT|BH|DW CD Synced", takes off the path. */
 const SYNCED_COOLDOWN_CANDIDATES = new Set(['GT Cooldown', 'BH Cooldown', 'DW Cooldown'])
@@ -191,29 +282,27 @@ const STONE_ASSIST_KINDS: Readonly<Record<string, 'multiplier' | 'substat'>> = {
 }
 
 /**
- * The five card masteries the stone tab ranks without pricing.
+ * Card masteries the stone tab used to leave unpriced.
  *
- * Their ROI column reads a single cell — `eEcon Stones!$AX$32` — rather than
- * computing anything, so the sheet is asking the player what a mastery is
- * worth rather than working it out. A planner that spends stones on them would
- * be inventing a price.
+ * All five now have sheet stone costs ({@link STONE_MASTERY_COSTS}) and score
+ * through the econ model. Kept as an empty set so a future AX-only mastery
+ * can land here without reinventing the exclusion branch.
  */
-const STONE_UNPRICED = new Set([
-  'Coins Mastery', 'Extra Orb Mastery', 'Wave Skip Mastery',
-  'Intro Sprint Mastery', 'Wave Accelerator Mastery',
-])
+const STONE_MASTERY_UNPORTED = new Set<string>()
 
 /**
- * `UW CD` — the one candidate that is not a single level.
+ * `UW CD` — cooldown levels bought together while Keep CD Synced is on.
  *
- * `eEcon Stones!CA5` is `MAX` of the three weapon cooldowns, and buying it
- * takes a cooldown level on *whichever* of Golden Tower, Black Hole and Death
- * Wave currently sit at that maximum — up to three purchases in one step. The
- * planner moves one level at a time, so it cannot express that, and the sheet
- * also skips the candidate entirely once the longest cooldown is under 110
- * seconds.
+ * `eEcon Stones!DW5` advances every unlocked GT/BH/DW Cooldown that sits at
+ * `CA5` (the longest chart cooldown) and prices the step as the sum. Hide row
+ * `DW2` is `OR(NOT(AZ17), CA5<110)`. See {@link applyUwCdPurchases}.
  */
 const STONE_COMPOSITE = 'UW CD'
+
+/** Planner id for the composite — `stone:stone.ultimateWeaponCooldownStone`. */
+function isUwCdUpgrade(upgrade: EffectiveEconomyUpgrade): boolean {
+  return upgrade.sheetName === STONE_COMPOSITE
+}
 
 /** One candidate, resolved to the level it moves. */
 export interface EffectiveEconomyUpgrade {
@@ -271,11 +360,9 @@ export interface EffectiveEconomyPlanOptions {
   /**
    * `eEcon!AZ17` — "Keep GT|BH|DW CD Synced".
    *
-   * Not a term in the synchronisation multiplier, which is where it looks like
-   * it belongs: `EPC_SYNC` takes twelve arguments and none of them is this.
-   * `eEcon Stones!DO2` shows what it really does — it hides the three
-   * individual cooldown candidates, because keeping them synced means buying
-   * them together, which is the `UW CD` composite this planner cannot express.
+   * Hides the three individual cooldown candidates (`DO2` / `DR2` / `DT2`) and
+   * reveals `UW CD` (`DW2`) while the longest chart cooldown is still ≥ 110s.
+   * The composite is planned through {@link applyUwCdPurchases}.
    */
   keepCooldownsSynced?: boolean
   /**
@@ -303,6 +390,13 @@ export interface EffectiveEconomyPlanOptions {
    * The coin path buys two enhancements and neither exists without it.
    */
   workshopEnhancementsUnlocked?: boolean
+  /**
+   * Workshop enhancement levels, keyed by display name or tracker `WSP_*`
+   * code. Used for `eEcon!EO2` / `EP2` — Coin Bonus and Free Upgrades stay
+   * hidden until Utility enhancement spend clears their thresholds (see
+   * {@link UTILITY_ENHANCEMENT_SPEND_UNLOCKS}).
+   */
+  enhancementLevels?: Readonly<Record<string, number>>
 }
 
 export interface EffectiveEconomyPlan {
@@ -319,9 +413,20 @@ export interface EffectiveEconomyPlan {
 }
 
 /** The highest level a candidate can reach, or `null` when nothing prices one. */
-function resolveMaxLevel(upgrade: EffectiveEconomyUpgrade): number | null {
-  if (upgrade.sheetName === STONE_COMPOSITE) return null
-  if (STONE_UNPRICED.has(upgrade.sheetName) && upgrade.variants[0] === 'stone') return null
+function resolveMaxLevel(
+  upgrade: EffectiveEconomyUpgrade,
+  options: EffectiveEconomyPlanOptions,
+): number | null {
+  if (isUwCdUpgrade(upgrade)) {
+    if (!options.keepCooldownsSynced) return null
+    return uwCdRemainingPurchases(options.config, options.levels.stone)
+  }
+  if (STONE_MASTERY_UNPORTED.has(upgrade.sheetName) && upgrade.variants[0] === 'stone') {
+    return null
+  }
+  if (STONE_MASTERY_NAMES.has(upgrade.sheetName) && upgrade.variants[0] === 'stone') {
+    return STONE_MASTERY_MAX_LEVEL
+  }
 
   const weaponStat = STONE_WEAPON_STATS[upgrade.sheetName]
   if (weaponStat) return ultimateWeaponMaxLevel(weaponStat.weapon, weaponStat.stat)
@@ -370,10 +475,17 @@ function costOf(
   options: EffectiveEconomyPlanOptions,
 ): number | null {
   if (variant === 'stone') {
+    if (isUwCdUpgrade(upgrade)) {
+      // Cost of the Nth composite purchase from the player's starting CDs.
+      const prior = applyUwCdPurchases(options.config, options.levels.stone, nextLevel - 1)
+      return uwCdStoneCost(options.config, prior)
+    }
     const weaponStat = STONE_WEAPON_STATS[upgrade.sheetName]
     if (weaponStat) {
       return ultimateWeaponStoneCost(weaponStat.weapon, weaponStat.stat, nextLevel)
     }
+    const masteryCost = STONE_MASTERY_COSTS[upgrade.sheetName]
+    if (masteryCost !== undefined) return masteryCost
     const assist = STONE_ASSIST_KINDS[upgrade.sheetName]
     return assist ? assistEfficiencyStoneCost(assist, nextLevel) : null
   }
@@ -463,16 +575,33 @@ function levelOf(levels: EffectiveEconomyLevels, upgrade: EffectiveEconomyUpgrad
 function withLevels(
   levels: EffectiveEconomyLevels,
   current: ReadonlyMap<string, number>,
+  config: EffectiveEconomyConfig,
 ): EffectiveEconomyLevels {
   const next: EffectiveEconomyLevels = {
     time: { ...levels.time },
     stone: { ...levels.stone },
     discount: { ...levels.discount },
   }
+  let uwCdPurchases: number | null = null
   for (const [id, level] of current) {
     const upgrade = EFFECTIVE_ECONOMY_UPGRADES.find(entry => entry.id === id)
     if (!upgrade) continue
+    if (isUwCdUpgrade(upgrade)) {
+      uwCdPurchases = level
+      continue
+    }
     ;(next[upgrade.band] as unknown as Record<string, number>)[upgrade.key] = level
+  }
+  if (uwCdPurchases !== null) {
+    // Composite purchases rewrite the three CD stone levels from the starting
+    // account — individual CD candidates are off the path while sync is on.
+    const applied = applyUwCdPurchases(config, {
+      ...next.stone,
+      goldenTowerCooldownStone: levels.stone.goldenTowerCooldownStone,
+      blackHoleCooldownStone: levels.stone.blackHoleCooldownStone,
+      deathWaveCooldownStone: levels.stone.deathWaveCooldownStone,
+    }, uwCdPurchases)
+    next.stone = { ...applied, ultimateWeaponCooldownStone: uwCdPurchases }
   }
   return next
 }
@@ -511,6 +640,10 @@ export function planEffectiveEconomyPath(
   const upgrades: PathUpgrade[] = []
   const excluded: EffectiveEconomyPlan['excluded'] = []
   const byId = new Map(EFFECTIVE_ECONOMY_UPGRADES.map(upgrade => [upgrade.id, upgrade]))
+  const utilityEnhancementSpend = workshopEnhancementCoinsInvested(
+    'utility',
+    options.enhancementLevels ?? {},
+  )
 
   for (const upgrade of EFFECTIVE_ECONOMY_UPGRADES) {
     if (!upgrade.variants.includes(variant)) continue
@@ -521,12 +654,20 @@ export function planEffectiveEconomyPath(
     }
 
     if (upgrade.sheetName === STONE_COMPOSITE) {
-      excluded.push({
-        sheetName: upgrade.sheetName,
-        reason: 'buys a cooldown level on every weapon at the longest cooldown, '
-          + 'which is more than one level a step',
-      })
-      continue
+      if (!options.keepCooldownsSynced) {
+        excluded.push({
+          sheetName: upgrade.sheetName,
+          reason: 'the path is ranking cooldowns individually',
+        })
+        continue
+      }
+      if (!isUwCdCandidateVisible(config, levels.stone, true)) {
+        excluded.push({
+          sheetName: upgrade.sheetName,
+          reason: 'longest cooldown is under 110 seconds',
+        })
+        continue
+      }
     }
 
     if (options.daysOnly && COIN_PRICED_TIME_CANDIDATES.has(upgrade.sheetName)) {
@@ -537,10 +678,48 @@ export function planEffectiveEconomyPath(
       continue
     }
 
-    if (variant === 'stone' && STONE_UNPRICED.has(upgrade.sheetName)) {
+    if (variant === 'stone' && STONE_MASTERY_UNPORTED.has(upgrade.sheetName)) {
       excluded.push({
         sheetName: upgrade.sheetName,
-        reason: 'the sheet ranks it from a player-supplied return rather than a stone price',
+        reason: 'the sheet ranks it from an unported mastery-return formula rather than a stone price',
+      })
+      continue
+    }
+
+    if (variant === 'stone' && STONE_MASTERY_NAMES.has(upgrade.sheetName)
+      && isStoneMasteryOwned(upgrade.sheetName, config)) {
+      excluded.push({
+        sheetName: upgrade.sheetName,
+        reason: 'the card mastery is already unlocked',
+      })
+      continue
+    }
+
+    // Coins Mastery multiplies the Coins card — without the card the unlock
+    // does nothing, and a zero-gain candidate still fills the path.
+    if (variant === 'stone' && upgrade.sheetName === 'Coins Mastery'
+      && !config.cards.coins.active) {
+      excluded.push({
+        sheetName: upgrade.sheetName,
+        reason: 'the Coins card is not equipped',
+      })
+      continue
+    }
+
+    if (variant === 'stone' && upgrade.sheetName === 'Wave Skip Mastery'
+      && !config.cards.waveSkip.active) {
+      excluded.push({
+        sheetName: upgrade.sheetName,
+        reason: 'the Wave Skip card is not equipped',
+      })
+      continue
+    }
+
+    if (variant === 'stone' && upgrade.sheetName === 'Intro Sprint Mastery'
+      && !config.cards.introSprint.active) {
+      excluded.push({
+        sheetName: upgrade.sheetName,
+        reason: 'the Intro Sprint card is not equipped',
       })
       continue
     }
@@ -556,11 +735,58 @@ export function planEffectiveEconomyPath(
       continue
     }
 
+    // Time/coin hide-row prerequisites — assist slots, unique modules, mastery
+    // labs that need the unlock first, and perk labs.
+    if (variant === 'time' || variant === 'coin') {
+      const ready = TIME_PATH_PREREQUISITES[upgrade.sheetName]
+      if (ready && !ready(config)) {
+        excluded.push({
+          sheetName: upgrade.sheetName,
+          reason: 'its prerequisite is not met',
+        })
+        continue
+      }
+    }
+
+    const assistReady = ASSIST_SLOT_GATES[upgrade.sheetName]
+    if (assistReady && !assistReady(config)) {
+      excluded.push({
+        sheetName: upgrade.sheetName,
+        reason: 'no assist module is equipped in that slot',
+      })
+      continue
+    }
+
+    // `eEcon Stones!DQ2` / `DR2` / `DT2` / `DU2`: BH and SL stone stats stay
+    // hidden until their coin-bonus lab is at least level 1 (`BE20` / `BE21`).
+    if (variant === 'stone') {
+      const coinLabKey = STONE_COIN_LAB_GATES[upgrade.sheetName]
+      if (coinLabKey && levels.time[coinLabKey] <= 0) {
+        const labLabel = STONE_COIN_LAB_LABELS[coinLabKey] ?? coinLabKey
+        excluded.push({
+          sheetName: upgrade.sheetName,
+          reason: `the ${labLabel} lab is not started yet`,
+        })
+        continue
+      }
+    }
+
     if (options.workshopEnhancementsUnlocked === false
       && ENHANCEMENT_STATS[upgrade.sheetName]) {
       excluded.push({
         sheetName: upgrade.sheetName,
         reason: 'the Workshop Enhancements lab is not bought yet',
+      })
+      continue
+    }
+
+    // `eEcon!EO2` / `EP2`: hide while utility spend is still at or below the
+    // wiki unlock threshold (`WSPUTILITY_TOTAL_COINS_INVESTED(...)<=N`).
+    const utilityUnlockAt = UTILITY_ENHANCEMENT_SPEND_UNLOCKS[upgrade.sheetName]
+    if (utilityUnlockAt !== undefined && utilityEnhancementSpend <= utilityUnlockAt) {
+      excluded.push({
+        sheetName: upgrade.sheetName,
+        reason: `locked until more than ${utilityUnlockAt} coins are spent on Utility enhancements`,
       })
       continue
     }
@@ -582,7 +808,7 @@ export function planEffectiveEconomyPath(
       continue
     }
 
-    const level = levelOf(levels, upgrade)
+    const level = isUwCdUpgrade(upgrade) ? 0 : levelOf(levels, upgrade)
 
     if (MODULE_CANDIDATES.has(upgrade.sheetName) && level < MODULE_COIN_PATH_MIN_LEVEL) {
       excluded.push({
@@ -592,9 +818,12 @@ export function planEffectiveEconomyPath(
       continue
     }
 
-    const maxLevel = options.maxLevels?.[upgrade.id] ?? resolveMaxLevel(upgrade)
-    if (maxLevel === null) {
-      excluded.push({ sheetName: upgrade.sheetName, reason: 'no maximum level known' })
+    const maxLevel = options.maxLevels?.[upgrade.id] ?? resolveMaxLevel(upgrade, options)
+    if (maxLevel === null || maxLevel <= level) {
+      excluded.push({
+        sheetName: upgrade.sheetName,
+        reason: maxLevel === null ? 'no maximum level known' : 'longest cooldown is under 110 seconds',
+      })
       continue
     }
 
@@ -611,8 +840,13 @@ export function planEffectiveEconomyPath(
   const planned = planPath({
     upgrades,
     steps,
-    evaluate: current =>
-      computeEffectiveEconomy(config, withLevels(levels, current)).effectiveEconomy,
+    evaluate: current => {
+      const nextLevels = withLevels(levels, current, config)
+      const scored = variant === 'stone'
+        ? withStoneMasteriesActivated(config, levels, nextLevels)
+        : config
+      return computeEffectiveEconomy(scored, nextLevels).effectiveEconomy
+    },
     cost: (id, nextLevel) => {
       const upgrade = byId.get(id)
       if (!upgrade) return Number.NaN

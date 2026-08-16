@@ -56,9 +56,8 @@ describe('the eight shared between the two earning tabs', () => {
   it('points the stone path at the time path’s masteries', () => {
     /**
      * A card mastery is one lab level whatever ranks it. The stone tab ranks
-     * these five off a single user-supplied cell so a mastery can be weighed
-     * against a stone purchase — giving them stone levels of their own would
-     * let a plan buy the same level twice.
+     * these five with a stone price from the AX ROI cells — giving them stone
+     * levels of their own would let a plan buy the same level twice.
      */
     const shared = ECONOMY_STONE_LEVEL_REFS.filter(ref => ref.band === 'time')
     expect(shared.map(ref => ref.key)).toEqual([...ECONOMY_STONE_SHARED_KEYS])

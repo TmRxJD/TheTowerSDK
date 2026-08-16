@@ -1,0 +1,228 @@
+import type { McpToolCatalogEntry } from './schema'
+
+/** Static SoT for Unified MCP contract tool taxonomy. Update when adding MCP tools. */
+export const MCP_TOOL_CATALOG: Array<Omit<McpToolCatalogEntry, 'guarantees' | 'shipped'> & {
+  guarantees?: McpToolCatalogEntry['guarantees']
+  shipped?: boolean
+  notes?: string
+}> = [
+  // meta
+  { name: 'list_modules', category: 'meta', module: 'meta', guarantees: ['deterministic', 'structured'] },
+
+  // compliance
+  {
+    name: 'begin_mechanic_task',
+    category: 'compliance',
+    module: 'sdk',
+    guarantees: ['structured', 'noProseSoT', 'noFeatureClosedWithoutApproval'],
+  },
+  { name: 'record_mechanic_note', category: 'compliance', module: 'sdk', guarantees: ['structured', 'noProseSoT'] },
+  {
+    name: 'record_work_status',
+    category: 'compliance',
+    module: 'sdk',
+    guarantees: ['structured', 'noFeatureClosedWithoutApproval'],
+  },
+  { name: 'compliance_contract', category: 'compliance', module: 'sdk', guarantees: ['deterministic', 'structured'] },
+  { name: 'define_term', category: 'compliance', module: 'sdk', guarantees: ['structured'] },
+
+  // graph
+  { name: 'sdk_graph_get', category: 'graph', module: 'sdk', guarantees: ['deterministic', 'structured', 'noProseSoT'] },
+  { name: 'sdk_graph_context', category: 'graph', module: 'sdk', guarantees: ['deterministic', 'structured', 'noProseSoT'] },
+  {
+    name: 'sdk_graph_mutate',
+    category: 'graph',
+    module: 'sdk',
+    guarantees: ['structured', 'noProseSoT', 'mutateRefusesBadTrust', 'verifiedNeedsEvidence'],
+  },
+  {
+    name: 'sdk_graph_validate',
+    category: 'graph',
+    module: 'sdk',
+    guarantees: ['deterministic', 'structured', 'verifiedNeedsEvidence', 'noSilentDrift'],
+  },
+  { name: 'sdk_graph_render', category: 'docs', module: 'sdk', guarantees: ['deterministic', 'structured'] },
+  { name: 'ep_graph_get', category: 'graph', module: 'epaths', guarantees: ['deterministic', 'structured', 'noProseSoT'] },
+  {
+    name: 'ep_graph_mutate',
+    category: 'graph',
+    module: 'epaths',
+    guarantees: ['structured', 'noProseSoT', 'mutateRefusesBadTrust'],
+  },
+  { name: 'ep_graph_validate', category: 'graph', module: 'epaths', guarantees: ['deterministic', 'structured'] },
+  { name: 'ep_graph_render', category: 'docs', module: 'epaths', guarantees: ['deterministic', 'structured'] },
+  { name: 'record_ep_relation', category: 'graph', module: 'epaths', guarantees: ['structured', 'noProseSoT'] },
+
+  // debug
+  { name: 'sdk_debug_snapshot', category: 'debug', module: 'sdk', guarantees: ['deterministic', 'structured'] },
+  { name: 'sdk_debug_validate', category: 'debug', module: 'sdk', guarantees: ['deterministic', 'structured'] },
+  { name: 'sdk_debug_trace', category: 'debug', module: 'sdk', guarantees: ['structured'] },
+  { name: 'sdk_debug_watch', category: 'debug', module: 'sdk', guarantees: ['structured'] },
+
+  // doctor
+  {
+    name: 'sdk_doctor_check',
+    category: 'doctor',
+    module: 'sdk',
+    guarantees: ['deterministic', 'structured', 'doctorNeverInventFormulas'],
+  },
+  {
+    name: 'sdk_doctor_prescribe',
+    category: 'doctor',
+    module: 'sdk',
+    guarantees: ['deterministic', 'structured', 'doctorNeverInventFormulas'],
+  },
+  {
+    name: 'sdk_doctor_repair',
+    category: 'doctor',
+    module: 'sdk',
+    guarantees: ['structured', 'doctorNeverInventFormulas', 'mutateRefusesBadTrust'],
+  },
+  {
+    name: 'sdk_doctor_validate',
+    category: 'doctor',
+    module: 'sdk',
+    guarantees: ['deterministic', 'structured'],
+  },
+  {
+    name: 'sdk_doctor_autofix',
+    category: 'doctor',
+    module: 'sdk',
+    guarantees: ['structured', 'doctorNeverInventFormulas', 'mutateRefusesBadTrust'],
+  },
+
+  // kernel / registry / contract
+  {
+    name: 'sdk_kernel_load',
+    category: 'kernel',
+    module: 'sdk',
+    guarantees: ['deterministic', 'structured', 'noProseSoT'],
+  },
+  {
+    name: 'sdk_registry_get',
+    category: 'registry',
+    module: 'sdk',
+    guarantees: ['deterministic', 'structured'],
+  },
+  {
+    name: 'mcp_contract',
+    category: 'meta',
+    module: 'sdk',
+    guarantees: ['deterministic', 'structured'],
+  },
+
+  {
+    name: 'sdk_save_graph_get',
+    category: 'save',
+    module: 'sdk',
+    guarantees: ['deterministic', 'structured'],
+  },
+  {
+    name: 'sdk_planner_compile',
+    category: 'planner',
+    module: 'sdk',
+    guarantees: ['deterministic', 'structured'],
+    notes:
+      'Structural pipeline + citation emit; eval:true uses hand-ported bindings only — formula body codegen deferred',
+  },
+  {
+    name: 'sdk_sandbox_run',
+    category: 'sandbox',
+    module: 'sdk',
+    guarantees: ['structured', 'doctorNeverInventFormulas'],
+    notes: 'Modes: check|kernel|doctor-dry|save-graph|planner|decode|vm (light Tower VM)',
+  },
+  {
+    name: 'sdk_docs_generate',
+    category: 'docs',
+    module: 'sdk',
+    guarantees: ['deterministic', 'structured'],
+  },
+  {
+    name: 'sdk_lsp_diagnostics',
+    category: 'invariants',
+    module: 'sdk',
+    guarantees: ['deterministic', 'structured'],
+    notes: 'LSP diagnostics provider Phase 1 — full language server deferred',
+  },
+
+  // CAP / commit graph — @tmrxjd/governance-engine
+  {
+    name: 'commit_authorize',
+    category: 'commit',
+    module: 'governance',
+    guarantees: ['deterministic', 'structured', 'noFeatureClosedWithoutApproval'],
+    notes: 'CAP session state off|on|close-only',
+  },
+  {
+    name: 'commit_checkpoint',
+    category: 'commit',
+    module: 'governance',
+    guarantees: ['structured', 'noFeatureClosedWithoutApproval'],
+    notes: 'CAP-gated atomic commit; dryRun default for mastery',
+  },
+  {
+    name: 'commit_close',
+    category: 'commit',
+    module: 'governance',
+    guarantees: ['structured', 'noFeatureClosedWithoutApproval'],
+    notes: 'close-only: awaiting-user or user-approved',
+  },
+  {
+    name: 'commit_validate',
+    category: 'commit',
+    module: 'governance',
+    guarantees: ['deterministic', 'structured'],
+  },
+  {
+    name: 'commit_get',
+    category: 'commit',
+    module: 'governance',
+    guarantees: ['deterministic', 'structured'],
+  },
+
+  // invariants / coverage / drift
+  {
+    name: 'trust_coverage_report',
+    category: 'coverage',
+    module: 'sdk',
+    guarantees: ['deterministic', 'structured', 'verifiedNeedsEvidence'],
+  },
+  {
+    name: 'trust_drift_check',
+    category: 'drift',
+    module: 'sdk',
+    guarantees: ['structured', 'noSilentDrift', 'mutateRefusesBadTrust'],
+  },
+
+  // planner
+  {
+    name: 'plan_effective_path',
+    category: 'planner',
+    module: 'sdk',
+    guarantees: ['deterministic', 'structured'],
+    notes: 'Hand-ported planners; deterministic planner engine deferred',
+  },
+
+  // save
+  { name: 'decode_save', category: 'save', module: 'sdk', guarantees: ['structured'] },
+  { name: 'describe_schema', category: 'save', module: 'sdk', guarantees: ['deterministic', 'structured'] },
+  { name: 'run_extractor', category: 'save', module: 'sdk', guarantees: ['structured'] },
+  { name: 'list_exports', category: 'save', module: 'sdk', guarantees: ['deterministic', 'structured', 'noHallucinatedExports'] },
+  { name: 'get_export', category: 'save', module: 'sdk', guarantees: ['deterministic', 'structured', 'noHallucinatedExports'] },
+
+  // wiki
+  { name: 'wiki_search', category: 'wiki', module: 'sdk', guarantees: ['structured'] },
+  { name: 'wiki_page', category: 'wiki', module: 'sdk', guarantees: ['structured'] },
+
+  // sheet (epaths)
+  { name: 'sheet_info', category: 'sheet', module: 'epaths', guarantees: ['structured'] },
+  { name: 'inspect_tab_ui', category: 'sheet', module: 'epaths', guarantees: ['structured'] },
+  { name: 'list_lambdas', category: 'sheet', module: 'epaths', guarantees: ['structured', 'noHallucinatedExports'] },
+  { name: 'eval_formula', category: 'sheet', module: 'epaths', guarantees: ['structured'] },
+  { name: 'read_range', category: 'sheet', module: 'epaths', guarantees: ['structured'] },
+  { name: 'read_ids', category: 'sheet', module: 'epaths', guarantees: ['structured'] },
+  { name: 'input_ranges', category: 'sheet', module: 'epaths', guarantees: ['structured'] },
+  { name: 'write_cells', category: 'sheet', module: 'epaths', guarantees: ['structured'] },
+  { name: 'read_path_display', category: 'sheet', module: 'epaths', guarantees: ['structured'] },
+]

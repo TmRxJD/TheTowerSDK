@@ -236,11 +236,12 @@ export const LAB_UNLOCKS: Readonly<Record<string, LabUnlock>> = {
 /**
  * Whether a lab is unlocked for a player whose best run is `wave` on `tier`.
  *
- * The sheet compares against the player's whole per-tier wave list; this takes
- * only their furthest point and treats every lower tier as cleared. Reaching a
- * tier means clearing the wave that unlocked it, so in practice the two agree —
- * but a player who jumped tiers on an event could see a lab offered slightly
- * early, which is the safe direction to be wrong in.
+ * This is the **approximation** used when per-tier personal bests are not
+ * available. The live sheet's `IDS_LAB_HAS_UNLOCKED` instead reads the PB on
+ * the lab's unlock tier alone — see {@link isLabUnlockedByTierPersonalBests}.
+ * Reaching a higher tier usually means lower tiers were cleared, so the two
+ * agree for normal progression; a player who jumped tiers on an event could see
+ * a lab offered slightly early here, which is the safe direction to be wrong in.
  *
  * Ultimate-weapon-gated labs cannot be answered from a tier and a wave, so they
  * count as unlocked rather than hidden: dropping an upgrade the player may well
@@ -251,4 +252,69 @@ export function isLabUnlockedAt(labName: string, tier: number, wave: number): bo
   if (!requirement || requirement === UNLOCKED_BY_ULTIMATE) return true
   if (tier > requirement.tier) return true
   return tier === requirement.tier && wave >= requirement.wave
+}
+
+/**
+ * Sheet `IDS_LAB_HAS_UNLOCKED` / `DVT_HAS_LAB_UNLOCKED`.
+ *
+ * `IDS_LAB_HAS_UNLOCKED` builds `"T{unlockTier} {IDS_PS_TIER_PB(Tier N)}"` and
+ * hands it to `DVT_HAS_LAB_UNLOCKED`, which compares the lab's unlock wave to
+ * that PB. The player's furthest tier is **not** consulted — only the wave on
+ * the unlock tier (`_IDS!CM:CN`).
+ *
+ * Oracle-confirmed: with every PB at 0, `Damage` (`T0`) stays unlocked and
+ * `Shock Multiplier` (`T7 60`) stays locked.
+ */
+export function isLabUnlockedByTierPersonalBests(
+  labName: string,
+  wavesByTier: Readonly<Record<number, number>>,
+): boolean {
+  const requirement = LAB_UNLOCKS[labName]
+  if (!requirement || requirement === UNLOCKED_BY_ULTIMATE) return true
+  const pb = wavesByTier[requirement.tier] ?? 0
+  return pb >= requirement.wave
+}
+
+/**
+ * Hide-Non-unlocked filter for Effective Paths.
+ *
+ * Prefer per-tier PBs when the caller has them (sheet parity after an IDS
+ * import). Otherwise fall back to {@link isLabUnlockedAt} with the furthest
+ * run the Settings page asks for.
+ */
+export function isLabUnlockedForPath(
+  labName: string,
+  options: {
+    wavesByCampaignTier?: Readonly<Record<number, number>> | null
+    highestTier?: number
+    highestWave?: number
+  },
+): boolean {
+  const pbs = options.wavesByCampaignTier
+  if (pbs && Object.keys(pbs).length > 0) {
+    return isLabUnlockedByTierPersonalBests(labName, pbs)
+  }
+  return isLabUnlockedAt(labName, options.highestTier ?? 1, options.highestWave ?? 0)
+}
+
+/**
+ * Furthest campaign run implied by a per-tier PB table.
+ *
+ * Used after IDS import to fill Settings' Highest Tier / Wave from `_IDS!CM:CN`
+ * rather than leaving them at the blank-sheet defaults.
+ */
+export function furthestRunFromTierPersonalBests(
+  wavesByTier: Readonly<Record<number, number>>,
+): { tier: number, wave: number } {
+  let tier = 1
+  let wave = 0
+  for (const [key, pb] of Object.entries(wavesByTier)) {
+    const t = Number(key)
+    if (!Number.isFinite(t) || !(pb > 0)) continue
+    if (t > tier || (t === tier && pb > wave)) {
+      tier = t
+      wave = pb
+    }
+  }
+  return { tier, wave }
 }

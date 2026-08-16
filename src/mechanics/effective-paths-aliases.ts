@@ -201,7 +201,12 @@ const ALIAS_SEEDS: readonly AliasSeed[] = [
   },
 ]
 
-const CATALOG_BY_KEY = new Map(LAB_CATALOG.map(record => [record.name, record]))
+const CATALOG_BY_KEY = new Map(
+  LAB_CATALOG.flatMap(record => [
+    [record.slug, record] as const,
+    [record.name, record] as const,
+  ]),
+)
 
 function buildAlias(seed: AliasSeed): EffectivePathsAlias {
   let category = seed.category

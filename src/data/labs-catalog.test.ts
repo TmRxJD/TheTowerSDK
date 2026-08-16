@@ -15,6 +15,20 @@ describe('lab catalog', () => {
     expect(new Set(names).size).toBe(names.length)
   })
 
+  it('gives every lab a unique slug', () => {
+    const slugs = LAB_CATALOG.map(lab => lab.slug)
+    expect(new Set(slugs).size).toBe(slugs.length)
+  })
+
+  it('uses player-facing display names, never raw snake_case codes', () => {
+    // Historical bug: ~145 rows filed the research slug in `name`, so dropdowns
+    // showed amp_bot_cooldown next to Attack Speed Mastery.
+    const codeNames = LAB_CATALOG
+      .map(lab => lab.name)
+      .filter(name => /_/.test(name) || /^[a-z0-9]+(?:_[a-z0-9]+)+$/.test(name))
+    expect(codeNames).toEqual([])
+  })
+
   it('holds the whole catalog', () => {
     // 150 from labs-levels plus 75 from labs-static, which were disjoint.
     expect(LAB_CATALOG.length).toBe(225)

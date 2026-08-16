@@ -22,7 +22,10 @@ const catalogSlugs = [...new Set(
 )]
 
 const tableKeys = new Set(
-  LAB_CATALOG.filter(lab => lab.levels?.length).map(lab => matchKey(lab.name)),
+  LAB_CATALOG.filter(lab => lab.levels?.length).flatMap(lab => [
+    matchKey(lab.slug),
+    matchKey(lab.name),
+  ]),
 )
 
 /**

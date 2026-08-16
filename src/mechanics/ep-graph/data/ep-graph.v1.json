@@ -1,0 +1,330 @@
+{
+  "schemaVersion": 1,
+  "contentVersion": 1,
+  "sheetVersion": "v5.09.03.01",
+  "updatedAt": "2026-08-14",
+  "historicalAllowlist": [],
+  "nodes": {
+    "control.eEcon.showLabs": {
+      "id": "control.eEcon.showLabs",
+      "family": "eEcon",
+      "type": "control",
+      "label": "Show Labs",
+      "sourceCells": [{ "sheet": "eEcon", "cell": "AZ12", "kind": "control" }],
+      "status": "verified",
+      "traps": [],
+      "wikiTitles": []
+    },
+    "control.eEcon.showEnhancements": {
+      "id": "control.eEcon.showEnhancements",
+      "family": "eEcon",
+      "type": "control",
+      "label": "Show Enhancements",
+      "sourceCells": [{ "sheet": "eEcon", "cell": "AZ13", "kind": "control" }],
+      "status": "verified",
+      "traps": [],
+      "wikiTitles": []
+    },
+    "control.eEcon.hideNonUnlockedLabs": {
+      "id": "control.eEcon.hideNonUnlockedLabs",
+      "family": "eEcon",
+      "type": "control",
+      "label": "Hide Non-unlocked Labs",
+      "sourceCells": [{ "sheet": "eEcon", "cell": "AZ11", "kind": "control" }],
+      "status": "verified",
+      "traps": [],
+      "wikiTitles": []
+    },
+    "control.eEcon.hideRetroactiveDiscountLabs": {
+      "id": "control.eEcon.hideRetroactiveDiscountLabs",
+      "family": "eEcon",
+      "type": "control",
+      "label": "Hide Retroactive Discount Labs",
+      "sourceCells": [{ "sheet": "eEcon", "cell": "AZ14", "kind": "control" }],
+      "status": "verified",
+      "traps": [],
+      "wikiTitles": []
+    },
+    "control.eEcon.keepUwCdSynced": {
+      "id": "control.eEcon.keepUwCdSynced",
+      "family": "eEcon",
+      "type": "control",
+      "label": "Keep GT|BH|DW CD Synced",
+      "sourceCells": [{ "sheet": "eEcon", "cell": "AZ17", "kind": "control" }],
+      "status": "verified",
+      "traps": [],
+      "wikiTitles": []
+    },
+    "control.eEcon.cardsMaster": {
+      "id": "control.eEcon.cardsMaster",
+      "family": "eEcon",
+      "type": "control",
+      "label": "Cards📝 master",
+      "sourceCells": [{ "sheet": "eEcon", "cell": "AZ28", "kind": "control" }],
+      "status": "verified",
+      "traps": [{ "kind": "stale-row", "note": "Older docs said cards at row 43; live inspect is AZ28" }],
+      "wikiTitles": []
+    },
+    "control.eEcon.perksMaster": {
+      "id": "control.eEcon.perksMaster",
+      "family": "eEcon",
+      "type": "control",
+      "label": "Perks master",
+      "sourceCells": [{ "sheet": "eEcon", "cell": "AZ43", "kind": "control" }],
+      "status": "verified",
+      "traps": [],
+      "wikiTitles": []
+    },
+    "control.eEcon.costMode": {
+      "id": "control.eEcon.costMode",
+      "family": "eEcon",
+      "type": "control",
+      "label": "Cost mode DO / D+FT",
+      "sourceCells": [{ "sheet": "eEcon", "cell": "O3", "kind": "control" }],
+      "status": "verified",
+      "traps": [],
+      "wikiTitles": []
+    },
+    "display.eEcon.compareMasteriesAt": {
+      "id": "display.eEcon.compareMasteriesAt",
+      "family": "eEcon",
+      "type": "display",
+      "label": "Compare Masteries at",
+      "sourceCells": [
+        { "sheet": "eEcon", "cell": "AW29", "kind": "display" },
+        { "sheet": "eEcon", "cell": "AU29", "kind": "display" }
+      ],
+      "status": "verified",
+      "traps": [{ "kind": "display-only", "note": "ROI display for mastery cards; not a path planner input" }],
+      "wikiTitles": []
+    },
+    "hide.eEcon.EO2.coinBonus": {
+      "id": "hide.eEcon.EO2.coinBonus",
+      "family": "eEcon",
+      "type": "hide",
+      "label": "eEcon!EO2 Coin Bonus hide",
+      "sourceCells": [{ "sheet": "eEcon", "cell": "EO2", "kind": "hide" }],
+      "formula": "=OR(\n  REGEXMATCH(AZ13, \"^None\"),\n  NOT(O$3<>\"DO\"),\n  WSPUTILITY_TOTAL_COINS_INVESTED(\n    CHOOSECOLS('_IDS'!$T$16:$X$21, MATCH(AZ5, '_IDS'!$T$2:$X$2, 0)),\n    '_IDS'!$R$16:$R$21)<=50000000000,\n  IDS_LAB_LEVEL(\"Workshop Enhancements\")=0,\n  BK5+1>BL5)",
+      "formulaSource": "formulatext",
+      "status": "verified",
+      "traps": [],
+      "wikiTitles": ["Workshop Enhancement/Utility/Coin Bonus"]
+    },
+    "hide.eEcon.EP2.freeUpgrades": {
+      "id": "hide.eEcon.EP2.freeUpgrades",
+      "family": "eEcon",
+      "type": "hide",
+      "label": "eEcon!EP2 Free Upgrades hide",
+      "sourceCells": [{ "sheet": "eEcon", "cell": "EP2", "kind": "hide" }],
+      "formula": "=OR(\n  REGEXMATCH(AZ13, \"^None\"),\n  AO6+AS6=0,\n  NOT(O$3<>\"DO\"),\n  WSPUTILITY_TOTAL_COINS_INVESTED(\n    CHOOSECOLS('_IDS'!$T$16:$X$21, MATCH(AZ5, '_IDS'!$T$2:$X$2, 0)),\n    '_IDS'!$R$16:$R$21)<=5000000000000,\n  IDS_LAB_LEVEL(\"Workshop Enhancements\")=0,\n  BK6+1>BL6)",
+      "formulaSource": "formulatext",
+      "status": "verified",
+      "traps": [],
+      "wikiTitles": ["Free Upgrades"]
+    },
+    "hide.eEconStones.DW2.uwCd": {
+      "id": "hide.eEconStones.DW2.uwCd",
+      "family": "eEcon",
+      "type": "hide",
+      "label": "eEcon Stones!DW2 UW CD composite hide",
+      "sourceCells": [{ "sheet": "eEcon Stones", "cell": "DW2", "kind": "hide" }],
+      "formula": "=OR(\n  NOT(AZ17),\n  CA5<110)",
+      "formulaSource": "formulatext",
+      "status": "verified",
+      "traps": [],
+      "wikiTitles": []
+    },
+    "candidate.eEcon.time.CoinBonus": {
+      "id": "candidate.eEcon.time.CoinBonus",
+      "family": "eEcon",
+      "type": "candidate",
+      "label": "Coin Bonus (utility enhancement)",
+      "sourceCells": [{ "sheet": "eEcon", "cell": "EO4", "kind": "candidate" }],
+      "status": "verified",
+      "traps": [],
+      "wikiTitles": ["Workshop Enhancement/Utility/Coin Bonus", "Workshop Enhancement"]
+    },
+    "candidate.eEcon.time.FreeUpgrades": {
+      "id": "candidate.eEcon.time.FreeUpgrades",
+      "family": "eEcon",
+      "type": "candidate",
+      "label": "Free Upgrades (utility enhancement)",
+      "sourceCells": [{ "sheet": "eEcon", "cell": "EP4", "kind": "candidate" }],
+      "status": "verified",
+      "traps": [],
+      "wikiTitles": ["Free Upgrades"]
+    },
+    "candidate.eEcon.stone.UwCdComposite": {
+      "id": "candidate.eEcon.stone.UwCdComposite",
+      "family": "eEcon",
+      "type": "candidate",
+      "label": "UW CD composite (GT|BH|DW)",
+      "sourceCells": [{ "sheet": "eEcon Stones", "cell": "DW5", "kind": "candidate" }],
+      "status": "verified",
+      "traps": [],
+      "wikiTitles": []
+    },
+    "ids.WSPlus.utility": {
+      "id": "ids.WSPlus.utility",
+      "family": "eEcon",
+      "type": "ids",
+      "label": "_IDS WS+ utility enhancements",
+      "sourceCells": [
+        { "sheet": "_IDS", "cell": "R16", "kind": "ids" },
+        { "sheet": "_IDS", "cell": "T16", "kind": "ids" }
+      ],
+      "status": "verified",
+      "traps": [{ "kind": "spilled-range", "note": "Blank demo IDS ≠ missing columns" }],
+      "wikiTitles": []
+    },
+    "lambda.WSPUTILITY_TOTAL_COINS_INVESTED": {
+      "id": "lambda.WSPUTILITY_TOTAL_COINS_INVESTED",
+      "family": "eEcon",
+      "type": "lambda",
+      "label": "WSPUTILITY_TOTAL_COINS_INVESTED",
+      "sourceCells": [],
+      "lambdaName": "WSPUTILITY_TOTAL_COINS_INVESTED",
+      "formulaSource": "lambda",
+      "status": "verified",
+      "traps": [{ "kind": "other", "note": "Sheet hide uses <= threshold; unlock is strictly above" }],
+      "wikiTitles": []
+    },
+    "path.eEcon.timeVisible": {
+      "id": "path.eEcon.timeVisible",
+      "family": "eEcon",
+      "type": "path",
+      "label": "Visible CPK time path G:O",
+      "sourceCells": [{ "sheet": "eEcon", "cell": "G6", "kind": "display" }],
+      "status": "researching",
+      "traps": [{ "kind": "maxed-account", "note": "Empty demo IDS yields a one-row path — not parity proof" }],
+      "wikiTitles": []
+    }
+  },
+  "edges": [
+    {
+      "id": "e.showEnhancements.gates.EO2",
+      "from": "control.eEcon.showEnhancements",
+      "to": "hide.eEcon.EO2.coinBonus",
+      "kind": "gates",
+      "evidence": {
+        "sourceCells": [{ "sheet": "eEcon", "cell": "EO2", "kind": "formula" }]
+      }
+    },
+    {
+      "id": "e.showEnhancements.gates.EP2",
+      "from": "control.eEcon.showEnhancements",
+      "to": "hide.eEcon.EP2.freeUpgrades",
+      "kind": "gates",
+      "evidence": {
+        "sourceCells": [{ "sheet": "eEcon", "cell": "EP2", "kind": "formula" }]
+      }
+    },
+    {
+      "id": "e.costMode.gates.EO2",
+      "from": "control.eEcon.costMode",
+      "to": "hide.eEcon.EO2.coinBonus",
+      "kind": "gates",
+      "evidence": {
+        "sourceCells": [{ "sheet": "eEcon", "cell": "EO2", "kind": "formula" }]
+      }
+    },
+    {
+      "id": "e.costMode.gates.EP2",
+      "from": "control.eEcon.costMode",
+      "to": "hide.eEcon.EP2.freeUpgrades",
+      "kind": "gates",
+      "evidence": {
+        "sourceCells": [{ "sheet": "eEcon", "cell": "EP2", "kind": "formula" }]
+      }
+    },
+    {
+      "id": "e.EO2.hides.CoinBonus",
+      "from": "hide.eEcon.EO2.coinBonus",
+      "to": "candidate.eEcon.time.CoinBonus",
+      "kind": "hides",
+      "evidence": {
+        "sourceCells": [{ "sheet": "eEcon", "cell": "EO2", "kind": "hide" }],
+        "wikiTitle": "Workshop Enhancement/Utility/Coin Bonus"
+      }
+    },
+    {
+      "id": "e.EP2.hides.FreeUpgrades",
+      "from": "hide.eEcon.EP2.freeUpgrades",
+      "to": "candidate.eEcon.time.FreeUpgrades",
+      "kind": "hides",
+      "evidence": {
+        "sourceCells": [{ "sheet": "eEcon", "cell": "EP2", "kind": "hide" }],
+        "wikiTitle": "Free Upgrades"
+      }
+    },
+    {
+      "id": "e.lambda.derives.EO2",
+      "from": "lambda.WSPUTILITY_TOTAL_COINS_INVESTED",
+      "to": "hide.eEcon.EO2.coinBonus",
+      "kind": "derives",
+      "evidence": {
+        "lambdaName": "WSPUTILITY_TOTAL_COINS_INVESTED",
+        "sourceCells": [{ "sheet": "eEcon", "cell": "EO2", "kind": "formula" }]
+      }
+    },
+    {
+      "id": "e.lambda.derives.EP2",
+      "from": "lambda.WSPUTILITY_TOTAL_COINS_INVESTED",
+      "to": "hide.eEcon.EP2.freeUpgrades",
+      "kind": "derives",
+      "evidence": {
+        "lambdaName": "WSPUTILITY_TOTAL_COINS_INVESTED",
+        "sourceCells": [{ "sheet": "eEcon", "cell": "EP2", "kind": "formula" }]
+      }
+    },
+    {
+      "id": "e.ids.imports.lambda",
+      "from": "ids.WSPlus.utility",
+      "to": "lambda.WSPUTILITY_TOTAL_COINS_INVESTED",
+      "kind": "imports",
+      "evidence": {
+        "sourceCells": [{ "sheet": "_IDS", "cell": "T16", "kind": "ids" }],
+        "lambdaName": "WSPUTILITY_TOTAL_COINS_INVESTED"
+      }
+    },
+    {
+      "id": "e.keepSynced.syncs.DW2",
+      "from": "control.eEcon.keepUwCdSynced",
+      "to": "hide.eEconStones.DW2.uwCd",
+      "kind": "syncs",
+      "evidence": {
+        "sourceCells": [
+          { "sheet": "eEcon", "cell": "AZ17", "kind": "control" },
+          { "sheet": "eEcon Stones", "cell": "DW2", "kind": "hide" }
+        ]
+      }
+    },
+    {
+      "id": "e.DW2.hides.UwCd",
+      "from": "hide.eEconStones.DW2.uwCd",
+      "to": "candidate.eEcon.stone.UwCdComposite",
+      "kind": "hides",
+      "evidence": {
+        "sourceCells": [{ "sheet": "eEcon Stones", "cell": "DW2", "kind": "hide" }]
+      }
+    },
+    {
+      "id": "e.compareMasteries.displays.path",
+      "from": "display.eEcon.compareMasteriesAt",
+      "to": "path.eEcon.timeVisible",
+      "kind": "displays",
+      "evidence": {
+        "sourceCells": [{ "sheet": "eEcon", "cell": "AW29", "kind": "display" }]
+      }
+    },
+    {
+      "id": "e.showLabs.gates.labs",
+      "from": "control.eEcon.showLabs",
+      "to": "control.eEcon.hideNonUnlockedLabs",
+      "kind": "reads",
+      "evidence": {
+        "sourceCells": [{ "sheet": "eEcon", "cell": "AZ12", "kind": "control" }]
+      }
+    }
+  ]
+}

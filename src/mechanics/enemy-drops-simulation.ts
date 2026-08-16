@@ -26,6 +26,7 @@ import {
 import { getWorkshopCostsByKey } from '../data/index'
 import { bossWaveIntervalForTier, DEFAULT_BOSS_WAVE_INTERVAL } from '../data/enemies'
 import { clamp } from './math'
+import { cardLevelUpgradeGemCost } from './card-costs'
 import { clampCardGameLevel, clampCardMasteryLevel } from './enemy-drops-context'
 import { formatCompact } from '../internal/tool-formatting'
 import { computeEconomyScaledRoiPct, computeRoiReferenceCost } from '../internal/roi-scaling'
@@ -216,15 +217,6 @@ function finalizeEnemyDropsRoiRows(drafts: EnemyDropsRoiDraft[]): EnemyDropsRoiR
     totalYieldAtLevel: draft.totalYieldAtLevel,
   }))
   return rows.sort((a, b) => b.roi - a.roi)
-}
-
-const CARD_LEVEL_COPY_REQUIREMENTS = [0, 1, 3, 8, 16, 28, 48, 80] as const
-
-function cardLevelUpgradeGemCost(fromGameLevel: number, toGameLevel: number): number {
-  const fromIdx = clamp(Math.floor(fromGameLevel), 0, 7)
-  const toIdx = clamp(Math.floor(toGameLevel), 0, 7)
-  const copies = Math.max(0, CARD_LEVEL_COPY_REQUIREMENTS[toIdx] - CARD_LEVEL_COPY_REQUIREMENTS[fromIdx])
-  return copies * 20
 }
 
 function lookupLabRecord(slug: string) {

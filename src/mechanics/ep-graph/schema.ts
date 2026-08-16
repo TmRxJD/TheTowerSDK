@@ -1,0 +1,200 @@
+import { z } from 'zod'
+
+/** Planner / workbook partition — required on every node. */
+export const EpGraphFamilySchema = z.enum([
+  'eEcon',
+  'eHP',
+  'eRegen',
+  'eDamage',
+  'workbook',
+])
+export type EpGraphFamily = z.infer<typeof EpGraphFamilySchema>
+
+export const EpGraphNodeTypeSchema = z.enum([
+  'control',
+  'candidate',
+  'hide',
+  'ids',
+  'lambda',
+  'stat',
+  'display',
+  'path',
+])
+export type EpGraphNodeType = z.infer<typeof EpGraphNodeTypeSchema>
+
+export const EpSourceCellKindSchema = z.enum([
+  'control',
+  'candidate',
+  'hide',
+  'ids',
+  'display',
+  'formula',
+])
+export type EpSourceCellKind = z.infer<typeof EpSourceCellKindSchema>
+
+export const EpSourceCellSchema = z.object({
+  sheet: z.string().min(1),
+  cell: z.string().regex(/^[A-Z]{1,3}\d{1,4}$/),
+  kind: EpSourceCellKindSchema,
+})
+export type EpSourceCell = z.infer<typeof EpSourceCellSchema>
+
+export const EpTrapKindSchema = z.enum([
+  'display-only',
+  'stale-row',
+  'maxed-account',
+  'spilled-range',
+  'other',
+])
+
+export const EpTrapSchema = z.object({
+  kind: EpTrapKindSchema,
+  note: z.string().min(1),
+})
+export type EpTrap = z.infer<typeof EpTrapSchema>
+
+export const EpNodeStatusSchema = z.enum([
+  'researching',
+  'verified',
+  'disputed',
+  'deprecated',
+])
+export type EpNodeStatus = z.infer<typeof EpNodeStatusSchema>
+
+export const EpFormulaSourceSchema = z.enum(['formulatext', 'lambda', 'wiki'])
+
+export const EpGraphNodeBaseSchema = z.object({
+  id: z.string().min(1),
+  family: EpGraphFamilySchema,
+  type: EpGraphNodeTypeSchema,
+  label: z.string().min(1),
+  sourceCells: z.array(EpSourceCellSchema).default([]),
+  formula: z.string().optional(),
+  formulaSource: EpFormulaSourceSchema.optional(),
+  traps: z.array(EpTrapSchema).default([]),
+  status: EpNodeStatusSchema,
+  wikiTitles: z.array(z.string()).default([]),
+  lambdaName: z.string().optional(),
+})
+
+export const EpGraphNodeSchema = EpGraphNodeBaseSchema.superRefine((node, ctx) => {
+  if (node.formula != null && node.formulaSource == null) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'formula requires formulaSource',
+      path: ['formulaSource'],
+    })
+  }
+  if (
+    node.sourceCells.length === 0
+    && (node.wikiTitles?.length ?? 0) === 0
+    && !node.lambdaName
+  ) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'node needs sourceCells, wikiTitles, or lambdaName provenance',
+      path: ['sourceCells'],
+    })
+  }
+})
+export type EpGraphNode = z.infer<typeof EpGraphNodeSchema>
+
+export const EpEdgeKindSchema = z.enum([
+  'reads',
+  'hides',
+  'gates',
+  'prices',
+  'imports',
+  'displays',
+  'derives',
+  'syncs',
+])
+export type EpEdgeKind = z.infer<typeof EpEdgeKindSchema>
+
+export const EpEdgeEvidenceSchema = z.object({
+  sourceCells: z.array(EpSourceCellSchema).optional(),
+  wikiTitle: z.string().optional(),
+  lambdaName: z.string().optional(),
+}).superRefine((ev, ctx) => {
+  const hasCell = (ev.sourceCells?.length ?? 0) > 0
+  if (!hasCell && !ev.wikiTitle && !ev.lambdaName) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'evidence needs sourceCells, wikiTitle, or lambdaName',
+    })
+  }
+})
+export type EpEdgeEvidence = z.infer<typeof EpEdgeEvidenceSchema>
+
+export const EpGraphEdgeBaseSchema = z.object({
+  id: z.string().min(1),
+  from: z.string().min(1),
+  to: z.string().min(1),
+  kind: EpEdgeKindSchema,
+  evidence: EpEdgeEvidenceSchema,
+})
+export const EpGraphEdgeSchema = EpGraphEdgeBaseSchema
+export type EpGraphEdge = z.infer<typeof EpGraphEdgeSchema>
+
+export const EpHistoricalAllowlistEntrySchema = z.object({
+  sheet: z.string().optional(),
+  cell: z.string().optional(),
+  lambdaName: z.string().optional(),
+  note: z.string().min(1),
+})
+
+export const EpGraphSchema = z.object({
+  schemaVersion: z.literal(1),
+  contentVersion: z.number().int().nonnegative(),
+  sheetVersion: z.string().min(1),
+  updatedAt: z.string().min(1),
+  historicalAllowlist: z.array(EpHistoricalAllowlistEntrySchema).default([]),
+  nodes: z.record(z.string(), EpGraphNodeSchema),
+  edges: z.array(EpGraphEdgeSchema),
+})
+export type EpGraph = z.infer<typeof EpGraphSchema>
+
+export const EpMutationOpSchema = z.discriminatedUnion('op', [
+  z.object({
+    op: z.literal('addNode'),
+    node: EpGraphNodeSchema,
+    reason: z.string().min(1),
+    evidence: EpEdgeEvidenceSchema,
+  }),
+  z.object({
+    op: z.literal('modifyNode'),
+    id: z.string().min(1),
+    patch: EpGraphNodeBaseSchema.partial().omit({ id: true }),
+    reason: z.string().min(1),
+    evidence: EpEdgeEvidenceSchema,
+  }),
+  z.object({
+    op: z.literal('deleteNode'),
+    id: z.string().min(1),
+    reason: z.string().min(1),
+    evidence: EpEdgeEvidenceSchema,
+  }),
+  z.object({
+    op: z.literal('addEdge'),
+    edge: EpGraphEdgeSchema,
+    reason: z.string().min(1),
+  }),
+  z.object({
+    op: z.literal('modifyEdge'),
+    id: z.string().min(1),
+    patch: EpGraphEdgeBaseSchema.partial().omit({ id: true }),
+    reason: z.string().min(1),
+    evidence: EpEdgeEvidenceSchema,
+  }),
+  z.object({
+    op: z.literal('deleteEdge'),
+    id: z.string().min(1),
+    reason: z.string().min(1),
+    evidence: EpEdgeEvidenceSchema,
+  }),
+])
+export type EpMutationOp = z.infer<typeof EpMutationOpSchema>
+
+export function cellKey(cell: Pick<EpSourceCell, 'sheet' | 'cell'>): string {
+  return `${cell.sheet}!${cell.cell}`
+}

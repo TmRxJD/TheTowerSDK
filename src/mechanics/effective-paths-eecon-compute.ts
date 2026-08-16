@@ -133,7 +133,15 @@ export interface EffectiveEconomyConfig {
    */
   generator: {
     bonus: number
+    /** `AP5` — Generator assist slot filled. */
     hasAssist: boolean
+    /**
+     * `AP14` — Core assist slot filled.
+     *
+     * The Core assist-efficiency candidates hide on `NOT(AP14)` the same way
+     * Generator ones hide on `NOT(AP5)`.
+     */
+    coreHasAssist: boolean
     primaryRarity?: string
     assistRarity?: string
     assistBonus?: number
@@ -723,7 +731,7 @@ export function zeroEffectiveEconomyConfig(): EffectiveEconomyConfig {
       multiverseNexus: substat(),
     },
     assistEfficiency: { generatorBonus: 0, generatorSubstat: 0, coreSubstat: 0 },
-    generator: { bonus: 1, hasAssist: false },
+    generator: { bonus: 1, hasAssist: false, coreHasAssist: false },
     cards: {
       coins: { ...NO_CARD },
       freeUpgrades: { ...NO_CARD },

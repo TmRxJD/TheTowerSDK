@@ -16,5 +16,16 @@
     "skipLibCheck": true
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["src/**/*.test.ts", "src/**/*.spec.ts", "src/**/fixtures/**"]
+  "exclude": [
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "src/**/fixtures/**",
+    "src/mechanics/doctor/**",
+    "src/mechanics/kernel/**",
+    "src/mechanics/governance-adapter.ts",
+    "src/mechanics/sandbox/**",
+    "src/mechanics/docs-gen/**",
+    "src/mechanics/lsp/**",
+    "src/mechanics/registry/**"
+  ]
 }

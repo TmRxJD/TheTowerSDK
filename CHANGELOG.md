@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.0
+
+Labs catalog refresh, card gem costs, Effective Paths economy stone mastery / UW cooldown helpers,
+and the public graph surfaces (`ep-graph`, `sdk-graph`, `save-graph`, `debug-graph`, coverage,
+planner-engine, mcp-contract).
+
+Doctor / kernel / governance-adapter / registry / sandbox / docs-gen / lsp stay in the monorepo
+source tree for AGS tooling but are **not** part of the published `thetowersdk/mechanics` barrel —
+they need `@tmrxjd/governance-engine`, which is not a public npm dependency of this package.
+
 ## 0.4.1
 
 `sharedToolsCatalog` gains an Effective Paths entry, so a consumer building links or a menu from the

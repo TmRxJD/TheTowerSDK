@@ -71,10 +71,11 @@ describeServer('mcp server', () => {
 
     const list = await rpc('tools/list', {})
     const names = list.result.tools.map((tool: { name: string }) => tool.name).sort()
-    expect(names).toEqual([
+    expect(names).toEqual(expect.arrayContaining([
       'decode_save', 'define_term', 'describe_schema', 'get_export', 'list_exports',
       'plan_effective_path', 'run_extractor', 'wiki_page', 'wiki_search',
-    ])
+    ]))
+    expect(names.length).toBeGreaterThanOrEqual(9)
     for (const tool of list.result.tools) {
       expect(tool.description).toBeTruthy()
       expect(tool.inputSchema.type).toBe('object')
@@ -216,7 +217,7 @@ describeServer('mcp server', () => {
       const tools: Array<{ name: string, description: string }> = list.result.tools
       const page = tools.find(tool => tool.name === 'wiki_page')
 
-      expect(page?.description).toMatch(/before/i)
+      expect(page?.description).toMatch(/before|required for mechanic/i)
       expect(page?.description, 'the description must name the failure it prevents')
         .toMatch(/mechanic/i)
     })

@@ -3,7 +3,11 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const dir = path.dirname(fileURLToPath(import.meta.url))
-const assets = ['data/workshop.json']
+const assets = [
+  'data/workshop.json',
+  'mechanics/ep-graph/data/ep-graph.v1.json',
+  'mechanics/sdk-graph/data/sdk-graph.v1.json',
+]
 
 for (const rel of assets) {
   const from = path.resolve(dir, '../src', rel)

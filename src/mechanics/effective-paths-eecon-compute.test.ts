@@ -113,7 +113,7 @@ export function configFromSheet(
     },
 
     // `CV5` is a computed column, not an input cell — see the note above.
-    generator: { bonus: outputs.CV5 ?? 1, hasAssist: flag('AP5') },
+    generator: { bonus: outputs.CV5 ?? 1, hasAssist: flag('AP5'), coreHasAssist: flag('AP14') },
 
     cards: {
       coins: card(cells, 31),

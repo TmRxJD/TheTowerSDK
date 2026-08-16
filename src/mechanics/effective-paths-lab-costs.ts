@@ -64,7 +64,10 @@ export function findEffectivePathsLabKey(name: string): string | null {
 const catalogKey = (value: string): string => value.toLowerCase().replace(/[^a-z0-9]+/g, '')
 
 const CATALOG_BY_KEY = new Map(
-  LAB_CATALOG.map(record => [catalogKey(record.name), record] as const),
+  LAB_CATALOG.flatMap(record => [
+    [catalogKey(record.slug), record] as const,
+    [catalogKey(record.name), record] as const,
+  ]),
 )
 
 /**

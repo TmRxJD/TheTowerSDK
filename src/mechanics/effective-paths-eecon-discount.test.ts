@@ -217,6 +217,14 @@ describe('the totals the priority selector weighs', () => {
     expect(workshopEnhancementCoinsInvested('utility', levels)).toBe(0)
   })
 
+  it('reads tracker WSP_* codes for utility spend', () => {
+    // Without this the econ unlock gates and discount totals silently read 0.
+    expect(workshopEnhancementCoinsInvested('utility', { WSP_CASH_BONUS: 10 }))
+      .toBe(55_540_000_000)
+    expect(workshopEnhancementCoinsInvested('utility', { 'Cash Bonus': 10 }))
+      .toBe(55_540_000_000)
+  })
+
   it('totals an empty module preset at the 80,000 the sheet returns', () => {
     // Eight slots, each counting one level at 10,000 — the figure
     // `EPC_MOD_DISCOUNT` gives for an account with nothing equipped.
@@ -248,7 +256,7 @@ describe('the totals the priority selector weighs', () => {
     // 3.835e23 each they would swamp a 4.9e22 total.
     const counted = labCoinsRemaining(() => 0)
     const withThem = LAB_DISCOUNT_UNCOUNTED_LABS.reduce((total, name) => {
-      const record = LAB_CATALOG.find(entry => entry.name === name)
+      const record = LAB_CATALOG.find(entry => entry.slug === name || entry.name === name)
       expect(record, name).toBeTruthy()
       return total + (record?.levels ?? []).reduce((a, level) => a + level.cost, 0)
     }, counted)

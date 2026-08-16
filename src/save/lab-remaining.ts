@@ -7,7 +7,7 @@ export function getStaticLabWorkingLevelDurationHours(
   labSpeedLevel = 0,
 ): number | null {
   if (!displayName) return null
-  const lab = LAB_CATALOG.find(entry => entry.name === displayName)
+  const lab = LAB_CATALOG.find(entry => entry.name === displayName || entry.slug === displayName)
   if (!lab?.levels?.length) return null
 
   const workingLevel = Math.max(1, Math.floor(Number(completedLevel) || 0) + 1)

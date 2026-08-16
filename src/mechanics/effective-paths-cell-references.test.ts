@@ -133,6 +133,29 @@ describe('the sheet cells the port cites', () => {
     expect(
       distinct.size,
       'a cell reference was added or removed — verify it against the sheet, then update this',
-    ).toBe(78)
+    ).toBe(84)
+  })
+
+  it('maps cited eEcon control/hide cells through the EP graph index when present', async () => {
+    const { buildEpGraphIndex, loadEpGraph } = await import('./ep-graph')
+    const index = buildEpGraphIndex(loadEpGraph())
+    const must = ['eEcon!AZ13', 'eEcon!EO2', 'eEcon!EP2', 'eEcon!AZ17', 'eEcon Stones!DW2']
+    for (const key of must) {
+      expect(index.byCell[key], key).toBeTruthy()
+    }
+  })
+
+  it('every citation is modeled or explicitly allowlisted in coverage/sheets', async () => {
+    const { CoverageInventorySchema, isExplicitUnknown } = await import('./coverage/schema')
+    const sheets = CoverageInventorySchema.parse(
+      (await import('./coverage/data/sheets.v1.json')).default,
+    )
+    const byId = new Map(sheets.entries.map(e => [e.id, e]))
+    for (const key of distinct) {
+      const entry = byId.get(key)
+      expect(entry, key).toBeTruthy()
+      const ok = (entry!.graphNodeIds?.length ?? 0) > 0 || isExplicitUnknown(entry!.coverageStatus)
+      expect(ok, key).toBe(true)
+    }
   })
 })

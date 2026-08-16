@@ -11,7 +11,14 @@ pnpm build          # the server reads dist/
 pnpm mcp
 ```
 
-It speaks MCP over stdio, so register it as a stdio server:
+It speaks MCP over stdio, so register it as a stdio server.
+
+**Tracker monorepo:** use the slim pair — `tools/tower-mcp/mechanics-server.mjs` (`tower`) for
+mechanics and `tools/tower-mcp/gov-server.mjs` (`tower-gov`) for commits/governance. Do **not**
+register this package server and the monorepo servers together (duplicate tools / catalog overflow).
+The full CI harness is `tools/tower-mcp/server.mjs` (not for IDE CallMcpTool).
+
+Standalone package consumers:
 
 ```json
 {
@@ -30,6 +37,12 @@ Claude Code: `claude mcp add thetowersdk -- node ./node_modules/thetowersdk/mcp/
 
 | Tool | What it does |
 |---|---|
+| **`sdk_graph_get` / `sdk_graph_context`** | **Mount the mechanics graph** (full or compact context pack) before editing |
+| **`sdk_graph_mutate` / `validate`** | Atomic core-module graph mutations + health checks |
+| **`begin_mechanic_task`** | **Mandatory gate** before mechanic work — compliance token, map hits, wiki titles to fetch |
+| **`record_mechanic_note`** | Append verified relationships to `docs/mechanics-map/MAP.md` |
+| **`record_work_status`** | Append ledger entry (`awaiting_user` until human approval — never `done`) |
+| `compliance_contract` · `mcp_contract` | Compliance instructions + MCP taxonomy |
 | `list_exports` | What an entry point exports, filterable. Start here rather than guessing a name. |
 | `get_export` | One export, previewed — length plus a sample, so a 300-row table doesn't flood the context. |
 | `define_term` | What a game term, acronym or set of module initials means, and whether it is ambiguous. |
@@ -39,8 +52,25 @@ Claude Code: `claude mcp add thetowersdk -- node ./node_modules/thetowersdk/mcp/
 | `plan_effective_path` | Plan an Effective Paths route, with the candidates it left out and why. |
 | `wiki_search` | Find the community wiki's real page titles for a mechanic. |
 | `wiki_page` | Read a wiki page as Markdown, whole or one section. |
+| `trust_coverage_report` · `trust_drift_check` | TrustReport / drift (when wired on the surface you use) |
+| `ep_graph_*` · sheet tools | On monorepo `tower` / full harness — Effective Paths oracle |
 
-Everything is read-only. `decode_save` and `run_extractor` read the file you name and nothing else.
+Monorepo slim `tower` tool list: [`tools/tower-mcp/slim-catalog.mjs`](../../../tools/tower-mcp/slim-catalog.mjs).  
+Governance (`commit_*`, `schema_*`, `pointer_*`, …): [`packages/governance-engine/README.md`](../../governance-engine/README.md).
+
+`initialize` returns `instructions` with the compliance pipeline so clients inject it into context.
+
+`decode_save` and `run_extractor` are read-only on the save file. Map/ledger tools **append** to
+`docs/mechanics-map/` (override with `TOWER_MECHANICS_MAP_DIR`).
+
+## Compliance pipeline
+
+Full contract in the monorepo: `docs/AGENT_GAME_MECHANICS_CONTRACT.md`.
+
+```
+begin_mechanic_task → wiki_page (all related) → [oracle if EP] → record_mechanic_note
+→ implement → record_work_status(awaiting_user) → human tests → user_approved
+```
 
 ## Reading the wiki
 

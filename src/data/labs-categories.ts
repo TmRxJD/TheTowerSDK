@@ -117,7 +117,7 @@ const SAVE_INDEX_TO_SITE_SLUG = buildSaveIndexToSiteSlug()
 const SITE_LAB_CATEGORY_BY_SLUG = new Map(
   LAB_CATALOG
     .filter(lab => lab.category)
-    .map(lab => [lab.name, normalizeToolLabCategory(lab.category)]),
+    .map(lab => [lab.slug, normalizeToolLabCategory(lab.category)]),
 )
 
 export function findSiteLabCategoryForSaveIndex(saveIndex: number): string | null {

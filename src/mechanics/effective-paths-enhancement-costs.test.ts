@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   EFFECTIVE_HEALTH_ENHANCEMENTS,
   ENHANCEMENT_SPEND_UNLOCKS,
+  UTILITY_ENHANCEMENT_SPEND_UNLOCKS,
   enhancementCoinCost,
   enhancementCoinSpend,
   enhancementMaxLevel,
@@ -297,5 +298,17 @@ describe('the enhancement spend gate', () => {
     expect(ENHANCEMENT_SPEND_UNLOCKS['Wall Health']).toBe(50_000_000_000_000)
     expect(ENHANCEMENT_SPEND_UNLOCKS['Health']).toBeUndefined()
     expect(ENHANCEMENT_SPEND_UNLOCKS['Recovery Package']).toBeUndefined()
+  })
+
+  it('pins the utility spend unlocks the econ path shares with the wiki', () => {
+    // Wiki: Coin Bonus 50B Utility spend; Free Upgrades 5T. Sheet EO2/EP2 use
+    // `<=`, so unlocking is strictly above those figures.
+    expect(UTILITY_ENHANCEMENT_SPEND_UNLOCKS['Coin Bonus']).toBe(50_000_000_000)
+    expect(UTILITY_ENHANCEMENT_SPEND_UNLOCKS['Free Upgrades']).toBe(5_000_000_000_000)
+  })
+
+  it('reads tracker WSP_* codes when summing defensive spend', () => {
+    expect(workshopEnhancementSpend({ WSP_HEALTH: 5, WSP_ORB_SIZE: 10 }))
+      .toBe(25_680_000_000 + 1_420_900_000_000)
   })
 })

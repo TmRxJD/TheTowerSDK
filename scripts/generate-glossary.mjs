@@ -74,7 +74,7 @@ for (const module of catalog.MODULE_TEMPLATES ?? []) {
       kind: 'acronym',
       domain: 'module',
       expansion: module.name,
-      definition: `${module.type} module. These initials come from the module table, not from community usage.`,
+      definition: `${module.name} — ${module.type} module.`,
     })
   }
 }
@@ -188,7 +188,7 @@ for (const match of acronymSource.matchAll(/^\s*'?([A-Za-z0-9#+_-]+)'?\s*:\s*'([
       kind: 'acronym',
       domain: catalogEntry.domain,
       expansion: catalogEntry.term,
-      definition: `Community shorthand for ${catalogEntry.term}.`,
+      definition: `${catalogEntry.term} (${term}).`,
       source: 'catalog',
     })
     continue
@@ -200,7 +200,7 @@ for (const match of acronymSource.matchAll(/^\s*'?([A-Za-z0-9#+_-]+)'?\s*:\s*'([
     kind: 'acronym',
     domain: 'run',
     expansion,
-    definition: `Community shorthand for ${expansion}. Curated from player usage; the catalogs have no entry under this name.`,
+    definition: `${expansion} (${term}).`,
     source: 'community',
   })
 }

@@ -20,7 +20,11 @@ import { computeModuleStat } from '../data/module-bonus'
  */
 describe('behaviour is unchanged after the renames', () => {
   const labByName = (name: string) => {
-    const lab = getSharedToolLabs().find(entry => entry.name === name)
+    const lab = getSharedToolLabs().find(entry =>
+      entry.name === name
+      || entry.displayName === name
+      || entry.name === name.toLowerCase().replace(/[^a-z0-9]+/g, '_'),
+    )
     if (!lab) throw new Error(`${name} missing from the catalog`)
     return lab
   }

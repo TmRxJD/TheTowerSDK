@@ -17,7 +17,9 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { createRequire } from 'node:module'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+import { isDirectRun, runStdioMcp } from './run-stdio.mjs'
+import { parseCliJson, runRepoTsx } from './run-repo-tsx.mjs'
 
 const require = createRequire(import.meta.url)
 const HERE = path.dirname(fileURLToPath(import.meta.url))
@@ -40,6 +42,140 @@ function loadSdk() {
 }
 
 const sdk = loadSdk()
+
+/**
+ * Living mechanics map + ledger under the tracker monorepo (or an override).
+ *
+ * Agents must append verified relationships here instead of re-deriving them
+ * from memory next session. Override with TOWER_MECHANICS_MAP_DIR when the
+ * SDK package is used outside this repo.
+ */
+function resolveMonorepoRoot() {
+  if (process.env.TOWER_MONOREPO_ROOT) return process.env.TOWER_MONOREPO_ROOT
+  let dir = HERE
+  for (let i = 0; i < 8; i++) {
+    dir = path.dirname(dir)
+    if (fs.existsSync(path.join(dir, 'scripts', 'sdk-graph', 'sdk-graph-cli.mjs'))) {
+      return dir
+    }
+  }
+  // packages/sdk/mcp → repo root when nested in this monorepo
+  return path.join(HERE, '..', '..', '..')
+}
+
+function resolveMechanicsMapDir() {
+  if (process.env.TOWER_MECHANICS_MAP_DIR) return process.env.TOWER_MECHANICS_MAP_DIR
+  const root = resolveMonorepoRoot()
+  const candidates = [
+    path.join(root, 'docs', 'mechanics-map'),
+    path.join(HERE, '..', '..', '..', 'docs', 'mechanics-map'),
+    path.join(HERE, '..', '..', 'docs', 'mechanics-map'),
+    path.join(HERE, '..', 'docs', 'mechanics-map'),
+  ]
+  for (const dir of candidates) {
+    if (fs.existsSync(dir)) return dir
+  }
+  const fallback = candidates[0]
+  fs.mkdirSync(fallback, { recursive: true })
+  return fallback
+}
+
+const MECHANICS_MAP_DIR = resolveMechanicsMapDir()
+const MAP_FILE = path.join(MECHANICS_MAP_DIR, 'MAP.md')
+const LEDGER_FILE = path.join(MECHANICS_MAP_DIR, 'LEDGER.md')
+
+const ALLOWED_LEDGER_STATUSES = new Set([
+  'researching',
+  'implementing',
+  'awaiting_user',
+  'user_approved',
+  'blocked',
+])
+
+const FORBIDDEN_LEDGER_STATUSES = new Set(['done', 'complete', 'finished', 'shipped'])
+
+export const COMPLIANCE_INSTRUCTIONS = [
+  'GAME MECHANICS COMPLIANCE (thetowersdk MCP):',
+  '1. Mount the SDK graph first: sdk_graph_context or sdk_graph_get for the families you touch.',
+  '2. Before modelling or editing any Tower mechanic, call begin_mechanic_task.',
+  '3. Then wiki_search + wiki_page on EVERY related title (never one page). Use define_term for acronyms.',
+  '4. For Effective Paths / sheet ports use the epaths module tools (sheet_info, inspect_tab_ui, FORMULATEXT) — same MCP when using tools/tower-mcp.',
+  '5. Relationship changes: sdk_graph_mutate (core) or ep_graph_mutate (epaths). Cite node/edge IDs — no prose SoT.',
+  '6. Call record_work_status with researching|implementing|awaiting_user|user_approved|blocked — NEVER done/complete/finished.',
+  '7. Never claim a feature closed until the human approved (user_approved). Checkpoints do not need approval.',
+  '8. Never invent export names — list_exports / get_export. Never invent unlock thresholds — wiki + oracle + graph.',
+  '9. Trust the report: sdk_graph_validate / pnpm mechanics-trust:check. Mutate refuses to persist when TrustReport.ok is false.',
+  '10. Introspection: sdk_debug_snapshot / sdk_debug_validate (Debug Graph) — not print/playground guessing.',
+  '11. Drift: trust_drift_check / pnpm mechanics-trust:drift (sheets+wiki+save). Optional apply:true marks sheet formula mismatches disputed.',
+  '12. Doctor: sdk_doctor_check → prescribe → repair(safe) → validate. Auto-repair never invents formulas. See docs/AGENT_SDK_DOCTOR_PROTOCOL.md.',
+  '13. Kernel: sdk_kernel_load for unified MechanicsContext; sdk_registry_get for TOC; mcp_contract for tool taxonomy. Law: docs/AGENT_MECHANICS_CONSTITUTION.md.',
+  '14. CAP / commits live in @tmrxjd/governance-engine (unified tower-mcp module:governance). See docs/AGENT_COMMIT_AUTHORIZATION.md + docs/AGENT_GOVERNANCE_ENGINE.md.',
+  '15. Save graph / sandbox / planner scaffold / docs gen / LSP diagnostics: sdk_save_graph_get, sdk_sandbox_run, sdk_planner_compile (codegen deferred), sdk_docs_generate, sdk_lsp_diagnostics.',
+  'Protocols: docs/AGENT_MECHANICS_CONSTITUTION.md · docs/AGENT_MECHANICS_KERNEL_PROTOCOL.md · docs/AGENT_MCP_CONTRACT.md · docs/AGENT_SAVE_GRAPH_PROTOCOL.md · docs/AGENT_SANDBOX_PROTOCOL.md · docs/AGENT_SDK_GRAPH_PROTOCOL.md · docs/AGENT_EP_GRAPH_PROTOCOL.md · docs/AGENT_MECHANICS_TRUST_CONTRACT.md · docs/AGENT_DEBUG_GRAPH_PROTOCOL.md · docs/AGENT_SDK_DOCTOR_PROTOCOL.md · docs/AGENT_GAME_MECHANICS_CONTRACT.md',
+].join('\n')
+
+const MONOREPO_ROOT = resolveMonorepoRoot()
+
+function runSdkGraphCli(args) {
+  return parseCliJson(
+    runRepoTsx(MONOREPO_ROOT, 'scripts/sdk-graph/sdk-graph-cli.mjs', args),
+    'sdk-graph-cli',
+  )
+}
+
+function readMapText() {
+  return fs.existsSync(MAP_FILE) ? fs.readFileSync(MAP_FILE, 'utf8') : ''
+}
+
+function mapHitsFor(mechanic) {
+  const text = readMapText()
+  if (!text) return []
+  const needle = String(mechanic).toLowerCase()
+  const sections = text.split(/\n## /).slice(1)
+  const hits = []
+  for (const section of sections) {
+    const title = section.split('\n')[0]?.trim() ?? ''
+    const body = section.toLowerCase()
+    if (title.toLowerCase().includes(needle) || body.includes(needle)) {
+      hits.push({
+        title,
+        excerpt: section.slice(0, 600).trim(),
+      })
+    }
+  }
+  return hits.slice(0, 8)
+}
+
+function slugToken(mechanic) {
+  const base = String(mechanic).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+  return `${base || 'mechanic'}-${Date.now().toString(36)}`
+}
+
+async function wikiSearchTitles(query, limit = 12) {
+  const wanted = String(query).toLowerCase()
+  const offline = localWikiTitles().filter(slug => slug.includes(wanted.replace(/\s+/g, '-')))
+  if (offline.length > 0) {
+    return {
+      source: 'local',
+      titles: offline.slice(0, Math.min(Number(limit) || 12, 25)),
+    }
+  }
+  const params = new URLSearchParams({
+    action: 'query',
+    format: 'json',
+    list: 'search',
+    srsearch: String(query),
+    srlimit: String(Math.min(Number(limit) || 12, 25)),
+  })
+  const response = await fetch(`${sdk.wiki.FANDOM_API_URL}?${params}`)
+  if (!response.ok) return { source: 'error', error: `Fandom API HTTP ${response.status}`, titles: [] }
+  const payload = await response.json()
+  const hits = payload?.query?.search ?? []
+  return {
+    source: 'fandom',
+    titles: hits.map(hit => hit.title),
+  }
+}
 
 /**
  * Wiki pages, cached on disk between calls.
@@ -119,7 +255,7 @@ const preview = (value, limit = 40) => {
   return { kind: typeof value, value }
 }
 
-const TOOLS = {
+export const TOOLS = {
   list_exports: {
     description:
       'List what an entry point exports, optionally filtered. Use this first to find the right name '
@@ -220,10 +356,10 @@ const TOOLS = {
 
   wiki_page: {
     description:
-      'Read a page of The Tower community wiki as Markdown. USE THIS BEFORE describing how any game '
-      + 'mechanic works. The SDK models the game; it does not explain it, and a formula that looks '
-      + 'self-evident from a table has more than once meant something else. Cheap, cached, and '
-      + 'always better than inferring. Try `wiki_search` first if you are unsure of the exact title.',
+      'REQUIRED for mechanic work after wiki_search / begin_mechanic_task. Read a wiki page as '
+      + 'Markdown. Call this for EVERY related title begin_mechanic_task lists — not just one. '
+      + 'The SDK models numbers; the wiki explains behaviour, unlocks, stacking, and units. '
+      + 'Inferring from tables has shipped wrong unlocks and wrong damage sources. Wiki is CC-BY-SA.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -237,36 +373,59 @@ const TOOLS = {
       required: ['title'],
     },
     run: async ({ title, section, refresh }) => {
+      const { canonicalizeWikiTitle } = await import(
+        pathToFileURL(path.join(MONOREPO_ROOT, 'scripts/mechanics-trust/wiki-title-canonical.mjs')).href
+      )
+      const resolvedTitle = canonicalizeWikiTitle(title)
       let page
       try {
-        page = await wikiPageMarkdown(title, { refresh: Boolean(refresh) })
+        page = await wikiPageMarkdown(resolvedTitle, { refresh: Boolean(refresh) })
       } catch (error) {
         // A wrong title is the common case and is recoverable; say so rather
         // than letting it read as "the wiki has nothing on this".
+        const hintParts = [
+          'titles are case- and spelling-sensitive; run wiki_search to find the real one',
+        ]
+        if (resolvedTitle !== title) {
+          hintParts.unshift(`tried canonical title "${resolvedTitle}" for "${title}"`)
+        }
         return {
           error: error instanceof Error ? error.message : String(error),
-          hint: 'titles are case- and spelling-sensitive; run wiki_search to find the real one',
+          requestedTitle: title,
+          resolvedTitle,
+          hint: hintParts.join('; '),
         }
       }
 
-      const headings = [...page.markdown.matchAll(/^#{1,3} (.+)$/gm)].map(m => m[1].trim())
+      const headings = [...page.markdown.matchAll(/^#{1,6} (.+)$/gm)].map(m => m[1].trim())
       if (!section) {
         return {
-          title,
+          title: resolvedTitle,
+          requestedTitle: title !== resolvedTitle ? title : undefined,
+          canonicalized: title !== resolvedTitle,
           source: page.source,
           sections: headings,
           markdown: page.markdown.slice(0, 12000),
           truncated: page.markdown.length > 12000,
           licence: 'Wiki text is CC-BY-SA. Attribute it if you reproduce it.',
+          compliance:
+            'If begin_mechanic_task listed other titles, fetch those next before editing code.',
         }
       }
 
       const wanted = String(section).toLowerCase()
       const lines = page.markdown.split('\n')
       const start = lines.findIndex(
-        line => /^#{1,3} /.test(line) && line.replace(/^#+ /, '').trim().toLowerCase().includes(wanted),
+        line => /^#{1,6} /.test(line) && line.replace(/^#+ /, '').trim().toLowerCase().includes(wanted),
       )
-      if (start === -1) return { title, error: `no section matching "${section}"`, sections: headings }
+      if (start === -1) {
+        return {
+          title: resolvedTitle,
+          requestedTitle: title !== resolvedTitle ? title : undefined,
+          error: `no section matching "${section}"`,
+          sections: headings,
+        }
+      }
 
       const depth = (lines[start].match(/^#+/) ?? ['#'])[0].length
       let end = lines.length
@@ -274,15 +433,20 @@ const TOOLS = {
         const match = lines[i].match(/^(#+) /)
         if (match && match[1].length <= depth) { end = i; break }
       }
-      return { title, section: lines[start].replace(/^#+ /, ''), markdown: lines.slice(start, end).join('\n') }
+      return {
+        title: resolvedTitle,
+        requestedTitle: title !== resolvedTitle ? title : undefined,
+        section: lines[start].replace(/^#+ /, ''),
+        markdown: lines.slice(start, end).join('\n'),
+      }
     },
   },
 
   wiki_search: {
     description:
-      'Search the community wiki for pages about a mechanic, and get their exact titles back. Use '
-      + 'this when you do not know what a page is called, rather than guessing a title or searching '
-      + 'the open web.',
+      'REQUIRED first step when discovering wiki titles (or use begin_mechanic_task which runs this). '
+      + 'Returns exact page titles — pass each relevant one to wiki_page. Do not guess titles or '
+      + 'stop after a single near-miss.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -292,41 +456,746 @@ const TOOLS = {
       required: ['query'],
     },
     run: async ({ query, limit }) => {
-      const wanted = String(query).toLowerCase()
-      const offline = localWikiTitles().filter(slug => slug.includes(wanted.replace(/\s+/g, '-')))
-      if (offline.length > 0) {
-        // A local library answers without a request, and its slugs are the
-        // titles `wiki_page` will find, so the pair stays usable offline.
-        return {
-          query,
-          source: 'local',
-          results: offline.slice(0, Math.min(Number(limit) || 10, 25)).map(title => ({ title })),
-          next: 'pass one of these titles to wiki_page',
-        }
-      }
-
-      const params = new URLSearchParams({
-        action: 'query',
-        format: 'json',
-        list: 'search',
-        srsearch: String(query),
-        srlimit: String(Math.min(Number(limit) || 10, 25)),
-      })
-      const response = await fetch(`${sdk.wiki.FANDOM_API_URL}?${params}`)
-      if (!response.ok) return { error: `Fandom API HTTP ${response.status}` }
-
-      const payload = await response.json()
-      const hits = payload?.query?.search ?? []
+      const result = await wikiSearchTitles(query, limit)
+      if (result.error) return { query, error: result.error }
       return {
         query,
-        results: hits.map(hit => ({
-          title: hit.title,
-          // Snippets carry search-highlight markup; strip it so the text reads.
-          snippet: String(hit.snippet ?? '').replace(/<[^>]*>/g, ''),
-        })),
-        next: 'pass one of these titles to wiki_page',
+        source: result.source,
+        results: result.titles.map(title => ({ title })),
+        next: 'Call wiki_page for EVERY title that could define unlocks, stacking, units, or relations',
+        compliance: 'begin_mechanic_task → wiki_page(all) → record_mechanic_note before code edits',
       }
     },
+  },
+
+  begin_mechanic_task: {
+    description:
+      'MANDATORY gate before editing or describing any Tower mechanic. Opens a compliance session: '
+      + 'mounts the SDK graph context, returns a token, map hits, wiki titles to fetch, and the '
+      + 'forbidden guess policy. Call this first; then wiki_page every listed title; then '
+      + 'record_mechanic_note / record_work_status. Do not skip.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        mechanic: {
+          type: 'string',
+          description: 'Game name of the mechanic, e.g. "Coin Bonus" or "Golden Tower"',
+        },
+        intent: {
+          type: 'string',
+          description: 'What you plan to change or verify, one sentence',
+        },
+        relatedHints: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Extra search terms (currency, lab, UW, module…) to broaden wiki_search',
+        },
+        family: {
+          type: 'string',
+          description:
+            'Optional SDK graph family filter (e.g. ep.eEcon, lab, workshop). Broadens mount when set.',
+        },
+      },
+      required: ['mechanic', 'intent'],
+    },
+    run: async ({ mechanic, intent, relatedHints, family }) => {
+      const token = slugToken(mechanic)
+      const queries = [String(mechanic), ...(Array.isArray(relatedHints) ? relatedHints : [])]
+      const searches = []
+      const titleSet = new Set()
+      for (const query of queries.slice(0, 6)) {
+        const found = await wikiSearchTitles(query, 10)
+        searches.push({ query, source: found.source, titles: found.titles })
+        for (const title of found.titles) titleSet.add(title)
+      }
+      const mapHits = mapHitsFor(mechanic)
+
+      const contextArgs = ['context']
+      if (family) contextArgs.push('--family', String(family))
+      else {
+        // Heuristic: EP / path / sheet intents mount the EP econ family; otherwise full pack.
+        const blob = `${mechanic} ${intent} ${(relatedHints ?? []).join(' ')}`.toLowerCase()
+        if (/\b(ep|effective\s*path|eEcon|eHP|eRegen|eDamage|sheet|oracle)\b/i.test(blob)) {
+          contextArgs.push('--family', 'ep.eEcon')
+        }
+      }
+      let graphMount
+      try {
+        graphMount = runSdkGraphCli(contextArgs)
+      } catch (error) {
+        graphMount = { ok: false, error: error.message }
+      }
+
+      let trustSummary = null
+      try {
+        const trust = runSdkGraphCli(['validate'])
+        trustSummary = {
+          ok: trust.ok,
+          byStatus: trust.trustSummary?.byStatus ?? trust.indexSummary?.byStatus,
+          invariantErrors: (trust.invariants ?? []).filter(i => i.severity === 'error').length,
+          silentGaps: trust.coverage?.silentGaps?.length ?? 0,
+          note: 'sdk_graph_mutate / ep_graph_mutate refuse to persist when TrustReport.ok is false',
+        }
+      } catch (error) {
+        trustSummary = { ok: false, error: error.message }
+      }
+
+      return {
+        complianceToken: token,
+        mechanic,
+        intent,
+        mapDir: MECHANICS_MAP_DIR,
+        mapHits,
+        graphMount,
+        trustSummary,
+        wikiTitlesToFetch: [...titleSet].slice(0, 20),
+        wikiSearches: searches,
+        requiredNextSteps: [
+          'Cite graphMount node/edge IDs (or call sdk_graph_get / ep_graph_get for more) — graph is SoT for relationships',
+          'wiki_page for each wikiTitlesToFetch entry that could define behaviour',
+          'define_term for any acronym you will write into code/UI',
+          'If Effective Paths / sheet: epaths sheet_info + inspect_tab_ui + FORMULATEXT/eval_formula',
+          'Mutations via sdk_graph_mutate / ep_graph_mutate only — refused if trust validate fails',
+          'record_mechanic_note with verified facts + sources',
+          'record_work_status (researching → implementing → awaiting_user)',
+          'Only then edit packages/sdk or tool code',
+        ],
+        forbidden: [
+          'Guessing unlocks, stacking, units, or damage sources',
+          'Calling a feature closed (done/complete/finished) without user_approved — checkpoints do not need approval',
+          'Reading one wiki page and stopping',
+          'Inventing SDK export names',
+          'Trusting control row numbers from docs/code without live sheet label inspection (epaths inspect_tab_ui)',
+          'Skipping graphMount / claiming relationships without node or edge IDs',
+          'Persisting graph changes that fail sdk_graph_validate / mechanics-trust:check',
+        ],
+        contract: 'docs/AGENT_GAME_MECHANICS_CONTRACT.md',
+        trustContract: 'docs/AGENT_MECHANICS_TRUST_CONTRACT.md',
+        modules: 'Tower MCP modules: sdk + epaths (tools/tower-mcp). Call list_modules if unsure.',
+      }
+    },
+  },
+
+  record_mechanic_note: {
+    description:
+      'Append a verified mechanic relationship to docs/mechanics-map/MAP.md. REQUIRED after wiki/'
+      + 'oracle gathering when you learned something durable. Facts must cite sources. Builds the '
+      + 'map future agents must read via begin_mechanic_task.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        token: { type: 'string', description: 'complianceToken from begin_mechanic_task' },
+        mechanic: { type: 'string', description: 'Heading name for the map entry' },
+        relatesTo: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Other mechanics / systems this connects to',
+        },
+        facts: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Verified bullets (unlocks, units, gates)',
+        },
+        sources: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'wiki "Title" · sheet Tab!Cell · code path',
+        },
+        traps: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Ways agents have been wrong about this before',
+        },
+        openQuestions: {
+          type: 'array',
+          items: { type: 'string' },
+        },
+      },
+      required: ['token', 'mechanic', 'facts', 'sources'],
+    },
+    run: ({ token, mechanic, relatesTo, facts, sources, traps, openQuestions }) => {
+      fs.mkdirSync(MECHANICS_MAP_DIR, { recursive: true })
+      if (!fs.existsSync(MAP_FILE)) {
+        fs.writeFileSync(MAP_FILE, '# Mechanics relationship map (living)\n\n', 'utf8')
+      }
+      const date = new Date().toISOString().slice(0, 10)
+      const block = [
+        '',
+        `## ${mechanic}`,
+        `- **Relates to:** ${(relatesTo ?? []).join('; ') || '(none listed)'}`,
+        ...facts.map(f => `- **Fact:** ${f}`),
+        `- **Sources:** ${(sources ?? []).join(' · ')}`,
+        ...((traps ?? []).map(t => `- **Trap:** ${t}`)),
+        ...((openQuestions ?? []).map(q => `- **Open:** ${q}`)),
+        `- **Last verified:** ${date} · token \`${token}\``,
+        '',
+      ].join('\n')
+      fs.appendFileSync(MAP_FILE, block, 'utf8')
+      return { ok: true, path: MAP_FILE, appendedFor: mechanic, token }
+    },
+  },
+
+  record_work_status: {
+    description:
+      'Append a work-ledger entry. Status must be researching|implementing|awaiting_user|'
+      + 'user_approved|blocked. NEVER done/complete/finished/shipped. user_approved only after the '
+      + 'human explicitly approved testing.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        token: { type: 'string' },
+        title: { type: 'string' },
+        status: {
+          type: 'string',
+          enum: ['researching', 'implementing', 'awaiting_user', 'user_approved', 'blocked'],
+        },
+        summary: { type: 'string' },
+        evidence: { type: 'string', description: 'Tests, wiki titles, oracle cells checked' },
+      },
+      required: ['token', 'title', 'status', 'summary'],
+    },
+    run: ({ token, title, status, summary, evidence }) => {
+      const normalised = String(status).toLowerCase()
+      if (FORBIDDEN_LEDGER_STATUSES.has(normalised)) {
+        return {
+          error: `status "${status}" is forbidden — work is never finished without user approval`,
+          allowed: [...ALLOWED_LEDGER_STATUSES],
+        }
+      }
+      if (!ALLOWED_LEDGER_STATUSES.has(normalised)) {
+        return { error: `unknown status "${status}"`, allowed: [...ALLOWED_LEDGER_STATUSES] }
+      }
+      if (normalised === 'user_approved') {
+        // Soft warning: agents must not self-approve.
+        // Still allow write when the human told them to record approval.
+      }
+      fs.mkdirSync(MECHANICS_MAP_DIR, { recursive: true })
+      if (!fs.existsSync(LEDGER_FILE)) {
+        fs.writeFileSync(LEDGER_FILE, '# Agent work ledger (living)\n\n', 'utf8')
+      }
+      const date = new Date().toISOString().slice(0, 10)
+      const entry = [
+        '',
+        `## ${date} — ${title}`,
+        '',
+        `- **Token:** \`${token}\``,
+        `- **Status:** \`${normalised}\``,
+        `- **Summary:** ${summary}`,
+        `- **Evidence:** ${evidence ?? '(none)'}`,
+        normalised === 'user_approved'
+          ? '- **User approval:** recorded (must be human-confirmed in chat)'
+          : '- **User approval:** _(pending)_',
+        '',
+      ].join('\n')
+      const existing = fs.readFileSync(LEDGER_FILE, 'utf8')
+      const insertAt = existing.indexOf('\n## ')
+      if (insertAt === -1) fs.appendFileSync(LEDGER_FILE, entry, 'utf8')
+      else {
+        fs.writeFileSync(
+          LEDGER_FILE,
+          `${existing.slice(0, insertAt)}\n${entry}${existing.slice(insertAt)}`,
+          'utf8',
+        )
+      }
+      return {
+        ok: true,
+        path: LEDGER_FILE,
+        status: normalised,
+        reminder:
+          normalised === 'awaiting_user'
+            ? 'Tell the user it is ready for their test — do not call it finished.'
+            : undefined,
+      }
+    },
+  },
+
+  compliance_contract: {
+    description:
+      'Return the short game-mechanics compliance instructions and paths to the living map/ledger. '
+      + 'Call when unsure of the workflow.',
+    inputSchema: { type: 'object', properties: {} },
+    run: () => ({
+      instructions: COMPLIANCE_INSTRUCTIONS,
+      mapFile: MAP_FILE,
+      ledgerFile: LEDGER_FILE,
+      constitution: 'docs/AGENT_MECHANICS_CONSTITUTION.md',
+      contractDoc: 'docs/AGENT_GAME_MECHANICS_CONTRACT.md',
+      kernelProtocol: 'docs/AGENT_MECHANICS_KERNEL_PROTOCOL.md',
+      mcpContract: 'docs/AGENT_MCP_CONTRACT.md',
+      sdkGraphProtocol: 'docs/AGENT_SDK_GRAPH_PROTOCOL.md',
+      epGraphProtocol: 'docs/AGENT_EP_GRAPH_PROTOCOL.md',
+    }),
+  },
+
+  mcp_contract: {
+    description:
+      'Unified MCP contract: categories, guarantees, and tool catalog. '
+      + 'Call when unsure which tool family to use. See docs/AGENT_MCP_CONTRACT.md.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        category: { type: 'string', description: 'Optional category filter' },
+      },
+    },
+    run: ({ category } = {}) => {
+      const args = ['contract']
+      if (category) args.push('--category', category)
+      return parseCliJson(
+        runRepoTsx(MONOREPO_ROOT, 'scripts/mechanics-trust/kernel-cli.mjs', args),
+        'mechanics-kernel',
+      )
+    },
+  },
+
+  sdk_kernel_load: {
+    description:
+      'Load unified MechanicsContext (graphs + trust + coverage + doctor status). '
+      + 'Prefer this as the substrate mount before deep graph slices. '
+      + 'See docs/AGENT_MECHANICS_KERNEL_PROTOCOL.md.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        includeDoctor: {
+          type: 'boolean',
+          description: 'Include doctor status (default true)',
+        },
+      },
+    },
+    run: ({ includeDoctor } = {}) => {
+      const args = ['load']
+      if (includeDoctor === false) args.push('--no-doctor')
+      return parseCliJson(
+        runRepoTsx(MONOREPO_ROOT, 'scripts/mechanics-trust/kernel-cli.mjs', args),
+        'mechanics-kernel',
+      )
+    },
+  },
+
+  sdk_registry_get: {
+    description:
+      'Mechanics Registry TOC (nodes, edges, debug symbols, coverage, docs, MCP tools). '
+      + 'Discoverability only — graphs remain relationship SoT. Optional kind filter. '
+      + 'Writes docs/mechanics-map/registry/latest.json.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        kind: {
+          type: 'string',
+          description:
+            'mechanicNode|graphEdge|debugSymbol|debugModule|debugTest|saveModule|saveField|coverageEntry|invariant|docContract|mcpTool',
+        },
+      },
+    },
+    run: ({ kind } = {}) => {
+      const regArgs = ['registry']
+      if (kind) regArgs.push('--kind', kind)
+      return parseCliJson(
+        runRepoTsx(MONOREPO_ROOT, 'scripts/mechanics-trust/kernel-cli.mjs', regArgs),
+        'mechanics-kernel',
+      )
+    },
+  },
+
+  sdk_save_graph_get: {
+    description:
+      'Save Schema Graph slice (modules/fields/extractors/fixtures). '
+      + 'Fields stay researching until fixture evidence. See docs/AGENT_SAVE_GRAPH_PROTOCOL.md.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        type: { type: 'string', description: 'save.module | save.field | save.extractor | save.fixture' },
+      },
+    },
+    run: ({ type } = {}) => {
+      const args = ['save']
+      if (type) args.push('--type', type)
+      return parseCliJson(
+        runRepoTsx(MONOREPO_ROOT, 'scripts/mechanics-trust/kernel-cli.mjs', args),
+        'mechanics-kernel',
+      )
+    },
+  },
+
+  sdk_sandbox_run: {
+    description:
+      'Instrumented sandbox (kernel/doctor-dry/save-graph/planner/decode/vm). Never applies inventive repair. '
+      + 'mode=vm runs light Tower VM (kernel+fixture decode+citation eval+doctor-dry). '
+      + 'JSON fixtures decode immediately; .dat needs packages/sdk build. See docs/AGENT_SANDBOX_PROTOCOL.md.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        mode: {
+          type: 'string',
+          description: 'check | kernel | doctor-dry | save-graph | planner | decode | vm',
+        },
+        savePath: { type: 'string', description: 'Optional playerInfo.dat or JSON fixture path' },
+        family: { type: 'string', description: 'Planner family when mode includes planner/vm' },
+      },
+    },
+    run: ({ mode, savePath, family } = {}) => {
+      const args = []
+      if (mode) args.push('--mode', mode)
+      if (savePath) args.push('--save', savePath)
+      if (family) args.push('--family', family)
+      return parseCliJson(
+        runRepoTsx(MONOREPO_ROOT, 'scripts/mechanics-trust/sandbox-cli.mjs', args),
+        'mechanics-sandbox',
+      )
+    },
+  },
+
+  sdk_planner_compile: {
+    description:
+      'Compile a structural planner pipeline from EP/SDK graphs. '
+      + 'When graph has FORMULATEXT/lambda, codegen=citations and optional emit:true writes citation modules. '
+      + 'Optional eval:true + nodeId evaluates via hand-ported bindings only (never invents).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        family: { type: 'string', description: 'e.g. eEcon or ep.eEcon' },
+        list: { type: 'boolean', description: 'List known ep.* families' },
+        emit: { type: 'boolean', description: 'Write citation .ts/.md from graph formulas only' },
+        eval: { type: 'boolean', description: 'Evaluate a citation via hand-ported binding' },
+        nodeId: { type: 'string', description: 'Citation node id when eval:true (or --list bindings when list+eval)' },
+        unlockStat: { type: 'string', description: 'Coin Bonus | Free Upgrades for hide gates' },
+      },
+    },
+    run: ({ family, list, emit, eval: doEval, nodeId, unlockStat } = {}) => {
+      if (doEval) {
+        const args = []
+        if (list) args.push('--list')
+        else {
+          if (family) args.push('--family', family)
+          if (nodeId) args.push('--node', nodeId)
+          if (unlockStat) args.push('--unlock', unlockStat)
+        }
+        return parseCliJson(
+          runRepoTsx(MONOREPO_ROOT, 'scripts/mechanics-trust/planner-eval-cli.mjs', args),
+          'planner-eval',
+        )
+      }
+      if (emit) {
+        return parseCliJson(
+          runRepoTsx(MONOREPO_ROOT, 'scripts/mechanics-trust/planner-codegen-cli.mjs', family ? ['--family', family] : ['--family', 'eEcon']),
+          'planner-codegen',
+        )
+      }
+      const args = ['planner']
+      if (list) args.push('--list')
+      if (family) args.push('--family', family)
+      return parseCliJson(
+        runRepoTsx(MONOREPO_ROOT, 'scripts/mechanics-trust/kernel-cli.mjs', args),
+        'mechanics-kernel',
+      )
+    },
+  },
+
+  sdk_docs_generate: {
+    description:
+      'Generate canonical substrate docs under docs/mechanics-map/generated/ from Kernel/Registry/graphs.',
+    inputSchema: { type: 'object', properties: {} },
+    run: () =>
+      parseCliJson(
+        runRepoTsx(MONOREPO_ROOT, 'scripts/mechanics-trust/docs-gen-cli.mjs', []),
+        'mechanics-docs',
+      ),
+  },
+
+  sdk_lsp_diagnostics: {
+    description:
+      'Mechanics LSP Phase 1 diagnostics (kernel/doctor/save-graph). Full language server deferred.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        hover: { type: 'string', description: 'Optional symbol/family for hover markdown' },
+      },
+    },
+    run: ({ hover } = {}) => {
+      const args = ['lsp']
+      if (hover) args.push('--hover', hover)
+      return parseCliJson(
+        runRepoTsx(MONOREPO_ROOT, 'scripts/mechanics-trust/kernel-cli.mjs', args),
+        'mechanics-kernel',
+      )
+    },
+  },
+
+  sdk_graph_get: {
+    description:
+      'REQUIRED mount for mechanics work. Read the SDK mechanics graph (core + EP module merged) '
+      + 'or filter by family/module/type/status. Cite node IDs in answers.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        family: { type: 'string', description: 'e.g. ep.eEcon, lab, workshop' },
+        module: { type: 'string', description: 'core | ep' },
+        type: { type: 'string' },
+        status: { type: 'string' },
+        edgeKind: { type: 'string' },
+      },
+    },
+    run: ({ family, module, type, status, edgeKind }) => {
+      const args = ['get']
+      if (family) args.push('--family', family)
+      if (module) args.push('--module', module)
+      if (type) args.push('--type', type)
+      if (status) args.push('--status', status)
+      if (edgeKind) args.push('--edgeKind', edgeKind)
+      return runSdkGraphCli(args)
+    },
+  },
+
+  sdk_graph_context: {
+    description:
+      'Compact context pack (nodes/edges + index hints) for mounting into the agent session. Prefer over full get.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        family: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Optional family filter list',
+        },
+      },
+    },
+    run: ({ family }) => {
+      const args = ['context']
+      for (const f of family ?? []) {
+        args.push('--family', f)
+      }
+      return runSdkGraphCli(args)
+    },
+  },
+
+  sdk_graph_mutate: {
+    description:
+      'Atomic mutations on the core SDK graph module (lab/workshop/…). For EP use ep_graph_mutate. '
+      + 'Requires evidence + reason. Refuses to persist when TrustReport.ok is false '
+      + '(returns persisted:false + trustReport). Then pnpm sdk-graph:compile.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        ops: { type: 'array', items: { type: 'object' } },
+      },
+      required: ['ops'],
+    },
+    run: ({ ops }) => runSdkGraphCli(['mutate', JSON.stringify(ops)]),
+  },
+
+  sdk_graph_validate: {
+    description:
+      'Full TrustReport: structural + invariants + sheets coverage silent gaps + trustSummary. '
+      + 'CI equivalent: pnpm mechanics-trust:check. See docs/AGENT_MECHANICS_TRUST_CONTRACT.md.',
+    inputSchema: { type: 'object', properties: {} },
+    run: () => runSdkGraphCli(['validate']),
+  },
+
+  trust_coverage_report: {
+    description:
+      'Read-only coverage / trust summary (silent gaps, status counts). Same data as sdk_graph_validate '
+      + 'coverage + trustSummary fields.',
+    inputSchema: { type: 'object', properties: {} },
+    run: () => {
+      const trust = runSdkGraphCli(['validate'])
+      return {
+        ok: trust.ok,
+        coverage: trust.coverage,
+        trustSummary: trust.trustSummary,
+        invariantErrors: (trust.invariants ?? []).filter(i => i.severity === 'error'),
+        contract: 'docs/AGENT_MECHANICS_TRUST_CONTRACT.md',
+      }
+    },
+  },
+
+  trust_drift_check: {
+    description:
+      'Aggregate drift across sheets (FORMULATEXT), wiki page hashes, and save module hashes. '
+      + 'Runs pnpm mechanics-trust:drift. Sheet oracle skipped cleanly without env. '
+      + 'Pass apply:true to mark sheet formula mismatches disputed via graph mutate (trust-gated persist). '
+      + 'Cite docs/mechanics-map/drift/latest.json.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        apply: {
+          type: 'boolean',
+          description: 'When true, sheet formula mismatches are marked disputed on the graph',
+        },
+      },
+    },
+    run: ({ apply } = {}) => {
+      const args = apply ? ['--apply'] : []
+      return parseCliJson(
+        runRepoTsx(MONOREPO_ROOT, 'scripts/mechanics-trust/drift-all.mjs', args),
+        'mechanics-trust-drift',
+      )
+    },
+  },
+
+  sdk_doctor_check: {
+    description:
+      'SDK Doctor diagnosis: trust + debug + FS + symbols + coverage + drift snapshots + test adjacency. '
+      + 'Returns DoctorReport. See docs/AGENT_SDK_DOCTOR_PROTOCOL.md. Does not invent fixes.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        strictTests: { type: 'boolean', description: 'Elevate missing adjacent tests to warnings' },
+      },
+    },
+    run: ({ strictTests } = {}) => {
+      const args = ['check']
+      if (strictTests) args.push('--strict-tests')
+      return parseCliJson(
+        runRepoTsx(MONOREPO_ROOT, 'scripts/mechanics-trust/doctor-cli.mjs', args),
+        'sdk-doctor',
+      )
+    },
+  },
+
+  sdk_doctor_prescribe: {
+    description:
+      'Map DoctorReport issues to a PatchPlan (auto vs human). Does not apply patches.',
+    inputSchema: { type: 'object', properties: {} },
+    run: () =>
+      parseCliJson(
+        runRepoTsx(MONOREPO_ROOT, 'scripts/mechanics-trust/doctor-cli.mjs', ['prescribe']),
+        'sdk-doctor',
+      ),
+  },
+
+  sdk_doctor_repair: {
+    description:
+      'Apply Phase-1 safe doctor patches only (debug/coverage/docs/drift-status). '
+      + 'Pass apply:true to execute; stubs:true for researching stub graph patches. '
+      + 'Never invents planner formulas. Dry-run by default.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        apply: { type: 'boolean' },
+        stubs: { type: 'boolean' },
+      },
+    },
+    run: ({ apply, stubs } = {}) => {
+      const args = ['repair']
+      if (apply) args.push('--apply')
+      if (stubs) args.push('--stubs')
+      return parseCliJson(
+        runRepoTsx(MONOREPO_ROOT, 'scripts/mechanics-trust/doctor-cli.mjs', args),
+        'sdk-doctor',
+      )
+    },
+  },
+
+  sdk_doctor_validate: {
+    description: 'Post-repair validation: TrustReport (strict label) + debug structural + re-diagnose.',
+    inputSchema: { type: 'object', properties: {} },
+    run: () =>
+      parseCliJson(
+        runRepoTsx(MONOREPO_ROOT, 'scripts/mechanics-trust/doctor-cli.mjs', ['validate']),
+        'sdk-doctor',
+      ),
+  },
+
+  sdk_doctor_autofix: {
+    description:
+      'check → prescribe → repair(safe) → validate. Pass apply:true to execute safe patches. '
+      + 'Human/research patches remain in remainingHuman.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        apply: { type: 'boolean' },
+        stubs: { type: 'boolean' },
+      },
+    },
+    run: ({ apply, stubs } = {}) => {
+      const args = ['autofix']
+      if (apply) args.push('--apply')
+      if (stubs) args.push('--stubs')
+      return parseCliJson(
+        runRepoTsx(MONOREPO_ROOT, 'scripts/mechanics-trust/doctor-cli.mjs', args),
+        'sdk-doctor',
+      )
+    },
+  },
+
+  sdk_debug_snapshot: {
+    description:
+      'Debug Graph slice (modules/symbols/tests) plus recent session traces/errors. '
+      + 'Prefer this over print/playground guessing. See docs/AGENT_DEBUG_GRAPH_PROTOCOL.md.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        type: { type: 'string', description: 'runtime.module | runtime.symbol | runtime.test | …' },
+        exportName: { type: 'string' },
+      },
+    },
+    run: ({ type, exportName }) => {
+      const args = ['snapshot']
+      if (type) args.push('--type', type)
+      if (exportName) args.push('--export', exportName)
+      return parseCliJson(
+        runRepoTsx(MONOREPO_ROOT, 'scripts/mechanics-trust/debug-graph-cli.mjs', args),
+        'debug-graph-cli',
+      )
+    },
+  },
+
+  sdk_debug_validate: {
+    description:
+      'Validate Debug Graph + cross-invariants vs mechanics codeSymbols. '
+      + 'Fails when a mechanics codeSymbol has no runtime.symbol node.',
+    inputSchema: { type: 'object', properties: {} },
+    run: () =>
+      parseCliJson(
+        runRepoTsx(MONOREPO_ROOT, 'scripts/mechanics-trust/debug-graph-cli.mjs', ['validate']),
+        'debug-graph-cli',
+      ),
+  },
+
+  sdk_debug_trace: {
+    description:
+      'Run a mechanics export with instrumentation. Appends a runtime.trace (and runtime.error on failure) '
+      + 'to the session store (temp/debug-graph-session/). Returns structured trace — cite trace.id.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        exportName: { type: 'string', description: 'Exported symbol name, e.g. labMaxCatalogLevel' },
+        args: { type: 'array', description: 'JSON-serializable arguments for the export' },
+      },
+      required: ['exportName'],
+    },
+    run: ({ exportName, args }) => {
+      const cliArgs = ['trace', '--export', String(exportName)]
+      if (args != null) cliArgs.push('--args', JSON.stringify(args))
+      return parseCliJson(
+        runRepoTsx(MONOREPO_ROOT, 'scripts/mechanics-trust/debug-graph-cli.mjs', cliArgs),
+        'debug-graph-cli',
+      )
+    },
+  },
+
+  sdk_debug_watch: {
+    description:
+      'Poll mechanics sources for mtime changes + return recent session events. Pass since=ISO to filter.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        since: { type: 'string', description: 'ISO timestamp — only changes/events at or after' },
+      },
+    },
+    run: ({ since }) => {
+      const args = ['watch']
+      if (since) args.push('--since', String(since))
+      return parseCliJson(
+        runRepoTsx(MONOREPO_ROOT, 'scripts/mechanics-trust/debug-graph-cli.mjs', args),
+        'debug-graph-cli',
+      )
+    },
+  },
+
+  sdk_graph_render: {
+    description: 'Mermaid slices for the merged SDK graph. Prefer pnpm sdk-graph:compile to write docs.',
+    inputSchema: { type: 'object', properties: {} },
+    run: () => runSdkGraphCli(['render']),
   },
 
   define_term: {
@@ -493,71 +1362,13 @@ function replacer(key, value) {
   return value
 }
 
-// ---- stdio JSON-RPC --------------------------------------------------------
+// ---- stdio JSON-RPC (sdk-only entry; monorepo prefers tools/tower-mcp) ------
 
-const send = msg => process.stdout.write(`${JSON.stringify(msg)}\n`)
-
-const handlers = {
-  initialize: () => ({
-    protocolVersion: '2024-11-05',
-    capabilities: { tools: {} },
-    serverInfo: { name: 'thetowersdk', version: VERSION },
-  }),
-  'tools/list': () => ({
-    tools: Object.entries(TOOLS).map(([name, t]) => ({
-      name,
-      description: t.description,
-      inputSchema: t.inputSchema,
-    })),
-  }),
-  // Awaited: the wiki tools fetch, and a returned promise would serialise as
-  // `{}` — an empty answer that reads like "the wiki has nothing" rather than
-  // like a bug. Synchronous tools are unaffected.
-  'tools/call': async ({ name, arguments: args }) => {
-    const tool = TOOLS[name]
-    if (!tool) return { isError: true, content: [{ type: 'text', text: `unknown tool: ${name}` }] }
-    try {
-      const result = await tool.run(args ?? {})
-      return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] }
-    } catch (error) {
-      return { isError: true, content: [{ type: 'text', text: `${name} failed: ${error.message}` }] }
-    }
-  },
+if (isDirectRun(import.meta.url)) {
+  runStdioMcp({
+    name: 'thetowersdk',
+    version: VERSION,
+    instructions: COMPLIANCE_INSTRUCTIONS,
+    tools: TOOLS,
+  })
 }
-
-let buffer = ''
-process.stdin.on('data', chunk => {
-  buffer += chunk
-  let newline
-  while ((newline = buffer.indexOf('\n')) !== -1) {
-    const line = buffer.slice(0, newline).trim()
-    buffer = buffer.slice(newline + 1)
-    if (!line) continue
-
-    let request
-    try {
-      request = JSON.parse(line)
-    } catch {
-      continue
-    }
-
-    const handler = handlers[request.method]
-    if (!handler) {
-      // Notifications have no id and expect no reply.
-      if (request.id !== undefined) {
-        send({ jsonrpc: '2.0', id: request.id, error: { code: -32601, message: `unknown method: ${request.method}` } })
-      }
-      continue
-    }
-    // `handler` may be async — resolve before replying, and keep rejections on
-    // the same error path a throw already took.
-    Promise.resolve()
-      .then(() => handler(request.params ?? {}))
-      .then(result => send({ jsonrpc: '2.0', id: request.id, result }))
-      .catch(error => send({
-        jsonrpc: '2.0',
-        id: request.id,
-        error: { code: -32603, message: error.message },
-      }))
-  }
-})

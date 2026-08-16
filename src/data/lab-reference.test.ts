@@ -70,12 +70,14 @@ function toSeconds(value: string | number | undefined): number | null {
 
 interface NormalizedLab {
   name: string
+  slug: string
   levels: Array<{ level: number; cost: number; seconds: number | null }>
 }
 
 const ourLabs: NormalizedLab[] = [
   ...LAB_CATALOG.filter(lab => lab.levels?.length).map(lab => ({
     name: lab.name,
+    slug: lab.slug,
     // Level 0 is a baseline row with no purchase; the reference starts at 1.
     levels: lab.levels.filter(level => Number(level.level) >= 1).map(level => ({
       level: Number(level.level),
@@ -90,10 +92,10 @@ const canonicalByAlias = new Map(
   Object.entries(SITE_LAB_SLUG_ALIASES).map(([site, canonical]) => [matchKey(site), canonical]),
 )
 
-function referenceFor(name: string): ReferenceLab | undefined {
-  const direct = referenceByKey.get(matchKey(name))
+function referenceFor(lab: Pick<NormalizedLab, 'name' | 'slug'>): ReferenceLab | undefined {
+  const direct = referenceByKey.get(matchKey(lab.name)) ?? referenceByKey.get(matchKey(lab.slug))
   if (direct) return direct
-  const canonical = canonicalByAlias.get(matchKey(name))
+  const canonical = canonicalByAlias.get(matchKey(lab.slug)) ?? canonicalByAlias.get(matchKey(lab.name))
   return canonical ? referenceByKey.get(matchKey(canonical)) : undefined
 }
 
@@ -115,7 +117,7 @@ describe('lab tables against the Effective Paths reference', () => {
     const mismatches: string[] = []
     let compared = 0
     for (const lab of ourLabs) {
-      const ref = referenceFor(lab.name)
+      const ref = referenceFor(lab)
       if (!ref) continue
       const refByLevel = new Map(ref.levels.map(level => [level.level, level]))
       for (const level of lab.levels) {
@@ -136,7 +138,7 @@ describe('lab tables against the Effective Paths reference', () => {
     const mismatches: string[] = []
     let compared = 0
     for (const lab of ourLabs) {
-      const ref = referenceFor(lab.name)
+      const ref = referenceFor(lab)
       if (!ref) continue
       const refByLevel = new Map(ref.levels.map(level => [level.level, level]))
       for (const level of lab.levels) {
@@ -155,7 +157,7 @@ describe('lab tables against the Effective Paths reference', () => {
   })
 
   it('covers most of the catalog, so the check is not vacuous', () => {
-    const matched = ourLabs.filter(lab => referenceFor(lab.name)).length
+    const matched = ourLabs.filter(lab => referenceFor(lab)).length
     // 188 of 221 today. The unmatched remainder is mostly the 31 per-card
     // masteries, which the sheet models as a single shared "Card Mastery" row.
     expect(matched).toBeGreaterThanOrEqual(185)
@@ -172,7 +174,7 @@ describe('lab tables against the Effective Paths reference', () => {
     // 8230000000 there, so they are not independent on it and neither can say
     // what the real value is. Recorded exactly rather than guessed: if the
     // sheet ever corrects it, this assertion fails and we adopt the fix.
-    const KNOWN_BAD = ['super_tower_bonus: L6=9260000000 -> L7=8230000000']
+    const KNOWN_BAD = ['Super Tower Bonus: L6=9260000000 -> L7=8230000000']
     const drops: string[] = []
     for (const lab of ourLabs) {
       const levels = [...lab.levels].sort((left, right) => left.level - right.level)

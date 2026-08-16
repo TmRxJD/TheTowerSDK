@@ -316,11 +316,31 @@ describe('lab candidates whose prerequisite is unmet', () => {
         ...bare().ultimateWeapons,
         'Chain Lightning': { ...bare().ultimateWeapons['Chain Lightning'], unlocked: true },
       },
+      // `AL75`'s F33 half — Chain Lightning Shock lab bought.
+      shockMultiplierUnlocked: true,
     }
     const plan = planEffectiveDamagePath({
       config, levels: ZERO_EFFECTIVE_DAMAGE_LEVELS, variant: 'lab-time', steps: 5,
     })
     expect(plan.excluded.some(entry => /not taken yet/.test(entry.reason))).toBe(false)
+  })
+
+  it('keeps Shock Multiplier off when Chain Lightning Shock is not bought', () => {
+    // Weapon half alone used to pass; `AL75` also needs Master Sheet F33 = 1.
+    const config = {
+      ...bare(),
+      ultimateWeapons: {
+        ...bare().ultimateWeapons,
+        'Chain Lightning': { ...bare().ultimateWeapons['Chain Lightning'], unlocked: true },
+      },
+      shockMultiplierUnlocked: false,
+    }
+    const plan = planEffectiveDamagePath({
+      config, levels: ZERO_EFFECTIVE_DAMAGE_LEVELS, variant: 'lab-time', steps: 25,
+    })
+    const reasons = new Map(plan.excluded.map(entry => [entry.sheetName, entry.reason]))
+    expect(reasons.get('Shock Multiplier')).toMatch(/not taken yet/)
+    expect(plan.steps.some(step => step.name === 'Shock Multiplier')).toBe(false)
   })
 })
 

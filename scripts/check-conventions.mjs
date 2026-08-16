@@ -35,8 +35,21 @@ const walk = dir => {
 }
 walk(SRC)
 
+/** Monorepo AGS tooling — not part of the published public API surface. */
+const MONOREPO_ONLY = rel =>
+  rel.startsWith('mechanics/doctor/')
+  || rel.startsWith('mechanics/kernel/')
+  || rel.startsWith('mechanics/sandbox/')
+  || rel.startsWith('mechanics/docs-gen/')
+  || rel.startsWith('mechanics/lsp/')
+  || rel.startsWith('mechanics/registry/')
+  || rel === 'mechanics/governance-adapter.ts'
+  || rel.startsWith('mechanics/sdk-graph/sheet-drift-mutate')
+  || rel.startsWith('mechanics/planner-engine/generated/')
+
 for (const file of files) {
   const rel = norm(path.relative(SRC, file))
+  if (MONOREPO_ONLY(rel)) continue
   const base = path.basename(rel)
   const raw = fs.readFileSync(file, 'utf8')
   const isTest = base.endsWith('.test.ts')
@@ -98,6 +111,7 @@ for (const area of PUBLIC_AREAS) {
     .readdirSync(path.join(SRC, area), { withFileTypes: true })
     .filter(e => e.isFile() && e.name.endsWith('.ts') && !e.name.endsWith('.test.ts') && e.name !== 'index.ts')
     .map(e => e.name.replace(/\.ts$/, ''))
+    .filter(mod => !MONOREPO_ONLY(`${area}/${mod}.ts`))
 
   /**
    * A module also counts as reachable when a module the barrel *does* export

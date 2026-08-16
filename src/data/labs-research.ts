@@ -3339,7 +3339,7 @@ const SITE_LAB_TYPE_BY_SLUG = (() => {
   const bySlug = new Map<string, string>()
   for (const lab of LAB_CATALOG) {
     if (!lab.category) continue
-    bySlug.set(lab.name, normalizeLabCategory(lab.category))
+    bySlug.set(lab.slug, normalizeLabCategory(lab.category))
   }
   for (const [alias, target] of Object.entries(LAB_RESEARCH_LEGACY_SLUG_ALIASES)) {
     const category = bySlug.get(alias)

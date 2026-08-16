@@ -59,35 +59,12 @@
 
 import { LAB_CATALOG } from '../data/labs-catalog'
 import { moduleUpgradeCoinCost } from './effective-paths-coin-costs'
-import {
-  enhancementCoinCost,
-  WORKSHOP_ENHANCEMENT_CATEGORIES,
-} from './effective-paths-enhancement-costs'
-import type { WorkshopEnhancementCategory } from './effective-paths-enhancement-costs'
 import type { EffectiveEconomyLevels } from './effective-paths-eecon-levels'
 import { labDurationDaysToReachLevel, labMaxCatalogLevel } from './effective-paths-lab-costs'
 import type { LabCostModifiers } from './effective-paths-lab-costs'
 import type { PathExclusion, PathStep } from './effective-paths-planner'
 
-/**
- * `WSPATTACK/DEFENSE/UTILITY_TOTAL_COINS_INVESTED` — coins sunk into a
- * category's six workshop enhancements.
- *
- * Undiscounted, and cumulative to each stat's level. Verified against the live
- * function at five level sets, exactly.
- */
-export function workshopEnhancementCoinsInvested(
-  category: WorkshopEnhancementCategory,
-  levels: Readonly<Record<string, number>>,
-): number {
-  let total = 0
-  for (const [stat, group] of Object.entries(WORKSHOP_ENHANCEMENT_CATEGORIES)) {
-    if (group !== category) continue
-    const level = Math.max(0, Math.floor(levels[stat] ?? 0))
-    for (let at = 1; at <= level; at++) total += enhancementCoinCost(stat, at) ?? 0
-  }
-  return total
-}
+export { workshopEnhancementCoinsInvested } from './effective-paths-enhancement-costs'
 
 /**
  * `EPC_MOD_DISCOUNT`'s base — coins sunk into the equipped modules.
@@ -148,8 +125,8 @@ export function labCoinsRemaining(levelOf: (labName: string) => number): number 
   const uncounted = new Set(LAB_DISCOUNT_UNCOUNTED_LABS)
   let total = 0
   for (const record of LAB_CATALOG) {
-    if (uncounted.has(record.name)) continue
-    const level = Math.max(0, Math.floor(levelOf(record.name) || 0))
+    if (uncounted.has(record.slug) || uncounted.has(record.name)) continue
+    const level = Math.max(0, Math.floor(levelOf(record.slug) || levelOf(record.name) || 0))
     for (const entry of record.levels) {
       if (entry.level > level) total += entry.cost
     }

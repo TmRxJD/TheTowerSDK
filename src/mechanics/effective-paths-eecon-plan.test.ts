@@ -37,7 +37,7 @@ function developedConfig(): EffectiveEconomyConfig {
     freeUpgradeDefense: { value: 0.1, relicPct: 0, vaultPct: 0 },
     freeUpgradeUtility: { value: 0.1, relicPct: 0, vaultPct: 0 },
     recoveryPackageChance: { value: 0.05, relicPct: 0, vaultPct: 0 },
-    generator: { bonus: 1.5, hasAssist: true, assistBonus: 1.3 },
+    generator: { bonus: 1.5, hasAssist: true, coreHasAssist: true, assistBonus: 1.3 },
     weapons: {
       goldenTower: { unlocked: true, bonus: 8, duration: 20, cooldown: 120, goldenCombo: 3 },
       blackHole: { unlocked: true, duration: 15, cooldown: 100 },
@@ -61,7 +61,14 @@ function developedLevels(): EffectiveEconomyLevels {
   const base = ZERO_EFFECTIVE_ECONOMY_LEVELS
   return {
     ...base,
-    time: { ...base.time, primaryModuleGenerator: 200, assistModuleGenerator: 200 },
+    time: {
+      ...base.time,
+      primaryModuleGenerator: 200,
+      assistModuleGenerator: 200,
+      // `eEcon Stones!DQ2` / `DT2` hide BH and SL stone stats until these are ≥1.
+      blackHoleCoinBonus: 1,
+      spotlightCoinBonus: 1,
+    },
   }
 }
 
@@ -102,21 +109,71 @@ describe('nothing is dropped without a reason', () => {
     })
   }
 
-  it('says why the stone path cannot plan four of its nineteen', () => {
+  it('leaves UW CD off until cooldowns are kept synced', () => {
     const plan = planEffectiveEconomyPath({
       config: developedConfig(), levels: developedLevels(), variant: 'stone', steps: 1,
     })
 
     const reasons = new Map(plan.excluded.map(e => [e.sheetName, e.reason]))
-    // Five masteries the sheet ranks from a player-supplied return...
+    expect(reasons.get('UW CD')).toMatch(/individually/)
+  })
+
+  it('plans UW CD once cooldowns are kept synced', () => {
+    const plan = planEffectiveEconomyPath({
+      config: developedConfig(),
+      levels: developedLevels(),
+      variant: 'stone',
+      steps: 5,
+      keepCooldownsSynced: true,
+    })
+    const reasons = new Map(plan.excluded.map(e => [e.sheetName, e.reason]))
+    expect(reasons.get('UW CD') ?? '').not.toMatch(/individually|110|more than one/)
+    // With GT/BH/DW unlocked at CD level 0, CA5 is 300 — the composite is live.
+    expect(plan.excluded.some(e => e.sheetName === 'UW CD')).toBe(false)
+  })
+
+  it('prices the five card masteries on the stone path when their cards are live', () => {
+    const plan = planEffectiveEconomyPath({
+      config: {
+        ...developedConfig(),
+        cards: {
+          ...developedConfig().cards,
+          coins: { active: true, value: 1.5, level: 5 },
+          waveSkip: { active: true, value: 0.15, level: 5 },
+          introSprint: { active: true, value: 20, level: 5 },
+        },
+      },
+      levels: developedLevels(),
+      variant: 'stone',
+      steps: 5,
+    })
+    const reasons = new Map(plan.excluded.map(e => [e.sheetName, e.reason]))
     for (const mastery of [
       'Coins Mastery', 'Extra Orb Mastery', 'Wave Skip Mastery',
       'Intro Sprint Mastery', 'Wave Accelerator Mastery',
     ]) {
-      expect(reasons.get(mastery), mastery).toMatch(/player-supplied return/)
+      expect(reasons.get(mastery) ?? '', mastery).not.toMatch(/unported|not equipped|already unlocked/)
     }
-    // ...and one that is not a single level at all.
-    expect(reasons.get('UW CD')).toMatch(/more than one level a step/)
+  })
+
+  it('leaves a mastery off once the card mastery is unlocked', () => {
+    const plan = planEffectiveEconomyPath({
+      config: {
+        ...developedConfig(),
+        cards: {
+          ...developedConfig().cards,
+          coins: { active: true, value: 1.5, level: 5 },
+          coinsMastery: { active: true, value: 1, level: 1 },
+          extraOrbMastery: { active: true, value: 1, level: 1 },
+        },
+      },
+      levels: developedLevels(),
+      variant: 'stone',
+      steps: 5,
+    })
+    const reasons = new Map(plan.excluded.map(e => [e.sheetName, e.reason]))
+    expect(reasons.get('Coins Mastery')).toMatch(/already unlocked/)
+    expect(reasons.get('Extra Orb Mastery')).toMatch(/already unlocked/)
   })
 })
 
@@ -302,5 +359,191 @@ describe('the two stone gates read off eEcon Stones!DM2:DQ2', () => {
     for (const name of ['GT Cooldown', 'BH Cooldown', 'DW Cooldown']) {
       expect(reasons.get(name), name).toMatch(/synced/)
     }
+    // And the composite that replaces them is available to plan.
+    expect(reasons.get('UW CD') ?? '').not.toMatch(/synced|110/)
+  })
+
+  it('hides UW CD once the longest cooldown is under 110 seconds', () => {
+    // Chart: 300 - 10*level; level 20 → 100s. All three at 20 ⇒ CA5 = 100.
+    const plan = planEffectiveEconomyPath({
+      config: developedConfig(),
+      levels: {
+        ...developedLevels(),
+        stone: {
+          ...developedLevels().stone,
+          goldenTowerCooldownStone: 20,
+          blackHoleCooldownStone: 20,
+          deathWaveCooldownStone: 20,
+        },
+      },
+      variant: 'stone',
+      steps: 5,
+      keepCooldownsSynced: true,
+    })
+    const reasons = new Map(plan.excluded.map(entry => [entry.sheetName, entry.reason]))
+    expect(reasons.get('UW CD')).toMatch(/110/)
+  })
+
+  it('hides assist candidates until an assist module is equipped', () => {
+    const plan = planEffectiveEconomyPath({
+      config: {
+        ...developedConfig(),
+        generator: { ...developedConfig().generator, hasAssist: false, coreHasAssist: false },
+      },
+      levels: developedLevels(),
+      variant: 'stone',
+      steps: 20,
+    })
+    const reasons = new Map(plan.excluded.map(entry => [entry.sheetName, entry.reason]))
+    for (const name of [
+      'Assist Module Bonus - Generator',
+      'Assist Module Substats - Generator',
+      'Assist Module Substats - Core',
+    ]) {
+      expect(reasons.get(name), name).toMatch(/assist module/)
+    }
+  })
+
+  it('hides Recovery Package Chance without Galaxy Compressor', () => {
+    // `eEcon!DW2` opens with `AO7+AS7=0`.
+    const plan = planEffectiveEconomyPath({
+      config: developedConfig(),
+      levels: developedLevels(),
+      variant: 'time',
+      steps: 20,
+    })
+    const reasons = new Map(plan.excluded.map(entry => [entry.sheetName, entry.reason]))
+    expect(reasons.get('Recovery Package Chance')).toMatch(/prerequisite/)
+  })
+
+  it('hides time-path Coins Mastery until the card mastery is unlocked', () => {
+    // Opposite of the stone path: `ED2` is `NOT(AZ32)`, and AZ32 needs mastery on.
+    const plan = planEffectiveEconomyPath({
+      config: {
+        ...developedConfig(),
+        cards: {
+          ...developedConfig().cards,
+          coins: { active: true, value: 1.5, level: 5 },
+          coinsMastery: { active: false, value: 1, level: 0 },
+        },
+      },
+      levels: developedLevels(),
+      variant: 'time',
+      steps: 20,
+    })
+    const reasons = new Map(plan.excluded.map(entry => [entry.sheetName, entry.reason]))
+    expect(reasons.get('Coins Mastery')).toMatch(/prerequisite/)
+  })
+
+  it('gates Gold Bot - Duration on owning the bot', () => {
+    // Was misspelled `Gold Bot Duration` and never matched the sheet name.
+    const plan = planEffectiveEconomyPath({
+      config: {
+        ...developedConfig(),
+        weapons: {
+          ...developedConfig().weapons,
+          goldBot: { ...developedConfig().weapons.goldBot, unlocked: false },
+        },
+      },
+      levels: developedLevels(),
+      variant: 'time',
+      steps: 20,
+    })
+    const reasons = new Map(plan.excluded.map(entry => [entry.sheetName, entry.reason]))
+    expect(reasons.get('Gold Bot - Duration')).toMatch(/weapon is not unlocked/)
+  })
+
+  it('hides BH and SL stone stats until their coin-bonus lab is started', () => {
+    // `DQ2` / `DR2` open with `BE20=0` (Black Hole Coin Bonus); `DT2` / `DU2`
+    // open with `BE21=0` (Spotlight Coin Bonus). Without this the stone path
+    // ranks duration and angle upgrades whose econ gain is still zero.
+    const plan = planEffectiveEconomyPath({
+      config: developedConfig(),
+      levels: {
+        ...developedLevels(),
+        time: {
+          ...developedLevels().time,
+          blackHoleCoinBonus: 0,
+          spotlightCoinBonus: 0,
+        },
+      },
+      variant: 'stone',
+      steps: 20,
+    })
+    const reasons = new Map(plan.excluded.map(entry => [entry.sheetName, entry.reason]))
+    expect(reasons.get('BH Duration')).toMatch(/Black Hole Coin Bonus/)
+    expect(reasons.get('BH Cooldown')).toMatch(/Black Hole Coin Bonus/)
+    expect(reasons.get('SL Angle')).toMatch(/Spotlight Coin Bonus/)
+    expect(reasons.get('SL Quantity')).toMatch(/Spotlight Coin Bonus/)
+    expect(plan.steps.some(step => step.name === 'BH Duration')).toBe(false)
+    expect(plan.steps.some(step => step.name === 'SL Angle')).toBe(false)
+  })
+
+  it('offers BH and SL stone stats once those labs are started', () => {
+    const plan = planEffectiveEconomyPath({
+      config: developedConfig(),
+      levels: developedLevels(),
+      variant: 'stone',
+      steps: 20,
+    })
+    const reasons = new Map(plan.excluded.map(entry => [entry.sheetName, entry.reason]))
+    expect(reasons.get('BH Duration') ?? '').not.toMatch(/Black Hole Coin Bonus/)
+    expect(reasons.get('SL Angle') ?? '').not.toMatch(/Spotlight Coin Bonus/)
+  })
+
+  it('hides Coin Bonus until Utility enhancement spend clears 50B', () => {
+    // Wiki + `eEcon!EO2`: `WSPUTILITY_TOTAL_COINS_INVESTED(...)<=50000000000`.
+    // Cash Bonus 9 = 49.01B (locked); Cash Bonus 10 = 55.54B (open).
+    const locked = planEffectiveEconomyPath({
+      config: developedConfig(),
+      levels: developedLevels(),
+      variant: 'time',
+      steps: 20,
+      workshopEnhancementsUnlocked: true,
+      enhancementLevels: { 'Cash Bonus': 9 },
+    })
+    const unlocked = planEffectiveEconomyPath({
+      config: developedConfig(),
+      levels: developedLevels(),
+      variant: 'time',
+      steps: 20,
+      workshopEnhancementsUnlocked: true,
+      enhancementLevels: { WSP_CASH_BONUS: 10 },
+    })
+    const lockedReasons = new Map(locked.excluded.map(e => [e.sheetName, e.reason]))
+    const unlockedReasons = new Map(unlocked.excluded.map(e => [e.sheetName, e.reason]))
+    expect(lockedReasons.get('Coin Bonus')).toMatch(/Utility enhancements/)
+    expect(unlockedReasons.get('Coin Bonus') ?? '').not.toMatch(/Utility enhancements/)
+  })
+
+  it('hides Free Upgrades until Utility spend clears 5T', () => {
+    // Wiki + `eEcon!EP2`: `<=5000000000000`. Cash Bonus 30 is under; 35 clears.
+    const withDigestor = {
+      ...developedConfig(),
+      uniques: {
+        ...developedConfig().uniques,
+        blackHoleDigestor: { primary: 1, assist: 0 },
+      },
+    }
+    const locked = planEffectiveEconomyPath({
+      config: withDigestor,
+      levels: developedLevels(),
+      variant: 'time',
+      steps: 20,
+      workshopEnhancementsUnlocked: true,
+      enhancementLevels: { 'Cash Bonus': 30 },
+    })
+    const unlocked = planEffectiveEconomyPath({
+      config: withDigestor,
+      levels: developedLevels(),
+      variant: 'time',
+      steps: 20,
+      workshopEnhancementsUnlocked: true,
+      enhancementLevels: { 'Cash Bonus': 35 },
+    })
+    const lockedReasons = new Map(locked.excluded.map(e => [e.sheetName, e.reason]))
+    const unlockedReasons = new Map(unlocked.excluded.map(e => [e.sheetName, e.reason]))
+    expect(lockedReasons.get('Free Upgrades')).toMatch(/Utility enhancements/)
+    expect(unlockedReasons.get('Free Upgrades') ?? '').not.toMatch(/Utility enhancements/)
   })
 })

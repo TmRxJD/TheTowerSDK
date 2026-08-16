@@ -144,7 +144,9 @@ export function normalizeToolLabLookupKey(name: string): string {
 
 function normalizeCatalogLab(lab: LabCatalogRecord): ToolLabRecord {
   return {
-    name: lab.name,
+    // Tool identity stays the stable slug (save keys, dropdown values).
+    name: lab.slug,
+    displayName: lab.name,
     type: lab.category ?? undefined,
     base: lab.base,
     value: lab.value,

@@ -125,9 +125,9 @@ export const WORKSHOP_ENHANCEMENTS_LAB = 'Workshop Enhancements'
  * damage path filled up with upgrades that do nothing. Same defect the weapon
  * gates fixed, one layer along.
  *
- * One more in that row is **not** listed here: Shock Multiplier gates on
- * `AND($BH$31, $AL$75)`, and neither cell is identified. Guessing would be
- * inventing a rule.
+ * One more in that row is Shock Multiplier: `AND($BH$31, $AL$75)`. `BH31` is
+ * Chain Lightning; `AL75` is `AND(BH31, 'Master Sheet'!F33=1)` where F33 is the
+ * Chain Lightning Shock lab level — see {@link LAB_PREREQUISITES}.
  */
 const LAB_PREREQUISITES: Readonly<Record<string, (config: EffectiveDamageConfig) => boolean>> = {
   // `NOT($AY$43)`. Row 43 of the cards block is the **Damage Mastery card**,
@@ -147,20 +147,15 @@ const LAB_PREREQUISITES: Readonly<Record<string, (config: EffectiveDamageConfig)
   /*
    * `NOT(AND($BH$31, $AL$75))`.
    *
-   * `BH31` is Chain Lightning: the ultimate weapon flags run down rows 30 to 37
-   * in `DAMAGE_ULTIMATE_WEAPONS` order, and three of those rows are confirmed
-   * independently — 33 is Spotlight in this model's own notes, 35 and 37 are
-   * Poison Swamp and Inner Land Mines in the stone tab's hide row, and `BG34`
-   * is literally labelled `SLM`.
-   *
-   * `AL75` is the Shock Multiplier lab's own unlocked flag — `AK75` names it
-   * "Shock Mult ⚠️". That half is **not** checked here: the planner has no lab
-   * unlock state of its own, and the sheet's other unlock clause runs through
-   * `IDS_LAB_HAS_UNLOCKED`, which `isLabUnlockedAt` only approximates. The
-   * weapon half is the one that stops a wrong recommendation.
+   * `BH31` is Chain Lightning. `AL75` is labelled "Shock Mult ⚠️" but its
+   * formula is `AND(BH31, 'Master Sheet'!F33=1)` — and Master Sheet row 33 is
+   * **Chain Lightning Shock**, the one-level unlock lab, not Shock Multiplier
+   * itself. `shockMultiplierUnlocked` on the config is that F33 half; compute
+   * already ANDs it with the weapon for the multiplier term.
    */
   'Shock Multiplier': config =>
-    Boolean(config.ultimateWeapons['Chain Lightning']?.unlocked),
+    Boolean(config.ultimateWeapons['Chain Lightning']?.unlocked)
+    && config.shockMultiplierUnlocked,
 }
 
 /** Whether a card is equipped and switched on, as the cards block reads it. */

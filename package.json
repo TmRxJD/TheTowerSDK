@@ -1,6 +1,6 @@
 {
   "name": "thetowersdk",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Game data and save-file reading for The Tower — build your own calculators and tools.",
   "license": "MIT",
   "author": "TmRxJD (https://github.com/TmRxJD)",
@@ -129,6 +129,14 @@
   ],
   "dependencies": {
     "zod": "^4.3.6"
+  },
+  "peerDependencies": {
+    "@tmrxjd/governance-engine": ">=0.1.0"
+  },
+  "peerDependenciesMeta": {
+    "@tmrxjd/governance-engine": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@eslint/js": "^9.18.0",

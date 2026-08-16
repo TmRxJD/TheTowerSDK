@@ -76,7 +76,6 @@ export const NOT_LABS: Readonly<Record<string, string>> = {
   'Primary Module - Armor': 'a module level, bought with coins rather than a lab',
   'Assist Module - Armor': 'a module level, bought with coins rather than a lab',
   'Recovery Package +': 'a module level, bought with coins rather than a lab',
-  'Shock Multiplier': 'an unlock, not a level — the model reads it as a boolean',
 }
 
 /**
@@ -368,6 +367,25 @@ export function showLevelsCap(option: string | undefined): number | null {
   const levels = Number.parseInt(token, 10)
   return Number.isFinite(levels) && levels >= 0 ? levels : null
 }
+
+/**
+ * Coin-path candidates whose ROI formula references `$AY$27`.
+ *
+ * Read off `eDamage Coins` row 5 via the live sheet: only these four columns
+ * call `EPG_MODULE_LEVEL_LIMIT($AY$27)`. Everything else on that band — other
+ * masteries, workshop enhancements, Core modules — ignores the dropdown, so a
+ * port that caps every lab candidate is over-applying the control.
+ */
+export const SHOW_LABS_ON_COIN_PATH_NAMES = [
+  'Damage Mastery',
+  'Demon Mode Mastery',
+  'Assist Module Bonus - Cannon',
+  'Dissonant Echo - Attack',
+] as const
+
+export const SHOW_LABS_ON_COIN_PATH_NAME_SET: ReadonlySet<string> = new Set(
+  SHOW_LABS_ON_COIN_PATH_NAMES,
+)
 
 /**
  * The feature controls, which are inputs too.
