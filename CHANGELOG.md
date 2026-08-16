@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.2
+
+Keep `node:fs` modules (repo-root, planner codegen, debug-graph session/trace, coverage
+citations, graph tooling, builders) off the public `thetowersdk/mechanics` barrel so
+browser bundlers do not crash when importing wave/EP formulas.
+
 ## 0.5.1
 
 Stop shipping the monorepo docs-gen/doctor/kernel chain through `builders` so the

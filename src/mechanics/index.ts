@@ -132,7 +132,6 @@ export * from './workshop-table-build'
 export * from './workshop-utility-stats'
 export * from './bot-medal-planner-types'
 export * from './formula-coverage'
-export * from './builders'
 export * from './els-calculator-options'
 export * from './ilm-calculator-options'
 export * from './effective-paths-uw-dps'
@@ -148,13 +147,8 @@ export * from './effective-paths-eecon-compute'
 export * from './effective-paths-eecon-plan'
 export * from './effective-paths-eecon-stone-mastery'
 export * from './effective-paths-eecon-uw-cd'
-export * from './coverage'
-export * from './debug-graph'
-export * from './ep-graph'
-export * from './mcp-contract'
-export * from './planner-engine'
-export * from './repo-root'
-export * from './save-graph'
-export * from './sdk-graph'
-// Monorepo-only (need @tmrxjd/governance-engine): doctor, kernel, governance-adapter,
-// registry, sandbox, docs-gen, lsp — import via packages/sdk/src/... or MCP CLIs.
+// Browser-safe public barrel ends here.
+// Node/AGS surfaces (coverage, debug-graph, ep-graph, mcp-contract, planner-engine,
+// repo-root, save-graph, sdk-graph, builders, doctor, kernel, …) import via
+// packages/sdk/src/mechanics/<path> — they must not be export* from this file or
+// Vite/CJS loads node:fs into the browser and blanks the showcase site.

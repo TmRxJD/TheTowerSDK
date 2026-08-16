@@ -35,7 +35,10 @@ const walk = dir => {
 }
 walk(SRC)
 
-/** Monorepo AGS tooling — not part of the published public API surface. */
+/**
+ * Monorepo / Node-only surfaces — not on the published public barrel.
+ * (export* of these pulls node:fs into browser bundles and blanks the showcase site.)
+ */
 const MONOREPO_ONLY = rel =>
   rel.startsWith('mechanics/doctor/')
   || rel.startsWith('mechanics/kernel/')
@@ -43,7 +46,16 @@ const MONOREPO_ONLY = rel =>
   || rel.startsWith('mechanics/docs-gen/')
   || rel.startsWith('mechanics/lsp/')
   || rel.startsWith('mechanics/registry/')
+  || rel.startsWith('mechanics/coverage/')
+  || rel.startsWith('mechanics/debug-graph/')
+  || rel.startsWith('mechanics/ep-graph/')
+  || rel.startsWith('mechanics/save-graph/')
+  || rel.startsWith('mechanics/sdk-graph/')
+  || rel.startsWith('mechanics/planner-engine/')
+  || rel.startsWith('mechanics/builders/')
   || rel === 'mechanics/governance-adapter.ts'
+  || rel === 'mechanics/repo-root.ts'
+  || rel === 'mechanics/mcp-contract.ts'
   || rel.startsWith('mechanics/sdk-graph/sheet-drift-mutate')
   || rel.startsWith('mechanics/planner-engine/generated/')
 
