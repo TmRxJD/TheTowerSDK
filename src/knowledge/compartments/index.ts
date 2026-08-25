@@ -17,6 +17,7 @@ import { ATTACK_KNOWLEDGE_EDGES, ATTACK_KNOWLEDGE_NODES } from './attack'
 import { BOT_KNOWLEDGE_EDGES, BOT_KNOWLEDGE_NODES } from './bots'
 import { BUILD_TARGET_KNOWLEDGE_EDGES, BUILD_TARGET_KNOWLEDGE_NODES } from './build-targets'
 import { MASTERY_KNOWLEDGE_EDGES, MASTERY_KNOWLEDGE_NODES } from './masteries'
+import { PATCH_NOTE_KNOWLEDGE_EDGES, PATCH_NOTE_KNOWLEDGE_NODES } from './patch-notes'
 import { CARD_KNOWLEDGE_EDGES, CARD_KNOWLEDGE_NODES } from './cards'
 import { COMBAT_KNOWLEDGE_EDGES, COMBAT_KNOWLEDGE_NODES } from './combat'
 import { DISSONANCE_KNOWLEDGE_EDGES, DISSONANCE_KNOWLEDGE_NODES } from './dissonance'
@@ -46,6 +47,15 @@ import { VAULT_KNOWLEDGE_EDGES, VAULT_KNOWLEDGE_NODES } from './vault'
 import { WORKSHOP_KNOWLEDGE_EDGES, WORKSHOP_KNOWLEDGE_NODES } from './workshop'
 
 export const TOWER_COMPARTMENTS: readonly Compartment[] = [
+  {
+    id: 'patch-notes',
+    domain: 'patch notes, changelog, release history, when something was added or changed, game versions',
+    summary:
+      'The developers’ own announcements, and how to read them: what the archive covers, how a '
+      + 'forwarded note hides its text and its date, and how a version is taken from one.',
+    nodes: PATCH_NOTE_KNOWLEDGE_NODES,
+    edges: PATCH_NOTE_KNOWLEDGE_EDGES,
+  },
   {
     id: 'sheets',
     domain: 'google sheets, spreadsheets, reading a workbook, writing to a sheet, service accounts, A1 ranges',

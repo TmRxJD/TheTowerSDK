@@ -10,17 +10,42 @@
 	import CardGemDemo from '$lib/demos/CardGemDemo.svelte';
 	import EffectivePathDemo from '$lib/demos/EffectivePathDemo.svelte';
 	import GlossaryDemo from '$lib/demos/GlossaryDemo.svelte';
+	import BuildersDemo from '$lib/demos/BuildersDemo.svelte';
 
-	const paired = [
-		{ ...homeExamples[0], Demo: LabsDemo, panel: 'Live' },
-		{ ...homeExamples[1], Demo: SyncUptimeDemo, panel: 'Live' },
-		{ ...homeExamples[2], Demo: WaveDemo, panel: 'Live' },
-		{ ...homeExamples[3], Demo: SaveDemo, panel: 'Sample' },
-		{ ...moreExamples[0], Demo: ModuleCostDemo, panel: 'Live' },
-		{ ...moreExamples[1], Demo: CardGemDemo, panel: 'Live' },
-		{ ...moreExamples[2], Demo: EffectivePathDemo, panel: 'Live' },
-		{ ...moreExamples[3], Demo: GlossaryDemo, panel: 'Live' }
+	/*
+	 * Paired by TITLE, not by position.
+	 *
+	 * This spread `moreExamples[n]` beside a hand-listed component, and the two lists had drifted:
+	 * `moreExamples[0]` is "Generate A Cost Table", which has no interactive panel, so every
+	 * pairing after it sat one place out. The page showed the Effective Paths sample above the
+	 * glossary demo and the glossary sample above the builders demo — each code block describing
+	 * the panel beside it, and none of them matching it.
+	 *
+	 * A name cannot drift silently: a renamed or missing example throws here instead.
+	 */
+	const byTitle = new Map(
+		[...homeExamples, ...moreExamples].map((example) => [example.title as string, example])
+	);
+
+	const LAYOUT = [
+		['Lab Costs', LabsDemo, 'Live'],
+		['Death Wave × Golden Bot', SyncUptimeDemo, 'Live'],
+		['Enemy Stats', WaveDemo, 'Live'],
+		['Read A Save', SaveDemo, 'Sample'],
+		// Code-only. Claiming it had a demo is what pushed everything below it out of step.
+		['Generate A Cost Table', null, 'Code'],
+		['Module Shard Cost', ModuleCostDemo, 'Live'],
+		['Card Gem Cost', CardGemDemo, 'Live'],
+		['Effective Paths', EffectivePathDemo, 'Live'],
+		['Glossary Lookup', GlossaryDemo, 'Live'],
+		['Any Calculator, From Its Own Declaration', BuildersDemo, 'Live']
 	] as const;
+
+	const paired = LAYOUT.map(([title, Demo, panel]) => {
+		const example = byTitle.get(title);
+		if (!example) throw new Error(`playground: no example titled "${title}"`);
+		return { ...example, Demo, panel };
+	});
 </script>
 
 <svelte:head>
@@ -40,21 +65,25 @@
 			<h2 class="text-lg font-medium">{item.title}</h2>
 			<p class="mt-1 mb-4 text-sm text-muted">{item.blurb}</p>
 			<div class="grid gap-4 lg:grid-cols-2">
-				<GlassPanel>
-					<p class="mb-3 text-xs font-semibold tracking-wide text-accent uppercase">{item.panel}</p>
-					<svelte:boundary>
-						{#snippet failed(error)}
-							<p class="text-sm text-muted">
-								This demo failed to load
-								{#if error instanceof Error}
-									({error.message})
-								{/if}
-								. The code sample still works.
-							</p>
-						{/snippet}
-						<Demo />
-					</svelte:boundary>
-				</GlassPanel>
+				{#if Demo}
+					<GlassPanel>
+						<p class="mb-3 text-xs font-semibold tracking-wide text-accent uppercase">
+							{item.panel}
+						</p>
+						<svelte:boundary>
+							{#snippet failed(error)}
+								<p class="text-sm text-muted">
+									This demo failed to load
+									{#if error instanceof Error}
+										({error.message})
+									{/if}
+									. The code sample still works.
+								</p>
+							{/snippet}
+							<Demo />
+						</svelte:boundary>
+					</GlassPanel>
+				{/if}
 				<GlassPanel>
 					<p class="mb-3 text-xs font-semibold tracking-wide text-accent uppercase">Code</p>
 					<CodeBlock code={item.code} />

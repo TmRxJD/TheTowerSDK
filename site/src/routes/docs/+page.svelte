@@ -9,8 +9,8 @@
 
 <h1 class="text-3xl font-semibold">Documentation</h1>
 <p class="mt-3 text-muted">
-	How to install TheTowerSDK, read game data and saves, call formulas, pull wiki pages, and connect an
-	AI. Use the sidebar to jump between topics.
+	How to install TheTowerSDK, read game data and saves, call formulas, pull wiki pages, and connect
+	an AI. Use the sidebar to jump between topics.
 </p>
 
 <ul class="mt-8 space-y-3">

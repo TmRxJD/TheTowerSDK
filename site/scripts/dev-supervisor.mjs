@@ -7,13 +7,7 @@
  * reason, it is restarted. Agents must never kill this process.
  */
 import { spawn } from 'node:child_process';
-import {
-	appendFileSync,
-	existsSync,
-	mkdirSync,
-	writeFileSync,
-	unlinkSync
-} from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, writeFileSync, unlinkSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { HOST, PORT, ORIGIN } from './port.mjs';

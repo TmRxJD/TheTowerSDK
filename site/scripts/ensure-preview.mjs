@@ -91,9 +91,12 @@ function pidAlive(pid) {
 	if (!pid || !/^\d+$/.test(String(pid))) return false;
 	try {
 		if (process.platform === 'win32') {
-			execSync(`powershell -NoProfile -Command "Get-Process -Id ${pid} -ErrorAction Stop | Out-Null"`, {
-				stdio: 'ignore'
-			});
+			execSync(
+				`powershell -NoProfile -Command "Get-Process -Id ${pid} -ErrorAction Stop | Out-Null"`,
+				{
+					stdio: 'ignore'
+				}
+			);
 			return true;
 		}
 		process.kill(Number(pid), 0);
@@ -138,10 +141,13 @@ function startWindowsIndependent() {
 	].join('\r\n');
 	writeFileSync(launchPs1, ps1, 'utf8');
 
-	const id = execSync(`powershell -NoProfile -ExecutionPolicy Bypass -File ${JSON.stringify(launchPs1)}`, {
-		encoding: 'utf8',
-		timeout: 15000
-	}).trim();
+	const id = execSync(
+		`powershell -NoProfile -ExecutionPolicy Bypass -File ${JSON.stringify(launchPs1)}`,
+		{
+			encoding: 'utf8',
+			timeout: 15000
+		}
+	).trim();
 	console.log(`Started HMR supervisor pid=${id} → ${ORIGIN}/`);
 	console.log(`Logs: ${outLog}`);
 }
@@ -193,7 +199,9 @@ async function main() {
 			console.log(`Ready (HMR): ${ORIGIN}/`);
 			process.exit(0);
 		}
-		console.log('Supervisor alive but HMR still down — leaving supervisor; check temp/preview-*.log');
+		console.log(
+			'Supervisor alive but HMR still down — leaving supervisor; check temp/preview-*.log'
+		);
 		process.exit(1);
 	}
 

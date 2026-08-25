@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
@@ -41,9 +41,7 @@ const supervisor = supervisorPid && pidAlive(supervisorPid) ? supervisorPid : ''
 const vite = vitePid && pidAlive(vitePid) ? vitePid : '';
 
 if (!home) {
-	console.log(
-		`DOWN  ${ORIGIN}/  supervisor=${supervisor || 'no'} vite=${vite || 'no'}`
-	);
+	console.log(`DOWN  ${ORIGIN}/  supervisor=${supervisor || 'no'} vite=${vite || 'no'}`);
 	process.exit(1);
 }
 

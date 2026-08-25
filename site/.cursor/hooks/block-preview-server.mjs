@@ -7,8 +7,6 @@
  * Prose rules were not enough — deny at the shell hook.
  */
 import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
 
 const PORT = 4173;
@@ -81,13 +79,13 @@ try {
 	const up = portListening();
 
 	// Explicit process / port kills
-	if (
-		/\b(kill-port|Stop-Process|taskkill)\b/i.test(cmd) &&
-		new RegExp(String(PORT)).test(cmd)
-	) {
+	if (/\b(kill-port|Stop-Process|taskkill)\b/i.test(cmd) && new RegExp(String(PORT)).test(cmd)) {
 		deny(`FORBIDDEN: never kill port ${PORT} / Vite HMR.`);
 	}
-	if (/hmr-supervisor|dev-supervisor|hmr-vite/i.test(cmd) && /\b(kill|Stop-Process|taskkill)\b/i.test(cmd)) {
+	if (
+		/hmr-supervisor|dev-supervisor|hmr-vite/i.test(cmd) &&
+		/\b(kill|Stop-Process|taskkill)\b/i.test(cmd)
+	) {
 		deny('FORBIDDEN: never kill the HMR supervisor.');
 	}
 
@@ -111,7 +109,7 @@ try {
 		/rm\s+(-rf|--recursive)[^\n]*node_modules/i.test(cmd) ||
 		/Remove-Item[^\n]*\.svelte-kit/i.test(cmd) ||
 		/rm\s+(-rf|--recursive)[^\n]*\.svelte-kit/i.test(cmd) ||
-		/node_modules[\\/]\.vite/i.test(cmd) && /(Remove-Item|rm\s|rimraf|unlink)/i.test(cmd);
+		(/node_modules[\\/]\.vite/i.test(cmd) && /(Remove-Item|rm\s|rimraf|unlink)/i.test(cmd));
 
 	if (mutatesPackages) {
 		deny(

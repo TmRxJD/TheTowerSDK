@@ -15,8 +15,8 @@
 
 <h2 class="mt-8 text-xl font-medium">ACS</h2>
 <p class="mt-2 text-muted">
-	Separate product and license. Tower players can request a personal grant with Player ID and
-	GitHub username only — see
+	Separate product and license. Tower players can request a personal grant with Player ID and GitHub
+	username only — see
 	<a href={href('/docs/ags/')}>ACS docs</a>
 	and the
 	<a href={href('/license/')}>player license</a>

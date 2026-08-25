@@ -123,7 +123,7 @@
 
 <div class="mt-4 overflow-x-auto rounded-md border border-line/70 bg-bg/40">
 	<table class="w-full min-w-[20rem] text-left text-sm">
-		<thead class="border-b border-line/70 text-xs uppercase tracking-wide text-muted">
+		<thead class="border-b border-line/70 text-xs tracking-wide text-muted uppercase">
 			<tr>
 				<th class="px-3 py-2 font-medium">Source</th>
 				<th class="px-3 py-2 font-medium">Cooldown</th>

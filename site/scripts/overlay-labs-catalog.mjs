@@ -13,10 +13,7 @@ import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const siteRoot = resolve(here, '..');
-const fromDist = resolve(
-	siteRoot,
-	'../TrackerWebsite/the-tower-run-tracker/packages/sdk/dist'
-);
+const fromDist = resolve(siteRoot, '../TrackerWebsite/the-tower-run-tracker/packages/sdk/dist');
 const toDist = join(siteRoot, 'node_modules/thetowersdk/dist');
 
 /** Relative paths under dist/ that consume or define LAB_CATALOG identity. */

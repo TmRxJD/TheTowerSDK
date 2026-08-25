@@ -62,8 +62,11 @@
     "sheets:test": "vitest run src/sheets",
     "docs:snippets": "node scripts/build-doc-snippets.mjs",
     "docs:seed": "npm run docs:snippets && npm run wiki:build",
-    "docs:check": "node scripts/build-doc-snippets.mjs --check && npm run wiki:check && node scripts/check-readme-links.mjs && node scripts/build-asset-manifest.mjs --check",
-    "assets:manifest": "node scripts/build-asset-manifest.mjs"
+    "docs:check": "node scripts/build-doc-snippets.mjs --check && npm run wiki:check && node scripts/check-readme-links.mjs && node scripts/build-asset-manifest.mjs --check && node scripts/build-game-asset-manifest.mjs --check && node scripts/build-patch-notes.mjs --check",
+    "assets:manifest": "node scripts/build-asset-manifest.mjs",
+    "assets:game": "node scripts/build-game-asset-manifest.mjs",
+    "patch-notes:ingest": "node scripts/ingest-patch-notes.mjs",
+    "patch-notes:build": "node scripts/build-patch-notes.mjs"
   },
   "exports": {
     ".": {

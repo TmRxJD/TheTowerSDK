@@ -105,7 +105,8 @@ can run as many as you like over the same root.
 | `thetowersdk/builders` | Ready-made calculators — see [below](#builders) | Yes |
 | `thetowersdk/bot` | Command registry, and every calculator as a command — see [below](#building-a-bot-on-this) | Yes |
 | `thetowersdk/sheets` | Google Sheets reads and writes — see [below](#google-sheets) | Yes |
-| `thetowersdk/assets` | Which artwork file belongs to which module or card — see [below](#module-and-card-artwork) | Yes |
+| `thetowersdk/assets` | The game's artwork catalogue — 1,059 assets across 19 domains — see [below](#module-and-card-artwork) | Yes |
+| `thetowersdk/knowledge` | The mechanics oracle, and five years of patch notes — see [below](#patch-notes) | Yes |
 
 Game data lives here, not in the consuming application. Relic unlock methods and
 bonus totals, theme categories and their coin coefficients, vault tree
@@ -941,6 +942,65 @@ Pin the toolchain first, with the hash corepack verifies against:
 
 [`docs/DESKTOP_AND_MOBILE.md`](docs/DESKTOP_AND_MOBILE.md) covers the main/renderer split, the IPC
 boundary, running the bridge in-process, and what does and does not work on mobile.
+
+---
+
+## Patch Notes
+
+Five years of the developers' own announcements, queryable. The catalogs say what a number **is**
+today; this says **when it became that**, and what was said about it at the time.
+
+```ts
+import {
+  whenIntroduced,
+  searchPatchNotes,
+  patchNotesForVersion,
+  patchNotesBetween,
+  recentPatchNotes,
+  PATCH_NOTES_SOURCE,
+} from 'thetowersdk/knowledge'
+
+whenIntroduced('shockwave')
+// { postedAt: '2021-07-15…', version: '0.1.29', title: 'v0.1.29 is out for everyone now…' }
+
+searchPatchNotes('guardian')          // every note mentioning it, newest first
+patchNotesForVersion('26.1.2')        // or 'v26.1.2' — both work
+patchNotesBetween('2024-01-01', '2024-12-31')
+recentPatchNotes(5)                   // what changed lately
+
+PATCH_NOTES_SOURCE
+// { notes: 232, withVersion: 177, earliest: '2021-07-15…', latest: '2026-08-25…', … }
+```
+
+Every note carries the message id it came from, so a claim is traceable to the post rather than
+to this package.
+
+### What it will not tell you
+
+**The archive begins on 2021-07-15**, the oldest post in the channel. `whenIntroduced` returning
+`null` means *not in this archive*, not *this never existed*.
+
+**A note mentioning a mechanic is not evidence the mechanic changed.** `searchPatchNotes` is a
+text search over announcements: it finds leads, and the note still has to be read.
+
+**`version` is `null` on 55 of the 232 notes**, because those notes state no version. It is not
+inferred from the notes around it — a wrong version attached to a real change reads as fact.
+
+### Keeping it current
+
+```bash
+npm run patch-notes:ingest   # read-only, resumable; needs a bot in the server
+npm run patch-notes:build    # regenerate the shipped dataset
+```
+
+Both refuse rather than write something wrong. The ingest stops if the messages come back empty —
+most notes are *forwarded*, and a forward carries its text in `message_snapshots`, not in
+`content`. The build stops if more than half the notes land on one day, which is what dating by
+the forward instead of the original looks like, and it stops if a version falls outside the range
+the game has ever used.
+
+`thetowersdk/knowledge` also carries a `patch-notes` compartment describing those traps, so an
+agent asking *when did this change* meets the dating rule before it reaches a date.
 
 ---
 

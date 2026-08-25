@@ -5,16 +5,16 @@ This is the documentation site. It lives in `site/` inside the
 `/TheTowerSDK/` rather than the `/TheTowerSDK-site/` it used to publish to — and is excluded
 from the published npm package.
 
-Public site for **[thetowersdk](https://www.npmjs.com/package/thetowersdk)**: game data, save reading, and formulas for *The Tower*.
+Public site for **[thetowersdk](https://www.npmjs.com/package/thetowersdk)**: game data, save reading, and formulas for _The Tower_.
 
 Live: **https://tmrxjd.github.io/TheTowerSDK/**
 
-| Resource | URL |
-|---|---|
-| npm | https://www.npmjs.com/package/thetowersdk |
-| SDK source | https://github.com/TmRxJD/TheTowerSDK |
-| Run Tracker (built on this SDK) | https://the-tower-run-tracker.com |
-| AGS public docs | https://github.com/TmRxJD/agent-governance-system-site |
+| Resource                        | URL                                                    |
+| ------------------------------- | ------------------------------------------------------ |
+| npm                             | https://www.npmjs.com/package/thetowersdk              |
+| SDK source                      | https://github.com/TmRxJD/TheTowerSDK                  |
+| Run Tracker (built on this SDK) | https://the-tower-run-tracker.com                      |
+| AGS public docs                 | https://github.com/TmRxJD/agent-governance-system-site |
 
 ## Stack
 

@@ -72,6 +72,9 @@
 		serves it locally, so an assistant builds and tests against a real account and sees it change as
 		you play. <a href={href('/docs/save/')}>Save File Docs →</a>
 	</p>
+	<div class="mt-4">
+		<CodeBlock code={adbBridgeSnippet} />
+	</div>
 </section>
 
 <section class="mt-10">

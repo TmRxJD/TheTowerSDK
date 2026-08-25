@@ -1,8 +1,5 @@
 <script lang="ts">
-	import {
-		CARD_LEVEL_COPY_REQUIREMENTS,
-		cardLevelUpgradeGemCost
-	} from '$lib/sdk-card-costs';
+	import { CARD_LEVEL_COPY_REQUIREMENTS, cardLevelUpgradeGemCost } from '$lib/sdk-card-costs';
 	import { formatNumberForDisplay } from 'thetowersdk/formatting';
 
 	const levelOptions = ['0', '1', '2', '3', '4', '5', '6', '7'] as const;
@@ -49,12 +46,12 @@
 </div>
 
 <div class="mt-4 rounded-md border border-line/70 bg-bg/40 p-3">
-	<p class="text-xs uppercase tracking-wide text-muted">Gem cost (range)</p>
+	<p class="text-xs tracking-wide text-muted uppercase">Gem cost (range)</p>
 	<p class="font-mono text-2xl text-gold">{formatNumberForDisplay(gems)}</p>
 </div>
 
 <table class="mt-4 w-full text-left text-sm">
-	<thead class="text-xs uppercase tracking-wide text-muted">
+	<thead class="text-xs tracking-wide text-muted uppercase">
 		<tr>
 			<th class="py-1 font-normal">Level</th>
 			<th class="py-1 font-normal">Copies</th>

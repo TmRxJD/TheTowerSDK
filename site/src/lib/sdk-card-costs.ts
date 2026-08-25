@@ -18,7 +18,6 @@ export function cardLevelUpgradeGemCost(fromGameLevel: number, toGameLevel: numb
 	const fromIdx = clampCardLevel(fromGameLevel);
 	const toIdx = clampCardLevel(toGameLevel);
 	if (toIdx <= fromIdx) return 0;
-	const copies =
-		CARD_LEVEL_COPY_REQUIREMENTS[toIdx] - CARD_LEVEL_COPY_REQUIREMENTS[fromIdx];
+	const copies = CARD_LEVEL_COPY_REQUIREMENTS[toIdx] - CARD_LEVEL_COPY_REQUIREMENTS[fromIdx];
 	return copies * GEM_PER_COPY;
 }

@@ -1,11 +1,7 @@
 <script lang="ts">
 	import { LINKS } from '$lib/links';
 	import { href } from '$lib/paths';
-	import {
-		buildLicenseIssueUrl,
-		isValidPlayerId,
-		playerIdHint
-	} from '$lib/player-id';
+	import { buildLicenseIssueUrl, isValidPlayerId, playerIdHint } from '$lib/player-id';
 	import GlassPanel from '$lib/ui/GlassPanel.svelte';
 
 	let playerId = $state('');
@@ -31,8 +27,8 @@
 <p class="text-xs font-semibold tracking-[0.18em] text-gold uppercase">Players</p>
 <h1 class="mt-2 text-3xl font-semibold">Player License</h1>
 <p class="mt-2 max-w-2xl text-muted">
-	TheTowerSDK itself is free for everyone to install and use — community tools, personal projects, or
-	commercial apps.
+	TheTowerSDK itself is free for everyone to install and use — community tools, personal projects,
+	or commercial apps.
 </p>
 <p class="mt-3 max-w-2xl text-muted">
 	Separately, Tower players can get <strong>Agentic Cognition Substrate</strong> for free for personal,
@@ -41,14 +37,14 @@
 
 <div class="mt-8 grid gap-4 md:grid-cols-2">
 	<GlassPanel>
-		<p class="text-xs uppercase tracking-wide text-muted">TheTowerSDK</p>
+		<p class="text-xs tracking-wide text-muted uppercase">TheTowerSDK</p>
 		<p class="mt-1 font-medium">Free for everyone</p>
 		<p class="mt-2 text-sm text-muted">
 			Install from npm and build. No Player ID needed for the SDK.
 		</p>
 	</GlassPanel>
 	<GlassPanel>
-		<p class="text-xs uppercase tracking-wide text-gold">ACS for Tower players</p>
+		<p class="text-xs tracking-wide text-gold uppercase">ACS for Tower players</p>
 		<p class="mt-1 font-medium">Personal grant</p>
 		<p class="mt-2 text-sm text-muted">
 			Optional AI governance tooling for your own local Tower projects. Not the same thing as the

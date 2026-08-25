@@ -160,3 +160,107 @@ export function towerAssetUrl(assetPath: string | null, baseUrl: string): string
   if (!assetPath) return null
   return `${baseUrl.replace(/\/+$/, '')}/${assetPath}`
 }
+
+/* ------------------------------------------------------------------ game artwork */
+
+export * from './game-manifest.generated'
+import {
+  GAME_ASSET_DOMAINS,
+  GAME_ASSET_FOLDERS,
+  GAME_ASSET_VERSION,
+  GAME_ASSETS,
+  type GameAssetDomain,
+  type GameAssetEntry,
+  UNIDENTIFIED_GAME_SPRITES,
+} from './game-manifest.generated'
+
+/**
+ * Root the GAME artwork paths are relative to, inside the `tower-assets` package.
+ *
+ * Separate from `TOWER_ASSETS_ROOT` because the two sets are different things: `assets/site`
+ * is a handful of screenshots the tracker used, `assets/game` is the extraction — 1,059
+ * catalogued assets across 19 domains, at three sizes each, from a known game build.
+ */
+export const TOWER_GAME_ASSETS_ROOT = 'assets/game'
+
+/** The sizes every catalogued asset is emitted at. */
+export const GAME_ASSET_SIZES = ['sm', 'md', 'lg'] as const
+
+export type GameAssetSize = (typeof GAME_ASSET_SIZES)[number]
+
+/** Fold a name, slug or sprite name to one comparable key. */
+function assetKey(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, '')
+}
+
+let byKey: Map<string, GameAssetEntry> | null = null
+
+/** Built once, from every way an entry can be named. */
+function index(): Map<string, GameAssetEntry> {
+  if (byKey) return byKey
+  const map = new Map<string, GameAssetEntry>()
+  for (const entry of GAME_ASSETS) {
+    for (const alias of [entry.name, entry.slug, entry.sprite]) {
+      const key = assetKey(alias)
+      // First wins: `name` is the SDK-facing one and is registered first.
+      if (key && !map.has(key)) map.set(key, entry)
+    }
+  }
+  byKey = map
+  return map
+}
+
+/**
+ * The catalogue entry for a name, slug or in-game sprite name.
+ *
+ * `null` when nothing matches, so "no art for this" is distinguishable from a wrong path.
+ */
+export function findGameAsset(nameOrSlug: string): GameAssetEntry | null {
+  return index().get(assetKey(nameOrSlug)) ?? null
+}
+
+/**
+ * The file path for a piece of game artwork, at a size.
+ *
+ * ```ts
+ * gameAssetPath('Amplifying Strike')        // 'modules/amplifying-strike-md.webp'
+ * gameAssetPath('Amplifying Strike', 'lg')  // the large variant
+ * gameAssetPath('Not A Thing')              // null
+ * ```
+ *
+ * `md` by default: `sm` is a list thumbnail and `lg` is a full-bleed background, so the
+ * middle is the one that is right more often than it is wrong.
+ */
+export function gameAssetPath(nameOrSlug: string, size: GameAssetSize = 'md'): string | null {
+  const entry = findGameAsset(nameOrSlug)
+  if (!entry) return null
+  const folder = GAME_ASSET_FOLDERS[entry.domain] ?? entry.domain
+  return `${folder}/${entry.slug}-${size}.webp`
+}
+
+/** Every catalogued asset in one domain — `modules`, `relics`, `tower-skins`, … */
+export function gameAssetsInDomain(domain: GameAssetDomain): readonly GameAssetEntry[] {
+  return GAME_ASSETS.filter(entry => entry.domain === domain)
+}
+
+/**
+ * How much of each domain is catalogued, and what is still unidentified.
+ *
+ * The extraction attributes a sprite by matching it against the SDK's own catalogs; whatever it
+ * cannot place is reported rather than dropped. A caller building a gallery needs to know the
+ * difference between "this domain is complete" and "this domain is what we could name so far".
+ */
+export function gameAssetCoverage(): {
+  version: string
+  domains: { domain: GameAssetDomain, assets: number }[]
+  unidentified: number
+} {
+  return {
+    version: GAME_ASSET_VERSION,
+    domains: GAME_ASSET_DOMAINS.map(domain => ({
+      domain,
+      assets: gameAssetsInDomain(domain).length,
+    })),
+    unidentified: UNIDENTIFIED_GAME_SPRITES.length,
+  }
+}

@@ -32,7 +32,7 @@
 			{/each}
 		</nav>
 	</aside>
-	<article class="min-w-0 max-w-3xl">
+	<article class="max-w-3xl min-w-0">
 		{@render children()}
 	</article>
 </div>

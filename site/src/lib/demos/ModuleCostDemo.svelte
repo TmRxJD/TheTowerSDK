@@ -25,7 +25,7 @@
 </label>
 
 <div class="mt-4 rounded-md border border-line/70 bg-bg/40 p-3">
-	<p class="text-xs uppercase tracking-wide text-muted">
+	<p class="text-xs tracking-wide text-muted uppercase">
 		Shards to level {nextLevel}
 	</p>
 	<p class="font-mono text-2xl text-gold">{formatNumberForDisplay(cost)}</p>

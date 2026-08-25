@@ -3,9 +3,9 @@
 	import { formatNumberForDisplay } from 'thetowersdk/formatting';
 
 	const defaultLab =
-		LAB_CATALOG.find((lab) => lab.name === 'Attack Speed')
-		?? LAB_CATALOG.find((lab) => lab.slug === 'attack_speed')
-		?? LAB_CATALOG[0];
+		LAB_CATALOG.find((lab) => lab.name === 'Attack Speed') ??
+		LAB_CATALOG.find((lab) => lab.slug === 'attack_speed') ??
+		LAB_CATALOG[0];
 
 	let labName = $state(defaultLab?.name ?? '');
 	let currentLevel = $state('0');
@@ -97,13 +97,13 @@
 {#if result}
 	<dl class="mt-4 grid gap-3 sm:grid-cols-2">
 		<div class="rounded-md border border-line/70 bg-bg/40 p-3">
-			<dt class="text-xs uppercase tracking-wide text-muted">
+			<dt class="text-xs tracking-wide text-muted uppercase">
 				Coin cost (levels {result.from} → {result.to})
 			</dt>
 			<dd class="font-mono text-2xl text-gold">{formatNumberForDisplay(result.coins)}</dd>
 		</div>
 		<div class="rounded-md border border-line/70 bg-bg/40 p-3">
-			<dt class="text-xs uppercase tracking-wide text-muted">Research time</dt>
+			<dt class="text-xs tracking-wide text-muted uppercase">Research time</dt>
 			<dd class="font-mono text-2xl text-accent">{formatDuration(result.seconds)}</dd>
 		</div>
 	</dl>

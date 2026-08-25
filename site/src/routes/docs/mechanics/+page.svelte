@@ -10,9 +10,8 @@
 
 <h1 class="text-3xl font-semibold">Formulas</h1>
 <p class="mt-3 text-muted">
-	<code>thetowersdk/mechanics</code> exports enemy scaling, ultimate weapon timing, lab and workshop
-	costs, Effective Paths planners, resource-drop helpers, and more — callable formulas for your
-	tools.
+	<code>thetowersdk/mechanics</code> exports enemy scaling, ultimate weapon timing, lab and workshop costs,
+	Effective Paths planners, resource-drop helpers, and more — callable formulas for your tools.
 </p>
 
 <h2 class="mt-8 text-xl font-medium">Effective Paths</h2>

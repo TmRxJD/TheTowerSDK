@@ -19,18 +19,6 @@
 		total?: [string, string];
 	};
 
-	function stat(weaponName: string, statName: string) {
-		const weapon = Object.values(uwStoneChartData).find((entry) => entry.name === weaponName);
-		return weapon?.stats?.find((entry) => entry.name === statName);
-	}
-
-	function stonesToMax(weaponName: string, statName: string): string {
-		const levels = stat(weaponName, statName)?.levels ?? [];
-		return formatNumberForDisplay(
-			levels.reduce((sum, level) => sum + (typeof level.cost === 'number' ? level.cost : 0), 0)
-		);
-	}
-
 	type Answer = { text: string; rows?: [string, string][]; total?: [string, string] };
 
 	type Entry = {

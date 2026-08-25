@@ -20,5 +20,6 @@
 	>
 		{copied ? 'Copied' : label}
 	</button>
-	<pre class="overflow-x-auto p-4 pt-10 text-[0.8rem] leading-relaxed text-fg/90"><code>{code}</code></pre>
+	<pre class="overflow-x-auto p-4 pt-10 text-[0.8rem] leading-relaxed text-fg/90"><code>{code}</code
+		></pre>
 </div>

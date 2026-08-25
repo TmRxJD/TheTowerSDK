@@ -190,6 +190,32 @@ export function scoreNode(node: KnowledgeNode, terms: readonly string[]): number
     return 850
   }
 
+  /*
+   * An acronym matches INITIALS, not substrings.
+   *
+   * `gt` used to reach `ultimateWeaponPlus.goldenCombo`, whose label is
+   * "Golden Tower - Golden Combo (GT+)", because the plain containment scoring below sees `gt`
+   * inside the literal "gt+". Meanwhile "Golden Tower" itself contains no "gt" at all and scored
+   * nothing, so the wrong node won and `resolveWithConfidence` called it `strong`.
+   *
+   * The same shape was wrong for `bh` (reached Consume, the Black Hole PLUS upgrade, not Black
+   * Hole) and `dw` (reached Kill Wall rather than Death Wave). Confidently wrong is worse than
+   * unresolved: an agent asking what GT means got an answer and no reason to doubt it.
+   *
+   * `GT+` and `GT` are different things in this game, so the shorthand rule above — which
+   * requires the parenthetical verbatim — keeps answering for the plus entities. This rule
+   * answers for the base one, and scores below an exact name so a real name always wins.
+   */
+  const initialsOf = (text: string) => text
+    .split(/[\s-]+/)
+    .filter(word => /^[a-z]/.test(word))
+    .map(word => word[0])
+    .join('')
+
+  if (terms.length === 1 && /^[a-z]{2,5}$/.test(terms[0]) && initialsOf(bareLabel) === terms[0]) {
+    return 800
+  }
+
   let score = 0
   for (const [index, term] of terms.entries()) {
     const stem = singular[index]

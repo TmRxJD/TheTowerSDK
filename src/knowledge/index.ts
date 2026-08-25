@@ -42,6 +42,7 @@ import type {
 } from './substrate'
 
 export * from './substrate'
+export * from './patch-notes'
 export {
   CASH_PER_KILL_CHAIN,
   ENEMY_BALANCE_MULTIPLIES_CASH_ONLY,

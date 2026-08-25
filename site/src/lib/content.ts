@@ -13,7 +13,12 @@ export const docsNav = [
 	{ href: '/docs/save/', label: 'Save Files' },
 	{ href: '/docs/mechanics/', label: 'Formulas' },
 	{ href: '/docs/charts/', label: 'Charts' },
+	{ href: '/docs/builders/', label: 'Builders' },
 	{ href: '/docs/bots/', label: 'Bots' },
+	{ href: '/docs/sheets/', label: 'Spreadsheets' },
+	{ href: '/docs/assets/', label: 'Artwork' },
+	{ href: '/docs/knowledge/', label: 'Knowledge' },
+	{ href: '/docs/patch-notes/', label: 'Patch Notes' },
 	{ href: '/docs/wiki/', label: 'Wiki' },
 	{ href: '/docs/mcp/', label: 'MCP & AI' },
 	{ href: '/docs/towerai/', label: 'TowerAI' },
@@ -37,7 +42,7 @@ export const features = [
 	},
 	{
 		title: 'Spreadsheet And Bot Tooling',
-		body: 'Read live community spreadsheets cell by cell through MCP, and share one calculation layer between a website and a Discord bot so both return the same numbers.'
+		body: 'Read live community spreadsheets through a transport you supply — padded rows, so a short row reads as unknown rather than zero — and turn every calculator into a slash command, so a website and a Discord bot return the same numbers from the same declaration.'
 	},
 	{
 		title: 'AI Development',
@@ -50,6 +55,18 @@ export const features = [
 	{
 		title: 'Wiki Ingestion',
 		body: 'Pull The Tower wiki into Markdown inside your app or AI session so mechanics are looked up, not guessed.'
+	},
+	{
+		title: 'Calculators As Data',
+		body: 'Every calculator declares its fields, their units and their caps, so a form, a slash command and a test are generated from one declaration instead of written three times and drifting apart.'
+	},
+	{
+		title: 'Five Years Of Patch Notes',
+		body: 'Every announcement the developers have made since July 2021, queryable by version, by date range, by text, or by “when was this first mentioned”. The catalogs say what a number is today; the notes say when it became that, and what was said about it at the time.'
+	},
+	{
+		title: 'The Game’s Artwork',
+		body: 'A catalogue of 1,059 assets across 19 domains — modules, cards, relics, tower skins, enemies, guardians, perks, backgrounds, events and more — extracted from a known game build, at three sizes each. Resolve any of them by name, slug or in-game sprite name; the 149 sprites nobody has mapped yet are listed rather than hidden.'
 	}
 ] as const;
 
@@ -293,6 +310,18 @@ console.log(plan.excluded.length, 'skipped')`
 
 const hits = lookupGlossary('CF')
 console.log(hits.map((h) => h.expansion ?? h.term))`
+	},
+	{
+		title: 'Any Calculator, From Its Own Declaration',
+		blurb: 'Fields, units and caps are declared, so a form renders a calculator it has never seen.',
+		code: `import { CALCULATOR_BUILDERS, findCalculatorBuilder } from 'thetowersdk/builders'
+
+const builder = findCalculatorBuilder('assist.stones')
+
+builder.fields // [{ key: 'currentLevel', label: 'Current level', kind: 'number', min: 0, max: 69 }, …]
+
+const result = builder.compute(builder.normalize({ currentLevel: 0, targetLevel: 10 }))
+console.log(result.totalStones) // 285`
 	}
 ] as const;
 

@@ -31,8 +31,11 @@
 		vault, relics, lifetime stats, and battle reports from the same root:
 	</p>
 	<pre
-		class="overflow-x-auto rounded-md border border-line/70 bg-bg/40 p-3 font-mono text-xs text-fg/90"
-	>{JSON.stringify(sample, null, 2)}</pre>
+		class="overflow-x-auto rounded-md border border-line/70 bg-bg/40 p-3 font-mono text-xs text-fg/90">{JSON.stringify(
+			sample,
+			null,
+			2
+		)}</pre>
 	<p class="text-xs text-muted">
 		<code>thetowersdk/node</code> decodes the file;
 		<code>thetowersdk/save</code> extractors return typed slices (plus

@@ -10,8 +10,8 @@
 
 <h1 class="text-3xl font-semibold">Game Data</h1>
 <p class="mt-3 text-muted">
-	Typed catalogs for labs, workshop, modules, cards, relics, bots, guardians, ultimate weapons, vault
-	nodes, perks, battle conditions, tiers, milestones, and the glossary.
+	Typed catalogs for labs, workshop, modules, cards, relics, bots, guardians, ultimate weapons,
+	vault nodes, perks, battle conditions, tiers, milestones, and the glossary.
 </p>
 
 <h2 class="mt-8 text-xl font-medium">Example</h2>

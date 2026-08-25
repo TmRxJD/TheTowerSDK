@@ -4,7 +4,6 @@
 		chartSnippet,
 		features,
 		homeExamples,
-		installSnippet,
 		sheetBuildSnippet,
 		sheetFormulaSnippet,
 		runTrackerSnippet,
