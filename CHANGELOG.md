@@ -1,9 +1,12 @@
 # Changelog
 
-## 0.5.3
+## 0.5.4
 
-Nine new entry points. Nothing was removed or renamed, so this is additive for
-anything already on 0.5.2.
+Nine new entry points. Nothing was removed or renamed, so this is additive for anything already
+on 0.5.2.
+
+> **Skip 0.5.3.** It reached npm before any of this landed, carrying the 0.5.2 export set, and a
+> published version cannot be replaced. Everything below ships as 0.5.4.
 
 Enough to build a tool end to end without writing any of the plumbing:
 
