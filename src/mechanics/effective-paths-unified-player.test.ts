@@ -62,7 +62,12 @@ const ECON = {
 }
 
 const TABS = [EHP, ECON]
-const VOCAB = vocabularyOf(TABS, ['Regular', 'Tourney'])
+/*
+ * Guarded because this runs at MODULE scope, before any suite. `describe.skipIf` below
+ * skips the tests; it cannot stop a call made while the file is being imported, and with
+ * the capture helper absent `vocabularyOf` is null and the whole file fails to collect.
+ */
+const VOCAB = AVAILABLE ? vocabularyOf(TABS, ['Regular', 'Tourney']) : null
 
 describe.skipIf(!AVAILABLE)('one drawn player, projected onto every tab', () => {
   it('gives a shared lab one level, scaled to each tab\'s own cap', () => {

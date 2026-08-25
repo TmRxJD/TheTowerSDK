@@ -4,8 +4,18 @@ import path from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { runExportTrace, watchDebugSources } from './trace'
 import { readSessionEvents } from './session'
+import { isMonorepoCheckout } from '../repo-root'
 
-describe('debug-graph trace session', () => {
+/*
+ * Monorepo only. The registry and the graph tooling name files by their monorepo path
+ * (`packages/sdk/src/...`) and read them from a repo root found by walking up to
+ * `scripts/mechanics-trust/`. In the published repository this package is the root, so those
+ * reads resolve above the checkout and the whole file fails to collect. Skipping keeps the
+ * enforcement here, where the paths mean something.
+ */
+const MONOREPO = isMonorepoCheckout()
+
+describe.skipIf(!MONOREPO)('debug-graph trace session', () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'dbg-session-'))
 
   afterEach(() => {

@@ -79,9 +79,15 @@ describe.skipIf(!HAS_SAVE)('whether to offer the import at all', () => {
 })
 
 describe.skipIf(!HAS_SAVE)('the per-tier curve', () => {
-  const realSave = JSON.parse(
-    readFileSync(SAVE_FIXTURE, 'utf8'),
-  ) as Record<string, unknown>
+  /*
+   * Conditional, because `describe.skipIf` does not stop this from running. Vitest still
+   * executes a skipped suite's BODY to discover its tests — only the tests themselves are
+   * skipped — so an unconditional read here fails collection on any machine without the
+   * fixture, which is every machine but one.
+   */
+  const realSave = (HAS_SAVE
+    ? JSON.parse(readFileSync(SAVE_FIXTURE, 'utf8'))
+    : {}) as Record<string, unknown>
 
   it('returns every tier the player has a wave on, not just the furthest', () => {
     /*

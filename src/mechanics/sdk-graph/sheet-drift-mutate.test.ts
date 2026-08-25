@@ -1,7 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import { buildSheetDriftMutateOps, partitionOpsByGraph } from './sheet-drift-mutate'
+import { isMonorepoCheckout } from '../repo-root'
 
-describe('sheet-drift-mutate', () => {
+/*
+ * Monorepo only. The registry and the graph tooling name files by their monorepo path
+ * (`packages/sdk/src/...`) and read them from a repo root found by walking up to
+ * `scripts/mechanics-trust/`. In the published repository this package is the root, so those
+ * reads resolve above the checkout and the whole file fails to collect. Skipping keeps the
+ * enforcement here, where the paths mean something.
+ */
+const MONOREPO = isMonorepoCheckout()
+
+describe.skipIf(!MONOREPO)('sheet-drift-mutate', () => {
   it('builds disputed modifyNode ops from formula mismatches', () => {
     const ops = buildSheetDriftMutateOps(
       [

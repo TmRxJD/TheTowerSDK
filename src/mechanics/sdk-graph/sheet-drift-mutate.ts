@@ -6,9 +6,35 @@ import { createRequire } from 'node:module'
 import path from 'node:path'
 
 const requireMjs = createRequire(__filename)
-const mod = requireMjs(
-  path.join(__dirname, '../../../../../scripts/mechanics-trust/sheet-drift-mutate.mjs'),
-) as {
+
+/**
+ * The implementation is a monorepo script, and this file is compiled into `dist`.
+ *
+ * Loading it at module scope meant importing this module CRASHED anywhere the monorepo is not
+ * around it — including the published repository, where the require resolved to a path above
+ * the checkout. Loading it on call instead means the failure lands on whoever actually uses
+ * drift mutation, with a message that says why, rather than on anyone who imports the file.
+ */
+let cached: SheetDriftMutateModule | null = null
+function load(): SheetDriftMutateModule {
+  if (cached) return cached
+  const target = path.join(__dirname, '../../../../../scripts/mechanics-trust/sheet-drift-mutate.mjs')
+  try {
+    cached = requireMjs(target) as SheetDriftMutateModule
+  }
+  catch (cause) {
+    // `new Error(msg, { cause })` needs ES2022 and this package targets ES2020, so the
+    // original failure is folded into the message rather than dropped.
+    const detail = cause instanceof Error ? cause.message : String(cause)
+    throw new Error(
+      'sheet-drift mutation is monorepo tooling: it needs scripts/mechanics-trust/'
+      + `sheet-drift-mutate.mjs, which is not part of the published package. (${detail})`,
+    )
+  }
+  return cached
+}
+
+interface SheetDriftMutateModule {
   buildSheetDriftMutateOps: (
     mismatches: Array<{
       nodeId?: string
@@ -32,5 +58,7 @@ const mod = requireMjs(
   ) => { ep: Array<{ id: string }>; core: Array<{ id: string }> }
 }
 
-export const buildSheetDriftMutateOps = mod.buildSheetDriftMutateOps
-export const partitionOpsByGraph = mod.partitionOpsByGraph
+export const buildSheetDriftMutateOps: SheetDriftMutateModule['buildSheetDriftMutateOps']
+  = (...args) => load().buildSheetDriftMutateOps(...args)
+export const partitionOpsByGraph: SheetDriftMutateModule['partitionOpsByGraph']
+  = (...args) => load().partitionOpsByGraph(...args)

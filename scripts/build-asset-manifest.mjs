@@ -153,8 +153,26 @@ async function build() {
   return lines.join('\n')
 }
 
-const built = await build()
 const check = process.argv.includes('--check')
+
+/*
+ * The artwork lives in a sibling workspace package, which does not exist in the published
+ * repository — there is no `tower-assets` next to a clone of this one. The manifest is COMMITTED,
+ * so it ships either way; what cannot be done without the art is verifying that it is current.
+ *
+ * So `--check` reports and passes, while generating still fails loudly: deriving a manifest from
+ * files that are not there would invent it. This was the last thing failing in a clone, and it
+ * failed as a stack trace out of a check that had nothing to check.
+ */
+if (check && !existsSync(ASSETS_ROOT)) {
+  console.log(
+    `Asset manifest check skipped — tower-assets is not at ${ASSETS_ROOT}. `
+    + 'The committed manifest is used as-is; it can only be re-derived where the artwork is.',
+  )
+  process.exit(0)
+}
+
+const built = await build()
 
 if (check) {
   const current = existsSync(OUT_FILE) ? await readFile(OUT_FILE, 'utf8') : ''

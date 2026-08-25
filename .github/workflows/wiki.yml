@@ -16,21 +16,13 @@ name: Publish wiki
 #      against the wiki. Verify before trusting CI:
 #        git clone https://<token>@github.com/TmRxJD/TheTowerSDK.wiki.git
 
+# Manual only. The wiki is normally published from a workstation with `npm run wiki:publish`,
+# which uses whatever git credentials are already present and needs no secret at all. This job
+# needs a WIKI_TOKEN, so leaving it on `push` meant a red run on every commit for a step nobody
+# was relying on — a permanently failing check teaches people to ignore the ones that matter.
+#
+# Set WIKI_TOKEN (classic PAT, `repo` scope) if you want to run it from here instead.
 on:
-  push:
-    branches: [main]
-    # Only rebuild when something the wiki is generated FROM changes.
-    paths:
-      - 'README.md'
-      - 'AGENTS.md'
-      - 'CONTRIBUTING.md'
-      - 'CHANGELOG.md'
-      - 'NOTICE'
-      - 'docs/**'
-      - 'examples/**'
-      - 'templates/**'
-      - 'scripts/build-wiki.mjs'
-      - '.github/workflows/wiki.yml'
   workflow_dispatch:
 
 # Two pushes racing would fight over the same wiki repo.
