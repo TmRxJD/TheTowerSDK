@@ -1,0 +1,65 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
+
+@theme {
+	--color-bg: #0f1419;
+	--color-panel: #161d26;
+	--color-line: #2a3644;
+	--color-fg: #e8eef4;
+	--color-muted: #9aa7b5;
+	--color-accent: #3d9bfd;
+	--color-accent-dim: #1d4f7a;
+	--color-gold: #e8b84a;
+	--font-sans: 'Segoe UI', 'IBM Plex Sans', system-ui, sans-serif;
+	--font-mono: ui-monospace, 'Cascadia Code', 'IBM Plex Mono', Consolas, monospace;
+}
+
+html {
+	background: var(--color-bg);
+	color: var(--color-fg);
+	scroll-behavior: smooth;
+}
+
+body {
+	margin: 0;
+	min-height: 100vh;
+	font-family: var(--font-sans);
+	line-height: 1.55;
+	background:
+		radial-gradient(1200px 640px at 18% -12%, #1a2a3a 0%, transparent 55%),
+		radial-gradient(900px 500px at 92% 8%, #1a2430 0%, transparent 50%),
+		var(--color-bg);
+}
+
+::selection {
+	background: color-mix(in srgb, var(--color-accent) 40%, transparent);
+}
+
+a {
+	color: var(--color-accent);
+}
+
+/* CTA links need readable text — global `a` color would make blue-on-blue. */
+a.btn-primary {
+	color: #0b1220;
+	background: var(--color-accent);
+	text-decoration: none;
+}
+a.btn-primary:hover {
+	filter: brightness(1.08);
+}
+
+a.btn-secondary {
+	color: var(--color-fg);
+	background: transparent;
+	border: 1px solid var(--color-line);
+	text-decoration: none;
+}
+a.btn-secondary:hover {
+	border-color: var(--color-accent);
+}
+
+code,
+pre {
+	font-family: var(--font-mono);
+}

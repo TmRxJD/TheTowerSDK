@@ -4,7 +4,7 @@
   "description": "Game data and save-file reading for The Tower — build your own calculators and tools.",
   "license": "MIT",
   "author": "TmRxJD (https://github.com/TmRxJD)",
-  "homepage": "https://github.com/TmRxJD/TheTowerSDK#readme",
+  "homepage": "https://tmrxjd.github.io/TheTowerSDK/",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/TmRxJD/TheTowerSDK.git"
