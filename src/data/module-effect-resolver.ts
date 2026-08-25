@@ -21,7 +21,11 @@ export interface ResolvedModuleEffect {
 }
 
 export function getModuleEffectRow(saveIndex: number): GameAssetModuleEffectRow | null {
-  const row = MODULE_EFFECTS_TABLE[String(saveIndex)]
+  // The index is stringified before lookup, so own keys only — the name says it comes
+  // from a save.
+  const key = String(saveIndex)
+  if (!Object.prototype.hasOwnProperty.call(MODULE_EFFECTS_TABLE, key)) return null
+  const row = MODULE_EFFECTS_TABLE[key]
   if (!row) return null
   if (!isModuleEffectsTablePopulated()) return null
   return row

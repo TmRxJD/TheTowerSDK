@@ -1,3 +1,4 @@
+import { ownLookup } from '../internal/own-lookup'
 /**
  * NRBF stores enums as `{ typeName, value__ }`. When the game serializes the member
  * name, `typeName` looks like `…EnemyType+Ray` and we prefer that over the numeric
@@ -126,7 +127,8 @@ export function normalizeKilledByDisplayLabel(label: string): string {
     return 'Apathy'
   }
 
-  const alias = KILLED_BY_LABEL_ALIASES[trimmed.toLowerCase()]
+  // Own keys only — this label comes straight out of a save file.
+  const alias = ownLookup(KILLED_BY_LABEL_ALIASES, trimmed.toLowerCase())
   if (alias) {
     return alias
   }
@@ -216,12 +218,19 @@ export function enemyDisplayNameFromSaveEnumIndex(index: number): string {
     return 'Overcharge'
   }
 
-  const extra = SAVE_FILE_KILLED_BY_EXTRA_INDEX_NAMES[index]
+  const extra = ownLookup(SAVE_FILE_KILLED_BY_EXTRA_INDEX_NAMES, index)
   if (extra) {
     return extra
   }
 
-  const name = SAVE_FILE_KILLED_BY_ENEMY_NAMES[index]
+  /*
+   * An array, not a record, so an explicit bounds check rather than an own-key one — and
+   * an integer check with it, because `names[1.5]` and `names['constructor']` both miss
+   * the elements and reach for a property instead.
+   */
+  const name = Number.isInteger(index) && index >= 0 && index < SAVE_FILE_KILLED_BY_ENEMY_NAMES.length
+    ? SAVE_FILE_KILLED_BY_ENEMY_NAMES[index]
+    : undefined
   if (name) {
     return name
   }

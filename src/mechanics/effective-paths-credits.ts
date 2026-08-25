@@ -60,7 +60,27 @@ export const EFFECTIVE_PATHS_SOURCE = {
   spreadsheetUrl: 'https://docs.google.com/spreadsheets/d/1YwZtKP6B4WYhRba5T6APJ1YxKNdfnIGQnprgnxmO7zc',
 } as const
 
+/**
+ * How to support the Effective Paths team directly.
+ *
+ * Tech Tree Games' webstore credits a creator code on purchase, so entering `SHEETLORD`
+ * sends support to the sheet's team at no extra cost to the buyer. This is the only way
+ * this package can meaningfully give back for formulas it did not write.
+ */
+export const EFFECTIVE_PATHS_SUPPORT = {
+  creatorCode: 'SHEETLORD',
+  storeUrl: 'https://store.techtreegames.com/thetower/',
+} as const
+
 /** A one-line credit suitable for a footer or an about box. */
 export const EFFECTIVE_PATHS_ATTRIBUTION =
-  'Effective Paths formulas by Mattew, QuietFanta and the Effective Paths maintainers. '
+  'Effective Paths formulas by Mattew, QuietFanta, Bisse and the Effective Paths maintainers. '
   + `Ported from the community spreadsheet (${EFFECTIVE_PATHS_SOURCE.version}).`
+
+/**
+ * The credit line plus the ask. Use this where there is room for two sentences; use
+ * {@link EFFECTIVE_PATHS_ATTRIBUTION} where there is only room for one.
+ */
+export const EFFECTIVE_PATHS_ATTRIBUTION_WITH_SUPPORT =
+  `${EFFECTIVE_PATHS_ATTRIBUTION} Support the Effective Paths team with creator code `
+  + `${EFFECTIVE_PATHS_SUPPORT.creatorCode} in The Tower webstore.`

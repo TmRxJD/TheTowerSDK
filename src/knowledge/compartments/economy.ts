@@ -1,0 +1,1283 @@
+/**
+ * Coins, cash and the currencies — as the game defines them.
+ *
+ * Read off the wiki on 2026-08-16 (Coins Per Kill Bonus, Coins Per Wave, Cash
+ * Bonus, Enemy Balance, Wave Skip, Currency/Gems, Currency/Keys).
+ *
+ * This is the family the Effective Paths `econ` variants compute, and it holds
+ * the strangest documented fact in the game:
+ *
+ * > **Enhancement is double counted in both the tier bonus and in CPK.**
+ *
+ * That is the wiki's own wording, not an inference. A model that "corrects" the
+ * apparent duplication will disagree with the game, and a model that never
+ * noticed it will agree by accident. Either way nobody learns which.
+ */
+import { CHIP_BENEFIT_INDEX_CASH_MULTIPLIER } from './guardian'
+import { CURRENCY_DEFINITIONS } from '../../data/currency'
+import type { KnowledgeEdge, KnowledgeNode } from '../substrate/schema'
+
+/** Read from the shipped catalog rather than transcribed, so it cannot drift. */
+const CATALOG_CURRENCY = {
+  origin: 'code',
+  ref: 'thetowersdk/data CURRENCY_DEFINITIONS',
+  verifiedAt: '2026-08-17',
+} as const
+
+const CURRENCIES = CURRENCY_DEFINITIONS as readonly {
+  readonly name: string
+  readonly summary: string
+  readonly persistence: string
+}[]
+
+/** The only currency that does not survive the run it was earned in. */
+export const RUN_ONLY_CURRENCIES: readonly string[] = CURRENCIES
+  .filter(currency => currency.persistence === 'run-only')
+  .map(currency => currency.name)
+
+/** Currencies that persist on the account between runs. */
+export const ACCOUNT_CURRENCIES: readonly string[] = CURRENCIES
+  .filter(currency => currency.persistence === 'account')
+  .map(currency => currency.name)
+
+/** `Main.CalculateCoinBonuses`, read instruction by instruction. */
+const GAME_COIN_BONUS = {
+  origin: 'game',
+  ref: 'Main.CalculateCoinBonuses @ RVA 0x1EB6AA0; Main.coinsBonusTotal field 0x14C',
+  sourceVersion: 'v28.3.0-arm64',
+  verifiedAt: '2026-08-18',
+} as const
+
+/** `Enemy.Kill`, where a dead enemy becomes coins and cash. */
+const GAME_KILL_AWARD = {
+  origin: 'game',
+  ref: 'Enemy.Kill @ RVA 0x21BD7B0',
+  sourceVersion: 'v28.3.0-arm64',
+  verifiedAt: '2026-08-18',
+} as const
+
+/** `Main.IsWaveSkip` / `IsDoubleWaveSkip`, and the wave-skip fields on Main. */
+const GAME_WAVE_SKIP = {
+  origin: 'game',
+  ref: 'Main.IsWaveSkip @ 0x1EC5360; Main.IsDoubleWaveSkip @ 0x1EC5464',
+  sourceVersion: 'v28.3.0-arm64',
+  verifiedAt: '2026-08-18',
+} as const
+
+/** `ModuleManager`'s stat getters, read across all 75 of them. */
+const GAME_MODULE_GETTERS = {
+  origin: 'game',
+  ref: 'ModuleManager get_* @ 0x1F40xxx-0x1F41xxx (75 getters)',
+  sourceVersion: 'v28.3.0-arm64',
+  verifiedAt: '2026-08-18',
+} as const
+
+/** Community farming guides, read 2026-08-18. Advice, not mechanics. */
+const COMMUNITY_ECON_GUIDES = {
+  origin: 'user',
+  ref: 'community coin-farming guides (BlueStacks, MuMu, wiki Coin Guide)',
+  verifiedAt: '2026-08-18',
+} as const
+
+const WIKI_CPK = { origin: 'wiki', ref: 'Coins Per Kill Bonus', verifiedAt: '2026-08-16' } as const
+const WIKI_CPW = { origin: 'wiki', ref: 'Coins Per Wave', verifiedAt: '2026-08-16' } as const
+const WIKI_CASH = { origin: 'wiki', ref: 'Cash Bonus', verifiedAt: '2026-08-16' } as const
+const WIKI_BALANCE = { origin: 'wiki', ref: 'Enemy Balance', verifiedAt: '2026-08-16' } as const
+const WIKI_WAVE_SKIP = { origin: 'wiki', ref: 'Wave Skip', verifiedAt: '2026-08-16' } as const
+const WIKI_GEMS = { origin: 'wiki', ref: 'Currency/Gems', verifiedAt: '2026-08-16' } as const
+const WIKI_KEYS = { origin: 'wiki', ref: 'Currency/Keys', verifiedAt: '2026-08-16' } as const
+
+/** The coins-per-kill formula, verbatim. */
+export const COINS_PER_KILL_FORMULA =
+  '(Workshop × CPK lab + CPK mod effect) × (1 + coin bonus enhancement) '
+  + '× (1 + coin bonus perk base [0.15] × perk quantity) '
+  + '× (trade-off perk [1.8] × (1 + trade-off lab))'
+
+/** Income multiplier for one skipped wave; compounds as 1.1^n across a streak. */
+export const WAVE_SKIP_INCOME_MULTIPLIER = 1.1
+
+/** Enemy Balance spawns roughly this many times the usual enemies. */
+export const ENEMY_BALANCE_SPAWN_MULTIPLIER = 1.8
+
+/**
+ * Every factor in `Main.coinsBonusTotal`, in the order the game applies them.
+ *
+ * `CalculateCoinBonuses` seeds the field to 1.0 and multiplies eleven things
+ * into it. Reading it settles several questions the wiki leaves open, and
+ * turns this compartment from wiki-only into something with a primary source.
+ *
+ * The order matters less than the fact that they are all MULTIPLICATIVE into
+ * one float. The community guides say "all multipliers in this game multiply
+ * with each other"; for coins that is now checked rather than repeated.
+ */
+export const COIN_BONUS_FACTORS: readonly string[] = [
+  'ad coin bonus (x1.5, if active or ads bypassed)',
+  'starter pack (x2, if owned)',
+  'epic pack (x3, if owned)',
+  'Coins card benefit at its level, if the card is EQUIPPED',
+  'research 166 Coins Mastery, if masteries are on and the Coins card code is complete',
+  'Relics.coin, the relic coin accumulator',
+  'coinsBonusEnhancement, applied only when greater than 1',
+  'tierCoinMultiplier',
+  'Main.GetThemesCoinBonus()',
+  'ModuleManager.EquippedGeneratorBenefit',
+  'DissonanceManager.CoinBoost',
+]
+
+/** The ad bonus, and the two purchases that multiply coins permanently. */
+export const AD_COIN_BONUS_MULTIPLIER = 1.5
+export const STARTER_PACK_COIN_MULTIPLIER = 2
+export const EPIC_PACK_COIN_MULTIPLIER = 3
+
+/**
+ * The packs stack with each other, because each is a separate `fmul`.
+ *
+ * Owning both is x6 on every coin the account earns, permanently and before any
+ * other bonus. Nothing in the game's own UI presents it as one number, and no
+ * community guide found on 2026-08-18 states it either.
+ */
+export const BOTH_PACKS_COIN_MULTIPLIER
+  = STARTER_PACK_COIN_MULTIPLIER * EPIC_PACK_COIN_MULTIPLIER
+
+/** Research index applied when the Coins card is equipped and masteries are on. */
+export const COINS_MASTERY_RESEARCH_INDEX = 166
+
+/** Card index for Coins, the card whose benefit multiplies coinsBonusTotal. */
+export const COINS_CARD_INDEX = 6
+
+/**
+ * Where the wiki's double-count claim is NOT visible.
+ *
+ * The compartment header quotes the wiki: *enhancement is double counted in
+ * both the tier bonus and in CPK*. On the `CalculateCoinBonuses` path it is not.
+ * `coinsBonusEnhancement` is multiplied in exactly once, and
+ * `Main.tierCoinMultiplier` is written in exactly ONE place in the whole binary
+ * — `DifficultyTierCalcs` — from per-tier constants, with no enhancement input.
+ *
+ * That does not refute the wiki. "Tier bonus" may name something other than
+ * `tierCoinMultiplier`, and CPK itself is assembled elsewhere. What it does is
+ * narrow the search: whatever the double count is, it does not happen in the
+ * function that builds the coin multiplier.
+ */
+export const COIN_ENHANCEMENT_APPLICATIONS_IN_CALCULATE_COIN_BONUSES = 1
+export const TIER_COIN_MULTIPLIER_WRITERS = 1
+
+/**
+ * What modules contribute to each economy stat, and under which cluster id.
+ *
+ * `ModuleManager` exposes 75 stat getters and 71 of them are the same three
+ * lines: `GetEquippedClusterBenefit(id) + GetEquippedAssistClusterBenefit(id)`.
+ * The combine is `fadd` — module contributions ADD into the stat. That is worth
+ * stating next to `coinsBonusTotal`, where every factor MULTIPLIES: the two
+ * layers compose differently and a model that picks one rule for both is wrong
+ * somewhere.
+ *
+ * The economy stats occupy a contiguous block of cluster ids with no gaps and
+ * no strangers — every id from 35 to 44 is an economy stat, and every economy
+ * stat is in that range. Checked in both directions.
+ */
+export const MODULE_ECONOMY_CLUSTER_IDS: Readonly<Record<string, number>> = {
+  CashBonus: 35,
+  CashPerWave: 36,
+  CoinsPerKill: 37,
+  CoinsPerWave: 38,
+  FreeAttackUpgrade: 39,
+  FreeDefenseUpgrade: 40,
+  FreeUtilityUpgrade: 41,
+  InterestPerWave: 42,
+  RecoveryAmount: 43,
+  MaxRecovery: 44,
+}
+
+/** Module contributions add; they do not multiply. */
+export const MODULE_CONTRIBUTION_IS_ADDITIVE = true
+
+/**
+ * The four getters that are NOT cluster sums, and why they matter here.
+ *
+ * Cannon, Armor, Generator and Core are the four module TYPES. Their getters
+ * read `GetModuleMainBenefit` plus the assist unlock rather than a cluster, and
+ * they are the ones that appear in the big multiplier chains:
+ * `EquippedGeneratorBenefit` multiplies into `coinsBonusTotal`, and
+ * `EquippedCannonBenefit` into `Main.damage`.
+ *
+ * So "the module contribution" means two different things depending on which
+ * getter is being asked, and only one of them is a cluster.
+ */
+export const MODULE_TYPE_BENEFIT_GETTERS: readonly string[] = [
+  'EquippedCannonBenefit',
+  'EquippedArmorBenefit',
+  'EquippedGeneratorBenefit',
+  'EquippedCoreBenefit',
+]
+
+export const MODULE_STAT_GETTER_COUNT = 75
+export const MODULE_CLUSTER_GETTER_COUNT = 71
+
+/**
+ * The per-kill coin chain, in the order `Enemy.Kill` multiplies it.
+ *
+ * Twelve terms, every one a multiply. The first is the enemy's own coin value
+ * and the rest are bonuses from six different systems. Nothing here is added.
+ *
+ * This is the mechanism under the community's "sync Golden Tower, Black Hole and
+ * Death Wave" advice: those three are literally three separate factors in this
+ * product, so overlapping their windows multiplies their contributions rather
+ * than adding them. The advice is sentiment; the reason it works is here.
+ */
+export const COINS_PER_KILL_CHAIN: readonly string[] = [
+  'Enemy.enemyKillCoins',
+  'Main.coinsBonusUpgrade',
+  'Main.coinsBonusTotal',
+  'GoldenTowerBonus()',
+  'CoinBotBonus()',
+  'BlackHoleCoinBonus()',
+  'SpotlightCoinBonus()',
+  'DeathWaveCoinBonus()',
+  'IntroSprintCoins()',
+  'LivedWavesCoins()',
+  'OrbCoinBonus()',
+  'BountyCoinBonus()',
+]
+
+/** Ultimate weapons that appear as their own factor in the per-kill chain. */
+export const ULTIMATE_WEAPONS_IN_COIN_CHAIN: readonly string[] = [
+  'Golden Tower', 'Black Hole', 'Spotlight', 'Death Wave',
+]
+
+/**
+ * Four things called a coin bonus, and they are not the same thing.
+ *
+ * All four appear in the SAME expression in `Enemy.Kill`, so a model that
+ * collapses any two of them into one number is wrong by a whole factor:
+ *
+ * - `Enemy.enemyKillCoins` — what this particular enemy is worth. Per enemy.
+ * - `Main.coinsBonusUpgrade` (0x4C0) — the workshop Coin Bonus upgrade.
+ * - `Main.coinsBonusTotal` (0x14C) — the account-wide multiplier that
+ *   `CalculateCoinBonuses` builds from eleven factors.
+ * - `ModuleManager.get_CoinsPerKill` — the MODULE contribution, cluster 37,
+ *   which is added into the stat rather than multiplied into the product.
+ */
+export const COIN_BONUS_HOMONYMS: Readonly<Record<string, string>> = {
+  'Enemy.enemyKillCoins': "this enemy's own coin value",
+  'Main.coinsBonusUpgrade': 'the workshop Coin Bonus upgrade',
+  'Main.coinsBonusTotal': 'the eleven-factor account multiplier',
+  'ModuleManager.get_CoinsPerKill': 'module cluster 37, additive into the stat',
+}
+
+/**
+ * Cash and coins are awarded by DIFFERENT arithmetic on the same kill.
+ *
+ * A few instructions before the coin product, `Kill` adds one cash figure into
+ * four fields at once — `cash`, `totalCashEarned`, `cashEarnedThisRound` and
+ * `cashEarnedThisWave` — with `fadd`. Coins are then built as a twelve-term
+ * product. Same event, additive on one side and multiplicative on the other.
+ */
+export const CASH_IS_ADDITIVE_ON_KILL = true
+export const CASH_FIELDS_WRITTEN_PER_KILL: readonly string[] = [
+  'cash', 'totalCashEarned', 'cashEarnedThisRound', 'cashEarnedThisWave',
+]
+
+/**
+ * The per-kill CASH chain, which is not the coin chain with different numbers.
+ *
+ * Read from the same `Enemy.Kill`. Five terms rather than twelve, and only one
+ * of them — Golden Tower — is shared with coins:
+ *
+ *     cash = Enemy.enemyKillCash
+ *          x Main.cashBonusUpgrade      (the workshop Cash Bonus upgrade)
+ *          x GoldenTowerBonus()         (the SAME call the coin chain uses)
+ *          x EnemyBalanceBonus()
+ *          x GuardianChips.chipBenefits[23]  (conditional)
+ *
+ * The product is then zeroed outright on a resume wave, and only afterwards
+ * added — with `fadd` — into four separate running totals.
+ */
+export const CASH_PER_KILL_CHAIN: readonly string[] = [
+  'Enemy.enemyKillCash',
+  'Main.cashBonusUpgrade',
+  'GoldenTowerBonus()',
+  'EnemyBalanceBonus()',
+  'GuardianChips.chipBenefits[23] (conditional)',
+]
+
+/** The one bonus that multiplies BOTH cash and coins on the same kill. */
+export const SHARED_COIN_AND_CASH_BONUS = 'GoldenTowerBonus()'
+
+/**
+ * A resume wave awards no cash at all.
+ *
+ * `fcsel d4, #0.0, d15, ne` on `get_IsResumeWave` — the whole product is
+ * discarded and zero is added instead. Not a reduction, a zero.
+ */
+export const RESUME_WAVE_CASH_MULTIPLIER = 0
+
+/**
+ * Enemy Balance multiplies CASH and never coins — now from the game, not the wiki.
+ *
+ * `EnemyBalanceBonus()` seeds the cash product and appears nowhere in the coin
+ * chain. The compartment already carried this claim from the wiki; it is now
+ * checked against `Enemy.Kill`. Coins still rise indirectly because the card
+ * spawns more enemies, which is a different mechanism from a multiplier.
+ */
+export const ENEMY_BALANCE_MULTIPLIES_CASH_ONLY = true
+
+/**
+ * Wave skip is a SEEDED roll, not a free-running random.
+ *
+ * `Main.IsWaveSkip(bool restartSeed)` draws from `Main.genericRandom`, which it
+ * constructs from `get_WaveSeed()` when asked to restart the seed. So the
+ * outcome is a function of the wave seed and reproduces for a given wave —
+ * the same `genericRandom` stream the enemy-level-skip work already documents.
+ *
+ * The chance comes from the Wave Skip card: `Cards.cardLevel[20]` and the
+ * benefit table, with a bounds check of 20 confirming the index.
+ * `IsDoubleWaveSkip()` is a SEPARATE method and therefore a separate roll.
+ */
+export const WAVE_SKIP_CARD_INDEX = 20
+export const WAVE_SKIP_IS_SEEDED = true
+export const WAVE_SKIP_DOUBLE_IS_SEPARATE_ROLL = true
+
+/** Round-scoped wave-skip totals the game keeps, all on Main. */
+export const WAVE_SKIP_TRACKED_FIELDS: readonly string[] = [
+  'coinsEarnedWaveSkipThisRound',
+  'mostCoinsFromWaveSkipThisRound',
+  'mostCellsFromWaveSkipThisRound',
+  'largestWaveSkipThisRound',
+]
+
+/**
+ * Round coin counters, measured against a real save rather than described.
+ *
+ * `src/pages/import/utils/coin-attribution-vs-save.test.ts` runs these against
+ * `test/playerInfo.dat`. They are relations between recorded fields, so they
+ * are checkable rather than merely stated.
+ */
+const SAVE_COIN_ATTRIBUTION = {
+  origin: 'save',
+  ref: 'test/playerInfo.dat, round counters',
+  sourceVersion: 'v28.3',
+  verifiedAt: '2026-08-18',
+} as const
+
+/**
+ * Counters that credit the SAME coins from different angles.
+ *
+ * Three of these alone exceed the round total in the fixture, which is what
+ * proves the overlap rather than merely suggesting it.
+ */
+export const OVERLAPPING_ROUND_COIN_COUNTERS: readonly string[] = [
+  'goldenTowerPlusCoinsThisRound',
+  'coinsEarnedWaveSkipThisRound',
+  'coinsEarnedFromAdBonusThisRound',
+  'coinsBonusTotalCoinsThisRound',
+  'blackHoleCoinsThisRound',
+  'deathWaveCoinsThisRound',
+  'spotlightCoinsThisRound',
+  'orbCoinsThisRound',
+  'critCoinCoinsThisRound',
+  'totalCoinsByBotThisRound',
+]
+
+/** The ad bonus multiplies non-fetched coins by this. */
+export const AD_BONUS_COIN_MULTIPLIER = 1.5
+
+/**
+ * Kill volume per wave, measured rather than assumed.
+ *
+ * `src/pages/import/utils/kills-per-wave-vs-save.test.ts` measures this against
+ * `test/playerInfo.dat` from two independent directions.
+ */
+const SAVE_KILL_VOLUME = {
+  origin: 'save',
+  ref: 'test/playerInfo.dat, wave 4875 round',
+  sourceVersion: 'v28.3',
+  verifiedAt: '2026-08-18',
+} as const
+
+/**
+ * Everything that moves kills-per-wave, and therefore coins-per-wave.
+ *
+ * The list is here to be counted against a model: a coin model that names fewer
+ * inputs than this is not simplifying, it is missing terms.
+ */
+export const KILL_VOLUME_INPUTS: readonly string[] = [
+  'wave number, through the enemy spawn-rate ladder',
+  'Wave Accelerator card level, which shortens the gap between waves',
+  'Wave Accelerator mastery, which reaches each spawn cap at an earlier wave',
+  'Enemy Balance card level and mastery, which trade enemy health for count',
+  'the separate spawn caps: 150 total, 120 normal, 20 elite, 10 boss',
+  'per-enemy-type spawn chance at that wave, which sets the coin VALUE mix',
+  'wave skip, which pays a skipped wave immediately and spawns nothing',
+  'boss and fleet waves, which are composed differently from ordinary ones',
+]
+
+export const ECONOMY_KNOWLEDGE_NODES: readonly KnowledgeNode[] = [
+  {
+    id: 'roundKillVolume',
+    label: 'How many enemies a wave actually produces',
+    kind: 'rule',
+    claimType: 'objective',
+    verification: 'verified_here',
+    summary:
+      'Coins from kills cannot be reasoned from an average wave payout — they come from how many '
+      + 'enemies of which TYPES a wave produces, which depends on the spawn ladder, the spawn '
+      + 'caps, Wave Accelerator and its mastery, and Enemy Balance. The coin simulation currently '
+      + 'modelled this as one spawn-cap lookup times one Enemy Balance multiplier and landed '
+      + 'three to four times low until 2026-08-18; it now reproduces a real round to within 10% '
+      + 'from two independent directions.',
+    units: 'enemies per wave',
+    implementedBy: [
+      'RESOURCE_DROPS_ENEMIES_PER_SPAWN_TICK',
+      'RESOURCE_DROPS_AVG_ENEMY_COIN_WEIGHT',
+      'accumulateResourceDropsKillYields',
+    ],
+    disambiguation:
+      'Not coins-per-wave, which is a separate FLAT per-wave award. This is the kill VOLUME that '
+      + 'coins-from-kills multiplies against.',
+    traps: [
+      'THE SPAWN CHART COUNTS TICKS, NOT ENEMIES. `Main.WaveUpdate` calls '
+      + '`SpawnRandomBasicEnemy` at three separate sites per tick — gated by cards, tournament '
+      + 'state and resistance level — then rolls `enemyDoubleSpawnChance` for one more. Reading '
+      + 'the chart `spawnCount` column as enemies-per-wave undercounted kills by 3-4x for as '
+      + 'long as the coin model existed, and it looked right because the SHAPE of the curve was right. '
+      + 'Fixed 2026-08-18 by `RESOURCE_DROPS_ENEMIES_PER_SPAWN_TICK`.',
+      'THAT PER-TICK YIELD IS A CALIBRATION, NOT A DERIVATION. Its structure comes from the '
+      + 'binary but its magnitude is measured, because the three spawn sites are conditional on '
+      + 'state a static read cannot resolve. Two independent estimates from the save agree to 2% '
+      + 'under full Wave Accelerator mastery and to 5% without it, which is the evidence for that '
+      + 'assumption — it is an assumption all the same, and a save from an account without the '
+      + 'mastery would test it.',
+      'THE AVERAGE COIN PER ENEMY WAS A GUESS AND IS NOW A MEASUREMENT, BUT IT IS STILL AN '
+      + 'AVERAGE. `RESOURCE_DROPS_AVG_ENEMY_COIN_WEIGHT` was a hand-blended 1.15; it is now '
+      + 'derived from per-type kill counts in a real round and comes to 2.34. That is a round '
+      + 'average over waves 600-4875 on one account at one tier — the mix shifts with wave, so a '
+      + 'single constant still cannot be right at both ends of a run. The per-wave curve needs '
+      + 'the base spawn chances, and two of the five live in the scene assets, not the binary.',
+      'A SKIPPED WAVE PAYS IMMEDIATELY AND SPAWNS NOTHING. Over half this fixture\'s round was '
+      + 'skipped, so kills and coins decouple: a model that multiplies kills by waves reached '
+      + 'counts waves that never spawned anything, and one that ignores wave skip loses the coins '
+      + 'those waves paid.',
+      `THERE ARE AT LEAST ${KILL_VOLUME_INPUTS.length} INPUTS TO THIS. Wave Accelerator changes the `
+      + 'gap between waves; its MASTERY changes how early each spawn cap is reached — those are '
+      + 'different effects, and only the second one appears in the current model.',
+    ],
+    assertions: [
+      { subject: 'roundKillVolume', predicate: 'namedInputCount', value: KILL_VOLUME_INPUTS.length, provenance: SAVE_KILL_VOLUME, verification: 'verified_here' as const },
+      { subject: 'roundKillVolume', predicate: 'shippedModelUndercountsKills', value: false, provenance: SAVE_KILL_VOLUME, verification: 'verified_here' as const },
+      { subject: 'roundKillVolume', predicate: 'perEnemyCoinWeightIsMeasured', value: true, provenance: SAVE_KILL_VOLUME, verification: 'verified_here' as const },
+      { subject: 'roundKillVolume', predicate: 'enemiesPerSpawnTickIsCalibratedNotDerived', value: true, provenance: SAVE_KILL_VOLUME, verification: 'verified_here' as const },
+      { subject: 'roundKillVolume', predicate: 'skippedWavesSpawnEnemies', value: false, provenance: SAVE_KILL_VOLUME, verification: 'verified_here' as const },
+    ],
+    sources: [SAVE_KILL_VOLUME],
+  },
+
+  {
+    id: 'roundCoinAttribution',
+    label: 'What the round coin counters mean',
+    kind: 'rule',
+    claimType: 'objective',
+    verification: 'verified_here',
+    summary:
+      `The ${OVERLAPPING_ROUND_COIN_COUNTERS.length} per-source coin counters on a battle report `
+      + 'are ATTRIBUTIONS, not a partition — the same coin is credited to several of them. Two '
+      + 'relations are exact: fetched coins are the gap between `coinsEarnedThisRound` and '
+      + '`coinsEarnedThisRoundWithoutFetch`, and the ad bonus is exactly half again on non-fetched '
+      + 'coins.',
+    units: 'coins',
+    disambiguation:
+      'Separate from coins-per-kill, which is a rate. This is about how a finished round REPORTS '
+      + 'where its coins came from, which is a different and less trustworthy thing.',
+    traps: [
+      'THE PER-SOURCE COUNTERS DO NOT SUM TO THE TOTAL, AND EXCEEDING IT IS NORMAL. In the '
+      + 'fixture, Golden Tower Plus + wave skip + ad bonus alone come to 1.3x the round total. Any '
+      + 'pie chart, percentage breakdown or "where did my coins come from" view built by summing '
+      + 'these fields is wrong by construction — and it will look plausible, because each '
+      + 'individual number is right.',
+      `THE AD BONUS IS x${AD_BONUS_COIN_MULTIPLIER}, WHICH MEANS ITS COUNTER IS A THIRD OF THE `
+      + 'TOTAL, NOT HALF. `coinsEarnedFromAdBonusThisRound` holds the bonus PART, so it is '
+      + '`total / 3`, not `total / 2`. Reading it as half understates the base by a third. It also '
+      + 'applies to non-fetched coins only: guardian-fetched coins bypass it.',
+      'FETCHED COINS ARE ALREADY INSIDE `coinsEarnedThisRound`. The without-fetch field exists '
+      + 'precisely because the plain total includes them. Adding '
+      + '`totalCoinsFetchedByGuardianThisRound` on top double counts.',
+      'A CARD CHANCE IS NOT AN INCOME SHARE. Critical Coin\'s lowest card level is a 15% chance and '
+      + 'it produced about 0.12% of the round\'s coins, because the chance applies to BASIC '
+      + 'enemies killed by critical damage and those are a vanishing share of coin VALUE late in a '
+      + 'run. The same shape holds for Death Wave: it tagged 89% of everything killed and is '
+      + 'credited with under 2% of the coins. Coverage and income are different questions.',
+    ],
+    assertions: [
+      { subject: 'roundCoinAttribution', predicate: 'overlappingCounterCount', value: OVERLAPPING_ROUND_COIN_COUNTERS.length, provenance: SAVE_COIN_ATTRIBUTION, verification: 'verified_here' as const },
+      { subject: 'roundCoinAttribution', predicate: 'countersSumToTotal', value: false, provenance: SAVE_COIN_ATTRIBUTION, verification: 'verified_here' as const },
+      { subject: 'roundCoinAttribution', predicate: 'adBonusCoinMultiplier', value: AD_BONUS_COIN_MULTIPLIER, provenance: SAVE_COIN_ATTRIBUTION, verification: 'verified_here' as const },
+      { subject: 'roundCoinAttribution', predicate: 'adBonusCounterShareOfTotal', value: 1 - 1 / AD_BONUS_COIN_MULTIPLIER, provenance: SAVE_COIN_ATTRIBUTION, verification: 'verified_here' as const },
+      { subject: 'roundCoinAttribution', predicate: 'adBonusAppliesToFetchedCoins', value: false, provenance: SAVE_COIN_ATTRIBUTION, verification: 'verified_here' as const },
+      { subject: 'roundCoinAttribution', predicate: 'fetchedCoinsIncludedInRoundTotal', value: true, provenance: SAVE_COIN_ATTRIBUTION, verification: 'verified_here' as const },
+    ],
+    sources: [SAVE_COIN_ATTRIBUTION],
+  },
+
+  {
+    id: 'economy.cashPerKill',
+    label: 'Cash from a kill',
+    kind: 'rule',
+    claimType: 'objective',
+    verification: 'verified_here',
+    summary:
+      `${CASH_PER_KILL_CHAIN.length} multiplied terms, then zeroed on a resume wave, then ADDED `
+      + 'into four running totals. It is not the coin chain with different numbers.',
+    units: 'cash per kill',
+    validRange: CASH_PER_KILL_CHAIN.join(' x '),
+    disambiguation:
+      '`Main.cashBonusUpgrade` (0x4B0) is the workshop Cash Bonus and sits beside '
+      + '`Main.coinsBonusUpgrade` (0x4C0). Adjacent fields, different currencies — and there is no '
+      + 'cash equivalent of `coinsBonusTotal` at all.',
+    traps: [
+      `THE CASH AND COIN CHAINS SHARE EXACTLY ONE TERM: ${SHARED_COIN_AND_CASH_BONUS}. Golden `
+      + 'Tower multiplies both. Everything else differs, so a helper that computes "the kill bonus" '
+      + 'once and applies it to both currencies is wrong on eleven of twelve coin terms and four '
+      + 'of five cash terms.',
+      'THERE IS NO CASH ANALOGUE OF `coinsBonusTotal`. Coins get an eleven-factor account-wide '
+      + 'multiplier assembled in its own function; cash does not. Symmetry is the wrong prior here.',
+      'A RESUME WAVE PAYS NO CASH. The product is computed and then discarded — `fcsel` selects '
+      + 'literal zero. Any cash-per-wave estimate that ignores resumes is high, and the error is '
+      + 'total rather than partial for those waves.',
+      'ENEMY BALANCE IS A CASH MULTIPLIER AND NOT A COIN ONE. It seeds the cash product and is '
+      + 'absent from the coin chain. Coins do rise when it is equipped, but through more enemies '
+      + 'rather than a bigger multiplier — a different mechanism with a different shape.',
+      'Cash is ADDED into four fields at once — cash, totalCashEarned, cashEarnedThisRound, '
+      + 'cashEarnedThisWave. Reading any one of them as "cash earned" gives a different scope.',
+      'A GUARDIAN CHIP MULTIPLIES CASH — NOT A GUILD BONUS. The pointer walk goes through '
+      + '`Main.guildManager`, which is what made it look like a guild perk, but the next two hops '
+      + 'are `GuildManager.guardianChips` then `GuardianChips.chipBenefits`. It reaches the '
+      + 'Guardian through the guild manager because the Guardian is guild-exclusive, not because '
+      + 'guilds pay cash. An earlier version of this trap said "a guild bonus" and was wrong.',
+      'WHICH chip is UNRESOLVED. The value is `chipBenefits[23]`, and the parallel '
+      + '`chipBenefitNames` is Unity-serialised asset data rather than anything in the binary, so '
+      + 'the slot cannot be named from the dump. What IS calibrated: `BountyCoinBonus` reads '
+      + '`chipBenefits[0]`, and ChipType 0 is `Steal`, the internal name for Bounty. So the array '
+      + 'is chip-benefit indexed and index 0 is Bounty; 23 is not guessed at.',
+      'Guardian is therefore an input to BOTH currencies — Bounty into coins, an unidentified chip '
+      + 'benefit into cash. A model with no guardian term is missing a factor from each.',
+    ],
+    implementedBy: [
+      'CASH_PER_KILL_CHAIN',
+      'CASH_FIELDS_WRITTEN_PER_KILL',
+      'RESUME_WAVE_CASH_MULTIPLIER',
+      'ENEMY_BALANCE_MULTIPLIES_CASH_ONLY',
+    ],
+    assertions: [
+      { subject: 'economy.cashPerKill', predicate: 'chainTermCount', value: CASH_PER_KILL_CHAIN.length, provenance: GAME_KILL_AWARD, verification: 'verified_here' },
+      { subject: 'economy.cashPerKill', predicate: 'resumeWaveMultiplier', value: RESUME_WAVE_CASH_MULTIPLIER, provenance: GAME_KILL_AWARD, verification: 'verified_here' },
+      { subject: 'economy.cashPerKill', predicate: 'enemyBalanceMultipliesCashOnly', value: ENEMY_BALANCE_MULTIPLIES_CASH_ONLY, provenance: GAME_KILL_AWARD, verification: 'verified_here' },
+      { subject: 'economy.cashPerKill', predicate: 'termsSharedWithCoinChain', value: 1, provenance: GAME_KILL_AWARD, verification: 'verified_here' },
+      // The same index the guardian compartment names, imported rather than
+      // retyped. Two compartments carrying `23` as a literal is one edit away
+      // from disagreeing about the same slot, and `findContradictions` groups
+      // by subject and predicate, so it would never notice: the subjects
+      // differ. Still unverified — see the guardian node for what would settle
+      // it.
+      { subject: 'economy.cashPerKill', predicate: 'cashChipBenefitIndex', value: CHIP_BENEFIT_INDEX_CASH_MULTIPLIER, provenance: GAME_KILL_AWARD, verification: 'unverified' },
+      { subject: 'economy.cashPerKill', predicate: 'bountyChipBenefitIndex', value: 0, provenance: GAME_KILL_AWARD, verification: 'verified_here' },
+    ],
+    sources: [GAME_KILL_AWARD],
+  },
+  {
+    id: 'economy.waveSkipRoll',
+    label: 'How a wave skip is rolled',
+    kind: 'rule',
+    claimType: 'objective',
+    verification: 'verified_here',
+    summary:
+      'A seeded draw from `Main.genericRandom`, built from the wave seed, with the chance coming '
+      + `from the Wave Skip card at index ${WAVE_SKIP_CARD_INDEX}. Doubling is a separate roll.`,
+    units: 'probability per wave',
+    disambiguation:
+      'Distinct from the `waveSkip` node, which is the card and its payout. This is the mechanism '
+      + 'that decides whether a skip happens at all.',
+    traps: [
+      'IT IS SEEDED, NOT FREE-RUNNING. `IsWaveSkip` draws from `genericRandom`, which is '
+      + 'constructed from `get_WaveSeed()`. The outcome is a function of the wave seed and '
+      + 'reproduces — the same stream the enemy-level-skip work documents. Modelling it as an '
+      + 'independent coin flip per wave is wrong about reproducibility even where it is right '
+      + 'about the average.',
+      '`IsDoubleWaveSkip` IS A SEPARATE METHOD AND A SEPARATE ROLL. Treating a double as "the skip '
+      + 'roll succeeding twice" conflates two draws.',
+      'THE SEED IS SHARED WITH OTHER PER-WAVE DRAWS. Consuming `genericRandom` elsewhere moves '
+      + 'this one, which is why the enemies compartment records the stream rather than each '
+      + 'consumer separately.',
+      `The chance is read from card index ${WAVE_SKIP_CARD_INDEX} and its benefit table, so an `
+      + 'unequipped Wave Skip card has no chance at all rather than a base chance.',
+    ],
+    implementedBy: [
+      'WAVE_SKIP_CARD_INDEX',
+      'WAVE_SKIP_IS_SEEDED',
+      'WAVE_SKIP_TRACKED_FIELDS',
+    ],
+    assertions: [
+      { subject: 'economy.waveSkipRoll', predicate: 'cardIndex', value: WAVE_SKIP_CARD_INDEX, provenance: GAME_WAVE_SKIP, verification: 'verified_here' },
+      { subject: 'economy.waveSkipRoll', predicate: 'isSeeded', value: WAVE_SKIP_IS_SEEDED, provenance: GAME_WAVE_SKIP, verification: 'verified_here' },
+      { subject: 'economy.waveSkipRoll', predicate: 'doubleIsSeparateRoll', value: WAVE_SKIP_DOUBLE_IS_SEPARATE_ROLL, provenance: GAME_WAVE_SKIP, verification: 'verified_here' },
+      { subject: 'economy.waveSkipRoll', predicate: 'trackedRoundFields', value: WAVE_SKIP_TRACKED_FIELDS.length, provenance: GAME_WAVE_SKIP, verification: 'verified_here' },
+    ],
+    sources: [GAME_WAVE_SKIP],
+  },
+  {
+    id: 'economy.killAward',
+    label: 'What a dead enemy is worth',
+    kind: 'rule',
+    claimType: 'objective',
+    verification: 'verified_here',
+    summary:
+      `\`Enemy.Kill\` multiplies ${COINS_PER_KILL_CHAIN.length} terms together to get the coins `
+      + 'for one kill, and separately ADDS a cash figure into four fields. Coins compound; cash '
+      + 'accumulates.',
+    units: 'coins per kill; cash per kill',
+    validRange: COINS_PER_KILL_CHAIN.join(' x '),
+    disambiguation:
+      'Four different things are called a coin bonus and all four are in this one expression: the '
+      + "enemy's own value, the workshop upgrade, the account multiplier, and the module cluster "
+      + 'contribution. See COIN_BONUS_HOMONYMS.',
+    traps: [
+      'EVERY TERM IS A MULTIPLY, SO ANY ZERO ZEROES THE KILL. Twelve factors, no additions. A '
+      + 'model that sums bonuses instead of multiplying them understates dramatically at high '
+      + 'stacking and cannot reproduce the game at any level.',
+      `FOUR ULTIMATE WEAPONS ARE THEIR OWN FACTORS — ${ULTIMATE_WEAPONS_IN_COIN_CHAIN.join(', ')}. `
+      + 'That is why overlapping their windows compounds: the community advice to sync Golden '
+      + 'Tower, Black Hole and Death Wave is sentiment, but the reason it works is that each is a '
+      + 'separate multiply here. Spotlight is in the chain too and is usually left out of that '
+      + 'advice.',
+      'CASH IS ADDED, COINS ARE MULTIPLIED, ON THE SAME KILL. The cash figure goes into four '
+      + 'fields with `fadd` a few instructions earlier. Reusing a coin model for cash, or the '
+      + 'reverse, is wrong in a way that looks plausible at low values.',
+      'THE MODULE CONTRIBUTION IS NOT IN THIS PRODUCT. `get_CoinsPerKill` (cluster 37) feeds the '
+      + 'stat additively; the product here multiplies `coinsBonusUpgrade` and `coinsBonusTotal`. '
+      + 'Two different layers, and putting the module term in the product double counts it.',
+      'Bounty is a GUARDIAN chip and appears here as `BountyCoinBonus()`, so guardian state is an '
+      + 'input to coins per kill. A coin model with no guardian term is missing a factor entirely, '
+      + 'not merely mis-sized.',
+    ],
+    implementedBy: [
+      'COINS_PER_KILL_CHAIN',
+      'COIN_BONUS_HOMONYMS',
+      'ULTIMATE_WEAPONS_IN_COIN_CHAIN',
+      'CASH_FIELDS_WRITTEN_PER_KILL',
+    ],
+    assertions: [
+      { subject: 'economy.killAward', predicate: 'coinChainTermCount', value: COINS_PER_KILL_CHAIN.length, provenance: GAME_KILL_AWARD, verification: 'verified_here' },
+      { subject: 'economy.killAward', predicate: 'allCoinTermsMultiplicative', value: true, provenance: GAME_KILL_AWARD, verification: 'verified_here' },
+      { subject: 'economy.killAward', predicate: 'cashIsAdditive', value: CASH_IS_ADDITIVE_ON_KILL, provenance: GAME_KILL_AWARD, verification: 'verified_here' },
+      { subject: 'economy.killAward', predicate: 'cashFieldsWrittenPerKill', value: CASH_FIELDS_WRITTEN_PER_KILL.length, provenance: GAME_KILL_AWARD, verification: 'verified_here' },
+      { subject: 'economy.killAward', predicate: 'ultimateWeaponFactors', value: ULTIMATE_WEAPONS_IN_COIN_CHAIN.length, provenance: GAME_KILL_AWARD, verification: 'verified_here' },
+      { subject: 'economy.killAward', predicate: 'coinBonusHomonymCount', value: Object.keys(COIN_BONUS_HOMONYMS).length, provenance: GAME_KILL_AWARD, verification: 'verified_here' },
+    ],
+    sources: [GAME_KILL_AWARD],
+  },
+  {
+    id: 'economy.moduleContribution',
+    label: 'What modules add to each economy stat',
+    kind: 'rule',
+    claimType: 'objective',
+    verification: 'verified_here',
+    summary:
+      `${MODULE_CLUSTER_GETTER_COUNT} of ${MODULE_STAT_GETTER_COUNT} \`ModuleManager\` getters are `
+      + 'the same shape: equipped cluster benefit plus assist cluster benefit, ADDED. The ten '
+      + 'economy stats sit in a contiguous cluster block, ids 35 to 44.',
+    units: 'stat units, added to the stat before any multiplier applies',
+    validRange:
+      Object.entries(MODULE_ECONOMY_CLUSTER_IDS).map(([stat, id]) => `${stat}=${id}`).join(', '),
+    disambiguation:
+      '`get_CoinsPerKill` on ModuleManager is the MODULE contribution to coins per kill, not coins '
+      + 'per kill. The full stat also takes the workshop ladder and the lab; this getter is one '
+      + 'term of it.',
+    traps: [
+      'MODULES ADD, THE COIN MULTIPLIER MULTIPLIES. The combine inside every cluster getter is '
+      + '`fadd`, while every factor in `coinsBonusTotal` is `fmul`. The two layers compose by '
+      + 'different rules, and using one rule for both is wrong on one of them — most likely by '
+      + 'treating a module bonus as a percentage multiplier.',
+      'ASSIST MODULES ARE A SEPARATE TERM IN EVERY ONE OF THEM. Each getter adds '
+      + '`GetEquippedAssistClusterBenefit` to the equipped one, so a model that reads only equipped '
+      + 'modules silently drops the assist contribution for all seventy-one stats at once.',
+      `FOUR GETTERS ARE NOT CLUSTER SUMS: ${MODULE_TYPE_BENEFIT_GETTERS.join(', ')}. Those are the `
+      + 'four module TYPES and they read the module main benefit instead. They are also the ones '
+      + 'that appear in the big chains — Generator multiplies into the coin total, Cannon into '
+      + 'damage — so the exception is the case that matters most.',
+      'The cluster id is the join key, not the stat name. Ids 35 to 44 are the economy block; a '
+      + 'lookup by display name has no meaning at this layer.',
+    ],
+    implementedBy: [
+      'MODULE_ECONOMY_CLUSTER_IDS',
+      'MODULE_TYPE_BENEFIT_GETTERS',
+      'MODULE_CONTRIBUTION_IS_ADDITIVE',
+    ],
+    assertions: [
+      { subject: 'economy.moduleContribution', predicate: 'statGetterCount', value: MODULE_STAT_GETTER_COUNT, provenance: GAME_MODULE_GETTERS, verification: 'verified_here' },
+      { subject: 'economy.moduleContribution', predicate: 'clusterGetterCount', value: MODULE_CLUSTER_GETTER_COUNT, provenance: GAME_MODULE_GETTERS, verification: 'verified_here' },
+      { subject: 'economy.moduleContribution', predicate: 'contributionIsAdditive', value: MODULE_CONTRIBUTION_IS_ADDITIVE, provenance: GAME_MODULE_GETTERS, verification: 'verified_here' },
+      { subject: 'economy.moduleContribution', predicate: 'economyClusterIdCount', value: Object.keys(MODULE_ECONOMY_CLUSTER_IDS).length, provenance: GAME_MODULE_GETTERS, verification: 'verified_here' },
+      { subject: 'economy.moduleContribution', predicate: 'moduleTypeGetterCount', value: MODULE_TYPE_BENEFIT_GETTERS.length, provenance: GAME_MODULE_GETTERS, verification: 'verified_here' },
+    ],
+    sources: [GAME_MODULE_GETTERS],
+  },
+  {
+    id: 'coinsBonusTotal',
+    label: 'The coin multiplier the game actually builds',
+    kind: 'stat',
+    claimType: 'objective',
+    verification: 'verified_here',
+    summary:
+      '`Main.CalculateCoinBonuses` seeds `coinsBonusTotal` to 1 and multiplies '
+      + `${COIN_BONUS_FACTORS.length} things into it. Every one is multiplicative; none is added.`,
+    units: 'multiplier on coins earned',
+    validRange: COIN_BONUS_FACTORS.join('; '),
+    disambiguation:
+      'This is the account-wide coin MULTIPLIER, not coins per kill. `CoinsPerKill` is a separate '
+      + 'getter that returns the module contribution only — equipped cluster benefit plus assist '
+      + 'cluster benefit, added.',
+    traps: [
+      'TWO PAID PACKS MULTIPLY COINS PERMANENTLY, AND THEY STACK. The starter pack is '
+      + `x${STARTER_PACK_COIN_MULTIPLIER} and the epic pack x${EPIC_PACK_COIN_MULTIPLIER}, applied `
+      + `as separate multiplies, so owning both is x${BOTH_PACKS_COIN_MULTIPLIER} on everything. `
+      + 'No coin model that ignores account purchases can be compared between two players, and '
+      + 'nothing in the game surfaces it as one number.',
+      `THE AD BONUS IS x${AD_COIN_BONUS_MULTIPLIER} AND APPLIES WHEN ADS ARE BYPASSED TOO. The `
+      + 'gate is `IsRewardedAdsBypassed() || IsAdCoinBonusActive()`, so an ad-free purchase grants '
+      + 'it permanently rather than removing it.',
+      'THE COINS CARD MUST BE EQUIPPED, not merely owned. The card benefit and the Coins Mastery '
+      + 'research are both inside the `cardActive` branch, so an unequipped Coins card contributes '
+      + 'nothing and its mastery contributes nothing either. Same shape as the Damage card.',
+      'THE ENHANCEMENT IS SKIPPED WHEN IT IS NOT ABOVE 1. `fcmp` against 1.0 with a `b.le` past '
+      + 'the multiply. Harmless arithmetically, but it means the field is a multiplier seeded at '
+      + '1 and never a bonus to be added.',
+      'FOUR OTHER SYSTEMS FEED THIS ONE FIELD — relics, themes, modules and dissonance. A coin '
+      + 'model that treats any of them as a separate additive line rather than a factor here will '
+      + 'not reproduce the game.',
+    ],
+    implementedBy: [
+      'COIN_BONUS_FACTORS',
+      'STARTER_PACK_COIN_MULTIPLIER',
+      'EPIC_PACK_COIN_MULTIPLIER',
+      'BOTH_PACKS_COIN_MULTIPLIER',
+      'AD_COIN_BONUS_MULTIPLIER',
+    ],
+    assertions: [
+      { subject: 'coinsBonusTotal', predicate: 'factorCount', value: COIN_BONUS_FACTORS.length, provenance: GAME_COIN_BONUS, verification: 'verified_here' },
+      { subject: 'coinsBonusTotal', predicate: 'allFactorsMultiplicative', value: true, provenance: GAME_COIN_BONUS, verification: 'verified_here' },
+      { subject: 'coinsBonusTotal', predicate: 'adBonusMultiplier', value: AD_COIN_BONUS_MULTIPLIER, provenance: GAME_COIN_BONUS, verification: 'verified_here' },
+      { subject: 'coinsBonusTotal', predicate: 'starterPackMultiplier', value: STARTER_PACK_COIN_MULTIPLIER, provenance: GAME_COIN_BONUS, verification: 'verified_here' },
+      { subject: 'coinsBonusTotal', predicate: 'epicPackMultiplier', value: EPIC_PACK_COIN_MULTIPLIER, provenance: GAME_COIN_BONUS, verification: 'verified_here' },
+      { subject: 'coinsBonusTotal', predicate: 'bothPacksMultiplier', value: BOTH_PACKS_COIN_MULTIPLIER, provenance: GAME_COIN_BONUS, verification: 'verified_here' },
+      { subject: 'coinsBonusTotal', predicate: 'coinsCardIndex', value: COINS_CARD_INDEX, provenance: GAME_COIN_BONUS, verification: 'verified_here' },
+      { subject: 'coinsBonusTotal', predicate: 'coinsMasteryResearchIndex', value: COINS_MASTERY_RESEARCH_INDEX, provenance: GAME_COIN_BONUS, verification: 'verified_here' },
+      { subject: 'coinsBonusTotal', predicate: 'enhancementApplicationsHere', value: COIN_ENHANCEMENT_APPLICATIONS_IN_CALCULATE_COIN_BONUSES, provenance: GAME_COIN_BONUS, verification: 'verified_here' },
+      { subject: 'tierCoinMultiplier', predicate: 'writerCount', value: TIER_COIN_MULTIPLIER_WRITERS, provenance: GAME_COIN_BONUS, verification: 'verified_here' },
+    ],
+    sources: [GAME_COIN_BONUS],
+  },
+  {
+    id: 'economy.farmingAdvice',
+    label: 'Coins per kill versus coins per wave',
+    kind: 'rule',
+    claimType: 'sentiment',
+    summary:
+      'The community consensus is that coins per kill dominates once runs are long, and that coins '
+      + 'per wave is the better early buy. Widely repeated, stage-dependent, and not a mechanic.',
+    disambiguation:
+      'Three different kinds of claim get quoted together in farming guides. That multipliers all '
+      + 'multiply is OBJECTIVE and is verified on `coinsBonusTotal`. That coins per wave beats '
+      + 'coins per kill below some wave count is CONDITIONAL on how far a run goes. Which build '
+      + 'to run, and which weapons to sync, is OPINION.',
+    traps: [
+      'SENTIMENT. None of this is a game rule. It is what experienced players advise, it changes '
+      + 'with patches and playstyle, and it must never be encoded as a threshold or a mode.',
+      'THE CROSSOVER POINT IS NOT A CONSTANT. Guides quote "300-400 waves" as where coins per kill '
+      + 'overtakes coins per wave, and the same guides say it depends on tier and enemy density. '
+      + 'It is a rule of thumb about a player, not a threshold in the game, and no source found '
+      + 'gives a formula for it.',
+      'GUIDES DO NOT AGREE ON UNITS. Some argue coins per minute, some coins per run. Game speed '
+      + 'changes one and not the other, so two correct-sounding recommendations can conflict '
+      + 'purely because they optimise different things.',
+      'NONE OF THE FARMING GUIDES SURVEYED CARRIES A FORMULA. One states outright that it gives no '
+      + 'explicit numbers. Treat them as direction, and take magnitudes from `coinsBonusTotal`.',
+      'Guides predate the account purchases. None found mentions that the starter and epic packs '
+      + 'multiply coins, which changes any absolute figure they quote by up to six times.',
+    ],
+    sources: [COMMUNITY_ECON_GUIDES],
+  },
+  {
+    id: 'coinsPerKill',
+    label: 'Coins per kill (CPK)',
+    kind: 'stat',
+    summary:
+      `Coins earned per enemy destroyed. CPK = ${COINS_PER_KILL_FORMULA}. 149 workshop levels from `
+      + '×1.00, +0.01 each, to ×2.49.',
+    units: 'multiplier',
+    traps: [
+      'THE ENHANCEMENT IS DOUBLE COUNTED — the wiki states it applies in both the tier bonus and '
+      + 'in CPK. This looks like a bug in any model that reproduces it and like an error in any '
+      + 'model that does not. It is the documented behaviour; do not "fix" it.',
+      'With no trade-off perk unlocked, that term is 1, NOT 0. A zero collapses the whole product.',
+      'The module effect is ADDED inside the first parentheses, not multiplied across the chain.',
+      'Tier Bonus, Skin Bonus, Golden Bot and Golden Tower all multiply coins from kills but do '
+      + 'NOT change the displayed CPK. The All Coin perk DOES change it. So the displayed number '
+      + 'is not the effective number, and which sources are visible in it is arbitrary.',
+      'Do not round intermediate values — the wiki says rounding diverges from the in-game display.',
+    ],
+    implementedBy: ['COINS_PER_KILL_FORMULA', 'COINS_PER_KILL_CHAIN'],
+    assertions: [
+      { subject: 'coinsPerKill', predicate: 'workshopBase', value: 1, provenance: WIKI_CPK },
+      { subject: 'coinsPerKill', predicate: 'workshopStep', value: 0.01, provenance: WIKI_CPK },
+      { subject: 'coinsPerKill', predicate: 'workshopMax', value: 2.49, provenance: WIKI_CPK },
+      // Derived, so the ceiling cannot drift from the ladder that reaches it.
+      { subject: 'coinsPerKill', predicate: 'workshopLevels', value: Math.round((2.49 - 1) / 0.01), provenance: WIKI_CPK, verification: 'verified_here' as const },
+      { subject: 'coinsPerKill', predicate: 'termsInKillAward', value: COINS_PER_KILL_CHAIN.length, provenance: GAME_KILL_AWARD, verification: 'verified_here' as const },
+    ],
+    // Listed because this node's own assertions cite the kill-award routine.
+    sources: [{ ...WIKI_CPK, section: 'Formula' }, GAME_KILL_AWARD],
+  },
+  {
+    id: 'coinsPerWave',
+    label: 'Coins per wave',
+    kind: 'stat',
+    disambiguation:
+      'Not Coins per Kill. This is a FLAT award (1 to 150) added once per wave; coins-per-kill is '
+      + 'a MULTIPLIER (×1.00 to ×2.49) on income from each enemy. They share a name prefix and a '
+      + 'workshop menu and share nothing else — different shape, different formula, different '
+      + 'scaling. Also not Cash per Wave, which pays a different currency.',
+    summary:
+      'A flat coin award for completing a wave. 149 workshop levels from a base of 1, +1 each, to '
+      + '150. Raised by the All Coins perk and by tier coin multipliers.',
+    units: 'coins',
+    traps: [
+      'This one is FLAT and additive, where coins-per-kill is a multiplier. They share a name '
+      + 'prefix and nothing else about their shape.',
+    ],
+    assertions: [
+      { subject: 'coinsPerWave', predicate: 'paidPerWaveRegardlessOfKills', value: true, provenance: WIKI_CPW },
+      // Separate from coins per kill, and both are called "coin bonus" by
+      // players. A model that applies one where the other belongs is wrong in
+      // proportion to how fast the run clears waves.
+      { subject: 'coinsPerWave', predicate: 'independentOfCoinsPerKill', value: true, provenance: WIKI_CPW },
+    ],
+    sources: [WIKI_CPW],
+  },
+  {
+    id: 'cashBonus',
+    label: 'Cash bonus',
+    kind: 'stat',
+    summary:
+      'Multiplier on cash from all sources including the wave bonus. 149 workshop levels from '
+      + '×1.00 to ×2.49; the Cash card multiplies with the lab.',
+    units: 'multiplier',
+    traps: [
+      'Cash bonus does NOT raise interest, and does not raise max interest either. Interest is '
+      + 'computed off a base this multiplier never touches.',
+      'Cash and coins are different currencies with different sinks. Cash is spent in-run; coins '
+      + 'buy permanent workshop upgrades.',
+    ],
+    assertions: [
+      { subject: 'cashBonus', predicate: 'multipliesCashNotCoins', value: true, provenance: WIKI_CASH },
+      // Cash and coins are different currencies with different bonuses, and the
+      // interest formula multiplies the cash-per-wave term by this one -- which
+      // is how "cash bonus raises interest" becomes true and "cash bonus raises
+      // the interest RATE" stays false.
+      { subject: 'cashBonus', predicate: 'raisesInterestRate', value: false, provenance: WIKI_CASH },
+    ],
+    sources: [WIKI_CASH],
+  },
+  {
+    id: 'enemyBalance',
+    label: 'Enemy Balance',
+    kind: 'entity',
+    summary:
+      'A common card that spawns about 1.8× the usual enemies and raises cash earned per kill.',
+    traps: [
+      'Its multiplier boosts CASH ONLY and never coins. Coins rise only indirectly, because there '
+      + 'are more enemies to kill. Applying the card multiplier to coins double-counts a benefit '
+      + 'the card does not give.',
+      'More enemies also means more incoming damage and more pressure on the spawn cap.',
+    ],
+    implementedBy: ['ENEMY_BALANCE_SPAWN_MULTIPLIER'],
+    assertions: [
+      { subject: 'enemyBalance', predicate: 'spawnMultiplier', value: ENEMY_BALANCE_SPAWN_MULTIPLIER, provenance: WIKI_BALANCE },
+      // More enemies is more income AND more danger. Recording it as an economy
+      // lever alone is half the mechanic.
+      { subject: 'enemyBalance', predicate: 'raisesIncomeAndThreatTogether', value: true, provenance: WIKI_BALANCE },
+    ],
+    sources: [WIKI_BALANCE],
+  },
+  {
+    id: 'waveSkip',
+    label: 'Wave Skip',
+    kind: 'entity',
+    summary:
+      'A rare card giving a chance to skip a wave and collect ×1.1 of the previous wave\'s coins, '
+      + 'cash and cells. Consecutive skips compound as 1.1^n.',
+    traps: [
+      'It compounds: n skipped waves in a row is 1.1^n, not 1.1 × n. Linear treatment badly '
+      + 'understates streaks.',
+      'TIME IS NOT SKIPPED. Energy Shield needs more waves between charges and Demon Mode lasts '
+      + 'more waves — both get relatively worse. Anything measured per-wave shifts; anything '
+      + 'measured per-second does not.',
+      'Free Upgrades test per wave COMPLETED after the skips, so skipped waves grant extra rolls.',
+      'A skipped boss wave still rolls reroll shards and module chances.',
+    ],
+    implementedBy: ['WAVE_SKIP_INCOME_MULTIPLIER', 'WAVE_SKIP_CARD_INDEX'],
+    assertions: [
+      { subject: 'waveSkip', predicate: 'incomeMultiplier', value: WAVE_SKIP_INCOME_MULTIPLIER, provenance: WIKI_WAVE_SKIP },
+      { subject: 'waveSkip', predicate: 'cardIndex', value: WAVE_SKIP_CARD_INDEX, provenance: GAME_WAVE_SKIP, verification: 'verified_here' as const },
+      { subject: 'waveSkip', predicate: 'isSeeded', value: WAVE_SKIP_IS_SEEDED, provenance: GAME_WAVE_SKIP, verification: 'verified_here' as const },
+    ],
+    // Listed because this node's own assertions cite the wave-skip predicates.
+    sources: [WIKI_WAVE_SKIP, GAME_WAVE_SKIP],
+  },
+  {
+    id: 'currency.gem',
+    label: 'Gems',
+    kind: 'currency',
+    summary:
+      'The premium currency. Buys cards, card slots, lab slots, modules and tournament tickets, '
+      + 'and rushes lab research.',
+    traps: [
+      'Floating gems are capped at 10 per RUN, spawn roughly every 400–500 waves and never more '
+      + 'than once every 15 minutes, at 2 gems each. Gem income is bounded by real time, not by '
+      + 'run performance.',
+      'Gems compete across five unrelated sinks. A plan spending gems on one must say what it is '
+      + 'not spending them on.',
+    ],
+    assertions: [
+      { subject: 'currency.gem', predicate: 'freeGemsPerAdvert', value: 2, provenance: WIKI_GEMS },
+      { subject: 'currency.gem', predicate: 'advertCooldownMinutes', value: 15, provenance: WIKI_GEMS },
+      // Bounded by real time rather than by play, which is why no build or tier
+      // raises it and why a plan that "farms gems" is planning to wait.
+      { subject: 'currency.gem', predicate: 'incomeBoundedByRealTime', value: true, provenance: WIKI_GEMS },
+    ],
+    sources: [{ ...WIKI_GEMS, section: 'Acquiring Gems' }],
+  },
+  {
+    id: 'currency.key',
+    label: 'Keys',
+    kind: 'currency',
+    summary:
+      'Earned only by placing 1st–15th in a LEGEND tournament. Spent exclusively on Tech Trees in '
+      + 'the Vault.',
+    traps: [
+      'Legend league and a top-15 placement, or no keys at all. Every key-gated upgrade — '
+      + 'including card slots 23–28 — is unreachable for most accounts.',
+    ],
+    assertions: [
+      { subject: 'currency.key', predicate: 'spentOnTheVault', value: true, provenance: WIKI_KEYS },
+      { subject: 'currency.key', predicate: 'earnedFromTournaments', value: true, provenance: WIKI_KEYS },
+    ],
+    sources: [WIKI_KEYS],
+  },
+  {
+    id: 'currency',
+    label: 'Currency',
+    kind: 'currency',
+    claimType: 'objective',
+    verification: 'verified_here',
+    summary:
+      `${CURRENCIES.length} currency entries, of which exactly one — ${RUN_ONLY_CURRENCIES.join(', ')} — is run-only. `
+      + 'Every other one persists on the account. They are separate ladders with separate sources, '
+      + 'and almost none of them convert into another.',
+    disambiguation:
+      'A count of catalog ENTRIES, not of distinct currencies the player holds. "Module Currency" '
+      + 'is one entry covering two things — Module Shards and Reroll Dice — which do not '
+      + 'interchange.',
+    traps: [
+      'Cash is the only run-only currency. Carrying a cash balance between runs, or treating it as '
+      + 'a progression resource, models a currency the game deletes at the end of every battle.',
+      '"Module Currency" is one entry for two currencies. Counting entries to count currencies '
+      + 'undercounts, and treating shards and reroll dice as one pool lets a planner spend the '
+      + 'wrong one.',
+      'Each currency has one or two real sources and they do not substitute — keys come only from '
+      + 'a top-15 Legend placement, bits and tokens only from guilds, elite cells only from elite '
+      + 'enemies. A plan that needs a currency the account cannot earn is not a slow plan, it is '
+      + 'an impossible one.',
+      'Persistence is not the same as spendability. Medals persist between events but are only '
+      + 'spendable in the Event Shop while an event is running.',
+    ],
+    implementedBy: ['CURRENCY_DEFINITIONS', 'CURRENCY_FLOW_ROWS', 'RUN_ONLY_CURRENCIES'],
+    assertions: [
+      { subject: 'currency', predicate: 'definitionCount', value: CURRENCIES.length, provenance: CATALOG_CURRENCY },
+      { subject: 'currency', predicate: 'runOnlyCount', value: RUN_ONLY_CURRENCIES.length, provenance: CATALOG_CURRENCY },
+      { subject: 'currency', predicate: 'accountCount', value: ACCOUNT_CURRENCIES.length, provenance: CATALOG_CURRENCY },
+      { subject: 'currency.cash', predicate: 'persistence', value: 'run-only', provenance: CATALOG_CURRENCY },
+      { subject: 'currency.coins', predicate: 'persistence', value: 'account', provenance: CATALOG_CURRENCY },
+      { subject: 'currency.moduleCurrency', predicate: 'coversDistinctCurrencies', value: 2, provenance: CATALOG_CURRENCY },
+    ],
+    sources: [CATALOG_CURRENCY],
+  },
+]
+
+export const ECONOMY_KNOWLEDGE_EDGES: readonly KnowledgeEdge[] = [
+  {
+    from: 'roundKillVolume',
+    kind: 'scales',
+    to: 'coinsPerKill',
+    note:
+      'CPK is per enemy; this is how many enemies there are. Coins from kills is the product, so '
+      + 'an error in either is an error in the total, and the volume half is the one nothing was '
+      + 'checking.',
+    sources: [SAVE_KILL_VOLUME],
+  },
+
+  {
+    from: 'roundCoinAttribution',
+    kind: 'derivedFrom',
+    to: 'coinsPerKill',
+    note:
+      'CPK is the rate coins are earned at; the round counters are how the finished run reports '
+      + 'them. The counters overlap, so they cannot be used to back out a rate.',
+    sources: [SAVE_COIN_ATTRIBUTION],
+  },
+
+  {
+    from: 'ultimateWeapon.goldenTower',
+    kind: 'scales',
+    to: 'economy.cashPerKill',
+    note:
+      'The one term the cash and coin chains share. Golden Tower is the only bonus that multiplies '
+      + 'both currencies on a kill.',
+    sources: [GAME_KILL_AWARD],
+  },
+  {
+    from: 'guardian.chip',
+    kind: 'scales',
+    to: 'economy.cashPerKill',
+    note:
+      'A chip benefit multiplies cash. Reached via `Main.guildManager` only because the Guardian '
+      + 'is guild-exclusive — the multiplier is the chip, not the guild.',
+    sources: [GAME_KILL_AWARD],
+  },
+  {
+    from: 'enemyBalance',
+    kind: 'scales',
+    to: 'economy.cashPerKill',
+    note:
+      'Seeds the cash product and appears nowhere in the coin chain — the wiki claim, now checked '
+      + 'against Enemy.Kill.',
+    sources: [GAME_KILL_AWARD],
+  },
+  {
+    from: 'economy.cashPerKill',
+    kind: 'independentOf',
+    to: 'economy.killAward',
+    note:
+      'Same kill, different arithmetic and almost disjoint inputs: cash is five multiplied terms '
+      + 'then added, coins are twelve multiplied terms. One shared factor between them.',
+    sources: [GAME_KILL_AWARD],
+  },
+  {
+    from: 'economy.waveSkipRoll',
+    kind: 'gates',
+    to: 'waveSkip',
+    note: 'Decides whether the skip happens; the card node describes what it pays when it does.',
+    sources: [GAME_WAVE_SKIP],
+  },
+  {
+    from: 'ultimateWeapon.goldenTower',
+    kind: 'scales',
+    to: 'economy.killAward',
+    note: '`GoldenTowerBonus()` is one of twelve multiplied terms in the per-kill coin product.',
+    sources: [GAME_KILL_AWARD],
+  },
+  {
+    from: 'ultimateWeapon.blackHole',
+    kind: 'scales',
+    to: 'economy.killAward',
+    note: '`BlackHoleCoinBonus()`, a separate factor from Golden Tower — which is why the two compound.',
+    sources: [GAME_KILL_AWARD],
+  },
+  {
+    from: 'ultimateWeapon.deathWave',
+    kind: 'scales',
+    to: 'economy.killAward',
+    note: '`DeathWaveCoinBonus()`, the third of the three weapons the community advises syncing.',
+    sources: [GAME_KILL_AWARD],
+  },
+  {
+    from: 'ultimateWeapon.spotlight',
+    kind: 'scales',
+    to: 'economy.killAward',
+    note:
+      '`SpotlightCoinBonus()`. In the chain on the same footing as the other three, and usually '
+      + 'absent from the sync advice.',
+    sources: [GAME_KILL_AWARD],
+  },
+  {
+    from: 'bot',
+    kind: 'scales',
+    to: 'economy.killAward',
+    note: '`CoinBotBonus()` — the Golden Bot term, one factor of the product.',
+    sources: [GAME_KILL_AWARD],
+  },
+  {
+    from: 'guardian.chip',
+    kind: 'scales',
+    to: 'economy.killAward',
+    note:
+      '`BountyCoinBonus()`. The Bounty chip is a coin multiplier, so guardian state is an input to '
+      + 'coins per kill and a model without it is missing a factor.',
+    sources: [GAME_KILL_AWARD],
+  },
+  {
+    from: 'orb',
+    kind: 'scales',
+    to: 'economy.killAward',
+    note: '`OrbCoinBonus()` — orbs contribute a coin factor as well as damage.',
+    sources: [GAME_KILL_AWARD],
+  },
+  {
+    from: 'coinsBonusTotal',
+    kind: 'scales',
+    to: 'economy.killAward',
+    note:
+      'The account multiplier enters the per-kill product as a single term, alongside the workshop '
+      + 'upgrade value it is often confused with.',
+    sources: [GAME_KILL_AWARD],
+  },
+  {
+    from: 'economy.moduleContribution',
+    kind: 'scales',
+    to: 'coinsPerKill',
+    note:
+      'Cluster 37, added to the stat. One term of coins per kill, not the whole of it, and added '
+      + 'rather than multiplied.',
+    sources: [GAME_MODULE_GETTERS],
+  },
+  {
+    from: 'economy.moduleContribution',
+    kind: 'independentOf',
+    to: 'coinsBonusTotal',
+    note:
+      'Stated because the two are easy to conflate: module cluster benefits ADD into a stat, while '
+      + 'every factor in the coin multiplier MULTIPLIES. The generator benefit is the one module '
+      + 'value that crosses over into the multiplier chain.',
+    sources: [GAME_MODULE_GETTERS],
+  },
+  {
+    from: 'theme',
+    kind: 'scales',
+    to: 'coinsBonusTotal',
+    note:
+      '`Main.GetThemesCoinBonus()` is called directly inside `CalculateCoinBonuses` and multiplied '
+      + 'in. The themes compartment derived this rate from the catalogs; this is where it lands.',
+    sources: [GAME_COIN_BONUS],
+  },
+  {
+    from: 'relic',
+    kind: 'scales',
+    to: 'coinsBonusTotal',
+    note: '`Relics.coin`, the accumulator seeded at 1, multiplied straight in.',
+    sources: [GAME_COIN_BONUS],
+  },
+  {
+    from: 'dissonance',
+    kind: 'scales',
+    to: 'coinsBonusTotal',
+    note:
+      '`DissonanceManager.CoinBoost` is the last factor applied. The utility trade is not a '
+      + 'separate income line — it multiplies the same field everything else does.',
+    sources: [GAME_COIN_BONUS],
+  },
+  {
+    from: 'economy.farmingAdvice',
+    kind: 'memberOf',
+    to: 'coinsBonusTotal',
+    note:
+      'Opinion about how to grow the multiplier. Kept next to it deliberately so the mechanic and '
+      + 'the advice are never quoted as one thing.',
+    sources: [COMMUNITY_ECON_GUIDES],
+  },
+  {
+    from: 'currency.key',
+    kind: 'memberOf',
+    to: 'currency',
+    note: 'One of the account currencies, and the most tightly gated of them.',
+    sources: [CATALOG_CURRENCY],
+  },
+  {
+    from: 'tier',
+    kind: 'scales',
+    to: 'coinsPerKill',
+    note:
+      'Tier coin bonus multiplies coins from kills without appearing in the displayed CPK — and '
+      + 'the enhancement term is counted in both places.',
+    sources: [{ ...WIKI_CPK, section: 'Formula' }],
+  },
+  {
+    from: 'coinsPerWave',
+    kind: 'independentOf',
+    to: 'coinsPerKill',
+    note:
+      'One is a flat per-wave award, the other a multiplier on per-kill income. Similar names, '
+      + 'unrelated shapes; a change to one says nothing about the other.',
+    sources: [WIKI_CPW],
+  },
+  {
+    from: 'cashBonus',
+    kind: 'independentOf',
+    to: 'coinsPerKill',
+    note: 'Cash and coins are separate currencies; the cash multiplier never touches coin income.',
+    sources: [WIKI_CASH],
+  },
+  {
+    from: 'enemyBalance',
+    kind: 'scales',
+    to: 'cashBonus',
+    note: 'Its multiplier raises cash per kill only — coins rise solely from the extra spawns.',
+    sources: [WIKI_BALANCE],
+  },
+  {
+    from: 'enemyBalance',
+    kind: 'caps',
+    to: 'enemy',
+    note: 'Spawning ~1.8× enemies presses against the 120 normal-enemy cap sooner.',
+    sources: [WIKI_BALANCE],
+  },
+  {
+    from: 'waveSkip',
+    kind: 'scales',
+    to: 'coinsPerWave',
+    note: 'A skipped wave pays ×1.1 of the previous wave, compounding across consecutive skips.',
+    sources: [WIKI_WAVE_SKIP],
+  },
+  {
+    from: 'waveSkip',
+    kind: 'scales',
+    to: 'freeUpgrades',
+    note: 'Free upgrades roll per completed wave after skips, so skips grant extra rolls.',
+    sources: [{ ...WIKI_WAVE_SKIP, section: 'Wave Based Interactions' }],
+  },
+  {
+    from: 'currency.gem',
+    kind: 'gates',
+    to: 'card',
+    note: 'Cards, card slots, lab slots, modules and tickets all draw on the same gem pool.',
+    sources: [{ ...WIKI_GEMS, section: 'Spending Gems' }],
+  },
+  {
+    from: 'currency.gem',
+    kind: 'gates',
+    to: 'lab.rush',
+    note: 'Rushing research is a gem sink competing with cards and modules.',
+    sources: [{ ...WIKI_GEMS, section: 'Spending Gems' }],
+  },
+  {
+    from: 'tournament.league',
+    kind: 'gates',
+    to: 'currency.key',
+    note: 'Keys come only from a top-15 placement in Legend league.',
+    sources: [WIKI_KEYS],
+  },
+  {
+    from: 'currency.key',
+    kind: 'gates',
+    to: 'card.slot',
+    note: 'Card slots beyond 22 need key upgrades in the harmony tech tree.',
+    sources: [WIKI_KEYS],
+  },
+]

@@ -1,4 +1,4 @@
-import { clampAssistMultiplierEfficiencyPct } from '../internal/assist-module-efficiency'
+import { clampAssistMultiplierEfficiencyPct } from './assist-module-efficiency'
 import { computeModuleStat, type ModuleCalcType } from '../data/module-bonus'
 import { computeLabValueAtLevel, getSharedToolLabs } from '../data/index'
 import {

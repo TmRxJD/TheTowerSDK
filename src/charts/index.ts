@@ -1,0 +1,41 @@
+/**
+ * Charts — the catalog of views over this game's data, and the data behind them.
+ *
+ * ## The boundary
+ *
+ * This module answers *what charts exist and what is in them*. It does not
+ * answer *how they look*. Rendering, styling, layout, the spreadsheet studio and
+ * all localisation stay with the application consuming this package.
+ *
+ * Everything here ships canonical English. A consumer needing another language
+ * wraps these strings; nothing in the SDK reaches for a translation layer.
+ *
+ * ## Why charts belong in the SDK at all
+ *
+ * A chart is a view over game data, so its definition is game data. Keeping the
+ * catalog outside meant the SDK could not answer "what do we know about
+ * Ultimate Weapon Enhancements?" even though a chart documenting them existed —
+ * the knowledge was real, validated, and unreachable from the package that owns
+ * game knowledge.
+ *
+ * `chart-mechanic-links` closes that loop: it maps each chart to the entities in
+ * `thetowersdk/knowledge` it documents, so a mechanic can find its chart and a
+ * chart can find its mechanic.
+ */
+export {
+  findChartByPathId,
+  findChartsByRendererKey,
+  listChartRendererKeys,
+  SHARED_CHART_REGISTRY,
+  type SharedChartDefinition,
+  type SharedChartRendererKey,
+} from './chart-registry'
+
+export { CHART_MECHANIC_LINKS } from './chart-mechanic-links'
+
+export * from './chart-data'
+export * from './uw-plus-chart-data'
+export * from './golden-tower-chart-data'
+export * from './gold-bot-vs-death-wave-uptime-data'
+export * from './chart-data-lookup'
+export * from './chart-calculator-links'

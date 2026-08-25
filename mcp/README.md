@@ -14,7 +14,7 @@ pnpm mcp
 It speaks MCP over stdio, so register it as a stdio server.
 
 **Tracker monorepo:** use the slim pair — `tools/tower-mcp/mechanics-server.mjs` (`tower`) for
-mechanics and `tools/tower-mcp/gov-server.mjs` (`tower-gov`) for commits/governance. Do **not**
+mechanics. Do **not**
 register this package server and the monorepo servers together (duplicate tools / catalog overflow).
 The full CI harness is `tools/tower-mcp/server.mjs` (not for IDE CallMcpTool).
 
@@ -56,7 +56,6 @@ Claude Code: `claude mcp add thetowersdk -- node ./node_modules/thetowersdk/mcp/
 | `ep_graph_*` · sheet tools | On monorepo `tower` / full harness — Effective Paths oracle |
 
 Monorepo slim `tower` tool list: [`tools/tower-mcp/slim-catalog.mjs`](../../../tools/tower-mcp/slim-catalog.mjs).  
-Governance (`commit_*`, `schema_*`, `pointer_*`, …): [`packages/governance-engine/README.md`](../../governance-engine/README.md).
 
 `initialize` returns `instructions` with the compliance pipeline so clients inject it into context.
 
@@ -97,6 +96,15 @@ TOWER_WIKI_DIR=/path/to/wiki-pages pnpm mcp
 
 Every response reports `source: "local" | "cache" | "fandom"`, so a local page that may be stale is
 distinguishable from a fresh fetch.
+
+A title that is not on disk still reaches the network by default, which on a machine with no
+connection means waiting for a socket timeout instead of getting a usable answer. Add
+`TOWER_WIKI_OFFLINE=1` to forbid that entirely — anything not already in `TOWER_WIKI_DIR` or the
+local cache comes back immediately as an error with a `hint`, never a hang:
+
+```bash
+TOWER_WIKI_DIR=/path/to/wiki-pages TOWER_WIKI_OFFLINE=1 pnpm mcp
+```
 
 This is the integration point for a separate content package. Wiki text is **CC-BY-SA** and this
 package is MIT, so pages are fetched rather than bundled; content distributed under its own licence

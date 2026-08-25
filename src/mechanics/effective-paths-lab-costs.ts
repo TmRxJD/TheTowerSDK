@@ -20,6 +20,7 @@
  * "to reach level L" for each.
  */
 
+import { ownLookup } from '../internal/own-lookup'
 import { LAB_CATALOG } from '../data/labs-catalog'
 import { parseDurationToHours } from '../formatting/numbers'
 
@@ -52,7 +53,7 @@ export const EFFECTIVE_PATHS_LAB_KEYS: Readonly<Record<string, string>> = {
 
 /** Resolve a path's label to its catalog key, or `null` when it is not a lab. */
 export function findEffectivePathsLabKey(name: string): string | null {
-  return EFFECTIVE_PATHS_LAB_KEYS[name] ?? null
+  return ownLookup(EFFECTIVE_PATHS_LAB_KEYS, name) ?? null
 }
 
 /**

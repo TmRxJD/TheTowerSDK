@@ -1,3 +1,4 @@
+import { atIndex } from '../own-lookup'
 import {
   buildLevelOptions,
   findRarityLabel,
@@ -134,7 +135,7 @@ export function buildModuleSubstatRarityEntries(
 }
 
 export function formatModuleSubstatRarityOptionLabel(rarityIndex: number): string {
-  return MODULE_SUBSTAT_BASE_RARITIES[rarityIndex] ?? String(rarityIndex)
+  return atIndex(MODULE_SUBSTAT_BASE_RARITIES, rarityIndex) ?? String(rarityIndex)
 }
 
 export function getModuleSubstatRarityByIndex(index: number): ModuleSubstatCanonicalRarity {

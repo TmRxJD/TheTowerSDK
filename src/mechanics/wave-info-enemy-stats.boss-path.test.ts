@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { buildStandardTierBattleConditions } from './battle-condition-config'
 import { bcCounterLabBenefitIncreaseAtLevel, computeEnemyStatLevelWithBcLabs } from './bc-counter-labs'
-import { getBasicEnemyWaveStats } from '../internal/enemy-wave-stats'
+import { getBasicEnemyWaveStats } from './enemy-wave-stats'
 import { getWaveInfoEnemyStatsUnfloored, WAVE_INFO_ENEMY_RULES } from './wave-info-enemy-stats'
 import { computeLabValueAtLevel, getSharedToolLabs } from '../data/index'
 

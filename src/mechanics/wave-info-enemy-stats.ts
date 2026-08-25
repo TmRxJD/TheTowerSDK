@@ -12,7 +12,7 @@
  *   4. Enemy research labs (−0.4% per level additive on matching row)
  *   5. Page perks — enemy-wave-info-pipeline / enemy-stat-display
  */
-import type { EnemyWaveEnemyType } from '../internal/enemy-wave-stats'
+import type { EnemyWaveEnemyType } from './enemy-wave-stats'
 import {
   aggregateWorkshopTableFloat,
   type BattleConditionSelection,

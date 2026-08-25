@@ -4,7 +4,7 @@
  * Wave Info page perks are applied in `enemy-wave-info-pipeline.ts`.
  */
 
-import type { EnemyWaveEnemyType } from '../internal/enemy-wave-stats'
+import type { EnemyWaveEnemyType } from './enemy-wave-stats'
 import { clamp } from './math'
 
 /** Trade-off perk indices for common enemy header stats. */

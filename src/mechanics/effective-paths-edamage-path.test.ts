@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { DAMAGE_PLAN_VARIANTS, planEffectiveDamagePath } from './effective-paths-edamage-plan'
 import { configFromSheet, levelsFromSheet } from './effective-paths-edamage-compute.test'
-import fixture from './effective-paths-edamage-path.fixtures.json'
+import fixture from '../../fixtures/mechanics/effective-paths-edamage-path.fixtures.json'
 
 /**
  * The eDamage path itself, against the one the sheet plans.

@@ -1,6 +1,6 @@
 import { botEffectiveRadius } from './bots'
 import { pickBotActivationDestination } from './bot-movement'
-import { UnityRandom } from '../internal/unity-random'
+import { UnityRandom } from './unity-random'
 
 export const BOT_MEDAL_SIM_STEP_SECONDS = 0.5
 export const BOT_MEDAL_SIM_DURATION_SECONDS = 1800

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import fixtures from './effective-paths-formula.fixtures.json'
-import liveDocument from './effective-paths-live-document.fixtures.json'
+import fixtures from '../../fixtures/mechanics/effective-paths-formula.fixtures.json'
+import liveDocument from '../../fixtures/mechanics/effective-paths-live-document.fixtures.json'
 import {
   EffectivePathsFormulaError,
   parseSheetFunction,

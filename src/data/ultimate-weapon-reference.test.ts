@@ -21,7 +21,7 @@ interface UwReference {
 }
 
 const reference = JSON.parse(
-  readFileSync(join(__dirname, 'fixtures', 'effective-paths-ultimate-weapons.json'), 'utf8'),
+  readFileSync(join(__dirname, '..', '..', 'fixtures', 'data', 'effective-paths-ultimate-weapons.json'), 'utf8'),
 ) as UwReference
 
 /**

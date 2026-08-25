@@ -1,0 +1,231 @@
+/**
+ * Damage reduction: what actually reaches the tower after every layer has taken its cut.
+ *
+ * The layers are multiplicative and ordered, not additive. Two 50% reductions leave 25%
+ * getting through, not 0% — so summing the percentages, which is the obvious thing to do,
+ * overstates mitigation badly and gets worse the more layers are on.
+ *
+ * Each layer has both a toggle and a value, because "off" and "set to zero" are different
+ * states a UI has to represent: a player who has not unlocked Chrono Field is not the same
+ * as one who has it at 0%. Note that the distinction lives on the INPUT — `layers` lists
+ * only steps that removed something, so both cases produce no step at all.
+ */
+import { applyDamageReduxLayerStack } from '../mechanics/index'
+import {
+  type CalculatorBuilder,
+  type CalculatorResultBase,
+  clampMagnitude,
+  clampNumber,
+} from './types'
+
+export interface DamageReductionInput {
+  /** Incoming damage before any reduction. */
+  rawDamage: number
+
+  useDefensePercent: boolean
+  /** Defense %, which is capped at 98 in game. */
+  defensePercent: number
+
+  useDefenseAbsolute: boolean
+  /** Flat damage removed before the percentage layers. */
+  defenseAbsolute: number
+
+  useChronoField: boolean
+  chronoReductionPercent: number
+
+  useFlameBot: boolean
+  flameBotReductionPercent: number
+
+  useNmp: boolean
+  nmpReductionPercent: number
+
+  usePrimordialCollapse: boolean
+  primordialCollapseReductionPercent: number
+
+  useChainThunder: boolean
+  chainThunderReductionPercent: number
+}
+
+export interface DamageReductionLayer {
+  readonly key: string
+  /** What this layer removed, as a percentage of what reached it. */
+  readonly reductionPercent: number
+  /** Damage remaining after this layer. */
+  readonly remaining: number
+}
+
+export interface DamageReductionResult extends CalculatorResultBase {
+  /** Damage that reaches the tower. */
+  readonly finalDamage: number
+  /** Share of the raw damage removed overall, 0–1. */
+  readonly totalReduction: number
+  /**
+   * Each layer that actually removed damage, in the order it applied, for a waterfall.
+   * A layer that is off — or on but at 0% — removes nothing and so has no step here.
+   */
+  readonly layers: readonly DamageReductionLayer[]
+}
+
+const defaults: DamageReductionInput = {
+  rawDamage: 1_000_000,
+  useDefensePercent: true,
+  defensePercent: 50,
+  useDefenseAbsolute: false,
+  defenseAbsolute: 0,
+  useChronoField: false,
+  chronoReductionPercent: 0,
+  useFlameBot: false,
+  flameBotReductionPercent: 0,
+  useNmp: false,
+  nmpReductionPercent: 0,
+  usePrimordialCollapse: false,
+  primordialCollapseReductionPercent: 0,
+  useChainThunder: false,
+  chainThunderReductionPercent: 0,
+}
+
+/** Defense % is capped in game; the others are ordinary percentages. */
+const DEFENSE_PERCENT_CAP = 98
+
+export const damageReductionCalculator: CalculatorBuilder<DamageReductionInput, DamageReductionResult> = {
+  id: 'damage.reduction',
+  title: 'Damage reduction',
+  summary: 'How much of an incoming hit reaches the tower once every mitigation layer applies.',
+
+  fields: [
+    { key: 'rawDamage', label: 'Incoming damage', kind: 'number', min: 0 },
+
+    { key: 'useDefensePercent', label: 'Defense % enabled', kind: 'boolean' },
+    {
+      key: 'defensePercent',
+      label: 'Defense %',
+      kind: 'number',
+      unit: 'percent',
+      min: 0,
+      max: DEFENSE_PERCENT_CAP,
+      help: `Capped at ${DEFENSE_PERCENT_CAP}% in game.`,
+    },
+
+    { key: 'useDefenseAbsolute', label: 'Defense Absolute enabled', kind: 'boolean' },
+    {
+      key: 'defenseAbsolute',
+      label: 'Defense Absolute',
+      kind: 'number',
+      min: 0,
+      help: 'Flat damage removed. A large value floors everything and hides the other layers.',
+    },
+
+    { key: 'useChronoField', label: 'Chrono Field enabled', kind: 'boolean' },
+    { key: 'chronoReductionPercent', label: 'Chrono Field', kind: 'number', unit: 'percent', min: 0, max: 100 },
+
+    { key: 'useFlameBot', label: 'Flame Bot enabled', kind: 'boolean' },
+    { key: 'flameBotReductionPercent', label: 'Flame Bot', kind: 'number', unit: 'percent', min: 0, max: 100 },
+
+    { key: 'useNmp', label: 'NMP enabled', kind: 'boolean' },
+    { key: 'nmpReductionPercent', label: 'NMP', kind: 'number', unit: 'percent', min: 0, max: 100 },
+
+    { key: 'usePrimordialCollapse', label: 'Primordial Collapse enabled', kind: 'boolean' },
+    {
+      key: 'primordialCollapseReductionPercent',
+      label: 'Primordial Collapse',
+      kind: 'number',
+      unit: 'percent',
+      min: 0,
+      max: 100,
+    },
+
+    { key: 'useChainThunder', label: 'Chain Thunder enabled', kind: 'boolean' },
+    { key: 'chainThunderReductionPercent', label: 'Chain Thunder', kind: 'number', unit: 'percent', min: 0, max: 100 },
+  ],
+
+  defaults,
+
+  normalize(input = {}) {
+    const bool = (value: unknown, fallback: boolean): boolean =>
+      typeof value === 'boolean' ? value : fallback
+    const percent = (value: unknown, fallback: number, max = 100): number =>
+      clampNumber(value, 0, max, fallback)
+
+    return {
+      rawDamage: clampMagnitude(input.rawDamage, defaults.rawDamage),
+
+      useDefensePercent: bool(input.useDefensePercent, defaults.useDefensePercent),
+      defensePercent: percent(input.defensePercent, defaults.defensePercent, DEFENSE_PERCENT_CAP),
+
+      useDefenseAbsolute: bool(input.useDefenseAbsolute, defaults.useDefenseAbsolute),
+      defenseAbsolute: clampMagnitude(input.defenseAbsolute, defaults.defenseAbsolute),
+
+      useChronoField: bool(input.useChronoField, defaults.useChronoField),
+      chronoReductionPercent: percent(input.chronoReductionPercent, defaults.chronoReductionPercent),
+
+      useFlameBot: bool(input.useFlameBot, defaults.useFlameBot),
+      flameBotReductionPercent: percent(input.flameBotReductionPercent, defaults.flameBotReductionPercent),
+
+      useNmp: bool(input.useNmp, defaults.useNmp),
+      nmpReductionPercent: percent(input.nmpReductionPercent, defaults.nmpReductionPercent),
+
+      usePrimordialCollapse: bool(input.usePrimordialCollapse, defaults.usePrimordialCollapse),
+      primordialCollapseReductionPercent: percent(
+        input.primordialCollapseReductionPercent,
+        defaults.primordialCollapseReductionPercent,
+      ),
+
+      useChainThunder: bool(input.useChainThunder, defaults.useChainThunder),
+      chainThunderReductionPercent: percent(
+        input.chainThunderReductionPercent,
+        defaults.chainThunderReductionPercent,
+      ),
+    }
+  },
+
+  compute(rawInput = {}) {
+    const input = this.normalize(rawInput)
+    const notes: string[] = []
+
+    if (typeof rawInput.defensePercent === 'number' && rawInput.defensePercent > DEFENSE_PERCENT_CAP) {
+      notes.push(`Defense % caps at ${DEFENSE_PERCENT_CAP}% in game; the value was clamped.`)
+    }
+
+    const { final, steps } = applyDamageReduxLayerStack(input.rawDamage, {
+      useDefense: input.useDefensePercent,
+      defenseRel: input.defensePercent,
+      useDefAbs: input.useDefenseAbsolute,
+      defenseAbsolute: input.defenseAbsolute,
+      useChrono: input.useChronoField,
+      chronoReductionPct: input.chronoReductionPercent,
+      useFlameBot: input.useFlameBot,
+      flameBotReductionPct: input.flameBotReductionPercent,
+      useNmp: input.useNmp,
+      nmpTotalReductionPct: input.nmpReductionPercent,
+      usePc: input.usePrimordialCollapse,
+      pcReductionPct: input.primordialCollapseReductionPercent,
+      useChainThunder: input.useChainThunder,
+      chainThunderReductionPct: input.chainThunderReductionPercent,
+    })
+
+    const layers = steps.map(step => ({
+      key: step.key,
+      reductionPercent: step.reductionPct,
+      remaining: step.value,
+    }))
+
+    /*
+     * A flat Defense Absolute large enough to floor the hit makes every later layer look
+     * like it does nothing — which is how a control gets reported as broken when it is
+     * simply downstream of something that already reduced the damage to zero.
+     */
+    if (input.useDefenseAbsolute && final === 0 && input.rawDamage > 0) {
+      notes.push('Defense Absolute already removes the whole hit, so the later layers cannot change the result.')
+    }
+    if (layers.length === 0) {
+      notes.push('No reduction layers are enabled, so the full hit lands.')
+    }
+
+    return {
+      finalDamage: final,
+      totalReduction: input.rawDamage > 0 ? 1 - final / input.rawDamage : 0,
+      layers,
+      notes,
+    }
+  },
+}

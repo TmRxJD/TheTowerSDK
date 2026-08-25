@@ -3,7 +3,7 @@ import {
   type MVNMode,
   type RarityPick,
   type UptimeCoreState,
-} from './uptime-core'
+} from '../mechanics/uptime-core'
 
 function clampBotCdLevel(level: number | null | undefined): number | null {
   if (level == null) return null

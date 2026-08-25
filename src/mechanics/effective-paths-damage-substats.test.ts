@@ -5,7 +5,7 @@ import {
   combinedSubstat,
 } from './effective-paths-damage-substats'
 import { assistSubstatCap } from './effective-paths-generics'
-import fixtures from './effective-paths-damage-substats.fixtures.json'
+import fixtures from '../../fixtures/mechanics/effective-paths-damage-substats.fixtures.json'
 
 /**
  * How the damage tab reads a substat, and bullets per second.

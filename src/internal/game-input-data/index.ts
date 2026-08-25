@@ -88,10 +88,12 @@ export {
   buildUwStatLevelEntries,
   buildUwStatOptionLabel,
   buildUwStatFieldLabel,
+} from './uw-stat-dropdown-math'
+export {
   computeDefaultUwStatStoneLevel,
   findUwStatSpec,
   type UwStatSpec,
-} from './uw-stat-dropdown-math'
+} from '../../mechanics/uw-stat-values'
 export {
   evaluateUwStatDropdownOptions,
   findUwStatDropdownBinding,

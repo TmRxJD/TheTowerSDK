@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import fixtures from './effective-paths-workshop-values.fixtures.json'
+import fixtures from '../../fixtures/mechanics/effective-paths-workshop-values.fixtures.json'
 import {
   EFFECTIVE_HEALTH_WORKSHOP_STATS,
   WORKSHOP_STAT_MAPPINGS,

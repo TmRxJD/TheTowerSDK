@@ -20,7 +20,7 @@ interface UnlockReference {
 }
 
 const reference = JSON.parse(
-  readFileSync(join(__dirname, 'fixtures', 'effective-paths-lab-unlocks.json'), 'utf8'),
+  readFileSync(join(__dirname, '..', '..', 'fixtures', 'data', 'effective-paths-lab-unlocks.json'), 'utf8'),
 ) as UnlockReference
 
 /**

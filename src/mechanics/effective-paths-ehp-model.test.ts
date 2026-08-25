@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import fixtures from './effective-paths-ehp-model.fixtures.json'
+import fixtures from '../../fixtures/mechanics/effective-paths-ehp-model.fixtures.json'
 import {
   chainThunderReduction,
   chronoFieldReduction,

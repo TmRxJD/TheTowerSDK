@@ -1,6 +1,6 @@
-import type { EnemyWaveEnemyType } from '../internal/enemy-wave-stats'
+import type { EnemyWaveEnemyType } from './enemy-wave-stats'
 import { clampCampaignTier } from '../data/index'
-import { getBasicEnemyWaveStats } from '../internal/enemy-wave-stats'
+import { getBasicEnemyWaveStats } from './enemy-wave-stats'
 import { getTierBattleConditionLevel } from '../data/index'
 import type { TournamentLeague } from '../data/index'
 import { applyTierBattleConditionsToSkipChance } from './enemy-level-skip'

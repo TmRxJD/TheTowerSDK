@@ -7,7 +7,7 @@ import {
   superTowerEffectiveBonus,
   superTowerEffectiveUltimateBonus,
 } from './effective-paths-damage-stats'
-import fixtures from './effective-paths-damage-stats3.fixtures.json'
+import fixtures from '../../fixtures/mechanics/effective-paths-damage-stats3.fixtures.json'
 
 /**
  * Super Tower, Spotlight coverage and the shockwave, against the live sheet.

@@ -1,5 +1,7 @@
 /**
- * Thin Tower domain plugin for @tmrxjd/governance-engine PluginHost.
+ * Thin Tower domain plugin for the authoring governance host.
+ *
+ * Authoring-only: excluded from the published package.
  * Full doctor probes live in doctor/tower-probes.ts (createTowerDoctorPlugin).
  */
 export {

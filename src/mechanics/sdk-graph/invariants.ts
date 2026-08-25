@@ -33,6 +33,10 @@ function hasRecheckableEvidence(node: SdkGraph['nodes'][string]): boolean {
   if ((node.wikiPages?.length ?? 0) > 0) return true
   if (node.lambdaName) return true
   if ((node.codeSymbols?.length ?? 0) > 0) return true
+  // An oracle node carries origin, ref, source version and verification date on
+  // every claim it makes, and its assertions are exercised by the knowledge
+  // suite. That is recheckable in the sense this invariant means.
+  if (node.oracleNodeId) return true
   return false
 }
 

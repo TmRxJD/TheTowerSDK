@@ -375,6 +375,19 @@ export interface EffectiveDamageConfig {
   waveAcceleratorRecovery: number
   /** `AY34` — coins in hand, which Perfect Freeze scales off. */
   cash: number
+  /**
+   * The Cash Bonus workshop enhancement the account already owns.
+   *
+   * Not one of `stats`: Cash Bonus is not a damage stat and has no row in that
+   * block. It reaches effective damage only through Perfect Freeze, which
+   * scales with `log10(cash)` — so raising it re-bases `cash` rather than
+   * multiplying any damage term.
+   *
+   * `eDamage Coins!$BU$5`, and it has to come from THAT tab. `BU5` on `eDamage`
+   * is `criticalChanceMastery`, a different quantity entirely, so a config
+   * built from the planner tab cannot supply this and must be told.
+   */
+  cashBonusEnhancementLevel: number
 
   stats: Readonly<Record<DamageWorkshopStat, DamageStatSource>>
   modules: Readonly<Record<ModuleSlot, DamageModuleSource>>
@@ -485,6 +498,28 @@ export interface EffectiveDamageConfig {
     active: boolean
     tierPersonalBest: number
     allTierPersonalBests: readonly number[]
+    /**
+     * The ULTIMATE WEAPON echo's own tier bests, when they differ.
+     *
+     * `TTG_DISSONANT_ATTACK_BOOST` and `TTG_DISSONANT_UW_BOOST` are
+     * byte-identical lambdas -- the type only chooses which cells are passed --
+     * and the sheet passes two DIFFERENT blocks:
+     *
+     *     CY5 = TTG_DISSONANT_ATTACK_BOOST($CX$13, $CX$14:$CX$34, CT5)
+     *     EB5 = TTG_DISSONANT_UW_BOOST($CX$40, $CX$41:$CX$61, CU5)
+     *
+     * On a real account those hold different numbers: `sheet-2` has attack
+     * 5475, 5009, 7526 against uw 5531, 6264, 6191. Each echo tracks its own
+     * per-tier personal bests.
+     *
+     * Optional, and when absent the fields above serve both -- which is right
+     * for any caller that has only one set, and was the only behaviour before
+     * a real account showed the two apart.
+     */
+    ultimateWeapon?: {
+      tierPersonalBest: number
+      allTierPersonalBests: readonly number[]
+    }
   }
 }
 
@@ -512,6 +547,7 @@ export function zeroEffectiveDamageConfig(): EffectiveDamageConfig {
     superCritMultiBase: 1,
     waveAcceleratorRecovery: 0,
     cash: 0,
+    cashBonusEnhancementLevel: 0,
     stats: fromKeys(DAMAGE_WORKSHOP_STATS, () => ({ ...ZERO_DAMAGE_STAT_SOURCE })),
     modules: fromKeys(MODULE_SLOTS, () => ({ ...ZERO_DAMAGE_MODULE_SOURCE })),
     substats: fromKeys(DAMAGE_SUBSTATS, () => ({ primary: 0, assist: 0 })),

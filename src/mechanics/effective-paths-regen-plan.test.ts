@@ -12,7 +12,7 @@ import {
   effectiveHealthPerks,
   ZERO_EFFECTIVE_HEALTH_LEVELS,
 } from './effective-paths-ehp-model'
-import fixtures from './effective-paths-regen.fixtures.json'
+import fixtures from '../../fixtures/mechanics/effective-paths-regen.fixtures.json'
 
 /**
  * The regen path, against the live sheet.

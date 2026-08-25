@@ -39,17 +39,42 @@ export function toNumberArray(raw: unknown): number[] {
     .filter((item): item is number => item != null)
 }
 
-export function readSaveNumberSource(raw: unknown): unknown[] {
+/**
+ * The live elements of a serialised `List<T>`.
+ *
+ * A C# `List<T>` serialises its BACKING ARRAY, not its contents: `_items` is
+ * the capacity and `_size` is how many of those elements are real. In a single
+ * real save, 29 of 50 list fields have `_items.length > _size` --
+ * `tournamentRecords` carries 176 live entries in a 256-slot array with **80
+ * non-null stale ones** past the end, and `moduleRecords` 106.
+ *
+ * So the tail is not reliably null, and a reader that takes `_items` whole gets
+ * whatever was there before: runs the player has not played, modules they no
+ * longer own. `readSaveNumberSource` has always truncated; three other readers
+ * did not, and each one's safety rested on the padding happening to be null in
+ * the save someone tested with.
+ *
+ * A missing or unreadable `_size` falls back to the whole array, because a list
+ * that cannot say how long it is should not silently read as empty.
+ */
+export function readSaveListItems(raw: unknown): unknown[] {
   if (Array.isArray(raw)) return raw
   if (!raw || typeof raw !== 'object') return []
 
   const list = raw as Record<string, unknown>
-  if (!Array.isArray(list._items)) return []
+  const items = Array.isArray(list._items)
+    ? list._items
+    : Array.isArray(list.items) ? list.items : null
+  if (!items) return []
 
-  const values = list._items
   const size = coerceSaveNumber(list._size)
-  if (size == null) return values
-  return values.slice(0, Math.max(0, Math.floor(size)))
+  if (size == null) return items
+  return items.slice(0, Math.max(0, Math.floor(size)))
+}
+
+/** Numbers from a list. Kept as a name because callers read as numbers. */
+export function readSaveNumberSource(raw: unknown): unknown[] {
+  return readSaveListItems(raw)
 }
 
 export function readIndexedNumberArray(raw: unknown, length: number): number[] {

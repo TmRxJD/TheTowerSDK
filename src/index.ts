@@ -14,3 +14,13 @@ export * from './save'
 
 // Number formatting that matches how the game displays values ("1.23K", "4.5B").
 export * from './formatting'
+
+/*
+ * Own-key lookups, public because the rule they enforce is not SDK-internal.
+ *
+ * Any consumer indexing a record with an id from a save, a sheet, a URL or a user is one
+ * `record[key]` away from getting an `Object.prototype` member back — and `??`, `||` and a
+ * truthiness check all fail to reject one. Sharing the helper is how the same convention
+ * holds on both sides of the package boundary.
+ */
+export { atIndex, hasOwnKey, ownLookup, ownLookupOr } from './internal/own-lookup'

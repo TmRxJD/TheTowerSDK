@@ -9,8 +9,8 @@ import {
   towerDamage,
   tradeOffDamagePerk,
 } from './effective-paths-damage-base'
-import fixtures from './effective-paths-damage-base.fixtures.json'
-import path from './effective-paths-edamage-path.fixtures.json'
+import fixtures from '../../fixtures/mechanics/effective-paths-damage-base.fixtures.json'
+import path from '../../fixtures/mechanics/effective-paths-edamage-path.fixtures.json'
 
 /**
  * The `Base` half of the eDamage composition.

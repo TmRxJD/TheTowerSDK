@@ -22,8 +22,7 @@
  *
  * Seven have no consistent scale against `DVT_WS_VALUE`, because that
  * function's fallback formulas for them are stale — the game's own getters give
- * different curves, which `scripts/read-il2cpp-method-constants.py` reads
- * straight out of `libil2cpp.so`.
+ * different curves.
  *
  * That is a smaller problem than it sounds, and worth stating so nobody
  * repeats the mistake this comment used to make: **no path calls those

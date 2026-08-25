@@ -1,5 +1,5 @@
-import type { Compressor, MVNMode } from '../uptime-core'
-import { MAX_ASSIST_MULTIPLIER_EFFICIENCY_PCT } from '../assist-module-efficiency'
+import type { Compressor, MVNMode } from '../../mechanics/uptime-core'
+import { MAX_ASSIST_MULTIPLIER_EFFICIENCY_PCT } from '../../mechanics/assist-module-efficiency'
 import type { GameDropdownOptionEntry } from './types'
 
 export const UPTIME_MVN_MODES: readonly MVNMode[] = [

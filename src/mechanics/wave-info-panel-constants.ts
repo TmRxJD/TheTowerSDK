@@ -34,46 +34,6 @@ export const WAVE_INFO_TIER_SPAWN_WEIGHT_TABLE = [
   7.285105,
   8.887828,
 ] as const
-export const WAVE_INFO_SPAWN_CAP_TABLE_TIER_GT13 = [
-  63,
-  13,
-  14,
-  10,
-  65,
-  13,
-  13,
-  9,
-  60,
-  14,
-  15,
-  11,
-  62,
-  13,
-  14,
-  11,
-  56,
-  15,
-  16,
-  13,
-] as const
-export const WAVE_INFO_SPAWN_CAP_WAVE_INDEX_THRESHOLDS = [
-  [
-    600,
-    0,
-  ],
-  [
-    1500,
-    4,
-  ],
-  [
-    3500,
-    16,
-  ],
-  [
-    5500,
-    19,
-  ],
-] as const
 export const WAVE_INFO_PROTECTO_RADIUS_TIER_GROWTH_PER_LEVEL = 0.0127 as const
 export const WAVE_INFO_ENEMY_SPEED_WAVE_MULT_CAP = 12 as const
 export const WAVE_INFO_PROTECTO_RADIUS_DISPLAY_SCALE = 10 as const

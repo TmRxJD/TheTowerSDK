@@ -13,7 +13,7 @@ import {
   rapidFireMultiplier,
   ultimateWeaponCriticalMultiplier,
 } from './effective-paths-damage-stats'
-import fixtures from './effective-paths-damage-stats.fixtures.json'
+import fixtures from '../../fixtures/mechanics/effective-paths-damage-stats.fixtures.json'
 
 /**
  * The `EPD_*` damage stats, against the live sheet.

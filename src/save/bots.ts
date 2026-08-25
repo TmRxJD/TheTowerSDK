@@ -17,10 +17,11 @@ import {
   sumBotSyncSlotCosts,
 } from '../data/bots'
 import { BOT_IMPORT_CATALOG, IMPORT_CATALOG_META } from './catalogs/indexes'
-import { getBotSaveLabel } from './catalogs/bots'
+import { findBotCatalogRow, getBotSaveLabel } from './catalogs/bots'
 import {
   coerceSaveNumber,
   readSaveBoolean,
+  readSaveListItems,
 } from './read-values'
 import {
   normalizeSaveBooleanMatrix,
@@ -117,16 +118,56 @@ export interface BotsSaveExtract {
 }
 
 /**
- * Game saves each bot's four upgrade levels as [primary, range, cooldown, secondary].
- * Tracker stat order is [primary, cooldown, secondary, range].
+ * Game save bot stat order to tracker stat order.
+ *
+ * The save stores a bot's four upgrade levels as
+ * `[secondary, range, cooldown, primary]`, where "primary" is the stat the
+ * tracker lists FIRST (Duration, or Damage R. for Flame Bot) and "secondary" is
+ * the one it lists third (Bonus, or Damage for Flame Bot). The tracker order is
+ * `[primary, cooldown, secondary, range]`. So save index 0 and 3 are the two
+ * that swap.
+ *
+ * This previously read index 0 as primary and index 3 as secondary, which put
+ * every bot's Duration on its Bonus and vice versa. Three sources say otherwise
+ * and agree with each other:
+ *
+ *   - the game's documented save format, which spells out `levelsOrder` per bot
+ *     (Flame Bot: 0 Damage, 1 Range, 2 Cooldown, 3 Damage R.);
+ *   - the real save fixture, where Bot Bot reads `[19, 20, 15, 30]` and the old
+ *     mapping made that a Bonus of 30 against a ceiling of 19 -- an impossible
+ *     level -- while this one makes it a bot maxed on all four stats;
+ *   - the IDS block of all nine community sheets, whose per-bot row order
+ *     matches `BOT_UPGRADE_STATS_BY_BOT` and not the save's.
+ *
+ * The two tests that covered this could not catch it: both fixtures had
+ * `saveLevels[0] === saveLevels[3]`, so the swapped positions held equal values
+ * and the assertions passed either way.
  */
 export function remapBotLevelsFromGameSaveOrder(saveLevels: number[]): number[] {
   const padded = toNumberArrayPreserveLength(saveLevels, BOT_SAVE_STAT_STRIDE)
   return [
+    padded[3] ?? 0,
+    padded[2] ?? 0,
     padded[0] ?? 0,
+    padded[1] ?? 0,
+  ]
+}
+
+/**
+ * Tracker stat order back to game save bot stat order.
+ *
+ * The exact inverse of {@link remapBotLevelsFromGameSaveOrder}, kept beside it
+ * so the permutation lives in one place. Needed when BUILDING a save-shaped
+ * object rather than reading one -- the IDS onboarding adapter lists a bot's
+ * upgrades in tracker order and has to emit them in the save's.
+ */
+export function remapBotLevelsToGameSaveOrder(trackerLevels: number[]): number[] {
+  const padded = toNumberArrayPreserveLength(trackerLevels, BOT_SAVE_STAT_STRIDE)
+  return [
     padded[2] ?? 0,
     padded[3] ?? 0,
     padded[1] ?? 0,
+    padded[0] ?? 0,
   ]
 }
 
@@ -162,12 +203,9 @@ function sumLevelRow(row: number[]): number {
   return row.reduce((sum, level) => sum + Math.max(0, level), 0)
 }
 
+/** Bot presets, truncated to the list's own `_size` rather than its capacity. */
 function readListItems(raw: unknown): unknown[] {
-  if (Array.isArray(raw)) return raw
-  if (raw && typeof raw === 'object' && Array.isArray((raw as Record<string, unknown>)._items)) {
-    return (raw as { _items: unknown[] })._items
-  }
-  return []
+  return readSaveListItems(raw)
 }
 
 function readUserBotDataRow(raw: unknown): UserBotDataSaveRow {
@@ -256,7 +294,7 @@ function buildBotRowsFromV28(root: Record<string, unknown>, presetIndex: number)
 
     return {
       index,
-      name: BOT_IMPORT_CATALOG[index]?.name ?? bot.name ?? null,
+      name: findBotCatalogRow(index)?.name ?? bot.name ?? null,
       label: getBotSaveLabel(index) || bot.label,
       unlocked,
       active: activeRow.active,
@@ -388,7 +426,7 @@ function buildLegacyBotRows(
     const statLevels = statSlices[index] ?? []
     return {
       index,
-      name: BOT_IMPORT_CATALOG[index]?.name ?? null,
+      name: findBotCatalogRow(index)?.name ?? null,
       label: getBotSaveLabel(index),
       unlocked: unlocked[index] === true,
       active: active[index] ?? false,

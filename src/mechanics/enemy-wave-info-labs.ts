@@ -7,7 +7,8 @@
  * Boss HP reads persisted workshop table float: `waveBase × 20 × (1 + tf/−100)`.
  * LabCalculations writes tf as `benefitPct × labValue × hpFixedMult(20)`.
  */
-import type { EnemyWaveEnemyType } from '../internal/enemy-wave-stats'
+import { ownLookup } from '../internal/own-lookup'
+import type { EnemyWaveEnemyType } from './enemy-wave-stats'
 import { workshopMultFromTableFloat } from './battle-condition-config'
 import { WAVE_INFO_ENEMY_RULES, WAVE_INFO_WORKSHOP_OFFSETS } from './wave-info-enemy-constants'
 
@@ -66,7 +67,7 @@ export function enemyLabSlugForWorkshopOffset(
   stat: 'hp' | 'damage',
 ): string | undefined {
   const map = stat === 'hp' ? WAVE_INFO_ENEMY_LAB_HP_OFFSETS : WAVE_INFO_ENEMY_LAB_DAMAGE_OFFSETS
-  return map[offset]
+  return ownLookup(map, offset)
 }
 
 /** Lab slug that affects this Wave Info row (for UI metadata). */

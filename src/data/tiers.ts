@@ -1,3 +1,5 @@
+import { canonicalBattleConditionName } from './battle-condition-names'
+
 export interface TierBattleConditionDefinition {
   name: string
   description: string
@@ -82,9 +84,9 @@ export const TIER_BATTLE_CONDITION_DEFINITIONS = [
   { name: 'Boss\'s Ultimate', description: 'Bosses spawn with overheal that boosts their health by a percentage.' },
   { name: 'Ranged Ultimate', description: 'Ranged enemy projectiles disable the tower from firing for a duration.' },
   { name: 'Fast\'s Ultimate', description: 'Fast enemies buff nearby enemies to match their speed.' },
-  { name: 'Scatter Ultimate', description: 'Scatter children gain increased health by a percentage.' },
-  { name: 'Ray Ultimate', description: 'Ray enemies fire faster by a percentage.' },
-  { name: 'Vampire Ultimate', description: 'Vampires drain faster by a percentage.' },
+  { name: 'Scatter\'s Ultimate', description: 'Scatter children gain increased health by a percentage.' },
+  { name: 'Ray\'s Ultimate', description: 'Ray enemies fire faster by a percentage.' },
+  { name: 'Vampire\'s Ultimate', description: 'Vampires drain faster by a percentage.' },
   { name: 'Saboteur\'s Ultimate', description: 'Saboteur fleet enemies have a {LEVEL/2}% chance to attack through the wall.' },
   { name: 'Commander\'s Ultimate', description: 'When Commander fleet enemies pulse in tower range, tower attack and health are reduced by 1 for the rest of the run.' },
   { name: 'Overcharge\'s Ultimate', description: 'Overcharge returning projectiles gain +LEVEL/200 exponent scaling on damage.' },
@@ -158,9 +160,9 @@ export const TIER_DATA = [
     buildBattleCondition('Plasma Cannon Resistance', 60),
     buildBattleCondition('Protector\'s Ultimate', 50),
     buildBattleCondition('Tank\'s Ultimate', 35),
-    buildBattleCondition('Scatter Ultimate', 20),
-    buildBattleCondition('Ray Ultimate', 20),
-    buildBattleCondition('Vampire Ultimate', 20),
+    buildBattleCondition('Scatter\'s Ultimate', 20),
+    buildBattleCondition('Ray\'s Ultimate', 20),
+    buildBattleCondition('Vampire\'s Ultimate', 20),
     buildBattleCondition('More Bosses', 5),
     buildBattleCondition('ELS Reduction', 25),
   ]),
@@ -173,9 +175,9 @@ export const TIER_DATA = [
     buildBattleCondition('Plasma Cannon Resistance', 70),
     buildBattleCondition('Protector\'s Ultimate', 65),
     buildBattleCondition('Tank\'s Ultimate', 50),
-    buildBattleCondition('Scatter Ultimate', 35),
-    buildBattleCondition('Ray Ultimate', 35),
-    buildBattleCondition('Vampire Ultimate', 35),
+    buildBattleCondition('Scatter\'s Ultimate', 35),
+    buildBattleCondition('Ray\'s Ultimate', 35),
+    buildBattleCondition('Vampire\'s Ultimate', 35),
     buildBattleCondition('More Bosses', 5),
     buildBattleCondition('ELS Reduction', 30),
     buildBattleCondition('Fast\'s Ultimate', 20),
@@ -189,9 +191,9 @@ export const TIER_DATA = [
     buildBattleCondition('Plasma Cannon Resistance', 80),
     buildBattleCondition('Protector\'s Ultimate', 80),
     buildBattleCondition('Tank\'s Ultimate', 65),
-    buildBattleCondition('Scatter Ultimate', 50),
-    buildBattleCondition('Ray Ultimate', 50),
-    buildBattleCondition('Vampire Ultimate', 50),
+    buildBattleCondition('Scatter\'s Ultimate', 50),
+    buildBattleCondition('Ray\'s Ultimate', 50),
+    buildBattleCondition('Vampire\'s Ultimate', 50),
     buildBattleCondition('More Bosses', 5),
     buildBattleCondition('ELS Reduction', 35),
     buildBattleCondition('Fast\'s Ultimate', 35),
@@ -206,9 +208,9 @@ export const TIER_DATA = [
     buildBattleCondition('Plasma Cannon Resistance', 90),
     buildBattleCondition('Protector\'s Ultimate', 95),
     buildBattleCondition('Tank\'s Ultimate', 80),
-    buildBattleCondition('Scatter Ultimate', 65),
-    buildBattleCondition('Ray Ultimate', 65),
-    buildBattleCondition('Vampire Ultimate', 65),
+    buildBattleCondition('Scatter\'s Ultimate', 65),
+    buildBattleCondition('Ray\'s Ultimate', 65),
+    buildBattleCondition('Vampire\'s Ultimate', 65),
     buildBattleCondition('More Bosses', 5),
     buildBattleCondition('ELS Reduction', 40),
     buildBattleCondition('Fast\'s Ultimate', 50),
@@ -216,7 +218,7 @@ export const TIER_DATA = [
     buildBattleCondition('Basic\'s Ultimate', 20),
     buildBattleCondition('Mass Enforcement', 1),
   ]),
-  buildTierData(22, 75, 21, 300, [
+  buildTierData(22, 72, 21, 300, [
     buildBattleCondition('Orb Resistance', 95),
     buildBattleCondition('Death Ray Resistance', 95),
     buildBattleCondition('Thorns Resistance', 95),
@@ -225,9 +227,9 @@ export const TIER_DATA = [
     buildBattleCondition('Plasma Cannon Resistance', 90),
     buildBattleCondition('Protector\'s Ultimate', 95),
     buildBattleCondition('Tank\'s Ultimate', 80),
-    buildBattleCondition('Scatter Ultimate', 80),
-    buildBattleCondition('Ray Ultimate', 80),
-    buildBattleCondition('Vampire Ultimate', 80),
+    buildBattleCondition('Scatter\'s Ultimate', 80),
+    buildBattleCondition('Ray\'s Ultimate', 80),
+    buildBattleCondition('Vampire\'s Ultimate', 80),
     buildBattleCondition('More Bosses', 5),
     buildBattleCondition('ELS Reduction', 45),
     buildBattleCondition('Fast\'s Ultimate', 65),
@@ -236,7 +238,7 @@ export const TIER_DATA = [
     buildBattleCondition('Mass Enforcement', 1),
     buildBattleCondition('Saboteur\'s Ultimate', 20),
   ]),
-  buildTierData(23, 92, 22, 300, [
+  buildTierData(23, 86, 22, 300, [
     buildBattleCondition('Orb Resistance', 95),
     buildBattleCondition('Death Ray Resistance', 95),
     buildBattleCondition('Thorns Resistance', 95),
@@ -245,9 +247,9 @@ export const TIER_DATA = [
     buildBattleCondition('Plasma Cannon Resistance', 90),
     buildBattleCondition('Protector\'s Ultimate', 95),
     buildBattleCondition('Tank\'s Ultimate', 80),
-    buildBattleCondition('Scatter Ultimate', 80),
-    buildBattleCondition('Ray Ultimate', 80),
-    buildBattleCondition('Vampire Ultimate', 80),
+    buildBattleCondition('Scatter\'s Ultimate', 80),
+    buildBattleCondition('Ray\'s Ultimate', 80),
+    buildBattleCondition('Vampire\'s Ultimate', 80),
     buildBattleCondition('More Bosses', 5),
     buildBattleCondition('ELS Reduction', 50),
     buildBattleCondition('Fast\'s Ultimate', 80),
@@ -257,7 +259,7 @@ export const TIER_DATA = [
     buildBattleCondition('Saboteur\'s Ultimate', 35),
     buildBattleCondition('Commander\'s Ultimate', 20),
   ]),
-  buildTierData(24, 115, 23, 300, [
+  buildTierData(24, 103, 23, 300, [
     buildBattleCondition('Orb Resistance', 95),
     buildBattleCondition('Death Ray Resistance', 95),
     buildBattleCondition('Thorns Resistance', 95),
@@ -266,9 +268,9 @@ export const TIER_DATA = [
     buildBattleCondition('Plasma Cannon Resistance', 90),
     buildBattleCondition('Protector\'s Ultimate', 95),
     buildBattleCondition('Tank\'s Ultimate', 80),
-    buildBattleCondition('Scatter Ultimate', 80),
-    buildBattleCondition('Ray Ultimate', 80),
-    buildBattleCondition('Vampire Ultimate', 80),
+    buildBattleCondition('Scatter\'s Ultimate', 80),
+    buildBattleCondition('Ray\'s Ultimate', 80),
+    buildBattleCondition('Vampire\'s Ultimate', 80),
     buildBattleCondition('More Bosses', 5),
     buildBattleCondition('ELS Reduction', 55),
     buildBattleCondition('Fast\'s Ultimate', 80),
@@ -308,9 +310,58 @@ export function getTierData(tier: number): TierData | undefined {
   return TIER_DATA.find(row => row.tier === tier)
 }
 
-/** Battle condition level for a tier (0 when absent). */
+/**
+ * Battle condition level for a tier (0 when absent).
+ *
+ * Both sides are canonicalised, so `ELS Reduction` (the name `TIER_DATA` uses)
+ * and `Skip Reduction - Subtract` (the name it is *defined* under) resolve to
+ * the same condition. Before that, looking it up by its defined name returned 0
+ * at every tier while the condition sat at level 55 — see
+ * `battle-condition-names.ts`.
+ */
 export function getTierBattleConditionLevel(tier: number, name: string): number {
+  const wanted = canonicalBattleConditionName(name)
   const tierData = getTierData(tier)
-  const condition = tierData?.battleConditions.find(row => row.name === name)
+  const condition = tierData?.battleConditions
+    .find(row => canonicalBattleConditionName(row.name) === wanted)
   return condition?.level ?? 0
+}
+
+/**
+ * Why `getTierBattleConditionLevel` returned 0.
+ *
+ * That function answers four different questions with the same number: the
+ * condition is absent at this tier, the tier does not exist, the tier has no
+ * conditions at all, or the caller misspelled the name. Only the first is a
+ * fact about the game; the last is a bug, and it looks identical.
+ *
+ * Call this when a zero matters. `absent` is the only benign answer.
+ */
+export type TierBattleConditionMiss =
+  | 'present'
+  | 'absent'
+  | 'unknown-tier'
+  | 'tier-has-no-conditions'
+  | 'unknown-condition'
+
+export function explainTierBattleConditionLookup(
+  tier: number,
+  name: string,
+): TierBattleConditionMiss {
+  const tierData = getTierData(tier)
+  if (!tierData) return 'unknown-tier'
+
+  const wanted = canonicalBattleConditionName(name)
+  const isDefined = TIER_BATTLE_CONDITION_DEFINITIONS
+    .some(definition => canonicalBattleConditionName(definition.name) === wanted)
+  const isUsedByAnyTier = TIER_DATA
+    .some(row => row.battleConditions
+      .some(condition => canonicalBattleConditionName(condition.name) === wanted))
+  if (!isDefined && !isUsedByAnyTier) return 'unknown-condition'
+
+  if (tierData.battleConditions.length === 0) return 'tier-has-no-conditions'
+
+  const present = tierData.battleConditions
+    .some(condition => canonicalBattleConditionName(condition.name) === wanted)
+  return present ? 'present' : 'absent'
 }

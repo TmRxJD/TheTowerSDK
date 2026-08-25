@@ -1,4 +1,4 @@
-import { clampAssistMultiplierEfficiencyPct } from '../internal/assist-module-efficiency'
+import { clampAssistMultiplierEfficiencyPct } from './assist-module-efficiency'
 import { computeLabValueAtLevel, getSharedToolLabs } from '../data/index'
 import { computeWorkshopStatNumericValueAtLevel } from '../internal/game-input-data/workshop-stat-dropdown-math'
 import { uwStoneChartData } from '../data/index'

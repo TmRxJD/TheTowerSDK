@@ -146,7 +146,7 @@ export const MCP_TOOL_CATALOG: Array<Omit<McpToolCatalogEntry, 'guarantees' | 's
     notes: 'LSP diagnostics provider Phase 1 — full language server deferred',
   },
 
-  // CAP / commit graph — @tmrxjd/governance-engine
+  // CAP / commit graph — authoring tooling, not part of the published package
   {
     name: 'commit_authorize',
     category: 'commit',
@@ -212,6 +212,15 @@ export const MCP_TOOL_CATALOG: Array<Omit<McpToolCatalogEntry, 'guarantees' | 's
   { name: 'get_export', category: 'save', module: 'sdk', guarantees: ['deterministic', 'structured', 'noHallucinatedExports'] },
 
   // wiki
+  // calculators -- the canonical formulas, callable by handle. Deterministic
+  // because they call the shipped function: same arguments, same answer, and no
+  // reconstruction in between.
+  { name: 'calc_list', category: 'calculator', module: 'sdk', guarantees: ['deterministic', 'structured'] },
+  { name: 'calc_describe', category: 'calculator', module: 'sdk', guarantees: ['deterministic', 'structured', 'noHallucinatedExports'] },
+  { name: 'calc_run', category: 'calculator', module: 'sdk', guarantees: ['deterministic', 'structured'] },
+  { name: 'calc_graph', category: 'calculator', module: 'sdk', guarantees: ['deterministic', 'structured', 'noProseSoT'] },
+  { name: 'calc_chart', category: 'calculator', module: 'sdk', guarantees: ['deterministic', 'structured', 'noProseSoT'] },
+
   { name: 'wiki_search', category: 'wiki', module: 'sdk', guarantees: ['structured'] },
   { name: 'wiki_page', category: 'wiki', module: 'sdk', guarantees: ['structured'] },
 
@@ -221,6 +230,10 @@ export const MCP_TOOL_CATALOG: Array<Omit<McpToolCatalogEntry, 'guarantees' | 's
   { name: 'list_lambdas', category: 'sheet', module: 'epaths', guarantees: ['structured', 'noHallucinatedExports'] },
   { name: 'eval_formula', category: 'sheet', module: 'epaths', guarantees: ['structured'] },
   { name: 'read_range', category: 'sheet', module: 'epaths', guarantees: ['structured'] },
+  // Resolves a satellite-tab cell to the planner cell it mirrors. Added because a
+  // formula-mode read of a spilled band comes back empty, so a `$AY$24` reference on
+  // a satellite reads as pointing at nothing.
+  { name: 'mirror_map', category: 'sheet', module: 'epaths', guarantees: ['structured'] },
   { name: 'read_ids', category: 'sheet', module: 'epaths', guarantees: ['structured'] },
   { name: 'input_ranges', category: 'sheet', module: 'epaths', guarantees: ['structured'] },
   { name: 'write_cells', category: 'sheet', module: 'epaths', guarantees: ['structured'] },

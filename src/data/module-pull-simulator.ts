@@ -1,0 +1,301 @@
+/**
+ * Module pull simulation.
+ *
+ * Game mechanics with no presentation in it: pity counters, rarity rates, pool sizes
+ * and the RNG walk. It sits beside the Unity random implementation it depends on, so a
+ * simulated pull uses the same generator the game does.
+ */
+/**
+ * Gem module pull simulator (seeded).
+ *
+ * Module banner pull simulation at a high level:
+ * - Rarity rates: Common 68.5%, Rare 29%, Epic 2.5%
+ * - Epic pity: guaranteed epic on pull when `epicPity` reaches 149 (150th dry pull)
+ * - Ten-pull rare pity: at least one rare in every 10-pull
+ * - Epic pool: 24 unique modules with ancestral-5 downweight (ancestral-5 downweight = 0.25)
+ * - Featured banner: 50% of epic pulls go to the featured module
+ *
+ * Module IDs are abstract pool indices (0-based). Map them to game `infoIndex` in your UI.
+ */
+
+import { cloneUnityRandomState, initUnityRandom, UnityRandom, type UnityRandomState } from '../mechanics/unity-random'
+
+export const MODULE_PULL_EPIC_PITY_CAP = 150
+export const MODULE_PULL_RARE_TEN_PITY = 10
+
+export const MODULE_PULL_RARITY_RATES = {
+  common: 0.685,
+  rare: 0.29,
+  epic: 0.025,
+} as const
+
+export const MODULE_PULL_POOL_SIZES = {
+  uniqueEpic: 24,
+  rare: 16,
+  common: 8,
+} as const
+
+/** Ancestral-5 rarity downweight multiplier (0.25). */
+export const MODULE_PULL_RARITY_DROP_ADJUSTMENT = 0.25
+
+export type ModulePullRarity = 'Common' | 'Rare' | 'Epic'
+
+export interface ModulePullSimulatorState {
+  random: UnityRandomState
+  epicPity: number
+  /** Pulls since last rare within the current ten-pull window (0–9). */
+  rarePityInTenPull: number
+}
+
+export interface ModulePullSimulatorOptions {
+  /** Single integer seed (expanded via Unity InitState). Ignored if `random` is set. */
+  seed?: number
+  random?: UnityRandomState
+  epicPity?: number
+  rarePityInTenPull?: number
+}
+
+export type ModulePullBanner = 'standard' | 'featured'
+
+export interface ModulePullContext {
+  banner?: ModulePullBanner
+  /** Game infoIndex for featured module (featured banner only). */
+  featuredInfoIndex?: number
+  /** infoIndexes already at Ancestral 5 — reduced pull weight. */
+  maxedInfoIndexes?: readonly number[]
+  /** Map abstract epic pool index → game infoIndex (length 24). When omitted, index === infoIndex. */
+  epicInfoIndexByPoolIndex?: readonly number[]
+}
+
+export interface ModulePullResult {
+  pullIndex: number
+  rarity: ModulePullRarity
+  /** Index within the rarity pool (0..N-1). */
+  poolIndex: number
+  /** Resolved game infoIndex when mapping is provided. */
+  infoIndex: number
+  forcedEpicPity: boolean
+  forcedRarePity: boolean
+  stateAfter: ModulePullSimulatorState
+}
+
+function buildInitialState(options: ModulePullSimulatorOptions): ModulePullSimulatorState {
+  const random = options.random
+    ? cloneUnityRandomState(options.random)
+    : initUnityRandom(options.seed ?? 1)
+  return {
+    random,
+    epicPity: Math.max(0, Math.floor(options.epicPity ?? 0)),
+    rarePityInTenPull: Math.max(0, Math.floor(options.rarePityInTenPull ?? 0)),
+  }
+}
+
+function buildEpicWeights(
+  maxedInfoIndexes: readonly number[],
+  epicInfoIndexByPoolIndex: readonly number[] | undefined,
+): number[] {
+  const poolSize = MODULE_PULL_POOL_SIZES.uniqueEpic
+  const maxedSet = new Set(maxedInfoIndexes)
+  const maxedCount = epicInfoIndexByPoolIndex
+    ? epicInfoIndexByPoolIndex.filter(id => maxedSet.has(id)).length
+    : 0
+
+  const basePerModule = MODULE_PULL_RARITY_RATES.epic / poolSize
+  const factor = 1 + 0.0025 * maxedCount
+  const maxedWeight = (basePerModule / 4) * factor
+
+  const weights: number[] = []
+  let nonMaxedCount = 0
+  for (let i = 0; i < poolSize; i += 1) {
+    const infoIndex = epicInfoIndexByPoolIndex?.[i] ?? i
+    if (!maxedSet.has(infoIndex)) nonMaxedCount += 1
+  }
+
+  const maxedTotal = maxedCount * maxedWeight
+  const remainder = Math.max(0, MODULE_PULL_RARITY_RATES.epic - maxedTotal)
+  const nonMaxedWeight = nonMaxedCount > 0 ? remainder / nonMaxedCount : 0
+
+  for (let i = 0; i < poolSize; i += 1) {
+    const infoIndex = epicInfoIndexByPoolIndex?.[i] ?? i
+    weights.push(maxedSet.has(infoIndex) ? maxedWeight : nonMaxedWeight)
+  }
+
+  return weights
+}
+
+function buildCommonWeights(maxedInfoIndexes: readonly number[]): number[] {
+  const poolSize = MODULE_PULL_POOL_SIZES.common
+  const maxedSet = new Set(maxedInfoIndexes)
+  const base = MODULE_PULL_RARITY_RATES.common / poolSize
+  const maxedWeight = base * MODULE_PULL_RARITY_DROP_ADJUSTMENT
+  let nonMaxedCount = 0
+  for (let i = 0; i < poolSize; i += 1) {
+    if (!maxedSet.has(i)) nonMaxedCount += 1
+  }
+  const remainder = Math.max(0, MODULE_PULL_RARITY_RATES.common - maxedSet.size * maxedWeight)
+  const nonMaxedWeight = nonMaxedCount > 0 ? remainder / nonMaxedCount : 0
+  return Array.from({ length: poolSize }, (_, i) => (maxedSet.has(i) ? maxedWeight : nonMaxedWeight))
+}
+
+function pickWeightedIndex(weights: readonly number[], rng: UnityRandom): number {
+  const total = weights.reduce((sum, w) => sum + w, 0)
+  if (total <= 0) return 0
+  let roll = rng.value() * total
+  for (let i = 0; i < weights.length; i += 1) {
+    roll -= weights[i] ?? 0
+    if (roll < 0) return i
+  }
+  return weights.length - 1
+}
+
+function rollRarity(
+  rng: UnityRandom,
+  forceEpic: boolean,
+  forceRare: boolean,
+): ModulePullRarity {
+  if (forceEpic) return 'Epic'
+  if (forceRare) return 'Rare'
+  const roll = rng.value()
+  if (roll < MODULE_PULL_RARITY_RATES.common) return 'Common'
+  if (roll < MODULE_PULL_RARITY_RATES.common + MODULE_PULL_RARITY_RATES.rare) return 'Rare'
+  return 'Epic'
+}
+
+function pickModule(
+  rarity: ModulePullRarity,
+  context: ModulePullContext,
+  rng: UnityRandom,
+): { poolIndex: number, infoIndex: number } {
+  const maxed = context.maxedInfoIndexes ?? []
+
+  if (rarity === 'Epic') {
+    if (
+      context.banner === 'featured'
+      && context.featuredInfoIndex != null
+      && rng.value() < 0.5
+    ) {
+      const featured = context.featuredInfoIndex
+      const map = context.epicInfoIndexByPoolIndex
+      const poolIndex = map ? Math.max(0, map.indexOf(featured)) : featured
+      return { poolIndex, infoIndex: featured }
+    }
+    const weights = buildEpicWeights(maxed, context.epicInfoIndexByPoolIndex)
+    const poolIndex = pickWeightedIndex(weights, rng)
+    const infoIndex = context.epicInfoIndexByPoolIndex?.[poolIndex] ?? poolIndex
+    return { poolIndex, infoIndex }
+  }
+
+  if (rarity === 'Rare') {
+    const poolIndex = rng.pickIndex(MODULE_PULL_POOL_SIZES.rare)
+    return { poolIndex, infoIndex: poolIndex }
+  }
+
+  const weights = buildCommonWeights(maxed)
+  const poolIndex = pickWeightedIndex(weights, rng)
+  return { poolIndex, infoIndex: poolIndex }
+}
+
+function advancePity(
+  state: ModulePullSimulatorState,
+  rarity: ModulePullRarity,
+  positionInBulk: number,
+  bulkSize: number,
+): Pick<ModulePullSimulatorState, 'epicPity' | 'rarePityInTenPull'> {
+  let epicPity = state.epicPity
+  let rarePityInTenPull = state.rarePityInTenPull
+
+  epicPity = rarity === 'Epic' ? 0 : epicPity + 1
+
+  if (rarity === 'Rare' || rarity === 'Epic') {
+    rarePityInTenPull = 0
+  } else {
+    rarePityInTenPull += 1
+  }
+
+  if (bulkSize === MODULE_PULL_RARE_TEN_PITY && positionInBulk === MODULE_PULL_RARE_TEN_PITY) {
+    rarePityInTenPull = 0
+  }
+
+  return { epicPity, rarePityInTenPull }
+}
+
+export function buildModulePullSimulatorState(
+  options: ModulePullSimulatorOptions = {},
+): ModulePullSimulatorState {
+  return buildInitialState(options)
+}
+
+/** Simulate a single gem module pull and return the updated RNG state. */
+export function simulateModulePull(
+  state: ModulePullSimulatorState,
+  context: ModulePullContext = {},
+  bulkPosition = 1,
+  bulkSize = 1,
+): ModulePullResult {
+  const rng = new UnityRandom(state.random)
+  const forceEpic = state.epicPity >= MODULE_PULL_EPIC_PITY_CAP - 1
+  const forceRare = (
+    bulkSize === MODULE_PULL_RARE_TEN_PITY
+    && bulkPosition === MODULE_PULL_RARE_TEN_PITY
+    && state.rarePityInTenPull >= MODULE_PULL_RARE_TEN_PITY - 1
+  ) // no rare in pulls 1–9 of this ten-pull
+
+  const rarity = rollRarity(rng, forceEpic, forceRare)
+  const picked = pickModule(rarity, context, rng)
+
+  const pity = advancePity(state, rarity, bulkPosition, bulkSize)
+  const stateAfter: ModulePullSimulatorState = {
+    random: rng.getState(),
+    ...pity,
+  }
+
+  return {
+    pullIndex: bulkPosition,
+    rarity,
+    poolIndex: picked.poolIndex,
+    infoIndex: picked.infoIndex,
+    forcedEpicPity: forceEpic,
+    forcedRarePity: forceRare,
+    stateAfter,
+  }
+}
+
+/** Simulate `count` consecutive pulls (use `bulkSize` 10 for a ten-pull). */
+export function simulateModulePulls(
+  options: ModulePullSimulatorOptions,
+  context: ModulePullContext = {},
+  count = 1,
+  bulkSize = 1,
+): { pulls: ModulePullResult[], finalState: ModulePullSimulatorState } {
+  let state = buildInitialState(options)
+  const pulls: ModulePullResult[] = []
+  const effectiveBulk = bulkSize === MODULE_PULL_RARE_TEN_PITY ? MODULE_PULL_RARE_TEN_PITY : 1
+
+  for (let i = 0; i < count; i += 1) {
+    const positionInBulk = (i % effectiveBulk) + 1
+    const currentBulkSize = effectiveBulk
+    const result = simulateModulePull(state, context, positionInBulk, currentBulkSize)
+    pulls.push({ ...result, pullIndex: i + 1 })
+    state = result.stateAfter
+  }
+
+  return { pulls, finalState: state }
+}
+
+/** Find the next epic pull within `maxSearch` pulls. */
+export function findNextEpicPull(
+  options: ModulePullSimulatorOptions,
+  context: ModulePullContext = {},
+  maxSearch = 200,
+): { pullNumber: number, result: ModulePullResult } | null {
+  let state = buildInitialState(options)
+  for (let i = 1; i <= maxSearch; i += 1) {
+    const positionInBulk = ((i - 1) % 10) + 1
+    const result = simulateModulePull(state, context, positionInBulk, 10)
+    if (result.rarity === 'Epic') {
+      return { pullNumber: i, result: { ...result, pullIndex: i } }
+    }
+    state = result.stateAfter
+  }
+  return null
+}

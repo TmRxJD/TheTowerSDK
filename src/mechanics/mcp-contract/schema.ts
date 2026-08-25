@@ -12,6 +12,7 @@ export const McpToolCategorySchema = z.enum([
   'coverage',
   'drift',
   'planner',
+  'calculator',
   'save',
   'sheet',
   'wiki',

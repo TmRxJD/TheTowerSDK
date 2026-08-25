@@ -31,10 +31,25 @@ describe('STONE_MASTERY_COSTS', () => {
 })
 
 describe('isStoneMasteryOwned', () => {
-  it('reads the card mastery unlock flag', () => {
+  it('reads the mastery UNLOCK flag, not the equipped toggle', () => {
+    /*
+     * These are two different questions and this test used to assert the wrong
+     * one. `eEcon Stones!EA2` hides a mastery candidate on `IDS_CARD_MASTERY`
+     * — the save's unlock flag — and never on whether the card is equipped;
+     * `active` is `eEcon!AZ34` and its siblings, hand-set booleans.
+     *
+     * Reading `active` here excluded Extra Orb Mastery and Wave Accelerator
+     * Mastery from the generated sweep as "already unlocked" while the sheet
+     * was ranking both.
+     */
     const config = zeroEffectiveEconomyConfig()
     expect(isStoneMasteryOwned('Coins Mastery', config)).toBe(false)
+
+    // Equipped, still not unlocked: the candidate stays on the board.
     config.cards.coinsMastery.active = true
+    expect(isStoneMasteryOwned('Coins Mastery', config)).toBe(false)
+
+    config.cards.coinsMastery.masteryUnlocked = true
     expect(isStoneMasteryOwned('Coins Mastery', config)).toBe(true)
   })
 })

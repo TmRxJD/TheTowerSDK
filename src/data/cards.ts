@@ -14,7 +14,20 @@ export interface CardTemplate {
   masteryDescription: string
   // Type for all mastery levels
   masteryType: 'percent' | 'flat' | 'duration' | 'multi'
-  // Numeric values for each mastery level (index 0 -> mastery 1)
+  /*
+   * Numeric values for each mastery level, **index 0 -> mastery level 0**.
+   *
+   * Note the offset differs from `levelValues` above, which is index 0 -> level 1.
+   * Unlocking a mastery grants its level-0 effect immediately; the nine mastery
+   * LAB levels then raise it, so ten values cover levels 0-9. The wiki's Card
+   * Mastery Overview table is headed 0-9 for the same reason, while its lab
+   * time/coin table runs 1-9.
+   *
+   * This comment read "index 0 -> mastery 1" until 2026-08-17 and was off by
+   * one. `buildCardRegistry` in platform's chart spreadsheet library followed
+   * it, labelling every mastery row one level too high — inventing a level 10
+   * and omitting level 0.
+   */
   masteryValues: number[]
 }
 
@@ -27,7 +40,19 @@ export const RARITY_CHANCES = {
 } as const
 
 export const CARD_LEVELS = [1, 2, 3, 4, 5, 6, 7] as const
+
+/**
+ * The nine mastery LAB levels — not the ten mastery effect values.
+ *
+ * A mastery's effect is defined for levels 0-9 (see `masteryValues`), because
+ * unlocking it grants the level-0 effect before any lab is run. These nine are
+ * the lab upgrades on top of that. Using this array's length to size
+ * `masteryValues` is off by one in the direction that silently drops level 0.
+ */
 export const CARD_MASTERY_LEVELS = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const
+
+/** Mastery effect levels, including the level-0 effect granted at unlock. */
+export const CARD_MASTERY_EFFECT_LEVELS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] as const
 
 const cardTemplates: CardTemplate[] = [
   {
@@ -356,7 +381,7 @@ const cardTemplates: CardTemplate[] = [
   },
   {
     id: 'zerk',
-    name: 'Berzerker',
+    name: 'Berserker',
     description: 'Increases damage by x% of total damage absorbed this round (max of x8 tower damage)',
     rarity: 'epic',
     levelType: 'percent',
@@ -404,18 +429,34 @@ const cardTemplates: CardTemplate[] = [
   },
 ]
 
-export const CARDS_BY_RARITY = {
-  common: ['dmg', 'as', 'hp', 'regen', 'range', 'cash', 'coins', 'sa', 'crit-chance', 'eb', 'def', 'fort'],
-  rare: ['freeups', 'x-orb', 'pc', 'crit-coin', 'is', 'lms', 'rpc'],
-  epic: ['dr', 'en', 'st', 'sw', 'dm', 'es', 'wa', 'zerk', 'uwc', 'nuke', 'aoe'],
-} as const
-
 export const CARD_TEMPLATES = cardTemplates
+
+/**
+ * Card ids grouped by rarity, derived from `CARD_TEMPLATES`.
+ *
+ * This was a hand-written literal until 2026-08-17, and it had drifted: the
+ * `rare` bucket listed seven ids and omitted `ws` (Wave Skip), which is `rare`
+ * in its own template. Nothing failed, because both consumers degrade quietly —
+ * `resolveRarity` in the card import preview falls through to `'common'`, and
+ * `getEffectiveChance` divides the rarity odds by `CARDS_BY_RARITY[rarity].length`,
+ * so every rare card's draw chance came out 8/7 too high.
+ *
+ * Deriving it removes the whole class of drift rather than the one instance. The
+ * grouping is still exhaustive by construction, so a new rarity appears here
+ * automatically instead of silently landing nowhere.
+ */
+export const CARDS_BY_RARITY: Readonly<Record<CardTemplate['rarity'], readonly string[]>>
+  = CARD_TEMPLATES.reduce((groups, card) => {
+    ;(groups[card.rarity] ??= []).push(card.id)
+    return groups
+  }, {} as Record<CardTemplate['rarity'], string[]>)
 export const CARD_TEMPLATE_MAP: Record<string, CardTemplate> = CARD_TEMPLATES.reduce((map, card) => {
   map[card.id] = card
   return map
 }, {} as Record<string, CardTemplate>)
 
 export function getCardTemplate(id: string): CardTemplate | undefined {
+  // Card ids come from saves, so own keys only — see `getModuleTemplate`.
+  if (!Object.prototype.hasOwnProperty.call(CARD_TEMPLATE_MAP, id)) return undefined
   return CARD_TEMPLATE_MAP[id]
 }

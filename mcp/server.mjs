@@ -20,6 +20,9 @@ import { createRequire } from 'node:module'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { isDirectRun, runStdioMcp } from './run-stdio.mjs'
 import { parseCliJson, runRepoTsx } from './run-repo-tsx.mjs'
+import { TOWER_ORACLE_INSTRUCTIONS, TOWER_ORACLE_TOOLS } from './oracle-tools.mjs'
+
+export { TOWER_ORACLE_INSTRUCTIONS, TOWER_ORACLE_TOOLS }
 
 const require = createRequire(import.meta.url)
 const HERE = path.dirname(fileURLToPath(import.meta.url))
@@ -34,8 +37,25 @@ function loadSdk() {
       save: require(path.join(base, 'save', 'index.js')),
       node: require(path.join(base, 'node', 'index.js')),
       mechanics: require(path.join(base, 'mechanics', 'index.js')),
+      /*
+       * Calculators come from their own entry, not the mechanics barrel.
+       *
+       * The barrel is browser-safe by contract, and `export * from
+       * './calculators'` dragged `node:fs` and the governance engine into it --
+       * which killed every calculator page in the app. It was cut back to
+       * `calculators/types` and the note there says runtime calculator surfaces
+       * import `thetowersdk/mechanics/calculators` instead.
+       *
+       * This server did not follow. Every `calc_*` tool read
+       * `sdk.calculators.listCalculators`, which has been `undefined` since,
+       * so all five failed with "is not a function" -- 1,948 declared
+       * calculators unreachable through the MCP.
+       */
+      calculators: require(path.join(base, 'mechanics', 'calculators', 'index.js')),
       formatting: require(path.join(base, 'formatting', 'index.js')),
       wiki: require(path.join(base, 'wiki', 'index.js')),
+      charts: require(path.join(base, 'charts', 'index.js')),
+      knowledge: require(path.join(base, 'knowledge', 'index.js')),
     }
   }
   throw new Error('thetowersdk build not found — run `pnpm build` first')
@@ -109,7 +129,6 @@ export const COMPLIANCE_INSTRUCTIONS = [
   '11. Drift: trust_drift_check / pnpm mechanics-trust:drift (sheets+wiki+save). Optional apply:true marks sheet formula mismatches disputed.',
   '12. Doctor: sdk_doctor_check → prescribe → repair(safe) → validate. Auto-repair never invents formulas. See docs/AGENT_SDK_DOCTOR_PROTOCOL.md.',
   '13. Kernel: sdk_kernel_load for unified MechanicsContext; sdk_registry_get for TOC; mcp_contract for tool taxonomy. Law: docs/AGENT_MECHANICS_CONSTITUTION.md.',
-  '14. CAP / commits live in @tmrxjd/governance-engine (unified tower-mcp module:governance). See docs/AGENT_COMMIT_AUTHORIZATION.md + docs/AGENT_GOVERNANCE_ENGINE.md.',
   '15. Save graph / sandbox / planner scaffold / docs gen / LSP diagnostics: sdk_save_graph_get, sdk_sandbox_run, sdk_planner_compile (codegen deferred), sdk_docs_generate, sdk_lsp_diagnostics.',
   'Protocols: docs/AGENT_MECHANICS_CONSTITUTION.md · docs/AGENT_MECHANICS_KERNEL_PROTOCOL.md · docs/AGENT_MCP_CONTRACT.md · docs/AGENT_SAVE_GRAPH_PROTOCOL.md · docs/AGENT_SANDBOX_PROTOCOL.md · docs/AGENT_SDK_GRAPH_PROTOCOL.md · docs/AGENT_EP_GRAPH_PROTOCOL.md · docs/AGENT_MECHANICS_TRUST_CONTRACT.md · docs/AGENT_DEBUG_GRAPH_PROTOCOL.md · docs/AGENT_SDK_DOCTOR_PROTOCOL.md · docs/AGENT_GAME_MECHANICS_CONTRACT.md',
 ].join('\n')
@@ -151,6 +170,25 @@ function slugToken(mechanic) {
   return `${base || 'mechanic'}-${Date.now().toString(36)}`
 }
 
+/**
+ * The HTTP client the wiki sources need, resolved once.
+ *
+ * Game Vault's edge refuses Node's fetch outright, so without curl that source
+ * is simply unreachable from here. Resolved lazily and cached: an MCP session
+ * that never touches the wiki should not pay for a subprocess probe, and one
+ * that does should not pay twice.
+ *
+ * `null` when curl is missing — the SDK then reports Game Vault as unreachable
+ * with the reason, rather than the whole search failing.
+ */
+let wikiTransportPromise = null
+function wikiTransport() {
+  wikiTransportPromise ??= sdk.wiki.isCurlAvailable()
+    .then(ok => (ok ? sdk.wiki.createCurlFetch() : null))
+    .catch(() => null)
+  return wikiTransportPromise
+}
+
 async function wikiSearchTitles(query, limit = 12) {
   const wanted = String(query).toLowerCase()
   const offline = localWikiTitles().filter(slug => slug.includes(wanted.replace(/\s+/g, '-')))
@@ -160,20 +198,25 @@ async function wikiSearchTitles(query, limit = 12) {
       titles: offline.slice(0, Math.min(Number(limit) || 12, 25)),
     }
   }
-  const params = new URLSearchParams({
-    action: 'query',
-    format: 'json',
-    list: 'search',
-    srsearch: String(query),
-    srlimit: String(Math.min(Number(limit) || 12, 25)),
+  // Every wiki, not just Fandom. The two sites carry different pages, so a
+  // search that consulted one and came back empty was reporting "no such page"
+  // about a wiki it never asked.
+  const { hits, failures } = await sdk.wiki.searchWikis(String(query), {
+    limit: Math.min(Number(limit) || 12, 25),
+    externalFetchImpl: await wikiTransport(),
   })
-  const response = await fetch(`${sdk.wiki.FANDOM_API_URL}?${params}`)
-  if (!response.ok) return { source: 'error', error: `Fandom API HTTP ${response.status}`, titles: [] }
-  const payload = await response.json()
-  const hits = payload?.query?.search ?? []
+  if (hits.length === 0 && failures.length > 0) {
+    return { source: 'error', error: failures.map(f => `${f.sourceId}: ${f.error}`).join('; '), titles: [] }
+  }
   return {
-    source: 'fandom',
+    source: [...new Set(hits.map(hit => hit.sourceId))].join('+') || 'none',
     titles: hits.map(hit => hit.title),
+    // Kept per hit as well: two wikis can hold the same title with different
+    // content, so the title alone does not say what was read.
+    results: hits,
+    // Reported rather than swallowed. A source that errored looks exactly like
+    // a source with nothing to say unless it is named.
+    failures,
   }
 }
 
@@ -201,6 +244,8 @@ const WIKI_CACHE_DIR = path.join(os.tmpdir(), 'thetowersdk-wiki-cache')
  * licence, separately.
  */
 const WIKI_LOCAL_DIR = process.env.TOWER_WIKI_DIR ?? null
+/** Never reach the network; resolve from disk or fail fast. */
+const WIKI_OFFLINE = process.env.TOWER_WIKI_OFFLINE === '1'
 
 const wikiSlug = title => title.replace(/[^a-z0-9]+/gi, '-').toLowerCase().replace(/^-|-$/g, '')
 
@@ -210,8 +255,21 @@ function localWikiPage(title) {
   return fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : null
 }
 
-async function wikiPageMarkdown(title, { refresh = false } = {}) {
-  if (!refresh) {
+/**
+ * A page, from whichever wiki has it.
+ *
+ * `source` in the result is not decoration. There are two wikis and they
+ * disagree — several stat pages are empty stubs on Fandom and complete on Game
+ * Vault — so a caller recording a claim needs to know which site it came from,
+ * and one that only ever heard "fandom" was being told the page did not exist
+ * when it was one request away on the other.
+ *
+ * `sourceId` pins a specific wiki when the caller wants that; without it the
+ * sources are tried in order and the first hit wins. `tried` carries the
+ * failures so "Fandom 404, Game Vault answered" stays visible.
+ */
+async function wikiPageMarkdown(title, { refresh = false, sourceId = null } = {}) {
+  if (!refresh && !sourceId) {
     const local = localWikiPage(title)
     if (local) return { markdown: local, source: 'local' }
 
@@ -221,10 +279,42 @@ async function wikiPageMarkdown(title, { refresh = false } = {}) {
     }
   }
 
-  const markdown = await sdk.wiki.fetchFandomPageAsMarkdown(title)
-  fs.mkdirSync(WIKI_CACHE_DIR, { recursive: true })
-  fs.writeFileSync(path.join(WIKI_CACHE_DIR, `${wikiSlug(title)}.md`), markdown, 'utf8')
-  return { markdown, source: 'fandom' }
+  /*
+   * Offline mode: answer from what is on disk, or fail immediately.
+   *
+   * Without this, a title that is not cached locally reaches the live wikis — which is
+   * correct in normal use and wrong in two situations that matter. A machine with no
+   * network waits for a socket timeout instead of getting a usable error, and a test suite
+   * that exercises the not-found path becomes dependent on a volunteer-run site being
+   * responsive, which is how one assertion turned into a twenty-second hang under load.
+   */
+  if (WIKI_OFFLINE) {
+    throw new Error(
+      `Wiki page not available offline: ${title}. `
+      + 'TOWER_WIKI_OFFLINE is set, so only pages already in TOWER_WIKI_DIR or the local cache resolve.',
+    )
+  }
+
+  const externalFetchImpl = await wikiTransport()
+  const hit = sourceId
+    ? { ...await sdk.wiki.fetchWikiPageAsMarkdown(title, { sourceId, externalFetchImpl }), tried: [] }
+    : await sdk.wiki.fetchWikiPageFromAnySource(title, { externalFetchImpl })
+
+  // Only the default multi-source path is cached by title. A source-pinned
+  // fetch is a deliberate request for THAT wiki's version, and writing it to
+  // the shared by-title cache would make the next unpinned call silently
+  // return the pinned wiki's page.
+  if (!sourceId) {
+    fs.mkdirSync(WIKI_CACHE_DIR, { recursive: true })
+    fs.writeFileSync(path.join(WIKI_CACHE_DIR, `${wikiSlug(title)}.md`), hit.markdown, 'utf8')
+  }
+  return {
+    markdown: hit.markdown,
+    source: hit.sourceId,
+    resolvedTitle: hit.resolvedTitle,
+    url: hit.url,
+    tried: hit.tried,
+  }
 }
 
 /** Titles available offline, so `wiki_search` can answer without a network. */
@@ -369,17 +459,28 @@ export const TOOLS = {
           description: 'Case-insensitive heading to return alone, when the page is long',
         },
         refresh: { type: 'boolean', description: 'Bypass the cache and refetch' },
+        sourceId: {
+          type: 'string',
+          enum: ['fandom', 'gamevault'],
+          description:
+            'Read a specific wiki. Omit to try all of them and take the first hit. '
+            + 'Pin it when a page differs between sites, or when Fandom\'s version is a stub — '
+            + 'Bounce Shot, Multishot and Rend Armor are empty on Fandom and complete on gamevault.',
+        },
       },
       required: ['title'],
     },
-    run: async ({ title, section, refresh }) => {
+    run: async ({ title, section, refresh, sourceId }) => {
       const { canonicalizeWikiTitle } = await import(
         pathToFileURL(path.join(MONOREPO_ROOT, 'scripts/mechanics-trust/wiki-title-canonical.mjs')).href
       )
       const resolvedTitle = canonicalizeWikiTitle(title)
       let page
       try {
-        page = await wikiPageMarkdown(resolvedTitle, { refresh: Boolean(refresh) })
+        page = await wikiPageMarkdown(resolvedTitle, {
+          refresh: Boolean(refresh),
+          sourceId: sourceId ?? null,
+        })
       } catch (error) {
         // A wrong title is the common case and is recoverable; say so rather
         // than letting it read as "the wiki has nothing on this".
@@ -461,7 +562,11 @@ export const TOOLS = {
       return {
         query,
         source: result.source,
-        results: result.titles.map(title => ({ title })),
+        // Each hit says which wiki it came from. Cite that, not "the wiki":
+        // Fandom and Game Vault disagree on several pages and one of them
+        // being a stub is exactly the kind of thing this makes visible.
+        results: result.results ?? result.titles.map(title => ({ title })),
+        failures: result.failures?.length ? result.failures : undefined,
         next: 'Call wiki_page for EVERY title that could define unlocks, stacking, units, or relations',
         compliance: 'begin_mechanic_task → wiki_page(all) → record_mechanic_note before code edits',
       }
@@ -1354,6 +1459,179 @@ export const TOOLS = {
       return { table, kind: spec.kind, shape: JSON.parse(JSON.stringify(spec.schema.shape ?? {}, replacer)) }
     },
   },
+
+  // --- calculators ---------------------------------------------------------
+  //
+  // The formulas this repository reasons with, callable by handle. The point is
+  // not that an agent cannot do arithmetic; it is that it should not have to
+  // REDISCOVER which formula is canonical, what units it is in, and what feeds
+  // it. Every answer here comes from the shipped function, not a reconstruction.
+  calc_list: {
+    description:
+      'List the declared calculators — the canonical formulas, with what each reads and produces. '
+      + 'Call this before writing any game maths, so you use the established formula instead of '
+      + 'deriving a second one.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        filter: {
+          type: 'string',
+          description: 'Substring matched against id, title, concept or sheet name (e.g. "spotlight", "DVT_UW_STAT")',
+        },
+      },
+    },
+    run: ({ filter }) => {
+      const found = sdk.calculators.listCalculators(filter)
+      return {
+        total: sdk.calculators.CALCULATORS.length,
+        matched: found.length,
+        calculators: found.map(c => ({
+          id: c.id,
+          title: c.title,
+          because: c.because,
+          params: c.params.map(p => `${p.name}${p.optional ? '?' : ''}: ${p.kind}`),
+          returns: c.returns.unit ?? c.returns.kind,
+          sheet: c.sheet,
+        })),
+      }
+    },
+  },
+
+  calc_describe: {
+    description:
+      'One calculator in full: parameters with units, the invariants that must hold of its output, '
+      + 'what it reads and produces, and where the source lives.',
+    inputSchema: {
+      type: 'object',
+      properties: { id: { type: 'string', description: 'Calculator handle, e.g. "spotlight.coverage"' } },
+      required: ['id'],
+    },
+    run: ({ id }) => {
+      const spec = sdk.calculators.calculatorSpec(id)
+      if (!spec) {
+        return {
+          error: `no calculator "${id}"`,
+          hint: 'call calc_list rather than guessing a handle',
+          ids: sdk.calculators.CALCULATOR_IDS,
+        }
+      }
+      // The oracle entities this formula is about, and what has gone wrong with
+      // them before. Holding a handle, an agent should not have to go and find
+      // oracle_traps for itself -- that rediscovery is what the registry exists
+      // to stop, and it applies to the knowledge as much as to the formula.
+      const entities = sdk.calculators.CALCULATOR_ORACLE_LINKS[id] ?? []
+      const oracle = entities.map((entityId) => {
+        const traps = sdk.knowledge?.trapsFor?.(entityId) ?? []
+        return { id: entityId, traps }
+      })
+      return {
+        ...spec,
+        upstream: sdk.calculators.upstreamOf(id),
+        oracleEntities: entities,
+        oracle: oracle.filter(entry => entry.traps.length > 0),
+      }
+    },
+  },
+
+  calc_run: {
+    description:
+      'Run a declared calculator on real arguments and get the value the shipped function returns. '
+      + 'Refuses an unknown handle, a missing parameter or a wrong type rather than returning a '
+      + 'plausible number.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', description: 'Calculator handle' },
+        args: { type: 'object', description: 'Arguments by parameter name — see calc_describe' },
+      },
+      required: ['id'],
+    },
+    run: ({ id, args }) => {
+      try {
+        const result = sdk.calculators.runCalculator(id, args ?? {})
+        return result
+      } catch (error) {
+        // The message names the parameter and lists the ones it takes, which is
+        // the difference between a fixable call and a plausible wrong answer.
+        return { error: String(error?.message ?? error) }
+      }
+    },
+  },
+
+  calc_chart: {
+    description:
+      'Which formula produces a chart\'s numbers. Give a renderer key (or omit for all) and get '
+      + 'the calculator handles that compute the same quantity, plus where the published rows live. '
+      + 'An empty calculator list is a real answer: that chart is a measured table nothing can '
+      + 'recompute.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        chart: { type: 'string', description: 'Renderer key, e.g. "elite-spawn-chance"' },
+      },
+    },
+    run: ({ chart }) => {
+      const links = sdk.charts.CHART_CALCULATOR_LINKS
+      if (!chart) {
+        const computable = Object.entries(links).filter(([, l]) => l.calculators.length > 0)
+        return {
+          charts: Object.keys(links).length,
+          withFormula: computable.length,
+          measuredOnly: Object.keys(links).length - computable.length,
+          links,
+        }
+      }
+      const link = links[chart]
+      if (!link) return { error: `no chart "${chart}"`, charts: Object.keys(links) }
+      const titles = sdk.charts.SHARED_CHART_REGISTRY
+        .filter(entry => entry.rendererKey === chart)
+        .map(entry => entry.title)
+      return {
+        chart,
+        titles,
+        ...link,
+        describes: link.calculators.map(id => sdk.calculators.calculatorSpec(id)).filter(Boolean),
+      }
+    },
+  },
+
+  calc_graph: {
+    description:
+      'How the calculators relate: which call which, and which produce the values others read. '
+      + 'Use it to answer "what feeds this number?" without opening the source.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        concept: {
+          type: 'string',
+          description: 'Narrow to one concept, e.g. "damage.effective" — omit for the whole graph',
+        },
+      },
+    },
+    run: ({ concept }) => {
+      const graph = sdk.calculators.calculatorGraph()
+      if (!concept) {
+        return {
+          nodes: graph.nodes.length,
+          edges: graph.edges.length,
+          concepts: graph.concepts.map(c => c.name),
+          calls: graph.edges.filter(e => e.kind === 'calls'),
+        }
+      }
+      const entry = graph.concepts.find(c => c.name === concept)
+      if (!entry) {
+        return { error: `no concept "${concept}"`, concepts: graph.concepts.map(c => c.name) }
+      }
+      return {
+        concept,
+        producedBy: entry.producedBy,
+        readBy: entry.readBy,
+        upstreamOfEachProducer: Object.fromEntries(
+          entry.producedBy.map(id => [id, sdk.calculators.upstreamOf(id)]),
+        ),
+      }
+    },
+  },
 }
 
 /** Zod internals are circular; keep only what is readable. */
@@ -1368,7 +1646,9 @@ if (isDirectRun(import.meta.url)) {
   runStdioMcp({
     name: 'thetowersdk',
     version: VERSION,
-    instructions: COMPLIANCE_INSTRUCTIONS,
-    tools: TOOLS,
+    instructions: `${COMPLIANCE_INSTRUCTIONS}\n\n--- tower-oracle ---\n${TOWER_ORACLE_INSTRUCTIONS}`,
+    // Standalone consumers get the oracle too; in the monorepo tower-mcp mounts
+    // it as its own module, so it is kept out of TOOLS to avoid a name clash.
+    tools: { ...TOOLS, ...TOWER_ORACLE_TOOLS },
   })
 }

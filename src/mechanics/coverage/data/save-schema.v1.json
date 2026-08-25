@@ -1,0 +1,659 @@
+{
+  "version": 1,
+  "surface": "save",
+  "generatedAt": "2026-08-24T19:44:20.372Z",
+  "notes": "Seeded from packages/sdk/src/save/*.ts. Promote to modeled when graph nodes exist.",
+  "entries": [
+    {
+      "id": "save:battle-duration",
+      "surface": "save",
+      "label": "battle-duration",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/battle-duration.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:battle-history",
+      "surface": "save",
+      "label": "battle-history",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/battle-history.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:battle-history-normalize",
+      "surface": "save",
+      "label": "battle-history-normalize",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/battle-history-normalize.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:battle-report-extended",
+      "surface": "save",
+      "label": "battle-report-extended",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/battle-report-extended.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:battle-report-fields",
+      "surface": "save",
+      "label": "battle-report-fields",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/battle-report-fields.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:battle-reports",
+      "surface": "save",
+      "label": "battle-reports",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/battle-reports.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:bots",
+      "surface": "save",
+      "label": "bots",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/bots.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:cards",
+      "surface": "save",
+      "label": "cards",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/cards.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:catalogs/bots",
+      "surface": "save",
+      "label": "catalogs/bots",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/catalogs/bots.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:catalogs/guardians",
+      "surface": "save",
+      "label": "catalogs/guardians",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/catalogs/guardians.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:catalogs/indexes",
+      "surface": "save",
+      "label": "catalogs/indexes",
+      "graphNodeIds": [
+        "oracle.criticalChance",
+        "oracle.defenseAbsolute",
+        "oracle.healthRegen",
+        "oracle.lifesteal"
+      ],
+      "coverageStatus": "modeled",
+      "sources": [
+        "src/save/catalogs/indexes.ts"
+      ],
+      "reason": "Linked to knowledge-oracle nodes via implementedBy."
+    },
+    {
+      "id": "save:catalogs/perks",
+      "surface": "save",
+      "label": "catalogs/perks",
+      "graphNodeIds": [
+        "oracle.perk",
+        "oracle.perk.applicationForm",
+        "oracle.perk.index",
+        "oracle.perk.tradeOff",
+        "oracle.perk.ultimateWeapon"
+      ],
+      "coverageStatus": "modeled",
+      "sources": [
+        "src/save/catalogs/perks.ts"
+      ],
+      "reason": "Linked to knowledge-oracle nodes via implementedBy."
+    },
+    {
+      "id": "save:catalogs/relic-template-match",
+      "surface": "save",
+      "label": "catalogs/relic-template-match",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/catalogs/relic-template-match.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:catalogs/relics",
+      "surface": "save",
+      "label": "catalogs/relics",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/catalogs/relics.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:catalogs/themes",
+      "surface": "save",
+      "label": "catalogs/themes",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/catalogs/themes.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:catalogs/ultimate-weapons",
+      "surface": "save",
+      "label": "catalogs/ultimate-weapons",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/catalogs/ultimate-weapons.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:catalogs/vault",
+      "surface": "save",
+      "label": "catalogs/vault",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/catalogs/vault.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:catalogs/vault-overrides",
+      "surface": "save",
+      "label": "catalogs/vault-overrides",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/catalogs/vault-overrides.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:catalogs/vault-power",
+      "surface": "save",
+      "label": "catalogs/vault-power",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/catalogs/vault-power.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:catalogs/workshop",
+      "surface": "save",
+      "label": "catalogs/workshop",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/catalogs/workshop.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:dissonance",
+      "surface": "save",
+      "label": "dissonance",
+      "graphNodeIds": [
+        "oracle.dissonance"
+      ],
+      "coverageStatus": "modeled",
+      "sources": [
+        "src/save/dissonance.ts"
+      ],
+      "reason": "Linked to knowledge-oracle nodes via implementedBy."
+    },
+    {
+      "id": "save:effective-paths-from-save",
+      "surface": "save",
+      "label": "effective-paths-from-save",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/effective-paths-from-save.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:effective-paths-settings",
+      "surface": "save",
+      "label": "effective-paths-settings",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/effective-paths-settings.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:favorite-labs",
+      "surface": "save",
+      "label": "favorite-labs",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/favorite-labs.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:guardians",
+      "surface": "save",
+      "label": "guardians",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/guardians.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:ids-grid",
+      "surface": "save",
+      "label": "ids-grid",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/ids-grid.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:ids-import",
+      "surface": "save",
+      "label": "ids-import",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/ids-import.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:ids-import-blocks",
+      "surface": "save",
+      "label": "ids-import-blocks",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/ids-import-blocks.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:ids-import-collections",
+      "surface": "save",
+      "label": "ids-import-collections",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/ids-import-collections.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:ids-import-domains",
+      "surface": "save",
+      "label": "ids-import-domains",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/ids-import-domains.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:ids-import-modules",
+      "surface": "save",
+      "label": "ids-import-modules",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/ids-import-modules.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:ids-import-progression",
+      "surface": "save",
+      "label": "ids-import-progression",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/ids-import-progression.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:import-counts",
+      "surface": "save",
+      "label": "import-counts",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/import-counts.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:import-discovery",
+      "surface": "save",
+      "label": "import-discovery",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/import-discovery.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:import-executor",
+      "surface": "save",
+      "label": "import-executor",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/import-executor.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:import-planner",
+      "surface": "save",
+      "label": "import-planner",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/import-planner.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:killed-by",
+      "surface": "save",
+      "label": "killed-by",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/killed-by.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:lab-remaining",
+      "surface": "save",
+      "label": "lab-remaining",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/lab-remaining.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:labs",
+      "surface": "save",
+      "label": "labs",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/labs.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:lifetime",
+      "surface": "save",
+      "label": "lifetime",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/lifetime.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:module-effects-decode",
+      "surface": "save",
+      "label": "module-effects-decode",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/module-effects-decode.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:module-effects-display",
+      "surface": "save",
+      "label": "module-effects-display",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/module-effects-display.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:module-effects-ids",
+      "surface": "save",
+      "label": "module-effects-ids",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/module-effects-ids.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:module-effects-registry",
+      "surface": "save",
+      "label": "module-effects-registry",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/module-effects-registry.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:modules",
+      "surface": "save",
+      "label": "modules",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/modules.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:perks",
+      "surface": "save",
+      "label": "perks",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/perks.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:read-values",
+      "surface": "save",
+      "label": "read-values",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/read-values.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:relics",
+      "surface": "save",
+      "label": "relics",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/relics.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:save-path",
+      "surface": "save",
+      "label": "save-path",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/save-path.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:shared-tool-inputs-from-save",
+      "surface": "save",
+      "label": "shared-tool-inputs-from-save",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/shared-tool-inputs-from-save.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:shared-tool-inputs-from-save-extended",
+      "surface": "save",
+      "label": "shared-tool-inputs-from-save-extended",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/shared-tool-inputs-from-save-extended.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:themes",
+      "surface": "save",
+      "label": "themes",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/themes.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:tracker-lifetime-fields",
+      "surface": "save",
+      "label": "tracker-lifetime-fields",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/tracker-lifetime-fields.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:tracker-run-fields",
+      "surface": "save",
+      "label": "tracker-run-fields",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/tracker-run-fields.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:tracker-run-normalization",
+      "surface": "save",
+      "label": "tracker-run-normalization",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/tracker-run-normalization.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:ultimate-weapons",
+      "surface": "save",
+      "label": "ultimate-weapons",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/ultimate-weapons.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:vault",
+      "surface": "save",
+      "label": "vault",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/vault.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
+      "id": "save:workshop",
+      "surface": "save",
+      "label": "workshop",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/save/workshop.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    }
+  ]
+}

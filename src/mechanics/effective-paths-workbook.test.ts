@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import fixtures from './effective-paths-formula.fixtures.json'
+import fixtures from '../../fixtures/mechanics/effective-paths-formula.fixtures.json'
 import { EFFECTIVE_PATHS_ALIASES } from './effective-paths-aliases'
 import {
   buildEffectivePathsDocument,

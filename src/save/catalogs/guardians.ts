@@ -1,3 +1,4 @@
+import { atIndex } from '../../internal/own-lookup'
 import {
   GUARDIAN_CHIP_IMPORT_CATALOG,
   GUARDIAN_CHIP_TYPE_ENUM,
@@ -37,8 +38,23 @@ function activeChipRows(): readonly ActiveGuardianChipRow[] {
   return GUARDIAN_CHIP_IMPORT_CATALOG as readonly ActiveGuardianChipRow[]
 }
 
+/**
+ * Resolve a chip by its SAVE index, not by its position in the array.
+ *
+ * The two catalogs this can return are ordered differently and neither is
+ * ordered by save slot. `GUARDIAN_CHIP_CATALOG` runs slot 1, 3, 4, 0, 6, 2, 5,
+ * 7, 8, so array position 2 was returning Rush for a caller asking about save
+ * index 2 (Attack). `GUARDIAN_CHIP_IMPORT_CATALOG` starts with the `None` row at
+ * index -1, so position 0 returned None instead of Bounty.
+ *
+ * Both are resolved by identity now: `slotIndex` when a row carries one, else
+ * `index`. Callers that already ask by slot go through
+ * `findGuardianChipCatalogRowBySlotIndex`, which was always correct — this fixes
+ * the positional API that sits beside it.
+ */
 export function findGuardianChipCatalogRow(index: number): ActiveGuardianChipRow | null {
-  return activeChipRows()[index] ?? null
+  const rows = activeChipRows()
+  return rows.find(row => (row.slotIndex ?? row.index) === index) ?? null
 }
 
 export function getGuardianChipLabel(index: number): string {
@@ -65,7 +81,7 @@ export function findGuardianChipTrackerKey(index: number): string | null {
 
 export function findGuardianSkinCatalogRow(index: number): GuardianSkinCatalogRow | null {
   const rows = GUARDIAN_SKIN_IMPORT_CATALOG as readonly GuardianSkinCatalogRow[]
-  return rows[index] ?? null
+  return atIndex(rows, index) ?? null
 }
 
 export function getGuardianSkinLabel(index: number): string {

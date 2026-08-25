@@ -1,0 +1,176 @@
+/**
+ * Inner Land Mines: what the weapon's own levels are worth, before the tower's damage.
+ *
+ * ILM is unlike the other ultimate weapons in that a mine's damage depends on **how long it
+ * has been sitting there**. Charged Mines grows the charge at a fixed rate per second, so a
+ * mine detonated the instant it drops is worth 1× and one that survives its full 25-second
+ * lifetime is worth far more. A tool that reports a single "ILM damage" number without
+ * saying which of those it means is ambiguous by a large factor, so both are returned here.
+ *
+ * Chrono Jump only pays when Charged Mines is active and the tower has actually been hit,
+ * which is why `chargedMinesActive` gates it rather than being folded into the level.
+ *
+ * The cooldown has a hard floor of 37 seconds no matter what the chart says, and the
+ * quantity and damage tables end — a level past the end reads as 0, which is reported as a
+ * note rather than returned as a real answer.
+ */
+import {
+  computeChargedMinesRatePerSecond,
+  computeChronoJumpLabBenefit,
+  computeIlmChargeMultiplier,
+  computeInnerLandMinesCooldownSeconds,
+  computeInnerLandMinesDamageMult,
+  computeInnerLandMinesQuantity,
+  ILM_COOLDOWN_FLOOR_SEC,
+  ILM_MINE_LIFETIME_SEC,
+} from '../mechanics/index'
+import {
+  type CalculatorBuilder,
+  type CalculatorResultBase,
+  clampMagnitude,
+  clampNumber,
+} from './types'
+
+export interface InnerLandMinesInputs {
+  damageLevel: number
+  quantityLevel: number
+  cooldownLevel: number
+  /** ILM+ Charged Mines level. Inert unless `chargedMinesActive`. */
+  chargedMinesLevel: number
+  chargedMinesActive: boolean
+  chronoJumpLabLevel: number
+  /** Times the tower has been hit by its own ILM this run — what Chrono Jump counts. */
+  timesHitByIlm: number
+  /** How long a mine has been on the ground when it detonates. */
+  mineAgeSeconds: number
+}
+
+export interface InnerLandMinesResult extends CalculatorResultBase {
+  /** Damage multiplier from the Damage stat alone. */
+  readonly damageMultiplier: number
+  readonly mineCount: number
+  readonly cooldownSeconds: number
+  /** Charge at `mineAgeSeconds`: 1 at drop, more the longer it sits. */
+  readonly charge: number
+  /** Charge if the mine survives its full lifetime — the ceiling. */
+  readonly maxCharge: number
+  /** `damageMultiplier × mineCount × charge`, per detonation cycle. */
+  readonly effectiveDamageMultiplier: number
+  /** The same divided by the cooldown — comparable against other weapons' DPS. */
+  readonly damageMultiplierPerSecond: number
+  readonly chargedRatePerSecond: number
+  readonly chronoJumpBenefit: number
+  readonly mineLifetimeSeconds: number
+}
+
+const defaults: InnerLandMinesInputs = {
+  damageLevel: 0,
+  quantityLevel: 0,
+  cooldownLevel: 0,
+  chargedMinesLevel: 0,
+  chargedMinesActive: false,
+  chronoJumpLabLevel: 0,
+  timesHitByIlm: 0,
+  mineAgeSeconds: 0,
+}
+
+export const innerLandMinesCalculator: CalculatorBuilder<InnerLandMinesInputs, InnerLandMinesResult> = {
+  id: 'uw.inner-land-mines',
+  title: 'Inner Land Mines',
+  summary: 'Mine damage, count, cooldown and how much charge time is worth.',
+
+  fields: [
+    { key: 'damageLevel', label: 'Damage level', kind: 'number', min: 0 },
+    { key: 'quantityLevel', label: 'Quantity level', kind: 'number', min: 0 },
+    { key: 'cooldownLevel', label: 'Cooldown level', kind: 'number', min: 0 },
+    { key: 'chargedMinesActive', label: 'ILM+ (Charged Mines) active', kind: 'boolean' },
+    { key: 'chargedMinesLevel', label: 'Charged Mines level', kind: 'number', min: 0 },
+    { key: 'chronoJumpLabLevel', label: 'Chrono Jump lab', kind: 'number', min: 0 },
+    {
+      key: 'timesHitByIlm',
+      label: 'Times hit by your own ILM',
+      kind: 'number',
+      min: 0,
+      help: 'Chrono Jump only pays on hits, and only with ILM+ active.',
+    },
+    {
+      key: 'mineAgeSeconds',
+      label: 'Mine age at detonation',
+      kind: 'number',
+      unit: 'seconds',
+      min: 0,
+      max: ILM_MINE_LIFETIME_SEC,
+      help: `A mine lives ${ILM_MINE_LIFETIME_SEC}s; 0 means it detonates the moment it drops.`,
+    },
+  ],
+
+  defaults,
+
+  normalize(input = {}) {
+    const level = (value: unknown, fallback: number) =>
+      Math.floor(clampMagnitude(value, fallback))
+    return {
+      damageLevel: level(input.damageLevel, defaults.damageLevel),
+      quantityLevel: level(input.quantityLevel, defaults.quantityLevel),
+      cooldownLevel: level(input.cooldownLevel, defaults.cooldownLevel),
+      chargedMinesLevel: level(input.chargedMinesLevel, defaults.chargedMinesLevel),
+      chargedMinesActive: input.chargedMinesActive === true,
+      chronoJumpLabLevel: level(input.chronoJumpLabLevel, defaults.chronoJumpLabLevel),
+      timesHitByIlm: level(input.timesHitByIlm, defaults.timesHitByIlm),
+      // Clamped to the lifetime: a mine cannot be older than it can exist, and letting a
+      // larger number through would report a charge the game can never reach.
+      mineAgeSeconds: clampNumber(input.mineAgeSeconds, 0, ILM_MINE_LIFETIME_SEC, defaults.mineAgeSeconds),
+    }
+  },
+
+  compute(rawInput = {}) {
+    const input = this.normalize(rawInput)
+    const notes: string[] = []
+
+    const damageMultiplier = computeInnerLandMinesDamageMult(input.damageLevel)
+    const mineCount = computeInnerLandMinesQuantity(input.quantityLevel)
+    const cooldownSeconds = computeInnerLandMinesCooldownSeconds(input.cooldownLevel)
+
+    // A 0 here means "off the end of the chart", not "worth nothing" — say which.
+    if (damageMultiplier === 0) notes.push(`No Damage row is charted for level ${input.damageLevel}.`)
+    if (mineCount === 0) notes.push(`No Quantity row is charted for level ${input.quantityLevel}.`)
+    if (cooldownSeconds === 0) notes.push(`No Cooldown row is charted for level ${input.cooldownLevel}.`)
+    if (cooldownSeconds === ILM_COOLDOWN_FLOOR_SEC && input.cooldownLevel > 0) {
+      notes.push(`The cooldown is at its ${ILM_COOLDOWN_FLOOR_SEC}s floor; further levels do not shorten it.`)
+    }
+
+    const chargeInput = {
+      chargedMinesLevel: input.chargedMinesLevel,
+      chronoJumpLabLevel: input.chronoJumpLabLevel,
+      timesHitByIlm: input.timesHitByIlm,
+      chargedMinesActive: input.chargedMinesActive,
+    }
+    const now = computeIlmChargeMultiplier({ ...chargeInput, mineAgeSeconds: input.mineAgeSeconds })
+    const ceiling = computeIlmChargeMultiplier({ ...chargeInput, mineAgeSeconds: ILM_MINE_LIFETIME_SEC })
+
+    if (!input.chargedMinesActive && (input.chargedMinesLevel > 0 || input.chronoJumpLabLevel > 0)) {
+      notes.push('ILM+ is not active, so Charged Mines and Chrono Jump contribute nothing.')
+    }
+    if (input.chargedMinesActive && input.chronoJumpLabLevel > 0 && input.timesHitByIlm === 0) {
+      notes.push('Chrono Jump pays per hit taken from your own ILM, and no hits were entered.')
+    }
+
+    const effectiveDamageMultiplier = damageMultiplier * mineCount * now.charge
+
+    return {
+      damageMultiplier,
+      mineCount,
+      cooldownSeconds,
+      charge: now.charge,
+      maxCharge: ceiling.charge,
+      effectiveDamageMultiplier,
+      // Guarded rather than trusted: an uncharted cooldown is 0, and dividing by it would
+      // hand back Infinity as if it were a DPS.
+      damageMultiplierPerSecond: cooldownSeconds > 0 ? effectiveDamageMultiplier / cooldownSeconds : 0,
+      chargedRatePerSecond: computeChargedMinesRatePerSecond(input.chargedMinesLevel),
+      chronoJumpBenefit: computeChronoJumpLabBenefit(input.chronoJumpLabLevel),
+      mineLifetimeSeconds: ILM_MINE_LIFETIME_SEC,
+      notes,
+    }
+  },
+}

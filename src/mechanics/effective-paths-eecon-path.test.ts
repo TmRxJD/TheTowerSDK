@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { planEffectiveEconomyPath } from './effective-paths-eecon-plan'
 import { configFromSheet, levelsFromSheet } from './effective-paths-eecon-compute.test'
-import fixture from './effective-paths-eecon-path.fixtures.json'
+import fixture from '../../fixtures/mechanics/effective-paths-eecon-path.fixtures.json'
 
 /**
  * The eEcon path itself, against the one the sheet plans.

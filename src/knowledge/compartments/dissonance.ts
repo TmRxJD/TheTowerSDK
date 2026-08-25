@@ -1,0 +1,467 @@
+/**
+ * Dissonance — the system that pays you for switching off a whole upgrade tree.
+ *
+ * Found by chasing the three gates `Main.CalculateUpgradeBonuses` consults
+ * before it recomputes anything: `IsAttackDisabled`, `IsDefenseDisabled`,
+ * `IsUtilityDisabled`. All three are properties of `DissonanceManager`, and the
+ * knowledge graph had no node for any of it.
+ *
+ * It also explains something already recorded elsewhere without a cause: the
+ * `IsUtilityDisabled` check at the end of `CalculateEnemyLevelSkipChances` that
+ * zeroes both level-skip stats. That is dissonance, not a special case.
+ */
+import { LAB_CATALOG } from '../../data/labs-catalog'
+import type { KnowledgeEdge, KnowledgeNode } from '../substrate/schema'
+
+const GAME_DISSONANCE = {
+  origin: 'game',
+  ref: 'DissonanceManager and DissonanceBoost, v28.3 dump',
+  sourceVersion: 'v28.3.0-arm64',
+  verifiedAt: '2026-08-18',
+} as const
+
+const GAME_BOOST_FORMULA = {
+  origin: 'game',
+  ref: 'DissonanceBoost.GetValue @ 0x21CC6B8 and CalculateGlobalBonus @ 0x21CCB1C',
+  sourceVersion: 'v28.3.0-arm64',
+  verifiedAt: '2026-08-18',
+} as const
+
+const CATALOG_LABS = {
+  origin: 'code',
+  ref: 'thetowersdk/data LAB_CATALOG dissonant_echo_*',
+  verifiedAt: '2026-08-18',
+} as const
+
+/**
+ * The community guide most trusted at the time of writing, supplied by the repo
+ * owner. Not the game, but not a wiki either — a maintained, widely-checked
+ * document, and the only source for the boost MAGNITUDES, which are remote
+ * config and therefore unreachable from the binary.
+ */
+const COMMUNITY_GUIDE = {
+  origin: 'wiki',
+  ref: 'The Tower: Early Game Tower Guide (community, 2026-08)',
+  verifiedAt: '2026-08-18',
+} as const
+
+const SITE_CALCULATOR = {
+  origin: 'code',
+  ref: 'src/pages/calculators/dissonance.vue',
+  verifiedAt: '2026-08-18',
+} as const
+
+/** The four things dissonance can switch off, from `DissonanceManager.DissonanceType`. */
+export const DISSONANCE_TYPES = ['Attack', 'Defense', 'Utility', 'UltimateWeapon'] as const
+
+/** `DissonanceType.None = 0`, so the enum's zero is "not dissonant" rather than Attack. */
+export const DISSONANCE_TYPE_ENUM: Readonly<Record<string, number>> = {
+  None: 0,
+  Attack: 1,
+  Defense: 2,
+  Utility: 3,
+  UltimateWeapon: 4,
+}
+
+/**
+ * Which category you switch off, which lab echoes it, and which stat you gain.
+ *
+ * `DissonanceManager.Awake` constructs the four `DissonanceBoost` objects with
+ * research indices 239, 240, 238, 241 in that order, storing them into
+ * `damageBoost`, `healthBoost`, `coinBoost` and `ultDamageBoost`. Pairing those
+ * with the lab slugs at those indices gives the whole mapping, and it is a
+ * clean one-to-one: the boost you receive is in the stat the category you gave
+ * up was feeding.
+ */
+export const DISSONANCE_TRADE = [
+  { disables: 'Attack', researchIndex: 239, lab: 'dissonant_echo_attack', boosts: 'damage' },
+  { disables: 'Defense', researchIndex: 240, lab: 'dissonant_echo_defense', boosts: 'health' },
+  { disables: 'Utility', researchIndex: 238, lab: 'dissonant_echo_utility', boosts: 'coin' },
+  {
+    disables: 'UltimateWeapon',
+    researchIndex: 241,
+    lab: 'dissonant_echo_ultimate_weapons',
+    boosts: 'ultimateWeaponDamage',
+  },
+] as const
+
+/** Research indices of the four Dissonant Echo labs, keyed by the stat they boost. */
+export const DISSONANCE_ECHO_RESEARCH_INDEX: Readonly<Record<string, number>> = {
+  damage: 239,
+  health: 240,
+  coin: 238,
+  ultimateWeaponDamage: 241,
+}
+
+/**
+ * The echo lab's benefit per level: `(level + 1) * 0.005`, levels 0 to 20.
+ *
+ * Level 0 is already worth 0.5% — the lab's first rung is buying it, not
+ * unlocking it at zero. That is why a calculator has to add 1 to a raw level
+ * before scaling, and why doing so is correct rather than an off-by-one.
+ */
+export const DISSONANCE_ECHO_PER_LEVEL = 0.005
+export const DISSONANCE_ECHO_MAX_LEVEL = 20
+export const DISSONANCE_ECHO_MAX_BENEFIT
+  = (DISSONANCE_ECHO_MAX_LEVEL + 1) * DISSONANCE_ECHO_PER_LEVEL
+
+/** The exponent the boost curve is raised to. A literal in the binary, unlike the rest. */
+export const DISSONANCE_BOOST_EXPONENT = 1.75
+
+/**
+ * The ceiling each boost reaches at the wave cap.
+ *
+ * These are the `bonus` argument plus one, and `bonus` is REMOTE CONFIG — the
+ * binary fetches it at startup, so the binary cannot confirm these. They come
+ * from the community guide and from the site calculator, which agree: damage,
+ * health and ultimate-weapon damage reach x5, coins reach x3.
+ *
+ * Consistent with the trade mapping derived separately from `Awake`: coins are
+ * what Utility dissonance pays, and utility is the one the calculator singles
+ * out with a smaller multiplier.
+ */
+export const DISSONANCE_BOOST_CAP: Readonly<Record<string, number>> = {
+  damage: 5,
+  health: 5,
+  ultimateWeaponDamage: 5,
+  coin: 3,
+}
+
+/** Wave at which a boost reaches its cap. Also remote config. */
+export const DISSONANCE_BOOST_MAX_WAVE = 5000
+
+/** Milestone that unlocks dissonance. */
+export const DISSONANCE_UNLOCK = { tier: 4, wave: 90 } as const
+
+/**
+ * What each dissonance actually switches off, in the player's terms.
+ *
+ * The binary gives four booleans; this is what they cost you. Utility is the
+ * one worth reading twice — it takes enemy level skip, which is why
+ * `CalculateEnemyLevelSkipChances` ends by zeroing both stats.
+ */
+export const DISSONANCE_COST: Readonly<Record<string, string>> = {
+  Attack: 'all damage and bullets — the run has to kill through thorns, orbs and percent damage',
+  Defense: 'health, defense, knockback, orbs and thorns',
+  Utility: 'cash, free upgrades, recovery packages and enemy level skip',
+  UltimateWeapon: 'ultimate weapons, leaving the tower itself to do the damage',
+}
+
+/** Highest tier index `GetValue` accepts before it errors and returns 1. */
+export const DISSONANCE_MAX_TIER_INDEX = 25
+
+/** The Dissonant Echo labs, counted from the catalog rather than assumed. */
+const ECHO_LAB_COUNT = (LAB_CATALOG as readonly { name: string }[])
+  .filter(lab => /Dissonant Echo/i.test(lab.name)).length
+
+export const DISSONANCE_KNOWLEDGE_NODES: readonly KnowledgeNode[] = [
+  {
+    id: 'dissonance',
+    label: 'Dissonance',
+    kind: 'system',
+    claimType: 'objective',
+    verification: 'verified_here',
+    summary:
+      'A run modifier that DISABLES one whole upgrade category — attack, defense, utility or '
+      + 'ultimate weapons — in exchange for boosts to damage, health, coins and ultimate-weapon '
+      + 'damage. One type at a time, selected before the run.',
+    disambiguation:
+      'Not a difficulty setting and not a battle condition. A battle condition makes enemies '
+      + 'harder; dissonance takes away part of YOUR tower and pays for it. It is also not a '
+      + 'permanent choice — `SelectedDissonance` is per run.',
+    units: 'multiplier on four stats; a boolean gate on one upgrade category',
+    implementedBy: ['readDissonanceFromSaveRoot', 'DISSONANCE_TYPES', 'DISSONANCE_COST'],
+    assertions: [
+      {
+        subject: 'dissonance',
+        predicate: 'typeCount',
+        value: DISSONANCE_TYPES.length,
+        provenance: GAME_DISSONANCE,
+      },
+      {
+        subject: 'dissonance',
+        predicate: 'noneEnumValue',
+        value: DISSONANCE_TYPE_ENUM.None,
+        provenance: GAME_DISSONANCE,
+      },
+      {
+        subject: 'dissonance',
+        predicate: 'echoLabCount',
+        value: ECHO_LAB_COUNT,
+        provenance: GAME_DISSONANCE,
+      },
+      {
+        subject: 'dissonance',
+        predicate: 'unlockTier',
+        value: DISSONANCE_UNLOCK.tier,
+        provenance: COMMUNITY_GUIDE,
+      },
+      {
+        subject: 'dissonance',
+        predicate: 'unlockWave',
+        value: DISSONANCE_UNLOCK.wave,
+        provenance: COMMUNITY_GUIDE,
+      },
+      ...Object.entries(DISSONANCE_BOOST_CAP).map(([boost, cap]) => ({
+        subject: `dissonance.boost.${boost}`,
+        predicate: 'capMultiplier',
+        value: cap,
+        provenance: COMMUNITY_GUIDE,
+      })),
+    ],
+    traps: [
+      'IT ZEROES STATS, AND THE ZERO LOOKS LIKE DATA. `CalculateEnemyLevelSkipChances` ends by '
+      + 'checking `IsUtilityDisabled` and writing eight bytes of zero over BOTH level-skip '
+      + 'fields. A model that reads those stats without knowing why they are zero will conclude '
+      + 'the account has no level skip.',
+      '`CalculateUpgradeBonuses` consults all three disable gates BEFORE recomputing anything, so '
+      + 'the whole stat block is conditioned on dissonance. Any stat model that omits it is right '
+      + 'only for non-dissonant runs, which is not the same as being right.',
+      'The enum is 1-based: `None = 0`, `Attack = 1`. Treating a stored 0 as Attack turns "no '
+      + 'dissonance" into "attack disabled".',
+      'There is a FOURTH gate, `IsUltimateWeaponDisabled`, with no counterpart in '
+      + '`CalculateUpgradeBonuses` — ultimate weapons are not part of that recompute. Looking for '
+      + 'four gates there and finding three is expected.',
+      'UTILITY IS THE EXPENSIVE ONE and it is easy to underrate. It removes cash, free upgrades, '
+      + 'recovery packages AND enemy level skip — four systems, not one stat. The binary shows '
+      + 'only the level-skip zeroing; the rest is the community guide, and the two agree on the '
+      + 'part that overlaps.',
+    ],
+    sources: [GAME_DISSONANCE],
+  },
+  {
+    id: 'dissonance.boost',
+    label: 'Dissonance boost',
+    kind: 'rule',
+    claimType: 'objective',
+    verification: 'verified_here',
+    summary:
+      'Per tier: `1 + bonus * (min(waveReached, maxWave) / maxWave) ^ '
+      + `${DISSONANCE_BOOST_EXPONENT}` + '`, plus the echo term. The reward scales with the best '
+      + 'wave reached on that tier while dissonant, so it is earned per tier rather than granted.',
+    units: 'multiplier, 1 at no progress',
+    validRange:
+      'The wave is clamped to `maxWave` before normalising, so the base term cannot exceed '
+      + '`1 + bonus` however far the run goes.',
+    implementedBy: [
+      'DISSONANCE_BOOST_EXPONENT',
+      'DISSONANCE_BOOST_CAP',
+      'DISSONANCE_BOOST_MAX_WAVE',
+    ],
+    assertions: [
+      {
+        subject: 'dissonance.boost',
+        predicate: 'exponent',
+        value: DISSONANCE_BOOST_EXPONENT,
+        provenance: GAME_BOOST_FORMULA,
+      },
+      {
+        subject: 'dissonance.boost',
+        predicate: 'maxTierIndex',
+        value: DISSONANCE_MAX_TIER_INDEX,
+        provenance: GAME_BOOST_FORMULA,
+      },
+      {
+        subject: 'dissonance.boost',
+        predicate: 'capWave',
+        value: DISSONANCE_BOOST_MAX_WAVE,
+        provenance: COMMUNITY_GUIDE,
+      },
+    ],
+    traps: [
+      'THE MAGNITUDES ARE REMOTE CONFIG, NOT CONSTANTS. `DissonanceManager.Awake` fetches '
+      + '`bonus` and `maxWave` from a server call and passes them to the `DissonanceBoost` '
+      + 'constructor. Only the 1.75 exponent is a literal. The caps below are therefore the one '
+      + 'part of this system that CANNOT be settled from the binary, however hard it is read — '
+      + `they come from observation: x${DISSONANCE_BOOST_CAP.damage} for damage, health and `
+      + `ultimate-weapon damage, x${DISSONANCE_BOOST_CAP.coin} for coins, reached at wave `
+      + `${DISSONANCE_BOOST_MAX_WAVE}. Treat them as current, not as constants.`,
+      'The curve is convex — an exponent above 1 means early waves are worth little and the last '
+      + 'stretch to the cap is worth most. Linear intuition understates the value of pushing a '
+      + 'tier and overstates the value of starting one.',
+      'The wave is clamped BEFORE the division, so beyond `maxWave` there is no reward at all. A '
+      + 'plan that treats more waves as always better is wrong past the cap.',
+      'A tier index at or above ' + `${DISSONANCE_MAX_TIER_INDEX}` + ' logs an error and returns '
+      + '1, not 0. A neutral-looking result can mean the lookup failed.',
+    ],
+    sources: [GAME_BOOST_FORMULA],
+  },
+  {
+    id: 'dissonance.echo',
+    label: 'Dissonant Echo',
+    kind: 'rule',
+    claimType: 'objective',
+    verification: 'verified_here',
+    summary:
+      'A lab that pays out a share of the dissonance progress you have made on OTHER tiers. '
+      + '`GetValue` adds `globalBonus * labBenefit`, where the global bonus is `bonus` times the '
+      + 'summed curve over the tiers below the one being asked about.',
+    units: 'multiplier added to the per-tier boost',
+    disambiguation:
+      'Not a bigger boost on the current tier — a separate term sourced from every LOWER tier. '
+      + 'Four labs, one per boost type, sharing the localisation template "Dissonant Echo - {0}", '
+      + `at research indices ${Object.values(DISSONANCE_ECHO_RESEARCH_INDEX).sort((a, b) => a - b).join(', ')}.`,
+    implementedBy: [
+      'DISSONANCE_ECHO_RESEARCH_INDEX',
+      'DISSONANCE_TRADE',
+      'DISSONANCE_ECHO_PER_LEVEL',
+    ],
+    assertions: [
+      ...DISSONANCE_TRADE.map(trade => ({
+        subject: `dissonance.${trade.disables}`,
+        predicate: 'boostsStat',
+        value: trade.boosts,
+        provenance: GAME_DISSONANCE,
+      })),
+      ...DISSONANCE_TRADE.map(trade => ({
+        subject: `dissonance.${trade.disables}`,
+        predicate: 'echoResearchIndex',
+        value: trade.researchIndex,
+        provenance: GAME_DISSONANCE,
+      })),
+      {
+        subject: 'dissonance.echo',
+        predicate: 'benefitPerLevel',
+        value: DISSONANCE_ECHO_PER_LEVEL,
+        provenance: CATALOG_LABS,
+      },
+      {
+        subject: 'dissonance.echo',
+        predicate: 'maxBenefit',
+        value: DISSONANCE_ECHO_MAX_BENEFIT,
+        provenance: CATALOG_LABS,
+      },
+    ],
+    traps: [
+      'THE SUM IS OVER EVERY OTHER TIER, above and below. `CalculateGlobalBonus` walks the whole '
+      + 'wave array and skips exactly one element — the current tier. See '
+      + '[[dissonance.echoTierRange]], which records how this was read backwards once.',
+      `The lab pays ${DISSONANCE_ECHO_PER_LEVEL} per level starting at LEVEL 0, so level 0 is `
+      + `already worth ${DISSONANCE_ECHO_PER_LEVEL} and the maximum at level `
+      + `${DISSONANCE_ECHO_MAX_LEVEL} is ${DISSONANCE_ECHO_MAX_BENEFIT.toFixed(3)}. A calculator `
+      + 'must add 1 to a raw level before scaling; doing so is correct, not an off-by-one.',
+      'THE ECHO REACHES TOURNAMENTS TOO, not just other campaign tiers. A model that treats '
+      + 'dissonance as campaign-only understates a tournament run for any account with dissonance '
+      + 'progress anywhere.',
+      'The guide\'s worked example is the cheapest check on the whole formula and it lands '
+      + `exactly: a x${DISSONANCE_BOOST_CAP.damage} boost echoes as 2% elsewhere, and `
+      + `(${DISSONANCE_BOOST_CAP.damage} - 1) x ${DISSONANCE_ECHO_PER_LEVEL} = 0.02. That also `
+      + 'confirms the global term is built from the value MINUS ONE rather than the value itself '
+      + '— the same base-versus-multiplier distinction that the perk formula turns on.',
+      'It is cached per tier (`_cachedForTier`) and recomputed only when the tier changes. A '
+      + 'caller that mutates wave records without changing tier reads a stale bonus.',
+      'The four labs share one localisation string, so a catalog keyed on display name collapses '
+      + 'them into one entry. They are distinguished only by research index.',
+      'THE FOUR SHARE ONE LOCALISATION TERM, so the name table in the game CANNOT tell you which '
+      + 'index is which. All four resolve locId 3366, `"Dissonant Echo - {0}"`, and the suffix is '
+      + 'substituted at runtime. Anything that names these labs is a hand-written mapping, and two '
+      + 'of ours had 238 and 241 swapped until 2026-08-18 — `LAB_RESEARCH_IMPORT_CATALOG` and '
+      + '`LAB_RESEARCH_DISPLAY_NAME_OVERRIDES`, with the override winning resolution, so every '
+      + 'decoded save labelled the Utility echo "Ultimate Weapons" and vice versa. Four plausible '
+      + 'names were all present in every table; only their PAIRING with an index was wrong, which '
+      + 'is why nothing that counted or spell-checked them noticed.',
+      'THE INDEX ORDER IS NOT THE ENUM ORDER. `DissonanceManager.Awake` builds the boosts with '
+      + 'research indices 239, 240, 238, 241 — Utility is 238, out of sequence, sitting BEFORE '
+      + 'Attack. Sorting the four indices and pairing them with `DissonanceType` order gets Utility '
+      + 'and Attack backwards. Resolve through `DISSONANCE_TRADE`, never by position.',
+      'THE TIE-BREAKER IS THE STAT, NOT THE NAME. 238 feeds `coinBoost`, and coin is what you are '
+      + 'paid for giving up Utility. That is the check `lab-dissonance-index.test.ts` encodes, '
+      + 'against the game asset table and `LAB_RESEARCH_BY_INDEX`.',
+    ],
+    sources: [GAME_BOOST_FORMULA],
+  },
+  {
+    id: 'dissonance.echoTierRange',
+    label: 'Which tiers the echo sums over',
+    kind: 'rule',
+    claimType: 'objective',
+    verification: 'verified_here',
+    summary:
+      'EVERY tier except the one being evaluated — above it as well as below. '
+      + '`CalculateGlobalBonus` walks the whole `waveReached` array and skips exactly one '
+      + 'element, the one at the current tier.',
+    disambiguation:
+      'Not "tiers below". A tier ABOVE the one being evaluated contributes its full share. The '
+      + 'echo is a global pool minus the tier you are already counting directly.',
+    assertions: [
+      {
+        subject: 'dissonance.echoTierRange',
+        predicate: 'includesTiersAbove',
+        value: true,
+        provenance: GAME_BOOST_FORMULA,
+      },
+      {
+        subject: 'dissonance.echoTierRange',
+        predicate: 'includesCurrentTier',
+        value: false,
+        provenance: GAME_BOOST_FORMULA,
+      },
+    ],
+    traps: [
+      'THE SKIP IS A CONTINUE, NOT A BREAK, and this was read wrong here on 2026-08-18. The loop '
+      + 'is driven by a LENGTH counter (`x21`) and runs the full array; a second counter '
+      + '(`x23 = tier - i`) exists only to feed `cbz x23`, which jumps to the increment block. '
+      + '`cbz` tests for EXACTLY zero, so once `i` passes `tier` the counter goes negative and '
+      + 'the body resumes. Reading it as a loop exit gives "tiers below only", which is wrong and '
+      + 'plausible.',
+      'The report that came out of that misreading — that the site calculator over-counts by '
+      + 'including tiers above — was FALSE. `src/pages/calculators/dissonance.vue` sums every tier '
+      + 'except the current one, which is what the game does. It was corrected because the values '
+      + 'match the game in play; a binary reading loses to an observed number.',
+      'In a loop with a separate exit counter, a `cbz`/`cbnz` on any other register is a filter '
+      + 'on one iteration, not a bound. Check which register the loop-closing branch actually '
+      + 'tests before concluding a range.',
+    ],
+    sources: [GAME_BOOST_FORMULA, SITE_CALCULATOR],
+  },
+]
+
+export const DISSONANCE_KNOWLEDGE_EDGES: readonly KnowledgeEdge[] = [
+  {
+    from: 'dissonance.boost',
+    kind: 'memberOf',
+    to: 'dissonance',
+    note: 'The reward half of the trade.',
+    sources: [GAME_BOOST_FORMULA],
+  },
+  {
+    from: 'dissonance.echo',
+    kind: 'scales',
+    to: 'dissonance.boost',
+    note: 'Added to the per-tier boost, sourced from the tiers below it.',
+    sources: [GAME_BOOST_FORMULA],
+  },
+  {
+    from: 'dissonance.echoTierRange',
+    kind: 'memberOf',
+    to: 'dissonance.echo',
+    note: 'An open question about which tiers feed it, recorded rather than guessed.',
+    sources: [SITE_CALCULATOR],
+  },
+  {
+    from: 'dissonance',
+    kind: 'gates',
+    to: 'enemyLevelSkip',
+    note:
+      'Utility dissonance zeroes both level-skip stats outright — the last thing '
+      + '`CalculateEnemyLevelSkipChances` does. This is the cause of a zero already documented '
+      + 'there without one.',
+    sources: [GAME_DISSONANCE],
+  },
+  {
+    from: 'dissonance',
+    kind: 'appliedBefore',
+    to: 'damage',
+    note:
+      'The disable gates are read at the top of `CalculateUpgradeBonuses`, before any stat is '
+      + 'recomputed, so every tower stat is downstream of the dissonance choice.',
+    sources: [GAME_DISSONANCE],
+  },
+  {
+    from: 'dissonance.echo',
+    kind: 'memberOf',
+    to: 'lab',
+    note: 'Four labs at research 238-241, sharing one localisation template.',
+    sources: [GAME_DISSONANCE],
+  },
+]

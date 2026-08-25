@@ -1,3 +1,4 @@
+import { ownLookup } from '../../internal/own-lookup'
 import { z } from 'zod'
 
 /** SDK-wide family partition (EP families are namespaced ep.*). */
@@ -34,6 +35,15 @@ export const SdkGraphNodeTypeSchema = z.enum([
   'display',
   'path',
   'unlock',
+  /**
+   * A game-mechanics claim lifted from the knowledge oracle.
+   *
+   * Distinct from the spreadsheet-shaped types above on purpose: an oracle node
+   * describes how the GAME behaves, not how a planner cell computes. Reusing
+   * `stat` or `control` for it would make the two indistinguishable in every
+   * query that follows.
+   */
+  'knowledge',
 ])
 export type SdkGraphNodeType = z.infer<typeof SdkGraphNodeTypeSchema>
 
@@ -72,6 +82,16 @@ export const SdkGraphNodeBaseSchema = z.object({
   traps: z.array(SdkTrapSchema).default([]),
   status: SdkNodeStatusSchema,
   lambdaName: z.string().optional(),
+  /**
+   * The knowledge-oracle node this was lifted from, if any.
+   *
+   * Counts as provenance. An oracle node is not a bare assertion: it carries
+   * its own `sources` with origin, ref, source version and verification date,
+   * and its claims are checked by the knowledge test suite. Pointing at one is
+   * therefore recheckable in the sense the invariants mean — more so than a
+   * `codeSymbol`, which is only a name.
+   */
+  oracleNodeId: z.string().optional(),
 })
 
 export const SdkGraphNodeSchema = SdkGraphNodeBaseSchema.superRefine((node, ctx) => {
@@ -86,10 +106,11 @@ export const SdkGraphNodeSchema = SdkGraphNodeBaseSchema.superRefine((node, ctx)
     || (node.wikiPages?.length ?? 0) > 0
     || (node.codeSymbols?.length ?? 0) > 0
     || !!node.lambdaName
+    || !!node.oracleNodeId
   if (!hasProv) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: 'node needs sourceCells, wikiPages, codeSymbols, or lambdaName',
+      message: 'node needs sourceCells, wikiPages, codeSymbols, lambdaName, or oracleNodeId',
       path: ['sourceCells'],
     })
   }
@@ -211,7 +232,7 @@ export function epFamilyToSdk(family: string): SdkGraphFamily {
     eDamage: 'ep.eDamage',
     workbook: 'ep.workbook',
   }
-  return map[family] ?? 'ep.workbook'
+  return ownLookup(map, family) ?? 'ep.workbook'
 }
 
 export function sdkFamilyToEp(family: string): string | null {

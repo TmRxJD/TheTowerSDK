@@ -20,7 +20,8 @@ import {
 import type { EffectiveEconomyLevels } from './effective-paths-eecon-levels'
 import { checkEffectiveEconomyLevels } from './effective-paths-levels-schema'
 import type { EffectiveLevelsIssue } from './effective-paths-levels-schema'
-import { computeEffectiveEconomy } from './effective-paths-eecon-compute'
+import { COMPARE_MASTERIES_AT_DEFAULT, computeEffectiveEconomy } from './effective-paths-eecon-compute'
+import type { EffectiveEconomyShadow } from './effective-paths-eecon-compute'
 import type { EffectiveEconomyConfig } from './effective-paths-eecon-compute'
 import {
   assistEfficiencyStoneCost,
@@ -28,7 +29,9 @@ import {
 } from './effective-paths-assist-efficiency'
 import {
   isStoneMasteryOwned,
+  STONE_MASTERY_CARD_KEYS,
   STONE_MASTERY_COSTS,
+  STONE_MASTERY_LEVEL_KEYS,
   STONE_MASTERY_MAX_LEVEL,
   STONE_MASTERY_NAMES,
   withStoneMasteriesActivated,
@@ -354,6 +357,43 @@ export interface EffectiveEconomyPlanOptions {
   maxLevels?: Readonly<Record<string, number>>
   targetLevels?: Readonly<Record<string, number>>
   excludeIds?: readonly string[]
+  /**
+   * Why a given `excludeIds` entry was left out, by id.
+   *
+   * `excludeIds` is one flat set fed from several places -- a lab the account
+   * has not unlocked, and the sheet's display toggles -- and the reason it was
+   * reported with was hard-coded to "not unlocked yet" for all of them. So
+   * turning on "Hide UW Cooldown" told a player `DW Cooldown - not unlocked
+   * yet` about a stat they had MAXED, which is a false statement about their
+   * own account and sends them to the wrong screen to fix it.
+   *
+   * Callers that know the cause supply it here; anything unlabelled keeps the
+   * old wording.
+   */
+  excludeReasons?: Readonly<Record<string, string>>
+  /**
+   * Every candidate the greedy loop prices, at every step — so a parity test
+   * can compare against the sheet's `DV5:ES5` band candidate by candidate
+   * rather than only noticing that step N differs.
+   */
+  onCandidateRoi?: (entry: {
+    step: number
+    id: string
+    name: string
+    nextLevel: number
+    roi: number
+    gain: number
+    price: number
+  }) => void
+  /**
+   * Whether an upgrade is on the board AT THIS STEP.
+   *
+   * The sheet re-evaluates each candidate column's gate on every ROW, so an
+   * upgrade can be offered at step 1 and withdrawn later. `excludeIds` is the
+   * right tool for one the currency cannot buy at all; this is for the ones
+   * that come and go. See `PathPlanOptions.available`.
+   */
+  available?: (step: number, id: string) => boolean
   labModifiers?: LabCostModifiers
   moduleDiscountPercent?: number
   enhancementDiscounts?: WorkshopEnhancementDiscounts
@@ -590,7 +630,7 @@ function withLevels(
       uwCdPurchases = level
       continue
     }
-    ;(next[upgrade.band] as unknown as Record<string, number>)[upgrade.key] = level
+    (next[upgrade.band] as unknown as Record<string, number>)[upgrade.key] = level
   }
   if (uwCdPurchases !== null) {
     // Composite purchases rewrite the three CD stone levels from the starting
@@ -612,6 +652,69 @@ function withLevels(
  * Candidates keep their matrix order, because the planner breaks a tie by
  * taking the earliest — which is the sheet taking the leftmost column.
  */
+/**
+ * The candidates the sheet prices with a different cooldown guard.
+ *
+ * Keyed on the CANDIDATE, so the quirk cannot reach the baseline or any other
+ * upgrade -- `evaluate` is called with no candidate for the baseline, which
+ * gives the sheet's `Old`, and with one for the candidate, which gives `New`.
+ * The eDamage planner learned this the hard way: keying on a level delta left
+ * an override switched on for the rest of the path and repriced the board.
+ *
+ * See {@link EffectiveEconomyShadow.candidateCooldownGuardUsesGoldenTower}.
+ */
+const GOLDEN_TOWER_GUARD_CANDIDATES = new Set([
+  'Recovery Package Chance',
+  'Assist Module Substats - Generator',
+  /*
+   * The three STONE cooldown candidates, which were missing.
+   *
+   * Enumerated by reading all nineteen `eEcon Stones` candidate formulas and
+   * asking which compare Black Hole's and Death Wave's duration against
+   * GOLDEN TOWER's cooldown rather than their own -- `CV5>=GTcd1*CO5` and
+   * `CY5>=GTcd1*CO5`. Exactly three do: GT Cooldown, BH Cooldown, DW Cooldown.
+   * The other sixteen keep each weapon's own threshold.
+   *
+   * This is why the port ranked DW Cooldown 30x below DW Quantity while the
+   * sheet ranked it ABOVE. A shorter cooldown lifts uptime AND the overlap
+   * between weapons, and weapons firing together are worth more than the sum
+   * of them firing apart -- which is the whole reason the sheet ranks cooldown
+   * so high, and it is invisible unless the candidate rebuilds the sync.
+   *
+   * Two explanations were tried and killed before this, and are recorded so
+   * they are not tried again. NOT a floored cooldown: `syncMultiplier` does
+   * `Math.floor(cycle.cooldown)`, which looked like it would swallow small
+   * reductions, but a bump moves DW cooldown 286.9 -> 277.3 and the floor
+   * moves with it. And NOT a sync that fails to respond: it goes 1.228040 ->
+   * 1.228509 on account-1, exactly the 3.8e-4 measured, and DOWN 6% on
+   * account-2 -- overlap is not monotonic in cooldown, which is real.
+   */
+  'GT Cooldown',
+  'BH Cooldown',
+  'DW Cooldown',
+])
+
+function shadowFor(candidate: { name: string } | undefined): EffectiveEconomyShadow {
+  if (candidate === undefined) return {}
+
+  /*
+   * `eEcon!EF5` computes its free-upgrade term with `$AZ$35`/`$AW$35`, the Wave
+   * Skip card, where the base column uses `$AZ$33`/`$AW$33`, Free Upgrades.
+   * Enumerated by `candidate-vs-base-diff.mjs`, not found by chasing a sweep.
+   */
+  if (candidate.name === 'Wave Skip Mastery') {
+    return { freeUpgradeCardFromWaveSkip: true }
+  }
+
+  if (candidate.name === 'Intro Sprint Mastery'
+    || candidate.name === 'Wave Accelerator Mastery') {
+    return { waveSkipDroppedByCandidateGate: true }
+  }
+  return GOLDEN_TOWER_GUARD_CANDIDATES.has(candidate.name)
+    ? { candidateCooldownGuardUsesGoldenTower: true }
+    : {}
+}
+
 export function planEffectiveEconomyPath(
   options: EffectiveEconomyPlanOptions,
 ): EffectiveEconomyPlan {
@@ -649,7 +752,10 @@ export function planEffectiveEconomyPath(
     if (!upgrade.variants.includes(variant)) continue
 
     if (skipped.has(upgrade.id)) {
-      excluded.push({ sheetName: upgrade.sheetName, reason: 'not unlocked yet' })
+      excluded.push({
+        sheetName: upgrade.sheetName,
+        reason: options.excludeReasons?.[upgrade.id] ?? 'not unlocked yet',
+      })
       continue
     }
 
@@ -695,34 +801,23 @@ export function planEffectiveEconomyPath(
       continue
     }
 
-    // Coins Mastery multiplies the Coins card — without the card the unlock
-    // does nothing, and a zero-gain candidate still fills the path.
-    if (variant === 'stone' && upgrade.sheetName === 'Coins Mastery'
-      && !config.cards.coins.active) {
-      excluded.push({
-        sheetName: upgrade.sheetName,
-        reason: 'the Coins card is not equipped',
-      })
-      continue
-    }
-
-    if (variant === 'stone' && upgrade.sheetName === 'Wave Skip Mastery'
-      && !config.cards.waveSkip.active) {
-      excluded.push({
-        sheetName: upgrade.sheetName,
-        reason: 'the Wave Skip card is not equipped',
-      })
-      continue
-    }
-
-    if (variant === 'stone' && upgrade.sheetName === 'Intro Sprint Mastery'
-      && !config.cards.introSprint.active) {
-      excluded.push({
-        sheetName: upgrade.sheetName,
-        reason: 'the Intro Sprint card is not equipped',
-      })
-      continue
-    }
+    /*
+     * NO card-equipped gate on the stone masteries. There were three, for
+     * Coins, Wave Skip and Intro Sprint, on the reasoning that "without the
+     * card the unlock does nothing, and a zero-gain candidate still fills the
+     * path".
+     *
+     * The sheet does not agree, and it is unambiguous about it.
+     * `eEcon Stones!EA2` through `EE2` are identical:
+     *
+     *   =OR(IDS_CARD_MASTERY(LEFT(EA4, LEN(EA4)-8)),
+     *       AND($AZ$11, NOT(IDS_LAB_HAS_UNLOCKED(EA4))))
+     *
+     * Already unlocked, or hide-non-unlocked-labs with the lab unresearched.
+     * The equipped toggle appears nowhere. And the premise was wrong on its own
+     * terms: on the generated sweep the sheet ranks Coins Mastery at ROI
+     * 2.4e-05, which is not zero.
+     */
 
     // The weapon behind a candidate has to be owned. The stone band buys
     // weapon stats outright, so its gate is the weapon it names; the time band
@@ -836,16 +931,130 @@ export function planEffectiveEconomyPath(
     })
   }
 
+  /**
+   * The five stone masteries' returns, computed ONCE from the account's own
+   * state rather than from wherever the path has got to.
+   *
+   * `eEcon Stones!EC5` is the whole Wave Skip Mastery candidate:
+   *
+   *   =IFS(OR(EC$2, $DL5), , TRUE, $AX$36)
+   *
+   * An ABSOLUTE reference to one cell, so every row of the ROI band carries
+   * the same number and the value does not move as the path spends. `AX36`
+   * itself is `(New/Old-1)/1000`, where `Old` is the account's current coins
+   * and `New` is the coins with that mastery unlocked at
+   * `RIGHT($AX$29, 1)` -- the "Compare Masteries at" level, NOT the account's
+   * own mastery level.
+   *
+   * The planner used to rank these by raising the mastery lab one level from
+   * wherever the account had it, which is a different quantity and a different
+   * size: it printed `Wave Skip Mastery@4` where the sheet prints `lvl 0`, and
+   * ranked all five against the stone candidates accordingly.
+   */
+  const stoneMasteryGains = new Map<string, number>()
+  if (variant === 'stone') {
+    /*
+     * Each mastery's return, taken from `eEcon!AX32`..`AX40` verbatim.
+     *
+     * Two of the five are closed forms and do not touch the economy at all;
+     * two compare a NAMED SUB-PRODUCT rather than effective economy; the fifth
+     * has no formula on the sheet, so its ROI cell is blank and it ranks last.
+     *
+     *   AX32 Coins       `0.03*(1+RIGHT(AX29,1))/1250`
+     *   AX34 Extra Orb   `$AZ$26*0.04*(1+RIGHT(AX29,1))/750`
+     *   AX36 Wave Skip   `(New/Old-1)/1000`, Old = `CU5*DR5`
+     *   AX38 Intro Spr.  `(New/Old-1)/1250`, Old = `DR5`
+     *   AX41 Wave Accel. `(New/Old-1)/1000`, Old = `DR5`
+     *
+     * Scoring these on total effective economy — which is what this did first
+     * — is a different quantity and came out about 5x the sheet's on Wave
+     * Skip. `Old` is two columns multiplied together, not the answer.
+     *
+     * The cells are taken from the candidate columns `EA5`..`EE5`, each of
+     * which is a bare `$AX$nn` reference, rather than by counting rows in the
+     * label column beside them — that is how Wave Accelerator was first read
+     * as `AX40`, which is empty.
+     *
+     * The denominators are already `STONE_MASTERY_COSTS`, so what is stored
+     * here is the NUMERATOR: the planner divides by the cost itself.
+     */
+    const at = config.compareMasteriesAt ?? COMPARE_MASTERIES_AT_DEFAULT
+    const idOf = (sheetName: string) => EFFECTIVE_ECONOMY_UPGRADES
+      .find(u => u.sheetName === sheetName && u.variants[0] === 'stone')?.id
+
+    const base = computeEffectiveEconomy(config, levels)
+    /*
+     * Two of them ADD the compare level to the mastery's own; one REPLACES it.
+     *
+     *   AX36 Wave Skip   `EPC_WS_FUP(13, 1, $AV$35, 1, RIGHT($AX$29,1))`
+     *                    — the compare level IS the mastery level
+     *   AX38 Intro Spr.  `100*1.8*(1+CB5+RIGHT(AX29,1))`
+     *   AX41 Wave Accel. `1+10%*(1+CC5+RIGHT(AX29,1))`
+     *                    — both add it to the level the account already has
+     *
+     * Treating all three as "replace" priced Wave Skip exactly and left Intro
+     * Sprint 5x low and Wave Accelerator NEGATIVE, which is what a level going
+     * DOWN looks like.
+     */
+    const ADDS_COMPARE_LEVEL = new Set(['Intro Sprint Mastery', 'Wave Accelerator Mastery'])
+    const withMastery = (sheetName: string) => {
+      const levelKey = STONE_MASTERY_LEVEL_KEYS[sheetName]
+      const cardKey = STONE_MASTERY_CARD_KEYS[sheetName]
+      if (!levelKey || !cardKey) return null
+      const level = ADDS_COMPARE_LEVEL.has(sheetName) ? levels.time[levelKey] + at : at
+      /*
+       * The MASTERY card is switched on and the base card is left alone.
+       *
+       * `AX36` does pass a literal `1` for `has_card` into `EPC_WS_FUP` and
+       * `EPC_WSM`, so forcing Wave Skip's own card on looked like a read of the
+       * formula. It priced MORE accounts differently, not fewer — 5 of 22
+       * against 3 — so whatever that literal stands for, it is not "pretend the
+       * player equipped it". Reverted rather than kept for the one account
+       * whose path it moved.
+       */
+      const cards = { ...config.cards, [cardKey]: { ...config.cards[cardKey], active: true } }
+      return computeEffectiveEconomy(
+        { ...config, cards },
+        { ...levels, time: { ...levels.time, [levelKey]: level } },
+      )
+    }
+    const ratio = (sheetName: string, of: (c: Readonly<Record<string, number>>) => number) => {
+      const after = withMastery(sheetName)
+      if (!after) return null
+      const before = of(base.columns)
+      if (!(before > 0)) return null
+      return of(after.columns) / before - 1
+    }
+
+    const gains: Record<string, number | null> = {
+      'Coins Mastery': 0.03 * (1 + at),
+      'Extra Orb Mastery': config.estimates.extraOrbTagShare * 0.04 * (1 + at),
+      'Wave Skip Mastery': ratio('Wave Skip Mastery', c => c.CU5 * c.DR5),
+      'Intro Sprint Mastery': ratio('Intro Sprint Mastery', c => c.DR5),
+      /*
+       * `EE5` is `$AX$41`, NOT `$AX$40`. Reading the label column one row off
+       * put this at an empty cell and scored the candidate at zero — on
+       * account-2 its real return is 0.001122, the HIGHEST on the board at
+       * step 8, which is exactly where the sheet buys it and the port did not.
+       */
+      'Wave Accelerator Mastery': ratio('Wave Accelerator Mastery', c => c.DR5),
+    }
+    for (const [sheetName, gain] of Object.entries(gains)) {
+      const id = idOf(sheetName)
+      if (id && gain !== null && Number.isFinite(gain)) stoneMasteryGains.set(id, gain)
+    }
+  }
+
   const skips: PathSkip[] = []
   const planned = planPath({
     upgrades,
     steps,
-    evaluate: current => {
+    evaluate: (current, candidate) => {
       const nextLevels = withLevels(levels, current, config)
       const scored = variant === 'stone'
         ? withStoneMasteriesActivated(config, levels, nextLevels)
         : config
-      return computeEffectiveEconomy(scored, nextLevels).effectiveEconomy
+      return computeEffectiveEconomy(scored, nextLevels, shadowFor(candidate)).effectiveEconomy
     },
     cost: (id, nextLevel) => {
       const upgrade = byId.get(id)
@@ -853,6 +1062,9 @@ export function planEffectiveEconomyPath(
       return costOf(upgrade, nextLevel, variant, options) ?? Number.NaN
     },
     onSkip: skip => skips.push(skip),
+    onCandidateRoi: options.onCandidateRoi,
+    available: options.available,
+    relativeGain: id => stoneMasteryGains.get(id) ?? null,
   })
 
   /*

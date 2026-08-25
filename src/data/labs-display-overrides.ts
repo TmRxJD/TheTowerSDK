@@ -1,4 +1,6 @@
+import { ownLookup } from '../internal/own-lookup'
 import { LAB_CATALOG } from './labs-catalog'
+import { LAB_RESEARCH_IMPORT_CATALOG } from './player-stats'
 import { findLabResearchByIndex, findLabResearchBySlug } from './labs-research'
 import { normalizeToolLabCategory, normalizeToolLabLookupKey } from './labs'
 import {
@@ -7,11 +9,32 @@ import {
   findSiteLabSlugForSaveIndex,
 } from './labs-categories'
 
+/**
+ * Names the extracted asset table does not supply cleanly, by save index.
+ *
+ * The four Dissonant Echo rows are here because the game's I2 catalog cannot
+ * name them: all four share locId 3366, `"Dissonant Echo - {0}"`, templated at
+ * runtime. So the suffix has to come from somewhere else.
+ *
+ * Until 2026-08-18 indices 238 and 241 were SWAPPED here and in
+ * `LAB_RESEARCH_IMPORT_CATALOG`, and the override won resolution — so every
+ * decoded save labelled the Utility echo "Ultimate Weapons" and vice versa.
+ * Three independent sources say otherwise and agree with each other:
+ *
+ *   - `DissonanceManager.Awake` (v28.3.0-arm64, RVA 0x21cd414) constructs the
+ *     four boosts with research indices 239, 240, 238, 241 in that order,
+ *     storing them into damageBoost, healthBoost, coinBoost, ultDamageBoost.
+ *     238 feeds the COIN boost, which is the Utility trade.
+ *   - the game's own `labResearch.researchNames` asset table.
+ *   - `LAB_RESEARCH_BY_INDEX` in `labs-research.ts`.
+ *
+ * `lab-dissonance-index.test.ts` holds all three to each other.
+ */
 export const LAB_RESEARCH_DISPLAY_NAME_OVERRIDES: Readonly<Record<number, string>> = {
-  238: 'Dissonant Echo - Ultimate Weapons',
+  238: 'Dissonant Echo - Utility',
   239: 'Dissonant Echo - Attack',
   240: 'Dissonant Echo - Defense',
-  241: 'Dissonant Echo - Utility',
+  241: 'Dissonant Echo - Ultimate Weapons',
 }
 
 /**
@@ -46,13 +69,55 @@ const STATIC_LAB_CATEGORY_BY_LOOKUP_KEY = new Map(
   ]),
 )
 
+export interface LabResearchImportRow {
+  index: number
+  gameField: string | null
+  displayName: string | null
+  slug: string | null
+  category: string | null
+}
+
+let importRowsByIndex: Map<number, LabResearchImportRow> | null = null
+
+/**
+ * Resolve an import-catalog row by its SAVE index, never by array position.
+ *
+ * Every row carries an explicit `index`, and callers were reaching in with
+ * `LAB_RESEARCH_IMPORT_CATALOG[i]` instead. That happens to work today because
+ * the catalog is dense 0-249 in order, which is exactly what makes it dangerous:
+ * it is correct by coincidence, and the coincidence is a property of the data
+ * rather than of the code. Drop one row, or sort the file, and every lab after
+ * the change silently renames itself — levels intact, names shifted, nothing
+ * throwing. The Dissonant Echo 238/241 swap showed how invisible a wrong
+ * index-to-name pairing is once it ships.
+ *
+ * `null` for an index the catalog does not carry, so a short or padded save
+ * reads as "no catalog row" rather than as some other lab.
+ */
+export function findLabResearchImportRow(index: number): LabResearchImportRow | null {
+  if (!Number.isInteger(index)) return null
+  if (!importRowsByIndex) {
+    importRowsByIndex = new Map()
+    for (const row of LAB_RESEARCH_IMPORT_CATALOG as readonly LabResearchImportRow[]) {
+      if (!importRowsByIndex.has(row.index)) importRowsByIndex.set(row.index, row)
+    }
+  }
+  return importRowsByIndex.get(index) ?? null
+}
+
+/** How many save indices the import catalog covers. */
+export function labResearchImportRowCount(): number {
+  return LAB_RESEARCH_IMPORT_CATALOG.length
+}
+
 export function findLabResearchDisplayName(
   saveIndex: number,
   extractedName: string | null | undefined,
 ): string | null {
-  if (LAB_RESEARCH_DISPLAY_NAME_OVERRIDES[saveIndex]) {
-    return LAB_RESEARCH_DISPLAY_NAME_OVERRIDES[saveIndex]
-  }
+  // Truthiness is not enough on a plain lookup: `Object.prototype` is truthy, so a
+  // `__proto__` index returned it as though it were an override name.
+  const override = ownLookup(LAB_RESEARCH_DISPLAY_NAME_OVERRIDES, saveIndex)
+  if (override) return override
   if (isUsableLabExtractedName(extractedName)) return extractedName as string
   const fromSite = findSiteLabDisplayNameForSaveIndex(saveIndex)
   if (fromSite) return fromSite

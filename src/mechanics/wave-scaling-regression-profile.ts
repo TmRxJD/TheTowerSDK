@@ -67,9 +67,17 @@ export const CAMPAIGN_COIN_REWARD_CURVE: readonly number[] = [
   40,
   48,
   60,
-  75,
-  92,
-  115,
+  /*
+   * Tiers 22-24 read 72 / 86 / 103 as of v28.3, confirmed against the game's
+   * own tier screen on 2026-08-16.
+   *
+   * They previously read 75 / 92 / 115, which was wrong. If you are tempted to
+   * change them back because another table in this repo disagrees, that table
+   * is the one to fix — this is the confirmed set.
+   */
+  72,
+  86,
+  103,
 ]
 
 /** T10+ damage attenuation — legacy NewDMG + tier-branch ladder tabulated. */

@@ -1,3 +1,5 @@
+import { readSaveListItems } from './read-values'
+
 /** Locate battle history array inside NRBF-parsed save root (case-insensitive key). */
 export function findBattleHistoryItems(parsedRoot: unknown): unknown[] | null {
   if (!parsedRoot || typeof parsedRoot !== 'object') {
@@ -13,9 +15,14 @@ export function findBattleHistoryItems(parsedRoot: unknown): unknown[] | null {
     if (!history || typeof history !== 'object') {
       continue
     }
-    const items = (history as { _items?: unknown[] })._items
-    if (Array.isArray(items)) {
-      return items
+    /*
+     * `_size`, not the capacity. `battleHistory` is 30 live runs in a 32-slot
+     * array here, and a stale entry past the end carries every field
+     * `looksLikeBattleRun` checks for -- so it would import as a run the player
+     * never played.
+     */
+    if (Array.isArray((history as { _items?: unknown })._items)) {
+      return readSaveListItems(history)
     }
   }
 
@@ -51,4 +58,52 @@ export function listImportableBattleRuns(parsedRoot: unknown): Record<string, un
     return []
   }
   return items.filter(looksLikeBattleRun) as Record<string, unknown>[]
+}
+
+/** How many of a player's best runs the game averages for its coins/hour stat. */
+export const COINS_PER_HOUR_RUN_SAMPLE = 3
+
+const SECONDS_PER_HOUR = 3600
+
+function finitePositive(value: unknown): number | null {
+  const numeric = typeof value === 'number' ? value : Number(value)
+  return Number.isFinite(numeric) && numeric > 0 ? numeric : null
+}
+
+/**
+ * The player's coins per hour, as the game's own stat panel derives it.
+ *
+ * Mean of the **three best** runs in battle history, where a run's rate is
+ * `coinsEarned / (realTime / 3600)`. Runs missing either field are dropped,
+ * the rates are sorted descending, and the top three — or fewer, if that is
+ * all there is — are averaged. `null` when no run qualifies.
+ *
+ * Worth having because it is an *input*, not a readout: Effective Paths prices
+ * the time path partly in coin-farming days, so without a real rate a caller
+ * has to ask the player to type one or fall back to a default that makes every
+ * cost on a developed account look astronomical.
+ *
+ * **It is a peak, not a sustained rate.** Averaging the best three runs is what
+ * the game's own stat panel does, and it will read higher than what a player
+ * actually earns per hour over a week. Offer it as a starting value rather than
+ * substituting it for a figure the player has given you.
+ *
+ * @example
+ * const rate = computeCoinsPerHourFromSaveRoot(parsedRoot)
+ * planEffectiveEconomyPath({ …, coinsPerHour: rate ?? undefined })
+ */
+export function computeCoinsPerHourFromSaveRoot(parsedRoot: unknown): number | null {
+  const rates: number[] = []
+
+  for (const run of listImportableBattleRuns(parsedRoot)) {
+    const coins = finitePositive(run.coinsEarned)
+    const seconds = finitePositive(run.realTime)
+    if (coins === null || seconds === null) continue
+    rates.push(coins / (seconds / SECONDS_PER_HOUR))
+  }
+
+  if (rates.length === 0) return null
+
+  const best = rates.sort((a, b) => b - a).slice(0, COINS_PER_HOUR_RUN_SAMPLE)
+  return best.reduce((total, rate) => total + rate, 0) / best.length
 }

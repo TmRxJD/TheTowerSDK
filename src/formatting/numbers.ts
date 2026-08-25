@@ -63,7 +63,14 @@ const COMPACT_NUMBER_SUFFIX_ORDER = [
   ...Array.from({ length: 26 }, (_, tier) => `A${String.fromCharCode(65 + tier)}`),
 ] as const
 
-type DecimalPreference = 'Period (.)' | 'Comma (,)'
+/**
+ * Which character a player reads as the decimal point.
+ *
+ * Exported because it is part of the signature of `formatNumberForDisplay`,
+ * `parseResource` and `normalizeDecimalSeparator` — a consumer storing this preference
+ * needs to be able to name its type.
+ */
+export type DecimalPreference = 'Period (.)' | 'Comma (,)'
 
 type FormatMode = 'display' | 'compact' | 'grouped'
 type SmallNumberStrategy = 'round' | 'preserve'
@@ -142,14 +149,47 @@ export function formatDecimalForDisplay(
 
 export const normalizeNumericValue = (value: string) => value.replace(',', '.').replace('k', 'K')
 
-export function normalizeDecimalSeparator(value: string | number | null | undefined): string {
+/**
+ * Bring a typed or pasted number to a period-decimal, no-grouping form.
+ *
+ * **A period is the decimal point; a comma groups thousands.** That is the project's
+ * policy and the default of `decimalSeparatorPreference`, and it is what the display side
+ * already does — `formatNumberForDisplay(1234567)` renders `1,234,567`. Parsing used to
+ * disagree with it: every comma became a period, so the number this package printed did
+ * not survive being pasted back in. `1,234,567` read as `1.234567`.
+ *
+ * A comma is only removed where it actually groups three digits. `"1,5"` is left exactly
+ * as it came in, so a validator rejects it rather than this function silently choosing
+ * between 1.5 (read as a European decimal) and 15 (read as a stripped group) — both of
+ * which are a wrong answer presented as a right one.
+ *
+ * Pass `'Comma (,)'` to mirror the whole thing for a caller whose user set that.
+ */
+export function normalizeDecimalSeparator(
+  value: string | number | null | undefined,
+  decimalPreference: DecimalPreference = 'Period (.)',
+): string {
   if (value === null || value === undefined) return ''
-  return String(value).trim().replace(/\s+/g, '').replace(/,/g, '.')
+  const text = String(value).trim().replace(/\s+/g, '')
+  if (!text) return ''
+
+  if (decimalPreference === 'Comma (,)') {
+    // Mirrored: periods group, a comma is the decimal point.
+    const grouped = /^[+-]?\d{1,3}(\.\d{3})+(,\d+)?$/
+    const base = grouped.test(text) ? text.replace(/\./g, '') : text
+    return base.replace(/,/g, '.')
+  }
+
+  const grouped = /^[+-]?\d{1,3}(,\d{3})+(\.\d+)?$/
+  return grouped.test(text) ? text.replace(/,/g, '') : text
 }
 
-export function standardizeNotation(value: string): string {
+export function standardizeNotation(
+  value: string,
+  decimalPreference: DecimalPreference = 'Period (.)',
+): string {
   if (!value) return value
-  const normalizedValue = normalizeDecimalSeparator(value)
+  const normalizedValue = normalizeDecimalSeparator(value, decimalPreference)
   const match = normalizedValue.match(/^([\d.]+)([a-zA-Z]*)$/)
   if (!match) return normalizedValue
   const number = match[1]
@@ -183,8 +223,31 @@ export function parseNumberInput(input: string): number {
   return multiplier ? numberPart * multiplier : numberPart
 }
 
-export const parseValueWithUnit = (value: string | undefined | null) => {
-  if (value == null) return { value: 0, unit: '' }
+/**
+ * A number and its unit, pulled out of a display string.
+ *
+ * `value` is ALWAYS finite. Before 2026-08-18 it was `parseFloat(...) / 1000`
+ * with no guard, so any unparseable string produced NaN and handed it to the
+ * caller — `parseValueWithUnit("abc")` returned `{ value: NaN, unit: "K" }`.
+ *
+ * `parsed` is how absence is reported. Returning 0 alone would be a silent
+ * default of exactly the kind that hides here: a run with an unreadable coin
+ * total would sort and average as if it were zero. Callers that care about the
+ * difference between "no number" and "the number nought" must read `parsed`;
+ * callers that only need arithmetic get a finite value either way.
+ */
+export interface ParsedValueWithUnit {
+  /** Always finite. `0` when nothing could be read — check `parsed` to tell them apart. */
+  value: number
+  unit: string
+  /** `false` when the input carried no readable number. */
+  parsed: boolean
+}
+
+const UNPARSEABLE: ParsedValueWithUnit = { value: 0, unit: '', parsed: false }
+
+export const parseValueWithUnit = (value: string | undefined | null): ParsedValueWithUnit => {
+  if (value == null) return UNPARSEABLE
 
   const cleanedValue = value.replace(/^\$/, '')
   const match = cleanedValue.match(/^([\d,.]+)([a-zA-Z]+)?$/)
@@ -192,10 +255,15 @@ export const parseValueWithUnit = (value: string | undefined | null) => {
     const numericPart = match[1].replace(',', '.')
     const unitPart = match[2] || ''
     const numericValue = parseFloat(numericPart)
-    if (unitPart) return { value: numericValue, unit: unitPart }
+    if (!Number.isFinite(numericValue)) return UNPARSEABLE
+    if (unitPart) return { value: numericValue, unit: unitPart, parsed: true }
   }
 
-  return { value: parseFloat(cleanedValue.replace(',', '.')) / 1000, unit: 'K' }
+  // No unit: the bare number is read as thousands, which is what the tracker
+  // writes. "1500" is 1.5K.
+  const bare = parseFloat(cleanedValue.replace(',', '.'))
+  if (!Number.isFinite(bare)) return UNPARSEABLE
+  return { value: bare / 1000, unit: 'K', parsed: true }
 }
 
 export const convertToNumericValue = (value: number, unit: string): number => {
@@ -273,22 +341,50 @@ export function parseDuration(duration: string): number {
   return parseDurationToHours(duration) * 3600
 }
 
-export const sortByUnit = (left: string, right: string) => {
-  const leftValue = parseValueWithUnit(left)
-  const rightValue = parseValueWithUnit(right)
-  const leftMultiplier = unitMultipliers[leftValue.unit] || 1
-  const rightMultiplier = unitMultipliers[rightValue.unit] || 1
-  return (leftValue.value * leftMultiplier) - (rightValue.value * rightMultiplier)
+/**
+ * Compare two unit-suffixed display strings. A TOTAL order, and never NaN.
+ *
+ * The previous version subtracted two `parseValueWithUnit` results directly, so
+ * one unreadable cell made the comparator return NaN. `Array.prototype.sort`
+ * with a NaN-returning comparator leaves the order implementation-defined — in
+ * practice, on the runs table, the column simply did not sort and said nothing
+ * about it. This is the comparator behind nine columns of the runs table, so a
+ * single malformed value silently disabled sorting for the whole column.
+ *
+ * Unreadable values sort together at the end, below every real number, rather
+ * than being treated as zero and interleaved with genuine zeroes.
+ */
+export const sortByUnit = (left: string, right: string): number => {
+  const leftParsed = parseValueWithUnit(left)
+  const rightParsed = parseValueWithUnit(right)
+
+  if (!leftParsed.parsed || !rightParsed.parsed) {
+    if (leftParsed.parsed === rightParsed.parsed) return 0
+    return leftParsed.parsed ? -1 : 1
+  }
+
+  const leftMultiplier = unitMultipliers[leftParsed.unit] || 1
+  const rightMultiplier = unitMultipliers[rightParsed.unit] || 1
+  const difference = (leftParsed.value * leftMultiplier) - (rightParsed.value * rightMultiplier)
+  return Number.isFinite(difference) ? difference : 0
 }
 
 export const sortByConvertedDuration = (left: string, right: string) =>
   parseDuration(left) - parseDuration(right)
 
+/**
+ * Render a grouped number in the comma convention.
+ *
+ * Both separators swap, in one pass. Replacing only `.` with `,` leaves the comma group
+ * separators where they are, so `1,234.5` came out as `1,234,5` — which is ambiguous to a
+ * reader and unparseable by `parseResource`, breaking the round-trip in the one direction
+ * that exists for the players who need it. The correct form is `1.234,5`.
+ *
+ * This was invisible for as long as nothing passed `'Comma (,)'`.
+ */
 function applyDecimalPreference(value: string, decimalPreference: DecimalPreference): string {
-  if (decimalPreference === 'Comma (,)' && value.includes('.')) {
-    return value.replace(/\./g, ',')
-  }
-  return value
+  if (decimalPreference !== 'Comma (,)') return value
+  return value.replace(/[.,]/g, match => (match === '.' ? ',' : '.'))
 }
 
 function parseDisplayNumericValue(value: number | string): number | string {
@@ -516,11 +612,32 @@ export function formatRateWithNotation(amount: number, hours: number): string {
   return rate.toExponential(2)
 }
 
-export function parseResource(raw: string | null | undefined): { error?: true; value?: number } {
+/**
+ * A well-formed resource amount: digits, an optional decimal part, and either an exponent
+ * or one of the game's magnitude suffixes — nothing else.
+ *
+ * `parseNumberInput` falls back to `parseFloat` when its own pattern misses, and `parseFloat`
+ * takes a leading number and discards whatever follows. That turned `"12abc"` into `12` and
+ * `"abc"` into `0`, both reported as successes — a pasted value with a stray character became
+ * a confidently wrong number, and garbage became a zero indistinguishable from a real one.
+ * `parseResource` has an error channel, so it checks the shape before trusting the number.
+ */
+const RESOURCE_INPUT_PATTERN = /^(?:\d+|\d*\.\d+)(?:[eE][+-]?\d+|[KMBTQSOND]|A[A-Z])?$/i
+
+export function parseResource(
+  raw: string | null | undefined,
+  decimalPreference: DecimalPreference = 'Period (.)',
+): { error?: true; value?: number } {
   if (!raw) return { error: true }
-  const cleaned = normalizeDecimalSeparator(raw)
-  if (!cleaned) return { error: true }
-  const standardized = standardizeNotation(cleaned)
+  /*
+   * Normalise ONCE. `standardizeNotation` normalises internally, so passing it an already
+   * normalised string ran the grouping rules twice — and under the comma convention that
+   * turned "1,234" (one point two three four) into 1234, a thousandfold error of exactly
+   * the kind this preference exists to prevent.
+   */
+  const standardized = standardizeNotation(String(raw), decimalPreference)
+  if (!standardized) return { error: true }
+  if (!RESOURCE_INPUT_PATTERN.test(standardized.trim())) return { error: true }
   const value = parseNumberInput(standardized)
   if (!Number.isFinite(value) || value < 0) return { error: true }
   return { value }

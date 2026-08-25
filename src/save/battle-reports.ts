@@ -4,8 +4,8 @@ import { normalizeBattleHistorySaveEntry } from './battle-history-normalize'
 import { parseDurationToHours, parseSaveDateTimeToMs } from '../formatting/index'
 import { listImportableBattleRuns } from './battle-history'
 import { getKilledByFromSave } from './killed-by'
-import { normalizeTrackerDateText, normalizeTrackerTimeText } from '../internal/tracker-cloud-schemas'
-import { formatCompact } from '../internal/tool-formatting'
+import { normalizeTrackerDateText, normalizeTrackerTimeText } from './tracker-run-fields'
+import { formatCompact } from '../formatting/tool-formatting'
 
 export function readBattleDateFromSave(raw: unknown): Date {
   const ms = parseSaveDateTimeToMs(raw)

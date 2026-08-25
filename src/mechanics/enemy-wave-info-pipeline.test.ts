@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getBasicEnemyWaveStats } from '../internal/enemy-wave-stats'
+import { getBasicEnemyWaveStats } from './enemy-wave-stats'
 import { getWaveInfoEnemyStatsUnfloored } from './wave-info-enemy-stats'
 import { buildStandardTierBattleConditions } from './battle-condition-config'
 import {

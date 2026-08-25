@@ -39,7 +39,7 @@ const WORKSHOP_GAME_NAMES: Record<DamageWorkshopStat, string> = {
 }
 import type { EffectiveDamageLevels } from './effective-paths-edamage-levels'
 import type { DamageRunType } from './effective-paths-damage-base'
-import cells from './effective-paths-edamage.fixtures.json'
+import cells from '../../fixtures/mechanics/effective-paths-edamage.fixtures.json'
 
 /**
  * Effective damage against the sheet's own grid.
@@ -309,11 +309,76 @@ export function configFromSheet(source: SheetCells = cells as SheetCells): Effec
       bossWave: cell('BC27') === 1,
       bossWaveDivisor: cell('AY28') || 1,
     },
-    dissonance: { active: false, tierPersonalBest: 0, allTierPersonalBests: [] },
+    /*
+     * DISSONANT ECHO, which was hardcoded off here for every account.
+     *
+     *     CY5 = TTG_DISSONANT_ATTACK_BOOST($CX$13, $CX$14:$CX$34, CT5)
+     *     EB5 = TTG_DISSONANT_UW_BOOST($CX$40, $CX$41:$CX$61, CU5)
+     *
+     * With `active: false` the port returned 1 for both and two whole terms
+     * vanished -- `Disco Attack` out of `Base` and `Disco UW` out of the
+     * ultimate weapon total. On the generated fixture that is invisible,
+     * because its `CX13` is 0 and the boost really is 1; on `sheet-2` the sheet
+     * reads 5.20937539659 and 5.20808557575.
+     *
+     * The shape of the error is what named it: the four candidates that move
+     * only `OtherMults` came out with an implied base x5.152990 against the
+     * other eight, to six digits.
+     *
+     * This is the same defect `effective-paths-ehp-from-sheet.ts` records for
+     * Health, in the same words -- the model was never wrong, nothing set its
+     * inputs, and nothing reported that.
+     *
+     * `active` follows eHP's rule: true whenever a personal best exists. The
+     * sheet has no switch, it simply computes the boost, and with every best at
+     * zero the boost is 1 either way.
+     */
+    dissonance: (() => {
+      const range = (col: string, from: number, to: number) => {
+        const out: number[] = []
+        for (let row = from; row <= to; row += 1) out.push(cell(`${col}${row}`))
+        return out
+      }
+      const tierPersonalBest = cell('CX13')
+      const allTierPersonalBests = range('CX', 14, 34)
+      const uwTierPersonalBest = cell('CX40')
+      const uwAllTierPersonalBests = range('CX', 41, 61)
+      const any = (best: number, all: number[]) => best > 0 || all.some(x => x > 0)
+      return {
+        active: any(tierPersonalBest, allTierPersonalBests)
+          || any(uwTierPersonalBest, uwAllTierPersonalBests),
+        tierPersonalBest,
+        allTierPersonalBests,
+        ultimateWeapon: {
+          tierPersonalBest: uwTierPersonalBest,
+          allTierPersonalBests: uwAllTierPersonalBests,
+        },
+      }
+    })(),
   }
 }
 
 /** Row 5 is the "current levels" row, so the levels are the player's own. */
+/**
+ * A vault percentage read back as a LEVEL, without floating-point noise.
+ *
+ * `eDamage Keys!BO5` is `=BM8/5%` and the port does the same division, but
+ * `0.15 / 0.05` is `2.9999999999999996` in IEEE — and `keysCandidateCost`
+ * requires an integer, so it returned null, the candidate was excluded
+ * entirely, and the path came out exactly one step short. Seven of the
+ * twenty-two accounts drew a level whose product divides back inexactly.
+ *
+ * Only near-integers are snapped. A genuinely fractional level stays
+ * fractional: the working copy's hand-typed `BM8` of 0.0365 is 0.73 of a
+ * level, and rounding that away would hide the fixture defect rather than the
+ * arithmetic one.
+ */
+function vaultLevel(percentage: number, perLevel: number): number {
+  const raw = percentage / perLevel
+  const nearest = Math.round(raw)
+  return Math.abs(raw - nearest) < 1e-6 ? nearest : raw
+}
+
 export function levelsFromSheet(
   source: SheetCells = cells as SheetCells,
 ): EffectiveDamageLevels {
@@ -361,17 +426,17 @@ export function levelsFromSheet(
      * node's per-level percentage, which is `eDamage Keys!BO5 = BM8 / 5%`.
      */
     keys: {
-      damage: cell('BM8') / 0.05,
-      criticalChance: cell('BM10') / 0.01,
-      criticalFactor: cell('BM11') / 0.05,
-      superCritChance: cell('BM20') / 0.02,
-      superCritMult: cell('BM21') / 0.05,
-      attackSpeed: cell('BM9') / 0.05,
-      multishotChance: cell('BM14') / 0.04,
-      damagePerMeter: cell('BM13') / 0.05,
-      rapidFireChance: cell('BM16') / 0.04,
-      bounceShotChance: cell('BM18') / 0.04,
-      ultimateWeaponDamage: cell('BM39') / 0.05,
+      damage: vaultLevel(cell('BM8'), 0.05),
+      criticalChance: vaultLevel(cell('BM10'), 0.01),
+      criticalFactor: vaultLevel(cell('BM11'), 0.05),
+      superCritChance: vaultLevel(cell('BM20'), 0.02),
+      superCritMult: vaultLevel(cell('BM21'), 0.05),
+      attackSpeed: vaultLevel(cell('BM9'), 0.05),
+      multishotChance: vaultLevel(cell('BM14'), 0.04),
+      damagePerMeter: vaultLevel(cell('BM13'), 0.05),
+      rapidFireChance: vaultLevel(cell('BM16'), 0.04),
+      bounceShotChance: vaultLevel(cell('BM18'), 0.04),
+      ultimateWeaponDamage: vaultLevel(cell('BM39'), 0.05),
     },
     stone: {
       ...base.stone,
@@ -401,6 +466,40 @@ describe('effective damage, against the live grid', () => {
   for (const [ref, key, what] of factors) {
     it(`matches ${what} — ${ref}`, () => {
       expect(result[key]).toBeCloseTo(cell(ref), 6)
+    })
+  }
+
+  /*
+   * EVERY intermediate column, not just the eight aggregates above.
+   *
+   * The eight are `base`, `crit`, `ultimateWeaponCrit`, `bulletDamageMultiplier`,
+   * `spotlight`, `ultimateWeapons`, `slow` and `effectiveDamage` — the factors
+   * of `ES5`. They are the LAST step of a dozen columns each, so an error in an
+   * intermediate can hide behind them: cancel against a sibling, or move a
+   * number too little to fail a 6-decimal comparison on the total while still
+   * changing which upgrade a path picks.
+   *
+   * That is not hypothetical, it is the pattern of this whole port. Every stone
+   * and coin defect found so far surfaced as a RANKING difference in a sweep,
+   * never as a failing unit test, and each cost an afternoon of bisecting to
+   * localise. The sweeps were doing the job this test should do.
+   *
+   * Driven off `result.columns` rather than a written list, so a column the
+   * model gains is compared from the day it exists.
+   */
+  const skipped = new Set<string>([])
+  for (const ref of Object.keys(result.columns)) {
+    if (skipped.has(ref)) continue
+    it(`matches column ${ref}`, () => {
+      const expected = cell(ref)
+      // A blank on the sheet is not a zero to match; it means this account does
+      // not exercise the column, and asserting against it would be asserting
+      // against nothing.
+      if (expected === undefined || expected === null || expected === '') {
+        expect.soft(true, `${ref} is blank on the sheet`).toBe(true)
+        return
+      }
+      expect(result.columns[ref]).toBeCloseTo(Number(expected), 6)
     })
   }
 

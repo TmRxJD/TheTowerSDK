@@ -222,13 +222,6 @@ describeServer('mcp server', () => {
         .toMatch(/mechanic/i)
     })
 
-    it('hands back a recoverable error for a title that does not exist', async () => {
-      // Offline this is a fetch failure and online it is a "not found"; either
-      // way it must be an error *object* with a way forward, not a throw.
-      const result = await call('wiki_page', { title: 'ThisPageCannotExist9f3a' })
-      expect(result.error).toBeTruthy()
-      expect(result.hint ?? '').toMatch(/wiki_search|title/i)
-    })
   })
 
   describe('with a local page library', () => {
@@ -250,7 +243,7 @@ describeServer('mcp server', () => {
       if (!hasLibrary) return
       offline = spawn('node', [SERVER], {
         stdio: ['pipe', 'pipe', 'inherit'],
-        env: { ...process.env, TOWER_WIKI_DIR: dir },
+        env: { ...process.env, TOWER_WIKI_DIR: dir, TOWER_WIKI_OFFLINE: '1' },
       })
       offline.stdout.on('data', chunk => {
         offlineBuffer += chunk
@@ -267,6 +260,19 @@ describeServer('mcp server', () => {
     })
 
     afterAll(() => offline?.kill())
+
+    /*
+     * Lives here, not against the live wiki, because it used to reach Fandom for a title
+     * that by definition is not there — so a volunteer-run site having a slow minute made
+     * it hang for twenty seconds and fail the whole file under suite concurrency. The
+     * property being checked is the SHAPE of the failure, which needs no network:
+     * an error object with a way forward, never a throw.
+     */
+    itLocal('hands back a recoverable error for a title that does not exist', async () => {
+      const result = await callLocal('wiki_page', { title: 'ThisPageCannotExist9f3a' })
+      expect(result.error).toBeTruthy()
+      expect(result.hint ?? '').toMatch(/wiki_search|title/i)
+    })
 
     const callLocal = async (name: string, args: Record<string, unknown>) => {
       const response = await new Promise<Record<string, unknown>>((resolve, reject) => {

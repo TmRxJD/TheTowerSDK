@@ -1,9 +1,14 @@
 /**
- * Reading The Tower's community wiki.
+ * Reading The Tower's community wikis.
  *
- * The wiki is on Fandom, which serves **wikitext** — templates, infoboxes,
- * `[[File:...]]` links and vertical wikitables — rather than anything you can
- * render directly. This turns that into Markdown.
+ * There are two, and they do not carry the same pages — see `wiki-sources.ts`
+ * for the set and `searchWikis` / `fetchWikiPageFromAnySource` to consult all
+ * of them. The `fetchFandom*` helpers below are the single-site path, kept
+ * because Fandom is the larger wiki and the sensible default.
+ *
+ * Both serve **wikitext** — templates, infoboxes, `[[File:...]]` links and
+ * vertical wikitables — rather than anything you can render directly. This
+ * turns that into Markdown.
  *
  * ```ts
  * import { fetchFandomPageAsMarkdown } from 'thetowersdk/wiki'
@@ -32,10 +37,13 @@
 import { convertFandomWikitextToMarkdown } from './wiki-fandom-wikitext'
 import type { FandomWikitextContext } from './wiki-fandom-wikitext'
 
+export * from './wiki-credits'
 export * from './wiki-fandom-media'
 export * from './wiki-fandom-raw-tables'
 export * from './wiki-fandom-wikitext'
 export * from './wiki-fandom-wikitext-table'
+export * from './wiki-sources'
+export * from './wiki-transport-curl'
 
 /** Where the community wiki's API lives. */
 export const FANDOM_API_URL

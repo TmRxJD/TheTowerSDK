@@ -198,6 +198,26 @@ export interface ModuleCostRow {
   cumulativeCost: number
 }
 
+/**
+ * The highest level a module cost table prices.
+ *
+ * Buying level L reads entry `L - 2` — module levels start at 1 and the first purchase is
+ * level 2 — so a 299-entry table prices levels up to 300, which is the rarity cap.
+ */
+export function moduleCostMaxLevel(costs: readonly number[]): number {
+  return costs.length + 1
+}
+
+/**
+ * Per-level costs between two module levels, stopping at the last level the table prices.
+ *
+ * Both bounds matter. Without the cap, `costs[index]` past the end read as `undefined` and
+ * `|| 0` turned it into a free level, so a plan running past 300 came back too cheap while
+ * looking entirely normal. Without the ceiling on `to`, an unbounded target allocated a row
+ * per level — two million rows from a single call.
+ *
+ * Totals are unchanged: the rows this drops all cost 0.
+ */
 export function buildModuleCostRows(
   costs: readonly number[],
   fromLevel: number,
@@ -205,7 +225,8 @@ export function buildModuleCostRows(
   discountPercent: number,
 ): ModuleCostRow[] {
   const from = Math.max(1, Math.floor(Number(fromLevel) || 1))
-  const to = Math.max(from, Math.floor(Number(toLevel) || from))
+  const requestedTo = Math.max(from, Math.floor(Number(toLevel) || from))
+  const to = Math.min(requestedTo, moduleCostMaxLevel(costs))
   if (to <= from) return []
 
   const mult = 1 - (clampDiscountPercent(discountPercent) / 100)

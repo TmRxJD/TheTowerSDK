@@ -1,3 +1,4 @@
+import { ownLookup } from '../internal/own-lookup'
 import { findLabResearchBySlug } from './labs-research'
 import { SITE_LAB_SLUG_ALIASES } from './labs-categories'
 
@@ -18,7 +19,7 @@ export function computeResearchLabLevel(
   slug: string,
   maxLevel = 99,
 ): number {
-  const canonical = SITE_LAB_SLUG_ALIASES[slug] ?? slug
+  const canonical = ownLookup(SITE_LAB_SLUG_ALIASES, slug) ?? slug
   const research = findLabResearchBySlug(canonical) ?? findLabResearchBySlug(slug)
   const candidateKeys = [
     slug,
@@ -28,8 +29,10 @@ export function computeResearchLabLevel(
   ].filter((key): key is string => typeof key === 'string' && key.length > 0)
 
   for (const key of candidateKeys) {
-    const value = researchLabLevels[key]
-    if (Number.isFinite(value)) {
+    // `researchLabLevels` is the caller's own record — saved settings, a save file —
+    // so it gets the same treatment as our catalogs.
+    const value = ownLookup(researchLabLevels, key)
+    if (typeof value === 'number' && Number.isFinite(value)) {
       return clampInt(value, 0, maxLevel)
     }
   }

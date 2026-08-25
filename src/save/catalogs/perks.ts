@@ -14,6 +14,195 @@ export const PERK_TRADE_OFF_INDICES = Array.from({ length: 10 }, (_, offset) => 
 export const PERK_CATALOG_SIZE = 50
 
 /**
+ * Where the game applies each trade-off perk, read from the call sites.
+ *
+ * `Perks.PerkBenefitUp(index)` returns the benefit side and `PerkBenefitDown(index)`
+ * the penalty; the FUNCTION each is called from says which stat it lands on.
+ * That is what identifies a perk, and unlike a display string it cannot be
+ * transposed without the game changing.
+ *
+ * Only trade-offs are listed: they are the pool with two sides, and the only
+ * one this repo got wrong.
+ */
+export const PERK_EFFECT_SITES: Readonly<Record<number, { up: string, down?: string }>> = {
+  0: { up: 'Main.towerMaxHealth (x)' },
+  1: { up: 'Main.damage (x)' },
+  2: { up: 'Main.towerHealthRegen (x)' },
+  3: { up: 'Main.coinsBonusUpgrade and Main.coinsPerWave (x)' },
+  4: { up: 'Main.bounceTargets (+, integer)' },
+  5: { up: 'Main.interestPerWave (x)' },
+  6: { up: 'Main.mineDamage (x)' },
+  7: { up: 'Main.orbCount (+, integer)' },
+  8: { up: 'Main.free{Attack,Defense,Utility}UpgradeChance (+)' },
+  9: { up: 'Main.defenseRel (+)' },
+  10: { up: 'Perks.ApplyWaveBenefit' },
+  11: { up: '(no benefit call — it unlocks a weapon)' },
+  12: { up: 'Main.GameMaxSpeedWithBuffs' },
+  13: { up: 'Main.cashBonusUpgrade (x)' },
+  14: { up: 'Main.defenseAbs (x)' },
+  20: { up: 'Main.GetSmartMissilesQuantity' },
+  21: { up: 'Swamp.GetRadius' },
+  22: { up: 'Main.GetDeathwaveQuantity' },
+  23: { up: '(no benefit call — it adds a set of mines)' },
+  24: { up: 'Main.GetGoldenTowerBonus' },
+  25: { up: 'Main.GetChainLightningDamage' },
+  26: { up: 'Main.GetChronoFieldDuration' },
+  27: { up: 'Main.GetBlackHoleDuration' },
+  28: { up: 'Main.GetSpotlightBonus' },
+  40: { up: 'Main.damage (x)', down: 'Enemy.GetEnemyBaseHealth (boss)' },
+  41: { up: 'Main.coinsBonusUpgrade and Main.coinsPerWave (x)', down: 'Main.towerMaxHealth (x)' },
+  42: { up: 'Enemy.GetEnemyBaseHealth', down: 'Main.towerHealthRegen and Main.lifesteal (x)' },
+  43: { up: 'Enemy.GetEnemyBaseDamage', down: 'Main.damage (x)' },
+  44: { up: '(not applied through PerkBenefitUp)', down: 'Enemy.GetEnemyBaseDamage' },
+  45: { up: 'Enemy.GetEnemyBaseSpeed', down: 'Enemy.GetEnemyBaseDamage' },
+  46: { up: 'Main.cashPerWave (x)', down: '(not applied through PerkBenefitDown)' },
+  47: { up: 'Main.towerHealthRegen (x)', down: 'Main.towerMaxHealth (x)' },
+  48: { up: 'Enemy.GetEnemyBaseHealth (boss)', down: 'Enemy.GetEnemyBaseSpeed' },
+  49: { up: 'Main.lifesteal (x)', down: '(not applied through PerkBenefitDown)' },
+}
+
+/**
+ * The two indices whose names were swapped, kept so the fix is legible.
+ *
+ * 40 raises TOWER damage and penalises BOSS health; 48 does the opposite pair,
+ * lowering boss health and penalising boss speed. The catalog had the names the
+ * other way round.
+ */
+export const PERK_TRADE_OFF_TRANSPOSITION_FIXED = [40, 48, 41, 49] as const
+
+/**
+ * Every index whose name this catalog had wrong before 2026-08-18.
+ *
+ * Thirteen of thirty-four. The ultimate-weapon block (20-28) was entirely
+ * correct; the standard block had eleven of fifteen wrong and the trade-off
+ * block two pairs transposed.
+ *
+ * The pattern is not random noise — the names were written in the order of a
+ * display list rather than in index order, so runs of them are shifted. It is
+ * what a hand-transcribed index mapping looks like when nothing ever checks it.
+ */
+/**
+ * What `perkBenefitUpBase` is: the constant term of the one real formula.
+ *
+ * `Perks.PerkBenefitUp` (0x1F7FC74) computes, for the normal path:
+ *
+ *     (base[i] + increase[i] * perkLevel[i]) * (1 + StandardPerkBonus)
+ *
+ * with the bonus read from a lab that DEPENDS ON THE PERK — research 83
+ * (Standard Perks Bonus) for standard perks, 88 (Improve Trade-off Perks) for
+ * trade-offs, and neither for the integer perks or any UW perk. An earlier
+ * version of this note said 88 for the general case; that is the trade-off lab
+ * and using it on a standard perk would be quietly wrong. See
+ * `mechanics/perk-benefit.ts`, which routes all five cases.
+ *
+ * That single expression is BOTH of the formulas the wiki gives:
+ *
+ *     base = 1  ->  (1 + increase * qty) * (1 + SPB)   the wiki's "multiplicative"
+ *     base = 0  ->  (    increase * qty) * (1 + SPB)   the wiki's "additive"
+ *
+ * So `perkBenefitUpBase` is not a hint about which formula to use — it IS the
+ * difference between them, and the game has one code path. Perks 0, 1, 2, 3, 5,
+ * 13 and 14 carry base 1; everything else is 0 or absent, and an absent entry
+ * is 0 because `Initialize` only writes indices 0-14.
+ *
+ * ## The consequence worth stating
+ *
+ * A base-0 perk whose result is USED as a multiplier has no implicit 1, so it
+ * does not stack the way the name suggests. "Land Mine Damage x3.50" at two
+ * stacks is `3.5 * 2 = 7.0`, not `1 + 3.5 * 2 = 8.0`. Reading the "x" in the
+ * name as a multiplier-with-identity is wrong for exactly the base-0 perks.
+ *
+ * `onlyOneLevel = true` takes a separate path that returns `base + increase`
+ * with no quantity term — the per-level preview the UI shows, not the applied
+ * value.
+ */
+export const PERK_BENEFIT_UP_FORMULA
+  = '(base[i] + increase[i] * perkLevel[i]) * (1 + StandardPerkBonus)'
+
+/** The Standard Perks Bonus lab. Trade-offs use 88 instead; see perk-benefit.ts. */
+export const PERK_STANDARD_BONUS_RESEARCH_INDEX = 83
+
+/**
+ * How each perk's returned value is USED at its application site.
+ *
+ * A different question from `perkBenefitUpBase`, and conflating the two was an
+ * error here on 2026-08-18. Base says whether the returned number carries an
+ * implicit 1; this says whether the call site multiplies the stat by it or adds
+ * it. Perk 6 is the case that separates them: base 0, applied with `fmul`.
+ */
+export const PERK_APPLIED_AS: Readonly<Record<number, 'multiply' | 'add' | 'flag' | 'grant'>> = {
+  0: 'multiply',
+  1: 'multiply',
+  2: 'multiply',
+  3: 'multiply',
+  4: 'add',
+  5: 'multiply',
+  6: 'multiply',
+  7: 'add',
+  8: 'add',
+  9: 'add',
+  10: 'multiply',
+  11: 'grant',
+  12: 'add',
+  13: 'multiply',
+  14: 'multiply',
+}
+
+/** Perks whose returned value has NO implicit 1, so stacking is linear. */
+export const PERK_WITHOUT_IDENTITY_TERM = [4, 6, 7, 8, 9, 10, 11, 12] as const
+
+/**
+ * Perk 44 has no magnitude because it is a FLAG, and that is the data.
+ *
+ * `perkBenefitUpIncrease[44]` is 0, which reads like a missing value. It is not.
+ * `Enemy.get_RangedInRange` (0x21B58F0) does:
+ *
+ *     w8 = perkLevel[44]
+ *     cmp w8, #0
+ *     mov w8, #0x138            ; Enemy.rangedEnemyInRangeBool
+ *     cinc x8, x8, gt           ; -> 0x139 Enemy.nearRangedEnemyInRangeBool
+ *     ldrb w0, [x19, x8]
+ *
+ * With the perk taken it reads a DIFFERENT pre-authored flag — the near-range
+ * one — instead of scaling a distance. There is no number to store, so a zero
+ * here is correct rather than absent. Its `maxLevel` of 1 is consistent: a flag
+ * cannot stack.
+ *
+ * The same `perkLevel[44]` check appears in `Enemy.OnTriggerEnter2D`,
+ * `Main.MainCameraSizeCheck` and `WaveInfoPanel.CalculateEnemyValues`, so the
+ * effect reaches collision, framing and the wave-info display too.
+ */
+export const PERK_44_IS_A_FLAG = {
+  index: 44,
+  readsInsteadOf: 'Enemy.rangedEnemyInRangeBool',
+  reads: 'Enemy.nearRangedEnemyInRangeBool',
+  checkedIn: [
+    'Enemy.get_RangedInRange',
+    'Enemy.OnTriggerEnter2D',
+    'Main.MainCameraSizeCheck',
+    'WaveInfoPanel.CalculateEnemyValues',
+  ],
+} as const
+
+/**
+ * Perks the wiki's additive list omits, though the game adds them.
+ *
+ * The wiki names "Def %, Perks Wave Required". By `PERK_APPLIED_AS` the perks
+ * whose result is ADDED are 4, 7, 8, 9 and 12 — and Perks Wave Required is not
+ * among them, because index 10 is applied as `1 - benefit`, a multiplier. So
+ * the wiki is wrong in both directions at once: it omits four and includes one
+ * that belongs on the other side.
+ */
+export const PERK_ADDITIVE_MISSING_FROM_WIKI = [4, 7, 8, 12] as const
+
+/** Perks whose benefit is an INTEGER add — they cannot take a fractional value. */
+export const PERK_INTEGER_BENEFIT_INDICES = [4, 7] as const
+
+export const PERK_INDICES_CORRECTED_FROM_GAME = [
+  2, 3, 4, 6, 7, 8, 10, 11, 12, 13, 14, 41, 49,
+] as const
+
+/**
  * Save `bannedPerksIndex` / `firstPerkIndex` / `autoPickOrder` catalog.
  * Covers the standard, ultimate-weapon and trade-off perk pools. Trade-off perks
  * occupy `perkLevel` slots 40–48.
@@ -21,19 +210,19 @@ export const PERK_CATALOG_SIZE = 50
 export const PERK_IMPORT_CATALOG: readonly PerkCatalogRow[] = [
   { index: 0, pool: 'standard', name: 'x1.20 Max Health', maxLevel: 5 },
   { index: 1, pool: 'standard', name: 'x1.15 Damage', maxLevel: 5 },
-  { index: 2, pool: 'standard', name: 'x1.15 All Coin Bonuses', maxLevel: 5 },
-  { index: 3, pool: 'standard', name: 'Perk Wave Requirement -20.00%', maxLevel: 3 },
-  { index: 4, pool: 'standard', name: 'x1.15 Cash Bonus', maxLevel: 5 },
+  { index: 2, pool: 'standard', name: 'x1.75 Health Regen', maxLevel: 5 },
+  { index: 3, pool: 'standard', name: 'x1.15 All Coin Bonuses', maxLevel: 5 },
+  { index: 4, pool: 'standard', name: 'Bounce Shot +2', maxLevel: 3 },
   { index: 5, pool: 'standard', name: 'Interest x1.50', maxLevel: 5 },
-  { index: 6, pool: 'standard', name: 'x1.75 Health Regen', maxLevel: 5 },
-  { index: 7, pool: 'standard', name: 'Land Mine Damage x3.50', maxLevel: 5 },
-  { index: 8, pool: 'standard', name: 'x1.15 Defense Absolute', maxLevel: 5 },
+  { index: 6, pool: 'standard', name: 'Land Mine Damage x3.50', maxLevel: 5 },
+  { index: 7, pool: 'standard', name: 'Orbs +1', maxLevel: 2 },
+  { index: 8, pool: 'standard', name: 'Free Upgrade Chance for All +5.0%', maxLevel: 5 },
   { index: 9, pool: 'standard', name: 'Defense Percent +4.00', maxLevel: 5 },
-  { index: 10, pool: 'standard', name: 'Free Upgrade Chance for All +5.0%', maxLevel: 5 },
-  { index: 11, pool: 'standard', name: 'Bounce Shot +2', maxLevel: 3 },
-  { index: 12, pool: 'standard', name: 'Orbs +1', maxLevel: 2 },
-  { index: 13, pool: 'standard', name: 'Unlock a Random Ultimate Weapon', maxLevel: 1 },
-  { index: 14, pool: 'standard', name: 'Increase Max Game Speed by +1.00', maxLevel: 1 },
+  { index: 10, pool: 'standard', name: 'Perk Wave Requirement -20.00%', maxLevel: 3 },
+  { index: 11, pool: 'standard', name: 'Unlock a Random Ultimate Weapon', maxLevel: 1 },
+  { index: 12, pool: 'standard', name: 'Increase Max Game Speed by +1.00', maxLevel: 1 },
+  { index: 13, pool: 'standard', name: 'x1.15 Cash Bonus', maxLevel: 5 },
+  { index: 14, pool: 'standard', name: 'x1.15 Defense Absolute', maxLevel: 5 },
   { index: 20, pool: 'ultimate_weapon', name: '4 More Smart Missiles', maxLevel: 1 },
   { index: 21, pool: 'ultimate_weapon', name: 'Swamp Radius x1.5', maxLevel: 1 },
   { index: 22, pool: 'ultimate_weapon', name: '+1 Wave on Death Wave', maxLevel: 1 },
@@ -43,16 +232,16 @@ export const PERK_IMPORT_CATALOG: readonly PerkCatalogRow[] = [
   { index: 26, pool: 'ultimate_weapon', name: 'Chrono Field Duration +5s', maxLevel: 1 },
   { index: 27, pool: 'ultimate_weapon', name: 'Black Hole Duration +12.0s', maxLevel: 1 },
   { index: 28, pool: 'ultimate_weapon', name: 'Spotlight Damage Bonus x1.5', maxLevel: 1 },
-  { index: 40, pool: 'trade_off', name: 'Boss Health -70%, but Boss Speed +50%', maxLevel: 1 },
-  { index: 41, pool: 'trade_off', name: 'Lifesteal x2.50, but Knockback Force -70%', maxLevel: 1 },
+  { index: 40, pool: 'trade_off', name: 'x1.50 Tower Damage, but Bosses Have 8x Health', maxLevel: 1 },
+  { index: 41, pool: 'trade_off', name: 'x1.80 Coins, but Tower Max Health -70%', maxLevel: 1 },
   { index: 42, pool: 'trade_off', name: 'Enemies Have -50% Health, but Tower Health Regen and Lifesteal -90%', maxLevel: 1 },
   { index: 43, pool: 'trade_off', name: 'Enemies Damage -50%, but Tower Damage -50%', maxLevel: 1 },
   { index: 44, pool: 'trade_off', name: 'Ranged Enemies Attack Distance Reduced, but Tower Ranged Enemies Damage x3', maxLevel: 1 },
   { index: 45, pool: 'trade_off', name: 'Enemies Speed -40%, but Enemies Damage x2.5', maxLevel: 1 },
   { index: 46, pool: 'trade_off', name: 'x12.00 Cash Per Wave, but Enemy Kills Don\'t Give Cash', maxLevel: 1 },
   { index: 47, pool: 'trade_off', name: 'Tower Health Regen x8.00, but Tower Max Health -60%', maxLevel: 1 },
-  { index: 48, pool: 'trade_off', name: 'x1.50 Tower Damage, but Bosses Have 8x Health', maxLevel: 1 },
-  { index: 49, pool: 'trade_off', name: 'x1.80 Coins, but Tower Max Health -70%', maxLevel: 1 },
+  { index: 48, pool: 'trade_off', name: 'Boss Health -70%, but Boss Speed +50%', maxLevel: 1 },
+  { index: 49, pool: 'trade_off', name: 'Lifesteal x2.50, but Knockback Force -70%', maxLevel: 1 },
 ] as const
 
 const catalogByIndex = new Map(PERK_IMPORT_CATALOG.map(row => [row.index, row]))

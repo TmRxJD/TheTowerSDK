@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatCompact } from '../internal/tool-formatting'
+import { formatCompact } from './tool-formatting'
 
 describe('compact notation matches how the game displays numbers', () => {
   it('formats suffixes through AZ using sequential ÷1000 steps', () => {

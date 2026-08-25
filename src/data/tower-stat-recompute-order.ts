@@ -1,0 +1,282 @@
+/**
+ * Every tower stat the game recomputes, in the order it recomputes them.
+ *
+ * Read from `Main.CalculateUpgradeBonuses(bool ignoreCurrentHealth)`
+ * (RVA 0x1EAC9E0, v28.3.0-arm64) — 3991 instructions that walk every derived
+ * stat getter in turn and finish by calling `CalculateEnemyLevelSkipChances`.
+ * It is the game's own enumeration of what a "tower stat" is, which makes it a
+ * naming and coverage authority rather than a convenience list.
+ *
+ * ## What it is good for
+ *
+ * Two things this repo keeps getting wrong:
+ *
+ * 1. **Coverage.** A stat absent from our catalogs is invisible; a stat present
+ *    under a name nothing looks up reads as zero. This list is the denominator.
+ * 2. **Order.** The function starts with the three "disabled" gates, then works
+ *    through attack, then defence and survival, then the wall, then economy,
+ *    then recovery, and only then level skip. Anything that recomputes stats in
+ *    a different order and feeds one into another is not reproducing the game.
+ *
+ * ## What it is NOT
+ *
+ * Not a list of upgrade *sources*, and not the workshop's ordering. These are
+ * the resolved getters — the values after workshop, labs, cards, modules,
+ * relics and the vault have all been folded in.
+ */
+
+/** The three gates consulted before anything is recomputed. */
+export const TOWER_STAT_DISABLE_GATES = [
+  'IsAttackDisabled',
+  'IsDefenseDisabled',
+  'IsUtilityDisabled',
+] as const
+
+/**
+ * The 46 stat getters, in call order.
+ *
+ * Names are the game's own property names, not display labels. Do not tidy the
+ * spelling — `DefensePercentage` and `ThornDamage` are what the game calls
+ * them, and a lookup keyed on a prettier name matches nothing.
+ */
+export const TOWER_STAT_RECOMPUTE_ORDER = [
+  // Attack
+  'AttackSpeed',
+  'CriticalChance',
+  'CriticalFactor',
+  'SuperCriticalMult',
+  'SuperCriticalChance',
+  'AttackRange',
+  'AttackPerMeter',
+  'MultishotChance',
+  'MultishotTargets',
+  'RapidFireChance',
+  'RapidFireDuration',
+  'BounceShotChance',
+  'BounceShotTargets',
+  'BounceShotRange',
+  'RendArmorChance',
+  'RendArmorMult',
+  'EquippedArmorBenefit',
+  // Health and defence
+  'HealthBoost',
+  'HealthRegen',
+  'DefensePercentage',
+  'DefenseAbsolute',
+  'ThornDamage',
+  'Lifesteal',
+  'KnockbackChance',
+  'KnockbackForce',
+  'OrbSpeed',
+  'OrbCount',
+  'ShockwaveSize',
+  'ShockwaveFrequency',
+  'LandMineChance',
+  'LandMineDamage',
+  'LandMineRadius',
+  'DeathDefy',
+  'WallHealth',
+  'WallRebuild',
+  // Economy
+  'CashBonus',
+  'CashPerWave',
+  'CoinsPerKill',
+  'CoinsPerWave',
+  'FreeAttackUpgrade',
+  'FreeDefenseUpgrade',
+  'FreeUtilityUpgrade',
+  'InterestPerWave',
+  // Recovery
+  'RecoveryAmount',
+  'MaxRecovery',
+  'PackageChance',
+] as const
+
+export type TowerStatName = typeof TOWER_STAT_RECOMPUTE_ORDER[number]
+
+/**
+ * Stats whose name resolves to the WRONG entity in the knowledge graph.
+ *
+ * Measured, not guessed: each of these was passed to `resolveWithConfidence`
+ * and came back with an id that is a different mechanic, at `strong` or `weak`
+ * confidence — never `none`. That is the dangerous outcome. A name that
+ * resolves to nothing gets noticed; a name that resolves to something plausible
+ * gets used.
+ *
+ * `AttackRange` is the clearest: it is the tower's range, and it resolves to
+ * `enemy.ranged`, an enemy type. It is the same failure as `Range` resolving to
+ * `bot.range` in the milestone unlock table.
+ *
+ * Listed so the gap is explained rather than silent. Fixing them means either
+ * adding the missing entity or tightening the scorer, and tightening the scorer
+ * has broken lookups here before — so it is not a drive-by change.
+ */
+export const TOWER_STATS_THAT_MISRESOLVE: Readonly<Record<string, string>> = {
+  AttackRange: 'resolves to enemy.ranged — an enemy type, not the tower stat',
+  /*
+   * REGRESSION, introduced 2026-08-18 by adding the `dissonance.boost` node, and
+   * caught by the pin below rather than noticed.
+   *
+   * The mechanism is worth more than the entry. `scoreNode` gives 100 for an
+   * exact id match on ONE term and 150 for matching ALL terms loosely, so
+   * "Health Boost" scores `health` at 100 (its text never says "boost") and
+   * `dissonance.boost` at ~161 (id has "boost", summary has "health"). A loose
+   * match on everything beats an exact match on something.
+   *
+   * Not fixed by renaming the node: any node discussing a health boost matches
+   * both terms, so the collision follows the topic, not the label. Not fixed in
+   * the scorer either — tightening it has broken fourteen lookups here before,
+   * and that is its own change with its own evidence.
+   */
+  HealthBoost: 'resolves to dissonance.boost — the all-terms bonus outranks an exact id match',
+  SuperCriticalChance: 'resolves to criticalChance — a different stat with its own value',
+  EquippedArmorBenefit: 'resolves to workshopEnhancement.RendArmor — an enhancement, not the stat',
+  AttackPerMeter: 'resolves to workshopEnhancement.DamageMeter — the enhancement, not the stat',
+  LandMineChance: 'resolves to cardMastery.LandMineStun — a mastery, not the stat',
+  LandMineDamage: 'resolves to workshopEnhancement.LandMineDamage — the enhancement, not the stat',
+  LandMineRadius: 'resolves to ultimateWeapon.innerLandMines — the weapon, not its radius',
+  CashPerWave: 'resolves to cashBonus — conflates per-wave income with the bonus multiplier',
+  PackageChance: 'resolves to cardMastery.PackageChance — the mastery, not the recovery stat',
+}
+
+/**
+ * The entity each remaining stat resolves to, pinned.
+ *
+ * Not decoration. Without it, moving a stat OFF
+ * `TOWER_STATS_THAT_MISRESOLVE` would silently pass — both sides of the count
+ * check move together, so the count proves nothing on its own. With the ids
+ * pinned, a stat can only leave the bad list by resolving to the entity named
+ * here.
+ *
+ * Several stats legitimately share a target: `MultishotChance` and
+ * `MultishotTargets` are two numbers on one mechanic, and the graph models the
+ * mechanic. That is a coarse answer, not a wrong one.
+ */
+export const TOWER_STAT_EXPECTED_ENTITY: Readonly<Record<string, string>> = {
+  AttackSpeed: 'attackSpeed',
+  CriticalChance: 'criticalChance',
+  CriticalFactor: 'criticalFactor',
+  SuperCriticalMult: 'superCritMultiplier',
+  MultishotChance: 'multishot',
+  MultishotTargets: 'multishot',
+  RapidFireChance: 'rapidFire',
+  RapidFireDuration: 'rapidFire',
+  BounceShotChance: 'bounceShot',
+  BounceShotTargets: 'bounceShot',
+  BounceShotRange: 'bounceShot',
+  RendArmorChance: 'rendArmor',
+  RendArmorMult: 'rendArmor',
+  HealthRegen: 'healthRegen',
+  DefensePercentage: 'defensePercent',
+  DefenseAbsolute: 'defenseAbsolute',
+  ThornDamage: 'thorns',
+  Lifesteal: 'lifesteal',
+  KnockbackChance: 'knockback',
+  KnockbackForce: 'knockback',
+  OrbSpeed: 'orb',
+  OrbCount: 'orb',
+  ShockwaveSize: 'shockwave',
+  ShockwaveFrequency: 'shockwave',
+  DeathDefy: 'deathDefy',
+  WallHealth: 'wall',
+  WallRebuild: 'wall',
+  CashBonus: 'cashBonus',
+  CoinsPerKill: 'coinsPerKill',
+  CoinsPerWave: 'coinsPerWave',
+  FreeAttackUpgrade: 'freeUpgrades',
+  FreeDefenseUpgrade: 'freeUpgrades',
+  FreeUtilityUpgrade: 'freeUpgrades',
+  InterestPerWave: 'interest',
+  RecoveryAmount: 'recoveryPackage',
+  MaxRecovery: 'recoveryPackage',
+}
+
+/** Stats that resolve to a sensible entity. The complement of the list above. */
+export const TOWER_STATS_THAT_RESOLVE: readonly TowerStatName[] = TOWER_STAT_RECOMPUTE_ORDER
+  .filter(stat => !(stat in TOWER_STATS_THAT_MISRESOLVE))
+
+/**
+ * The stat `CalculateUpgradeBonuses` does NOT compute itself.
+ *
+ * Damage has its own function, `Main.CalculateDamageUpgradeBonuses`
+ * (RVA 0x1ED59C4), called first. So the 46 above are 46 of 47, and the missing
+ * one is the stat every build is measured by — which is exactly the kind of
+ * omission that reads as a complete list.
+ */
+export const TOWER_STAT_COMPUTED_SEPARATELY = 'Damage' as const
+
+/**
+ * How `Main.damage` (field 0x3C8) is assembled, in order.
+ *
+ * Thirteen stores to that field in one function, and EVERY one of them is the
+ * result of an `fmul`. There is no `fadd` in the chain at all. Damage is a pure
+ * product; any term modelled as additive is wrong.
+ *
+ * The chain runs in `double`, not `float`, while the workshop values feeding it
+ * are floats with visible drift — see the Critical Factor trap on the `damage`
+ * node. That combination is why the in-game number is only reproduced by
+ * carrying full precision.
+ */
+export const TOWER_DAMAGE_MULTIPLIER_CHAIN = [
+  'base damage',
+  'card mastery (IsCardMasteryEnabled)',
+  'module cannon (get_EquippedCannonBenefit)',
+  'vault tech tree (TechTreeStat.Damage = 8)',
+  'Berserker — an ADDITION expressed as a multiplier, capped at 8x',
+  'time-gated buff (get_time, IsEquippedOnPrimaryOrAssist)',
+  'unattributed multiplier',
+  'unattributed multiplier',
+  'perk 1: x1.15 Damage (PerkBenefitUp)',
+  'perk 40: x1.50 Tower Damage, but Bosses Have 8x Health (PerkBenefitUp)',
+  'perk 43: Enemies Damage -50%, but Tower Damage -50% (PerkBenefitDown)',
+  'vault damage cap slider (TechTreeStat.Damage_Cap_Slider = 57), intro sprint',
+  'damage boost (get_DamageBoost)',
+] as const
+
+/**
+ * Every store in the chain comes from an `fmul` — but one of them is an
+ * addition in disguise, so do NOT read this as "no term is additive".
+ *
+ * Berserker computes `gain = damageTakenWhileBerserked x cardValue` and then
+ * applies `damage x (1 + gain / damage)`, which is `damage + gain` written as a
+ * product. At the instruction level it is a multiply; at the modelling level it
+ * is the addition the wiki always said it was.
+ *
+ * Kept as a separate constant from the chain itself because the first version
+ * of this file asserted "purely multiplicative" on the strength of the opcodes
+ * alone, and that was wrong.
+ */
+export const TOWER_DAMAGE_CHAIN_EVERY_STORE_IS_FMUL = true
+
+/** Berserker's ceiling: the gain is capped so total damage cannot exceed 8x. */
+export const BERSERKER_DAMAGE_MULTIPLIER_CAP = 8
+
+/**
+ * RESOLVED 2026-08-18: perk index 40 IS the tower-damage trade-off.
+ *
+ * `CalculateDamageUpgradeBonuses` guards the call with `perkLevel[40]` — byte
+ * offset 0xC0, element 40 exactly — and multiplies `Main.damage` by the result.
+ * `PERK_IMPORT_CATALOG` had that name at 48 and a boss-health perk at 40.
+ *
+ * Settled by extracting where the game applies EVERY trade-off index rather
+ * than by picking between two lists. A trade-off's two sides land in different
+ * functions, and that pair is a fingerprint:
+ *
+ *   40  up -> Main.CalculateDamageUpgradeBonuses  down -> Enemy.GetEnemyBaseHealth
+ *   48  up -> Enemy.GetEnemyBaseHealth            down -> Enemy.GetEnemyBaseSpeed
+ *
+ * Exactly two names were transposed; the other eight were already right, which
+ * is why it was not an offset and why no pattern-based fix would have found it.
+ * See `PERK_EFFECT_SITES` in `save/catalogs/perks.ts`.
+ */
+export const PERK_INDEX_40 = {
+  index: 40,
+  name: 'x1.50 Tower Damage, but Bosses Have 8x Health',
+  benefitAppliedIn: 'Main.damage (x)',
+  penaltyAppliedIn: 'Enemy.GetEnemyBaseHealth (boss)',
+} as const
+
+/** Insert a space before each capital, which is how a player would write it. */
+export function towerStatDisplayName(stat: string): string {
+  return stat.replace(/([a-z])([A-Z])/g, '$1 $2')
+}

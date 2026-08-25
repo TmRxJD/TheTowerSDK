@@ -1,3 +1,4 @@
+import { ownLookupOr } from '../own-lookup'
 import { getWorkshopMaxLevelByKey } from '../../data/index'
 import { getWorkshopEnhancementDefinitions } from '../../data/index'
 import type { GameDropdownOptionEntry } from './types'
@@ -7,7 +8,7 @@ export const WORKSHOP_ENHANCEMENT_KEY_ALIASES: Readonly<Record<string, string>> 
 }
 
 export function getWorkshopEnhancementDataKey(enhancementKey: string): string {
-  return WORKSHOP_ENHANCEMENT_KEY_ALIASES[enhancementKey] ?? enhancementKey
+  return ownLookupOr(WORKSHOP_ENHANCEMENT_KEY_ALIASES, enhancementKey, enhancementKey)
 }
 
 /** Achievable enhancement level — cost tables index 0…N−1 for upgrades through level N. */

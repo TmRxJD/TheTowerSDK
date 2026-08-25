@@ -17,7 +17,7 @@ interface WorkshopReference {
 }
 
 const reference = JSON.parse(
-  readFileSync(join(__dirname, 'fixtures', 'effective-paths-workshop.json'), 'utf8'),
+  readFileSync(join(__dirname, '..', '..', 'fixtures', 'data', 'effective-paths-workshop.json'), 'utf8'),
 ) as WorkshopReference
 
 const ourWorkshop = workshop as unknown as Record<string, Record<string, { value: number }>>

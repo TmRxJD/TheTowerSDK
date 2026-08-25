@@ -1,0 +1,726 @@
+/**
+ * The Guardian, as the game defines it.
+ *
+ * Read off the wiki on 2026-08-16.
+ *
+ * Small system, one large trap: it is guild-exclusive and paid for in bits and
+ * guild tokens. Nothing about it is reachable by a player without a guild, so
+ * any plan that includes it must first establish that the account has one.
+ */
+import { ownLookupOr } from '../../internal/own-lookup'
+import { guardianUpgrades } from '../../data/guardian-upgrades'
+import { GUARDIAN_CHIP_TYPE_ENUM } from '../../data/player-stats'
+import type { KnowledgeEdge, KnowledgeNode } from '../substrate/schema'
+
+const WIKI_GUARDIAN = { origin: 'wiki', ref: 'Guardian', verifiedAt: '2026-08-16' } as const
+
+/** Read from the shipped enum rather than transcribed, so it cannot drift. */
+/** The shipped upgrade tables, read rather than transcribed. */
+/** The game's own `ChipType` enum and the chip benefit array. */
+/** The community Guardians workbook — the authority on what is RELEASED. */
+const SHEET_GUARDIANS = {
+  origin: 'sheet',
+  ref: 'Effective Paths Guardians template, tabs All Chips / Master Sheet',
+  verifiedAt: '2026-08-18',
+} as const
+
+/**
+ * `Guardian`'s compile-time constants, read out of the dump.
+ *
+ *   CHIPS_COUNT           = 10
+ *   CHIP_SLOTS_MAX        = 3
+ *   GUARDIANS_COUNT       = 10
+ *   GUARDIAN_UNLOCK_COST  = 200
+ *
+ * Mind the two threes. `CHIP_SLOTS_MAX` is how many chips can be EQUIPPED at
+ * once; `guardian.chip.upgradeTracksPerChip` is also 3 and is how many benefit
+ * tracks each chip has. Same number, unrelated quantities — treating them as
+ * one is the kind of join that produces a confident wrong model.
+ */
+const GAME_GUARDIAN_CONSTANTS = {
+  origin: 'game',
+  ref: 'Guardian public const',
+  sourceVersion: 'v28.3.0-arm64',
+  verifiedAt: '2026-08-20',
+} as const
+
+const GAME_CHIP_TYPE = {
+  origin: 'game',
+  ref: 'enum ChipType; GuardianChips.chipBenefits',
+  sourceVersion: 'v28.3.0-arm64',
+  verifiedAt: '2026-08-18',
+} as const
+
+const CATALOG_GUARDIAN_UPGRADES = {
+  origin: 'code',
+  ref: 'thetowersdk/data guardianUpgrades',
+  verifiedAt: '2026-08-18',
+} as const
+
+const CATALOG_GUARDIAN = {
+  origin: 'code',
+  ref: 'thetowersdk/data GUARDIAN_CHIP_TYPE_ENUM',
+  verifiedAt: '2026-08-17',
+} as const
+
+type ChipEntry = {
+  readonly chipType: string
+  readonly value: number
+  readonly trackerKey: string | null
+  readonly label: string
+}
+
+const CHIP_ENTRIES = GUARDIAN_CHIP_TYPE_ENUM as readonly ChipEntry[]
+
+function chipsByLabel(): Map<string, readonly ChipEntry[]> {
+  const grouped = new Map<string, ChipEntry[]>()
+  for (const chip of CHIP_ENTRIES) {
+    const bucket = grouped.get(chip.label)
+    if (bucket) bucket.push(chip)
+    else grouped.set(chip.label, [chip])
+  }
+  return grouped
+}
+
+/**
+ * Chip labels that more than one `chipType` answers to. Now empty, and kept.
+ *
+ * Until 2026-08-18 three labels each answered to two entries, and in every pair
+ * the entry whose `chipType` equalled the label was the one with a **null**
+ * `trackerKey` — so a lookup by display name resolved to the dead entry and read
+ * as "no data" rather than as an error.
+ *
+ * That was not a game quirk. It was our table, written before the game's
+ * `ChipType` enum was known: `attack` sat on `Scare`, `ally` on `Rush` and
+ * `fetch` on `Catch`. The labels have been separated and the keys moved onto the
+ * chip they name, so nothing is ambiguous any more.
+ *
+ * The derivation stays because it is the check, not the finding — if a future
+ * edit reintroduces a duplicate label, this goes non-empty and the tests fail.
+ */
+export const GUARDIAN_AMBIGUOUS_CHIP_LABELS: readonly string[] = [...chipsByLabel()]
+  .filter(([, entries]) => entries.length > 1)
+  .map(([label]) => label)
+
+/** The only safe key to resolve a chip by: `chipType` is unique, `label` is not. */
+export const GUARDIAN_CHIP_LOOKUP_KEY = 'chipType' as const
+
+/** Bits to unlock the Guardian, and to open each further chip slot. */
+export const GUARDIAN_UNLOCK_BIT_COST = 200
+export const GUARDIAN_SLOT_BIT_COST: Readonly<Record<number, number>> = { 2: 200, 3: 300 }
+
+/** Chips available at unlock versus bought from the guild shop for tokens. */
+export const GUARDIAN_BASE_CHIPS = ['Ally', 'Attack'] as const
+export const GUARDIAN_SHOP_CHIPS = ['Bounty', 'Fetch', 'Summon', 'Scout'] as const
+
+/**
+ * The upgrade tables, read off `guardianUpgrades` rather than transcribed.
+ *
+ * Each chip has THREE independent stat tracks, levelled and paid for
+ * separately. The table is stored as one array of rows per chip, one row per
+ * level, with a column per track — so the array's length is the length of the
+ * LONGEST track, and every shorter track is padded out with nulls.
+ *
+ * That padding is the whole hazard. `guardianUpgrades.attack.length` is 90, and
+ * only the cooldown track goes that far: the damage percentage stops at 20 and
+ * the target count at 10. Reading the array length as "the chip's max level"
+ * overstates two of the three tracks, by nine times in the worst case.
+ */
+const GUARDIAN_UPGRADE_TABLES = guardianUpgrades as unknown as
+  Readonly<Record<string, readonly Record<string, string | number | null>[]>>
+
+/**
+ * The cost column for a track is USUALLY `<track>Cost`, and twice it is not.
+ *
+ * `attack.percentage` is paid for by `attackCost` and `ally.recoveryAmount` by
+ * `recoveryCost`. Both are the chip's headline stat, so a lookup that builds the
+ * cost key by convention misses exactly the two tracks a player most wants
+ * costed — and if the miss defaults to zero, the two most expensive things the
+ * Guardian sells read as free.
+ */
+export const GUARDIAN_IRREGULAR_COST_COLUMNS: Readonly<Record<string, string>> = {
+  percentage: 'attackCost',
+  recoveryAmount: 'recoveryCost',
+}
+
+export function guardianCostColumn(track: string): string {
+  return ownLookupOr(GUARDIAN_IRREGULAR_COST_COLUMNS, track, `${track}Cost`)
+}
+
+export type GuardianTrack = {
+  readonly chip: string
+  readonly track: string
+  readonly maxLevel: number
+  readonly totalCost: number
+}
+
+/** Every (chip, track) pair with its own ceiling and its own total cost. */
+export const GUARDIAN_UPGRADE_TRACKS: readonly GuardianTrack[] = Object
+  .entries(GUARDIAN_UPGRADE_TABLES)
+  .flatMap(([chip, rows]) => {
+    const first = rows[0] ?? {}
+    return Object.keys(first)
+      .filter(key => key !== 'level' && !key.endsWith('Cost'))
+      .map(track => {
+        const costColumn = guardianCostColumn(track)
+        const live = rows.filter(row => row[track] !== null)
+        const maxLevel = live.reduce((best, row) => Math.max(best, Number(row.level) || 0), 0)
+        const totalCost = live.reduce((sum, row) => sum + (Number(row[costColumn]) || 0), 0)
+        return { chip, track, maxLevel, totalCost }
+      })
+  })
+
+/** Total cost to take every track of a chip to its own ceiling. */
+export const GUARDIAN_CHIP_TOTAL_COST: Readonly<Record<string, number>> = Object.fromEntries(
+  Object.keys(GUARDIAN_UPGRADE_TABLES).map(chip => [
+    chip,
+    GUARDIAN_UPGRADE_TRACKS
+      .filter(entry => entry.chip === chip)
+      .reduce((sum, entry) => sum + entry.totalCost, 0),
+  ]),
+)
+
+/** The chip whose tracks are cheapest to max, by a wide margin. */
+export const GUARDIAN_CHEAPEST_CHIP_TO_MAX = Object.entries(GUARDIAN_CHIP_TOTAL_COST)
+  .reduce((best, entry) => (entry[1] < best[1] ? entry : best))[0]
+
+/**
+ * Level 1 always costs nothing, on every track of every chip.
+ *
+ * It is the state the chip arrives in, not a purchase. So the number of levels
+ * a track has and the number of upgrades it sells differ by one, and a
+ * progress bar built on the former is off by one at both ends.
+ */
+export const GUARDIAN_FIRST_LEVEL_IS_FREE = true
+
+/**
+ * The game's `ChipType` enum has ten values. We carry eight.
+ *
+ *     0 Steal   1 Catch   2 Attack   3 Scare   4 Rush
+ *     5 Ally    6 Fetch   7 Summon   8 Scout   9 Repair
+ *
+ * `GUARDIAN_CHIP_TYPE_ENUM` covers 0-8 since 2026-08-18; Scout was added, having
+ * been wrongly absent while present in `guardianUpgrades`. `Repair` (9) is in
+ * NEITHER — not the save enum, not the upgrade tables, not the wiki chip list —
+ * and is left out deliberately because it is unreleased.
+ *
+ * It is recorded as uncovered vocabulary rather than as a tenth chip, because
+ * an enum value is evidence that the game knows the name and not proof that a
+ * player can obtain one.
+ */
+export const GAME_CHIP_TYPE_VALUES: readonly string[] = [
+  'Steal', 'Catch', 'Attack', 'Scare', 'Rush', 'Ally', 'Fetch', 'Summon', 'Scout', 'Repair',
+]
+
+export const CHIP_TYPES_NOT_IN_SAVE_ENUM = ['Repair'] as const
+
+/**
+ * `chipBenefits` is a flat float array, and index 0 is Bounty.
+ *
+ * Calibrated from `BountyCoinBonus`, which reads `chipBenefits[0]` and
+ * multiplies it by an enemy-side counter. ChipType 0 is `Steal`, the internal
+ * name this compartment already records for Bounty.
+ *
+ * The parallel `chipBenefitNames` is Unity-serialised asset data, so the rest of
+ * the slots cannot be named from the binary. One other slot is known to be
+ * consumed: `Enemy.Kill` multiplies CASH by `chipBenefits[23]`.
+ */
+/**
+ * The benefit array is THREE SLOTS PER CHIP TYPE, in `ChipType` order.
+ *
+ * Ten chip types times three attributes is thirty slots, and every slot whose
+ * reader was identified falls in the block its chip predicts:
+ *
+ *     slot  0  Steal/Bounty  track 0   BountyCoinBonus
+ *     slot  8  Attack        track 2   TowerBuddy.TriggerAttack
+ *     slot  9  Scare         track 0   TowerBuddy.ScareStarted
+ *     slot 11  Scare         track 2   TowerBuddy.ScareStarted
+ *     slot 14  Rush          track 2   TowerBuddy.RushStarted
+ *     slot 16  Ally          track 1   Main.ApplyAllyRecoveryPackage
+ *     slot 23  Summon        track 2   Enemy.Kill, the cash multiplier
+ *     slot 25  Scout         track 1   Enemy damage / TotalLightshotDamage
+ *     slot 27  Repair        track 0   Main.ApplyRepairChipHeal
+ *     slot 28  Repair        track 1   Main.GetWallHealthTrueMax
+ *
+ * The uneven gaps were slots with no identified reader, not a broken layout. An
+ * earlier version of this file warned against interpolating them and treated the
+ * spacing as a hazard; the spacing was a clue.
+ *
+ * Three independent sources agree on three-per-chip and on the track ORDER:
+ * `guardianUpgrades` here, the Effective Paths Guardians workbook, and the slot
+ * evidence above. That is what makes the layout a finding rather than a fit.
+ */
+export const CHIP_BENEFIT_SLOTS_PER_CHIP = 3
+export const CHIP_BENEFIT_SLOT_COUNT = 30
+
+export const CHIP_BENEFIT_SLOTS_BY_READER: Readonly<Record<number, string>> = {
+  0: 'BountyCoinBonus — the Bounty (Steal) coin multiplier',
+  8: 'TowerBuddy.TriggerAttack',
+  9: 'TowerBuddy.ScareStarted',
+  11: 'TowerBuddy.ScareStarted',
+  14: 'TowerBuddy.RushStarted',
+  16: 'Main.ApplyAllyRecoveryPackage',
+  23: 'Enemy.Kill — the cash multiplier, i.e. Summon track 2 (Cash Bonus)',
+  25: 'Enemy.HitMultiplier, ApplyProjectileDamage, TotalLightshotDamage',
+  27: 'Main.ApplyRepairChipHeal',
+  28: 'Main.GetWallHealthTrueMax',
+}
+
+/**
+ * Which chips a player can actually have, per the community workbook.
+ *
+ * The Effective Paths Guardians template carries SIX: Attack, Ally, Bounty,
+ * Fetch, Summon and Scout, each with three attributes in the same order as
+ * `guardianUpgrades`. That workbook tracks live content, so it is the authority
+ * on what is released — the binary is the authority on what is BUILT.
+ *
+ * `Repair` is in the game's enum, has runtime behaviour, and is in neither the
+ * workbook nor our tables. It is unreleased, and unreleased content changes
+ * before it ships — the relic work established that the same way. So its slots
+ * are recorded and its numbers are not trusted forward.
+ */
+export const GUARDIAN_RELEASED_CHIPS: readonly string[] = [
+  'Attack', 'Ally', 'Bounty', 'Fetch', 'Summon', 'Scout',
+]
+
+export const GUARDIAN_UNRELEASED_CHIP_TYPES: readonly string[] = ['Repair']
+
+/**
+ * `TowerBuddy` is the Guardian's runtime object, and it implements ALL TEN chips.
+ *
+ * Not six. The class carries `TriggerSteal`, `TryCatch`, `TriggerAttack`,
+ * `ScareStarted`, `RushStarted`, `AllyStarted`, `TriggerFetch`, `TriggerSummon`,
+ * `ScoutStarted` and `TriggerRepair` — one behaviour entry point per ChipType,
+ * with effects to match (`PlayRepairHealEffect`, `PlayRepairWallTint`).
+ *
+ * This settles what the enum alone could not. An earlier note here said an enum
+ * value proves the game knows a name rather than that a chip exists. Repair has
+ * a trigger, a heal applied from `Main.ApplyRepairChipHeal`, and two effect
+ * methods — that is a working chip, whatever our catalogs say.
+ */
+export const CHIP_TYPES_WITH_RUNTIME_BEHAVIOUR = 10
+export const GUARDIAN_RUNTIME_CLASS = 'TowerBuddy' as const
+
+export const CHIP_BENEFIT_INDEX_BOUNTY = 0
+export const CHIP_BENEFIT_INDEX_CASH_MULTIPLIER = 23
+
+export const GUARDIAN_KNOWLEDGE_NODES: readonly KnowledgeNode[] = [
+  {
+    id: 'guardian.unreleasedChips',
+    label: 'Chips built but not released',
+    kind: 'rule',
+    claimType: 'objective',
+    verification: 'verified_here',
+    summary:
+      `The binary implements ${CHIP_TYPES_WITH_RUNTIME_BEHAVIOUR} chip types. The community `
+      + `workbook, which tracks live content, carries ${GUARDIAN_RELEASED_CHIPS.length}. `
+      + `${GUARDIAN_UNRELEASED_CHIP_TYPES.join(' and ')} is built and not shipped.`,
+    disambiguation:
+      'Two different questions with two different authorities. What is BUILT comes from the '
+      + 'binary. What is RELEASED comes from the Effective Paths workbook, which excludes content '
+      + 'until it is live — the same division the relic work established.',
+    traps: [
+      `\`${GUARDIAN_UNRELEASED_CHIP_TYPES.join(', ')}\` HAS WORKING CODE AND NO PLAYER ACCESS. `
+      + '`TowerBuddy.TriggerRepair`, `PlayRepairHealEffect`, `PlayRepairWallTint` and '
+      + '`Main.ApplyRepairChipHeal` all exist. Presence in the binary is not availability, and a '
+      + 'planner that offers it is offering something nobody can buy.',
+      'ITS NUMBERS ARE NOT TRUSTWORTHY FORWARD. Unreleased content changes before it ships. The '
+      + 'relic catalog showed the same thing — the newest entries carry provisional values that '
+      + 'the community sheet deliberately withholds. Record the slots, do not build on the values.',
+      'THE COUNTS ANSWER DIFFERENT QUESTIONS AND WILL NOT MATCH. Ten built, six released, six in '
+      + '`guardianUpgrades`, eight in the save enum. Reconciling them into one number loses the '
+      + 'distinction that makes any of them useful.',
+    ],
+    implementedBy: ['GUARDIAN_RELEASED_CHIPS', 'GUARDIAN_UNRELEASED_CHIP_TYPES'],
+    assertions: [
+      { subject: 'guardian.unreleasedChips', predicate: 'builtChipTypes', value: CHIP_TYPES_WITH_RUNTIME_BEHAVIOUR, provenance: GAME_CHIP_TYPE, verification: 'verified_here' },
+      { subject: 'guardian.unreleasedChips', predicate: 'releasedChips', value: GUARDIAN_RELEASED_CHIPS.length, provenance: SHEET_GUARDIANS, verification: 'verified_here' },
+      { subject: 'guardian.unreleasedChips', predicate: 'unreleasedChipTypes', value: GUARDIAN_UNRELEASED_CHIP_TYPES.length, provenance: SHEET_GUARDIANS, verification: 'verified_here' },
+    ],
+    sources: [SHEET_GUARDIANS, GAME_CHIP_TYPE],
+  },
+  {
+    id: 'guardian.chipArrays',
+    label: 'The four parallel chip arrays',
+    kind: 'rule',
+    claimType: 'objective',
+    verification: 'verified_here',
+    summary:
+      '`GuardianChips` holds `chipBenefits`, `chipBenefitNames`, `chipBenefitCosts` and '
+      + '`chipLevelsMax` side by side. They are indexed together, and only one of the four is in '
+      + 'the binary.',
+    units: 'benefit values, costs, and level caps, all per slot',
+    disambiguation:
+      'These are per SLOT, not per chip. `guardianUpgrades` is a different table keyed by the six '
+      + 'wiki chip names with three tracks each; these arrays are flat and numerically indexed, '
+      + 'and reach at least slot 28.',
+    traps: [
+      'THREE OF THE FOUR ARRAYS ARE ASSET DATA. Only `chipBenefits` is read by code paths the dump '
+      + 'exposes; the names, costs and level caps ship serialised with the scene. So a slot can be '
+      + 'located by its reader but not priced or capped from the dump, and any cost figure for a '
+      + 'chip has to come from `guardianUpgrades` or the wiki instead.',
+      'THE ARRAYS ARE PARALLEL, SO AN INDEX IS ONLY MEANINGFUL ACROSS ALL FOUR. Reading '
+      + '`chipBenefits[n]` and pairing it with the nth entry of a DIFFERENT table — the six-chip '
+      + 'upgrade tables, say — is a category error, not an off-by-one.',
+      'THE FLAT ARRAY IS LONGER THAN THE CHIP LIST SUGGESTS. Slot 28 is read by '
+      + '`Main.GetWallHealthTrueMax`, so there are at least 29 entries against six chips in our '
+      + 'catalog and ten in the game enum. Whatever the layout is, it is not one slot per chip.',
+    ],
+    implementedBy: ['CHIP_BENEFIT_SLOTS_BY_READER', 'GUARDIAN_RUNTIME_CLASS'],
+    assertions: [
+      { subject: 'guardian.chipArrays', predicate: 'parallelArrayCount', value: 4, provenance: GAME_CHIP_TYPE, verification: 'verified_here' },
+      { subject: 'guardian.chipArrays', predicate: 'arraysReadableFromDump', value: 1, provenance: GAME_CHIP_TYPE, verification: 'verified_here' },
+      { subject: 'guardian.chipArrays', predicate: 'highestSlotObserved', value: 28, provenance: GAME_CHIP_TYPE, verification: 'verified_here' },
+    ],
+    sources: [GAME_CHIP_TYPE],
+  },
+  {
+    id: 'guardian.chipBenefits',
+    label: 'The chip benefit array',
+    kind: 'rule',
+    claimType: 'objective',
+    verification: 'verified_here',
+    summary:
+      'A flat float array on `GuardianChips`, read directly by run code. Index '
+      + `${CHIP_BENEFIT_INDEX_BOUNTY} is Bounty; index ${CHIP_BENEFIT_INDEX_CASH_MULTIPLIER} `
+      + 'multiplies cash on every kill.',
+    units: 'per-chip benefit values',
+    disambiguation:
+      '`chipBenefits` is not `guardianUpgrades`. The upgrade tables are keyed by the six wiki chip '
+      + 'names; this is a flat array the game indexes numerically, with a parallel '
+      + '`chipBenefitNames` that ships as Unity asset data and is not in the dump.',
+    traps: [
+      'THE GUARDIAN REACHES THE ECONOMY THROUGH GUILDMANAGER, WHICH READS AS A GUILD BONUS AND IS '
+      + 'NOT ONE. `Enemy.Kill` walks `Main.guildManager` then `guardianChips` then `chipBenefits`. '
+      + 'The hop through the guild manager is because the Guardian is guild-exclusive. I recorded '
+      + 'that walk as "a guild bonus" once; it is a chip benefit.',
+      'GUARDIAN IS AN INPUT TO BOTH CURRENCIES. Bounty multiplies coins via chipBenefits['
+      + `${CHIP_BENEFIT_INDEX_BOUNTY}], and an unidentified slot multiplies cash via `
+      + `chipBenefits[${CHIP_BENEFIT_INDEX_CASH_MULTIPLIER}]. A model with no guardian term is `
+      + 'missing a factor from each, not merely mis-sizing one.',
+      'THE SLOT NAMES ARE NOT IN THE BINARY. `chipBenefitNames` is serialised asset data, so index '
+      + '23 cannot be named from the dump and is deliberately left unnamed rather than inferred '
+      + 'from spacing.',
+      'THE GAME KNOWS TEN CHIP TYPES AND THE SAVE ENUM CARRIES EIGHT. Missing: '
+      + `${CHIP_TYPES_NOT_IN_SAVE_ENUM.join(' and ')}. Scout is in the upgrade tables despite the `
+      + 'enum gap. Repair is in nothing here at all — and it is NOT merely a name. `TowerBuddy` '
+      + 'carries `TriggerRepair`, `PlayRepairHealEffect` and `PlayRepairWallTint`, and '
+      + '`Main.ApplyRepairChipHeal` reads its benefit slot. An earlier version of this trap '
+      + 'hedged that an enum value proves the game knows a name rather than that a chip exists; '
+      + 'for Repair the runtime code settles it.',
+      `THE LAYOUT IS ${CHIP_BENEFIT_SLOTS_PER_CHIP} SLOTS PER CHIP TYPE, `
+      + `${CHIP_BENEFIT_SLOT_COUNT} in total, in \`ChipType\` order. Every identified reader lands `
+      + 'in its predicted block, and the track order matches `guardianUpgrades` and the Effective '
+      + 'Paths workbook independently. Slot 23 is Summon track 2 — the Cash Bonus attribute — '
+      + 'which is why `Enemy.Kill` reads it as a cash multiplier.',
+      'THE UNEVEN GAPS WERE MISSING READERS, NOT A BROKEN LAYOUT. An earlier version of this node '
+      + 'treated the spacing as a hazard and warned against interpolating. That was the wrong '
+      + 'conclusion from an incomplete scan: the spacing was a clue that the array is chip-blocked.',
+      'THE SCAN THAT FINDS READERS RETURNS FALSE POSITIVES. Byte-pattern matching hit Unity engine '
+      + 'classes (`BaseRuntimePanel.ScreenToPanel`, `SkeletonRootMotionBase.ApplyRootMotion`), and '
+      + 'an RVA-to-method lookup misattributed four more. Verify the enclosing class before '
+      + 'believing a hit.',
+    ],
+    implementedBy: [
+      'GAME_CHIP_TYPE_VALUES',
+      'CHIP_TYPES_NOT_IN_SAVE_ENUM',
+      'CHIP_BENEFIT_INDEX_BOUNTY',
+      'CHIP_BENEFIT_INDEX_CASH_MULTIPLIER',
+      'CHIP_BENEFIT_SLOTS_BY_READER',
+      'CHIP_TYPES_WITH_RUNTIME_BEHAVIOUR',
+      'GUARDIAN_RELEASED_CHIPS',
+      'GUARDIAN_UNRELEASED_CHIP_TYPES',
+    ],
+    assertions: [
+      { subject: 'guardian.chipBenefits', predicate: 'gameChipTypeCount', value: GAME_CHIP_TYPE_VALUES.length, provenance: GAME_CHIP_TYPE, verification: 'verified_here' },
+      { subject: 'guardian.chipBenefits', predicate: 'chipTypesMissingFromSaveEnum', value: CHIP_TYPES_NOT_IN_SAVE_ENUM.length, provenance: GAME_CHIP_TYPE, verification: 'verified_here' },
+      { subject: 'guardian.chipBenefits', predicate: 'bountyBenefitIndex', value: CHIP_BENEFIT_INDEX_BOUNTY, provenance: GAME_CHIP_TYPE, verification: 'verified_here' },
+      { subject: 'guardian.chipBenefits', predicate: 'cashMultiplierBenefitIndex', value: CHIP_BENEFIT_INDEX_CASH_MULTIPLIER, provenance: GAME_CHIP_TYPE, verification: 'unverified' },
+      { subject: 'guardian.chipBenefits', predicate: 'slotsNamedByReader', value: Object.keys(CHIP_BENEFIT_SLOTS_BY_READER).length, provenance: GAME_CHIP_TYPE, verification: 'verified_here' },
+      { subject: 'guardian.chipBenefits', predicate: 'slotsPerChipType', value: CHIP_BENEFIT_SLOTS_PER_CHIP, provenance: GAME_CHIP_TYPE, verification: 'verified_here' },
+      { subject: 'guardian.chipBenefits', predicate: 'totalSlots', value: CHIP_BENEFIT_SLOT_COUNT, provenance: GAME_CHIP_TYPE, verification: 'verified_here' },
+      { subject: 'guardian.chipBenefits', predicate: 'releasedChipCount', value: GUARDIAN_RELEASED_CHIPS.length, provenance: SHEET_GUARDIANS, verification: 'verified_here' },
+      { subject: 'guardian.chipBenefits', predicate: 'unreleasedChipTypeCount', value: GUARDIAN_UNRELEASED_CHIP_TYPES.length, provenance: SHEET_GUARDIANS, verification: 'verified_here' },
+      { subject: 'guardian.chipBenefits', predicate: 'chipTypesWithRuntimeBehaviour', value: CHIP_TYPES_WITH_RUNTIME_BEHAVIOUR, provenance: GAME_CHIP_TYPE, verification: 'verified_here' },
+      { subject: 'guardian.repair', predicate: 'hasRuntimeImplementation', value: true, provenance: GAME_CHIP_TYPE, verification: 'verified_here' },
+    ],
+    sources: [GAME_CHIP_TYPE],
+  },
+  {
+    id: 'guardian',
+    label: 'Guardian',
+    kind: 'system',
+    summary:
+      'A tower companion available only through guilds, unlocked for 200 bits. Behaves like a bot '
+      + 'but its effects are chosen by equipping chips into slots.',
+    traps: [
+      'Guild-exclusive. A player without a guild cannot obtain it at any price, so it must never '
+      + 'appear in a plan without first checking guild membership.',
+      'Bits are its currency, and bits come from guilds. This is not the same ladder as medals, '
+      + 'stones or gems.',
+    ],
+    implementedBy: ['GUARDIAN_UNLOCK_BIT_COST', 'GUARDIAN_BASE_CHIPS', 'GUARDIAN_SHOP_CHIPS'],
+    assertions: [
+      { subject: 'guardian', predicate: 'unlockBitCost', value: GUARDIAN_UNLOCK_BIT_COST, provenance: WIKI_GUARDIAN },
+      { subject: 'guardian', predicate: 'baseChipCount', value: GUARDIAN_BASE_CHIPS.length, provenance: WIKI_GUARDIAN, verification: 'verified_here' as const },
+      { subject: 'guardian', predicate: 'shopChipCount', value: GUARDIAN_SHOP_CHIPS.length, provenance: WIKI_GUARDIAN, verification: 'verified_here' as const },
+      // Base and shop chips must account for the released set, or a chip exists
+      // that neither route grants and nothing says how it is obtained.
+      { subject: 'guardian', predicate: 'chipSourcesCoverReleasedChips', value: GUARDIAN_BASE_CHIPS.length + GUARDIAN_SHOP_CHIPS.length === GUARDIAN_RELEASED_CHIPS.length, provenance: SHEET_GUARDIANS, verification: 'verified_here' as const },
+    ],
+    sources: [WIKI_GUARDIAN],
+  },
+  {
+    id: 'guardian.chip',
+    label: 'Guardian chip',
+    kind: 'entity',
+    summary:
+      'A module-like insert that gives the Guardian an ability. Ally and Attack come with the '
+      + 'unlock; Bounty, Fetch, Summon and Scout cost 200 guild tokens each in the guild shop.',
+    traps: [
+      'Only two chips are free. The other four are separate token purchases, and Summon and Scout '
+      + 'were season-gated (Season 5 and Season 7) — an account may simply never have had access.',
+      'Chips are limited by slots, and only the 2nd and 3rd slot costs are documented. The 4th is '
+      + 'listed as TBD on the wiki — do not invent a number for it.',
+    ],
+    implementedBy: ['GUARDIAN_UPGRADE_TRACKS', 'GUARDIAN_CHIP_TOTAL_COST'],
+    assertions: [
+      { subject: 'guardian.chip', predicate: 'upgradeTracksPerChip', value: CHIP_BENEFIT_SLOTS_PER_CHIP, provenance: GAME_CHIP_TYPE, verification: 'verified_here' as const },
+      { subject: 'guardian.chip', predicate: 'firstLevelIsFree', value: GUARDIAN_FIRST_LEVEL_IS_FREE, provenance: CATALOG_GUARDIAN_UPGRADES },
+      { subject: 'guardian.chip', predicate: 'cheapestChipToMax', value: GUARDIAN_CHEAPEST_CHIP_TO_MAX, provenance: CATALOG_GUARDIAN_UPGRADES },
+      { subject: 'guardian.chip', predicate: 'irregularCostColumnCount', value: Object.keys(GUARDIAN_IRREGULAR_COST_COLUMNS).length, provenance: CATALOG_GUARDIAN_UPGRADES, verification: 'verified_here' as const },
+    ],
+    // Listed because this node's own assertions cite the ChipType enum and the
+    // shipped guardian upgrade catalog.
+    sources: [
+      { ...WIKI_GUARDIAN, section: 'Chip Upgrades' }, GAME_CHIP_TYPE, CATALOG_GUARDIAN_UPGRADES,
+    ],
+  },
+  {
+    id: 'guardian.slot',
+    label: 'Guardian chip slot',
+    kind: 'entity',
+    summary:
+      'How many chips the Guardian can hold at once. One comes with the unlock; the second costs '
+      + '200 bits and the third 300. A fourth exists but its cost is not documented.',
+    units: 'count',
+    traps: [
+      'Owning a chip is not equipping it. Slots, not the chip collection, decide what is active.',
+    ],
+    implementedBy: ['GUARDIAN_SLOT_BIT_COST'],
+    assertions: [
+      // Per slot, because the cost is per slot. One "slot bit cost" would be
+      // right for slot 2 and wrong for slot 3.
+      ...Object.entries(GUARDIAN_SLOT_BIT_COST).map(([slot, cost]) => ({
+        subject: `guardian.slot.${slot}`,
+        predicate: 'bitCost',
+        value: cost,
+        provenance: WIKI_GUARDIAN,
+        verification: 'verified_here' as const,
+      })),
+      { subject: 'guardian.slot', predicate: 'paidSlotCount', value: Object.keys(GUARDIAN_SLOT_BIT_COST).length, provenance: WIKI_GUARDIAN, verification: 'verified_here' as const },
+      // The ceiling the game enforces, which the oracle only implied. One slot
+      // comes with the unlock and two are bought, so paidSlotCount + 1 must
+      // equal this — asserted rather than assumed so the two cannot drift.
+      { subject: 'guardian.slot', predicate: 'maxSlots', value: 3, provenance: GAME_GUARDIAN_CONSTANTS, verification: 'verified_here' as const },
+      { subject: 'guardian.slot', predicate: 'freeSlotPlusPaidMatchesMax', value: Object.keys(GUARDIAN_SLOT_BIT_COST).length + 1 === 3, provenance: GAME_GUARDIAN_CONSTANTS, verification: 'verified_here' as const },
+      // A slot is a separate purchase from the chip that goes in it, so owning
+      // a chip and being able to equip it are different questions.
+      { subject: 'guardian.slot', predicate: 'boughtSeparatelyFromChips', value: true, provenance: WIKI_GUARDIAN },
+    ],
+    sources: [{ ...WIKI_GUARDIAN, section: 'Unlocking/Upgrading' }, GAME_GUARDIAN_CONSTANTS],
+  },
+  {
+    id: 'guardian.upgradeTrack',
+    label: 'Guardian upgrade track',
+    kind: 'rule',
+    claimType: 'objective',
+    verification: 'verified_here',
+    summary:
+      `Each chip levels ${GUARDIAN_UPGRADE_TRACKS.length / Object.keys(GUARDIAN_CHIP_TOTAL_COST).length} `
+      + 'stat tracks separately, and each track has its own ceiling and its own cost ladder. '
+      + 'There is no single "chip level".',
+    units: 'levels, and bits per level',
+    validRange:
+      GUARDIAN_UPGRADE_TRACKS.map(t => `${t.chip}.${t.track} to ${t.maxLevel}`).join('; '),
+    disambiguation:
+      'This is `guardianUpgrades`, keyed by the six wiki chip names. It is a different table from '
+      + 'GUARDIAN_CHIP_TYPE_ENUM, which is the save encoding and has no Scout.',
+    traps: [
+      'THE ROW COUNT IS NOT THE MAX LEVEL. Each chip is stored as one row per level with the '
+      + 'shorter tracks padded to null, so the array length is the LONGEST track only. '
+      + 'The attack chip has 90 rows, but its damage percentage stops at 20 and its target count '
+      + 'at 10. Using the length as a ceiling overstates two tracks in every chip.',
+      'A NULL IN A TRACK MEANS THE TRACK HAS ENDED, NOT THAT THE VALUE IS ZERO. Reading past a '
+      + "track's ceiling and coalescing to 0 turns a maxed stat into an empty one, and it will "
+      + 'look like missing data rather than an overrun.',
+      'THE COST COLUMN IS NOT ALWAYS `<track>Cost`. `percentage` is paid by `attackCost` and '
+      + '`recoveryAmount` by `recoveryCost` — the headline stat of the two starter chips, in both '
+      + 'cases. Deriving the key by convention silently costs them at zero.',
+      'Level 1 costs nothing on every track. Levels and purchases differ by one.',
+      `Chips are NOT comparably priced. ${GUARDIAN_CHEAPEST_CHIP_TO_MAX} maxes for `
+      + `${GUARDIAN_CHIP_TOTAL_COST[GUARDIAN_CHEAPEST_CHIP_TO_MAX]}, roughly half of every other `
+      + 'chip. A plan that treats chip investment as uniform gets the ordering wrong.',
+    ],
+    implementedBy: [
+      'GUARDIAN_UPGRADE_TRACKS',
+      'GUARDIAN_CHIP_TOTAL_COST',
+      'GUARDIAN_IRREGULAR_COST_COLUMNS',
+      'guardianCostColumn',
+    ],
+    assertions: [
+      {
+        subject: 'guardian.upgradeTrack',
+        predicate: 'trackCount',
+        value: GUARDIAN_UPGRADE_TRACKS.length,
+        provenance: CATALOG_GUARDIAN_UPGRADES,
+        verification: 'verified_here',
+      },
+      {
+        subject: 'guardian.upgradeTrack',
+        predicate: 'irregularCostColumnCount',
+        value: Object.keys(GUARDIAN_IRREGULAR_COST_COLUMNS).length,
+        provenance: CATALOG_GUARDIAN_UPGRADES,
+        verification: 'verified_here',
+      },
+      {
+        subject: 'guardian.upgradeTrack',
+        predicate: 'firstLevelIsFree',
+        value: GUARDIAN_FIRST_LEVEL_IS_FREE,
+        provenance: CATALOG_GUARDIAN_UPGRADES,
+        verification: 'verified_here',
+      },
+      ...GUARDIAN_UPGRADE_TRACKS.map(track => ({
+        subject: `guardian.${track.chip}.${track.track}`,
+        predicate: 'maxLevel',
+        value: track.maxLevel,
+        provenance: CATALOG_GUARDIAN_UPGRADES,
+        verification: 'verified_here' as const,
+      })),
+      ...Object.entries(GUARDIAN_CHIP_TOTAL_COST).map(([chip, cost]) => ({
+        subject: `guardian.${chip}`,
+        predicate: 'totalCostToMax',
+        value: cost,
+        provenance: CATALOG_GUARDIAN_UPGRADES,
+        verification: 'verified_here' as const,
+      })),
+    ],
+    sources: [CATALOG_GUARDIAN_UPGRADES, { ...WIKI_GUARDIAN, section: 'Chip Upgrades' }],
+  },
+  {
+    id: 'guardian.chipEncoding',
+    label: 'How guardian chips are identified',
+    kind: 'rule',
+    claimType: 'objective',
+    verification: 'verified_here',
+    summary:
+      `Resolve a chip by \`${GUARDIAN_CHIP_LOOKUP_KEY}\`. The save enum holds `
+      + `${CHIP_ENTRIES.length} entries under ${chipsByLabel().size} distinct labels, and since `
+      + '2026-08-18 those are one to one. `value` is the game ChipType and also the save slot '
+      + 'order. One chip is stored under an internal name: Steal is Bounty.',
+    disambiguation:
+      'This describes GUARDIAN_CHIP_TYPE_ENUM, the save-file encoding. `guardianUpgrades` is a '
+      + 'different table keyed by the six wiki chip names, and `chipBenefits` is a third, flat and '
+      + 'numerically indexed at three slots per ChipType.',
+    traps: [
+      'THE TRACKER KEYS USED TO SIT ON THE WRONG TWIN. `attack` was on `Scare`, `ally` on `Rush`, '
+      + '`fetch` on `Catch` — so a lookup by display name returned an entry with a null key and '
+      + 'read as missing data rather than as a failure. Fixed by moving each key onto the chip it '
+      + 'names. If a rollback is ever considered: `Main.ApplyAllyRecoveryPackage` reads benefit '
+      + 'slot 16, which is ChipType 5 Ally track 1 — `maxRecovery` in `guardianUpgrades` and '
+      + '"beyond the basic Maximum Recovery limit" in the chip description. Ally, not Rush.',
+      'THREE CHIP TYPES STILL HAVE NO TRACKER KEY — Catch, Scare and Rush. They are real ChipType '
+      + 'values with real behaviour in `TowerBuddy`, and they are not the player-facing chips. A '
+      + 'null key means "not a tracker-facing chip", not "missing data".',
+      'REPAIR IS ABSENT ON PURPOSE. It is ChipType 9, built and unreleased, so it is not in this '
+      + 'enum. Scout (8) WAS wrongly absent and has been added — it is released and appears in '
+      + '`guardianUpgrades` and the community workbook.',
+      'chipType values are a 0-based enum where None is -1. Treating -1 as an index reads off the '
+      + 'end of any array built from this table.',
+    ],
+    implementedBy: ['GUARDIAN_CHIP_TYPE_ENUM', 'guardianUpgrades', 'GUARDIAN_CHIP_IMPORT_CATALOG'],
+    assertions: [
+      { subject: 'guardian.chip', predicate: 'saveEnumEntryCount', value: CHIP_ENTRIES.length, provenance: CATALOG_GUARDIAN },
+      { subject: 'guardian.chip', predicate: 'distinctLabelCount', value: chipsByLabel().size, provenance: CATALOG_GUARDIAN },
+      { subject: 'guardian.chip', predicate: 'ambiguousLabelCount', value: GUARDIAN_AMBIGUOUS_CHIP_LABELS.length, provenance: CATALOG_GUARDIAN },
+      { subject: 'guardian.chip', predicate: 'nullTrackerKeyCount', value: CHIP_ENTRIES.filter(c => c.trackerKey === null).length, provenance: CATALOG_GUARDIAN },
+      { subject: 'guardian.chip', predicate: 'upgradeTableChipCount', value: Object.keys(guardianUpgrades).length, provenance: CATALOG_GUARDIAN },
+      { subject: 'guardian.chip', predicate: 'saveEnumOmitsScout', value: !CHIP_ENTRIES.some(c => c.chipType === 'Scout'), provenance: CATALOG_GUARDIAN },
+      { subject: 'guardian.chip', predicate: 'saveEnumOmitsRepair', value: !CHIP_ENTRIES.some(c => c.chipType === 'Repair'), provenance: CATALOG_GUARDIAN },
+      { subject: 'guardian.chip', predicate: 'uniqueLookupKey', value: GUARDIAN_CHIP_LOOKUP_KEY, provenance: CATALOG_GUARDIAN },
+    ],
+    sources: [CATALOG_GUARDIAN],
+  },
+]
+
+export const GUARDIAN_KNOWLEDGE_EDGES: readonly KnowledgeEdge[] = [
+  {
+    from: 'guardian.unreleasedChips',
+    kind: 'memberOf',
+    to: 'guardian.chip',
+    note:
+      'The line between what the binary builds and what a player can obtain. The workbook is the '
+      + 'authority on the second.',
+    sources: [SHEET_GUARDIANS],
+  },
+  {
+    from: 'guardian.chipArrays',
+    kind: 'memberOf',
+    to: 'guardian.chipBenefits',
+    note:
+      'The three arrays that sit beside the benefits — names, costs and level caps — none of which '
+      + 'the dump exposes.',
+    sources: [GAME_CHIP_TYPE],
+  },
+  {
+    from: 'guardian.chipBenefits',
+    kind: 'independentOf',
+    to: 'guardian.upgradeTrack',
+    note:
+      'Two different tables for the same chips. The upgrade tracks are keyed by chip name with '
+      + 'three tracks each; the benefit array is flat and numerically indexed past slot 28. An '
+      + 'index in one has no meaning in the other.',
+    sources: [GAME_CHIP_TYPE],
+  },
+  {
+    from: 'guardian.chipBenefits',
+    kind: 'memberOf',
+    to: 'guardian.chip',
+    note:
+      'The numbers behind the chips, indexed numerically rather than by name, and read directly by '
+      + 'run code on every kill.',
+    sources: [GAME_CHIP_TYPE],
+  },
+  {
+    from: 'guardian.upgradeTrack',
+    kind: 'scales',
+    to: 'guardian.chip',
+    note:
+      'Owning a chip and having levelled it are separate facts. A chip at its starting level does '
+      + 'almost nothing, and the tracks are where the bits go.',
+    sources: [CATALOG_GUARDIAN_UPGRADES],
+  },
+  {
+    from: 'guardian.slot',
+    kind: 'caps',
+    to: 'guardian.chip',
+    note: 'Only as many chips as there are slots are active, regardless of how many are owned.',
+    sources: [{ ...WIKI_GUARDIAN, section: 'Unlocking/Upgrading' }],
+  },
+  {
+    from: 'guardian.chip',
+    kind: 'scales',
+    to: 'guardian',
+    note: 'The Guardian has no effect of its own — every ability it has comes from an equipped chip.',
+    sources: [{ ...WIKI_GUARDIAN, section: 'Chip Upgrades' }],
+  },
+  {
+    from: 'guardian.chipEncoding',
+    kind: 'memberOf',
+    to: 'guardian.chip',
+    note:
+      'How the save encodes a chip, as distinct from what the chip does. Resolve by chipType; '
+      + 'three display labels are ambiguous and lookup-by-label returns the null-trackerKey entry.',
+    sources: [CATALOG_GUARDIAN],
+  },
+]

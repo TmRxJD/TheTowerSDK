@@ -19,7 +19,7 @@ interface BotReference {
 }
 
 const reference = JSON.parse(
-  readFileSync(join(__dirname, 'fixtures', 'effective-paths-bots.json'), 'utf8'),
+  readFileSync(join(__dirname, '..', '..', 'fixtures', 'data', 'effective-paths-bots.json'), 'utf8'),
 ) as BotReference
 
 const ourBots = Object.values(BOT_UPGRADES_DATA) as Array<{

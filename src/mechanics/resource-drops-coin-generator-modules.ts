@@ -1,6 +1,7 @@
+import { ownLookup } from '../internal/own-lookup'
 import { getBotEffectiveRangeValue } from '../data/bots'
 import { getModuleTemplate } from '../data/modules'
-import type { Compressor } from '../internal/uptime-core'
+import type { Compressor } from './uptime-core'
 import type { SharedModuleProgressInputs } from '../internal/shared-tool-inputs-extended'
 
 /** Save module effect indices for equipped Generator uniques (module-i2-terms catalog). */
@@ -30,7 +31,7 @@ export function computeGeneratorUniqueRarityBonus(templateId: string, rarity: st
 }
 
 export function generatorUniqueTemplateFromEffectId(effectId: number): CoinRelevantGeneratorUniqueId | null {
-  const templateId = GENERATOR_UNIQUE_EFFECT_TO_TEMPLATE_ID[effectId]
+  const templateId = ownLookup(GENERATOR_UNIQUE_EFFECT_TO_TEMPLATE_ID, effectId)
   if (!templateId) return null
   return templateId as CoinRelevantGeneratorUniqueId
 }

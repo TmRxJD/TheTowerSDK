@@ -6,7 +6,7 @@ import {
 import type { EffectiveEconomyConfig } from './effective-paths-eecon-compute'
 import { ZERO_EFFECTIVE_ECONOMY_LEVELS } from './effective-paths-eecon-levels'
 import type { EffectiveEconomyLevels } from './effective-paths-eecon-levels'
-import states from './effective-paths-eecon-states.fixtures.json'
+import states from '../../fixtures/mechanics/effective-paths-eecon-states.fixtures.json'
 
 /**
  * Effective economy against the sheet's own grid.
@@ -35,8 +35,32 @@ const SHEET_STATES = states as unknown as SheetState[]
 /** `CV5` is supplied rather than computed — see the note above. */
 const SUPPLIED_COLUMNS = new Set(['CV5'])
 
+/**
+ * A numeric string is a number.
+ *
+ * `typeof === 'number' ? … : 0` read `eEcon!AX23` -- the GB Sync Desired Ratio,
+ * which the sheet stores as the TEXT "1" -- as zero. `goldBotSyncRatio` then
+ * came out 0, `MIN(MAX(50, average * 0), …)` collapsed to the floor, and `DL5`
+ * reported a flat 50 second Gold Bot cooldown on every account whose weapons
+ * were synced. Nothing failed: 50 is a plausible cooldown, and the twelve-account
+ * states fixture happens to contain no account that reaches this branch.
+ *
+ * Supported by the model, never set by the wiring, nothing anywhere reporting
+ * it -- the shape AGENTS.md warns about, found by a sweep rather than by reading.
+ *
+ * Non-numeric text still reads 0: `"-"`, `"Attack Disso"` and the empty string
+ * are not quantities, and `Number()` gives NaN for all three.
+ */
 const reader = (cells: Cells) => ({
-  cell: (ref: string) => (typeof cells[ref] === 'number' ? cells[ref] as number : 0),
+  cell: (ref: string) => {
+    const raw = cells[ref]
+    if (typeof raw === 'number') return raw
+    if (typeof raw === 'string' && raw.trim() !== '') {
+      const parsed = Number(raw)
+      if (Number.isFinite(parsed)) return parsed
+    }
+    return 0
+  },
   flag: (ref: string) => cells[ref] === true,
 })
 

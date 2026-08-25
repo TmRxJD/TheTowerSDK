@@ -388,6 +388,44 @@ export function superTowerBonus(cardLevel: number, labLevel: number): number {
   return card * (1 + 0.03 * labLevel)
 }
 
+/**
+ * `$BF$37` — the Super Tower lab as a multiplier, which
+ * {@link superTowerBonus} already folds into its own answer.
+ *
+ * It exists separately only because `eDamage Stone!EU5` and `EV5` multiply by
+ * it a second time; see
+ * {@link EffectiveDamageShadow.spotlightCandidateSuperTowerInline}.
+ */
+export function superTowerLabFactor(labLevel: number): number {
+  return 1 + 0.03 * labLevel
+}
+
+/**
+ * The Super Tower factor as the SL Angle and SL Quantity CANDIDATE columns
+ * build it, which is not what {@link superTowerEffectiveBonus} builds.
+ *
+ * Transcribed from `eDamage Stone!EU5`:
+ *
+ *     ST_SLB, IF($AY$53, 1+(35%*STB-1), 1)
+ *     ST,     IF(AND($AY$39, $AY$52),
+ *               1 + (15 * (STB * (1 + (ST_SLB-1) * SLC) - 1)) / STcd, 1)
+ *
+ * `1+(35%*STB-1)` is `0.35*STB`, written the long way in the sheet. The caller
+ * supplies the doubled bonus; this only assembles it.
+ */
+export function spotlightCandidateSuperTower(input: {
+  hasCard: boolean
+  hasMastery: boolean
+  bonus: number
+  cooldownSeconds: number
+  coverage: number
+}): number {
+  if (!input.hasCard) return 1
+  const masteryBonus = input.hasMastery ? 0.35 * input.bonus : 1
+  const withSpotlight = input.bonus * (1 + (masteryBonus - 1) * input.coverage)
+  return 1 + (15 * (withSpotlight - 1)) / input.cooldownSeconds
+}
+
 /** `EPD_SUPERTOWER_COOLDOWN` — seconds between Super Towers, from 45 down. */
 export function superTowerCooldown(hasMastery: boolean, masteryLevel: number): number {
   return 45 - 3 * (hasMastery ? 1 + masteryLevel : 0)

@@ -62,16 +62,26 @@ export const STONE_MASTERY_MAX_LEVEL = CARD_MASTERY_MAX_LEVEL
 /**
  * Whether the sheet's hide row would drop this mastery as already owned.
  *
- * `eEcon Stones!EA2` opens with `IDS_CARD_MASTERY(...)` — column AH on `_IDS`,
- * the card's mastery-unlocked flag. Once that is on, the stone tab stops
- * ranking the mastery; further levels are a lab/time concern.
+ * `eEcon Stones!EA2` is, in full and identically for all five:
+ *
+ *   =OR(IDS_CARD_MASTERY(LEFT(EA4, LEN(EA4)-8)),
+ *       AND($AZ$11, NOT(IDS_LAB_HAS_UNLOCKED(EA4))))
+ *
+ * so exactly two things hide a mastery candidate: it is already unlocked, or
+ * "hide non-unlocked labs" is on and its lab is not researched. Nothing about
+ * the card being EQUIPPED appears anywhere in it.
+ *
+ * This read `config.cards[key].active` — the equipped toggle, `eEcon!AZ34` and
+ * its siblings, which are hand-set booleans and not `IDS_CARD_MASTERY` at all.
+ * On the generated sweep that excluded Extra Orb Mastery and Wave Accelerator
+ * Mastery as "already unlocked" while the sheet was ranking both.
  */
 export function isStoneMasteryOwned(
   sheetName: string,
   config: EffectiveEconomyConfig,
 ): boolean {
   const key = STONE_MASTERY_CARD_KEYS[sheetName]
-  return key ? Boolean(config.cards[key]?.active) : false
+  return key ? Boolean(config.cards[key]?.masteryUnlocked) : false
 }
 
 /**

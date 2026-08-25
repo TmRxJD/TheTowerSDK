@@ -1,3 +1,4 @@
+import { ownLookup } from '../internal/own-lookup'
 import {
   findLabResearchBySlug,
   LAB_RESEARCH_SLUG_TO_INDEX,
@@ -74,7 +75,8 @@ export const LAB_LEVEL_TABLE_NAME_BY_SLUG: Readonly<Record<string, string>> = {
 
 /** Names to try, in order, when looking a lab's level table up by slug. */
 export function labLevelTableLookupNames(slug: string): string[] {
-  const alias = LAB_LEVEL_TABLE_NAME_BY_SLUG[slug]
+  // A plain lookup put a function into this `string[]` for a slug of `constructor`.
+  const alias = ownLookup(LAB_LEVEL_TABLE_NAME_BY_SLUG, slug)
   return alias && alias !== slug ? [slug, alias] : [slug]
 }
 
@@ -84,7 +86,7 @@ const SPECIAL_SITE_LAB_LABELS: Readonly<Record<string, string>> = {
 }
 
 function slugToDisplayLabel(slug: string): string {
-  const special = SPECIAL_SITE_LAB_LABELS[slug]
+  const special = ownLookup(SPECIAL_SITE_LAB_LABELS, slug)
   if (special) return special
   return slug
     .replace(/_/g, ' ')

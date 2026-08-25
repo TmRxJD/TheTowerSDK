@@ -47,11 +47,31 @@ export interface ResolvedEnemyDropsLabs {
   deathWaveCellsBonus: number
 }
 
+/*
+ * Resolving a slug to its lab is a linear scan of every lab, and the answer never changes
+ * for a given slug — the catalogs are static. Callers that sweep a level range were paying
+ * that scan once per level, so a single ROI table cost thousands of them. The value at a
+ * level still comes from `computeLabValueAtLevel` on every call; only the lookup is kept.
+ *
+ * `null` is cached too, so an unknown slug does not rescan the catalog forever.
+ */
+type ResolvedLab = ReturnType<typeof getSharedToolLabs>[number] | null
+const labBySlug = new Map<string, ResolvedLab>()
+
+function findLabBySlug(slug: string): ResolvedLab {
+  const cached = labBySlug.get(slug)
+  if (cached !== undefined) return cached
+
+  const research = findLabResearchBySlug(slug)
+  const lab = getSharedToolLabs()
+    .find(entry => entry.name === slug || (research && entry.displayName === research.displayName)) ?? null
+  labBySlug.set(slug, lab)
+  return lab
+}
+
 function resolveLabBenefitBySlug(slug: string, level: number): number {
   if (level <= 0) return 0
-  const labs = getSharedToolLabs()
-  const research = findLabResearchBySlug(slug)
-  const lab = labs.find(entry => entry.name === slug || (research && entry.displayName === research.displayName))
+  const lab = findLabBySlug(slug)
   if (!lab) return 0
   return computeLabValueAtLevel(lab, level)
 }

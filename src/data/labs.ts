@@ -10,7 +10,7 @@ import {
   LAB_RESEARCH_LEGACY_SLUG_ALIASES,
   type LabResearchRecord,
 } from './labs-research'
-import { findSiteLabCategoryForSaveIndex } from './labs-categories'
+import { findSiteLabCategoryForSaveIndex, SITE_LAB_SLUG_ALIASES } from './labs-categories'
 
 export interface ToolLabLevel {
   level: number
@@ -250,14 +250,63 @@ function lookupResearchForLab(record: ToolLabRecord): LabResearchRecord | undefi
   return undefined
 }
 
+let cachedSharedToolLabs: ToolLabRecord[] | null = null
+
+/**
+ * Every lab, normalised and enriched from the research catalog.
+ *
+ * Built once and shared. The catalog is static, so rebuilding 225 records per call bought
+ * nothing and cost 0.5ms — which does not sound like much until you notice how this gets
+ * used: a dozen helpers call it to resolve a single lab, and the ones that sweep a level
+ * range called it once per level. That is how a cost table came to spend seconds in a
+ * lookup whose answer never changed.
+ *
+ * The array is frozen because it is shared. Nothing mutates it today, and freezing means a
+ * caller that starts to would fail loudly here rather than quietly reorder or truncate the
+ * catalog for every other caller in the process. The records themselves are not frozen —
+ * callers still enrich and derive from them.
+ */
 export function getSharedToolLabs(): ToolLabRecord[] {
   // One catalog, one pass. This used to merge two files whose entries could
   // collide and whose costs were in different units; they are one file now, and
   // the names are asserted unique by labs-catalog.test.ts.
-  return LAB_CATALOG.map(lab => {
-    const record = normalizeCatalogLab(lab)
-    return enrichLabFromResearch(record, lookupResearchForLab(record))
-  })
+  if (!cachedSharedToolLabs) {
+    cachedSharedToolLabs = Object.freeze(LAB_CATALOG.map(lab => {
+      const record = normalizeCatalogLab(lab)
+      return enrichLabFromResearch(record, lookupResearchForLab(record))
+    })) as ToolLabRecord[]
+  }
+  return cachedSharedToolLabs
+}
+
+/**
+ * Resolve a lab record from a slug, tolerating every name a caller might hold.
+ *
+ * A lab is referred to by catalog name, by site alias, by research display name and by
+ * save index, and no single one of those matches everywhere — so the lookup has to try
+ * all four. That is why this was copied five times (platform's enemy-stats labs, three
+ * SDK modules, and the site's enemy-stats domain) rather than being derived: each caller
+ * needed the same fallback chain. Five copies of a name-resolution rule is five places a
+ * new alias has to be remembered, and a miss returns `undefined` rather than failing.
+ *
+ * The catalog is static, so the record list is built once and shared.
+ */
+export function findToolLabBySlug(slug: string): ToolLabRecord | undefined {
+  if (!cachedSharedToolLabs) cachedSharedToolLabs = getSharedToolLabs()
+  // Plain indexing resolves `constructor`/`toString` to Object.prototype members, so a
+  // slug from a save, a sheet or a URL could make `canonical` a function. Own keys only.
+  const canonical = Object.prototype.hasOwnProperty.call(SITE_LAB_SLUG_ALIASES, slug)
+    ? SITE_LAB_SLUG_ALIASES[slug]!
+    : slug
+  const research = findLabResearchBySlug(canonical) ?? findLabResearchBySlug(slug)
+  const displayName = research?.displayName
+
+  return cachedSharedToolLabs.find(lab =>
+    lab.name === slug
+    || lab.name === canonical
+    || (displayName != null && (lab.displayName === displayName || lab.name === displayName))
+    || (research?.index != null && lab.saveIndex === research.index),
+  )
 }
 
 export function formatLabDisplayName(input: string): string {
@@ -354,18 +403,28 @@ export function buildLabProgressRows(
   const coinDiscountMultiplier = Math.max(0, 1 - modifiers.labDiscount * 0.003)
 
   const levelsByNumber = new Map<number, ToolLabLevel>()
+  let lastDefinedLevel = 0
   for (const level of lab.levels) {
     if (Number.isFinite(level.level)) {
       levelsByNumber.set(level.level, level)
+      if (level.level > lastDefinedLevel) lastDefinedLevel = level.level
     }
   }
+
+  /*
+   * Levels past the lab's last were already skipped rather than costed, so the total was
+   * right — but the loop still ran once per requested level, and `targetLevel` comes from
+   * an input box. Stopping at the last defined level makes an absurd target cheap instead
+   * of unbounded, without changing any answer that was already correct.
+   */
+  const lastLevel = Math.min(targetLevel, lastDefinedLevel)
 
   let cumulativeTimeHours = 0
   let cumulativeGems = 0
   let cumulativeCoins = 0
   const rows: LabProgressRow[] = []
 
-  for (let level = currentLevel + 1; level <= targetLevel; level += 1) {
+  for (let level = currentLevel + 1; level <= lastLevel; level += 1) {
     const levelData = levelsByNumber.get(level)
     if (!levelData) continue
 

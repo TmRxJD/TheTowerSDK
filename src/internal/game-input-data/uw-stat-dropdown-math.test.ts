@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest'
 import {
   buildUwStatFieldLabel,
   buildUwStatOptionLabel,
+} from './uw-stat-dropdown-math'
+import {
   computeDefaultUwStatStoneLevel,
   findUwStatSpec,
-} from './uw-stat-dropdown-math'
+} from '../../mechanics/uw-stat-values'
 import { evaluateUwStatDropdownOptions, findUwStatDropdownBinding } from './uw-game-input-keys'
 
 describe('uw stat dropdown helpers', () => {

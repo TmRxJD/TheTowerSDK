@@ -155,6 +155,34 @@ exclusions. See [`../mcp/README.md`](../mcp/README.md).
 
 ## Credit
 
-The formulas and the candidate lists are the Effective Paths maintainers' work — `EFFECTIVE_PATHS_AUTHORS`,
-`EFFECTIVE_PATHS_MAINTAINERS` and `EFFECTIVE_PATHS_CONTRIBUTORS` name them, and
-`EFFECTIVE_PATHS_ATTRIBUTION` is a ready-made credit line for a UI.
+The formulas and the candidate lists are the Effective Paths team's work. This package is a port,
+not original research.
+
+- **Mattew** (`matteweon` on Discord) — IDS Master; the Effective Paths spreadsheets.
+- **QuietFanta** — eEcon Squirrel; the eHP Workshop+ sheet and the Workshop+ additions.
+- **Bisse** — maintainer; also contributed the save-format reference the decoder is checked against.
+- **Shiriru**, **Gladiator**, **Meringue** — maintainers and helpers, plus everyone the sheet lists
+  as a contributor.
+
+`EFFECTIVE_PATHS_AUTHORS`, `EFFECTIVE_PATHS_MAINTAINERS` and `EFFECTIVE_PATHS_CONTRIBUTORS` carry the
+full roster in code, so render those rather than copying names into your own UI — a copy drifts as
+the sheet's Home Page changes.
+
+### Support the team
+
+Enter creator code **`SHEETLORD`** at checkout in the
+[The Tower webstore](https://store.techtreegames.com/thetower/). It costs the buyer nothing extra and
+supports the people who derived these formulas.
+
+If you ship anything built on the `effectivePaths*` exports, please carry that ask through:
+
+```ts
+import { EFFECTIVE_PATHS_ATTRIBUTION_WITH_SUPPORT } from 'thetowersdk/mechanics'
+// "Effective Paths formulas by Mattew, QuietFanta, Bisse and the Effective Paths maintainers.
+//  Ported from the community spreadsheet (v5.09.03.01). Support the Effective Paths team with
+//  creator code SHEETLORD in The Tower webstore."
+```
+
+`EFFECTIVE_PATHS_ATTRIBUTION` is the same line without the ask, for places with room for only one
+sentence. `EFFECTIVE_PATHS_SUPPORT` gives you `{ creatorCode, storeUrl }` if you want to build the
+link yourself.

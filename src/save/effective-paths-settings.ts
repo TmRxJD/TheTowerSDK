@@ -27,6 +27,20 @@ export interface EffectivePathsSaveSettings {
   highestWave: number | null
   /** The game speed the player is running, which scales every lab timing. */
   gameSpeed: number | null
+  /**
+   * Every tier's best wave, keyed by tier number.
+   *
+   * `highestTier` and `highestWave` are one point on this curve, and the page
+   * wants the curve: `wavesByCampaignTier` is what prices a path per tier. The
+   * whole array was already being read here to find the furthest tier, and then
+   * discarded -- so a player who imported a save had an empty per-tier map
+   * while the same player importing an IDS sheet got a full one, from data the
+   * save had all along.
+   *
+   * Only tiers with a wave above zero, so an untouched tier stays absent rather
+   * than claiming a personal best of nothing.
+   */
+  wavesByTier: Record<number, number>
 }
 
 /**
@@ -53,10 +67,19 @@ export function readEffectivePathsSettingsFromSaveRoot(
 
   const gameSpeed = coerceSaveNumber(root.gameSpeedMemory)
 
+  const wavesByTier: Record<number, number> = {}
+  waves.forEach((wave, index) => {
+    const best = Math.floor(wave ?? 0)
+    // The array is 0-based and tiers are 1-based, which is the same offset
+    // `highestTier` uses above.
+    if (best > 0) wavesByTier[index + 1] = best
+  })
+
   return {
     highestTier,
     highestWave,
     gameSpeed: gameSpeed !== null && gameSpeed > 0 ? gameSpeed : null,
+    wavesByTier,
   }
 }
 

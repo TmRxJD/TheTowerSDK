@@ -1,4 +1,4 @@
-import { clampAssistModuleSlotEfficiencyPct } from '../internal/assist-module-efficiency'
+import { clampAssistModuleSlotEfficiencyPct } from './assist-module-efficiency'
 import { MODULE_SUBSTAT_CANONICAL_DATA } from '../data/module-substats'
 import type { SharedModuleEfficiencyLabs } from '../internal/shared-tool-inputs'
 import type { SharedModuleProgressInputs } from '../internal/shared-tool-inputs-extended'

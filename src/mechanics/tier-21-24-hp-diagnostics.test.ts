@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getBasicEnemyWaveStats } from '../internal/enemy-wave-stats'
+import { getBasicEnemyWaveStats } from './enemy-wave-stats'
 import { aggregateWorkshopTableFloat, buildStandardTierBattleConditions, workshopMultFromTableFloat } from './battle-condition-config'
 import { bcCounterLabBenefitIncreaseAtLevel } from './bc-counter-labs'
 import { CAMPAIGN_TIER_PRESSURE } from './wave-scaling-regression-profile'

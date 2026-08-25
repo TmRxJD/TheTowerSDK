@@ -3,7 +3,7 @@ import {
   EFFECTIVE_DAMAGE_CANDIDATES,
   type EffectiveDamagePathVariant,
 } from './effective-paths-edamage-candidates'
-import fixtures from './effective-paths-edamage-candidates.fixtures.json'
+import fixtures from '../../fixtures/mechanics/effective-paths-edamage-candidates.fixtures.json'
 
 /**
  * The four eDamage candidate lists, against the sheet's own update matrices.

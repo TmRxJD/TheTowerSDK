@@ -1,7 +1,7 @@
 /**
  * Wave Info panel ancillary stats — spawn weights, speed, mass, protector radius, spawn rate cap.
  */
-import type { EnemyWaveEnemyType } from '../internal/enemy-wave-stats'
+import type { EnemyWaveEnemyType } from './enemy-wave-stats'
 import { clampCampaignTier } from '../data/index'
 import type { TournamentLeague } from '../data/index'
 import type { BattleConditionSelection } from './battle-condition-config'

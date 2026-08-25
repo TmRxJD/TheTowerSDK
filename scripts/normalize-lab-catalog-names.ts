@@ -175,7 +175,7 @@ const header = `/**
  * To change lab costs or times, edit this file, or extend it from the game dump
  * under extraction-core/. Nothing fetches it at build time or at runtime. The
  * numbers are checked against the community Effective Paths sheet by
- * lab-reference.test.ts -- see src/data/fixtures/README.md.
+ * lab-reference.test.ts -- see fixtures/data/README.md.
  *
  * Identity vs label:
  *  - \`slug\` is the stable research / save / lookup key (snake_case).

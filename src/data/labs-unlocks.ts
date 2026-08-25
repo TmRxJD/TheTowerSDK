@@ -1,3 +1,4 @@
+import { ownLookup } from '../internal/own-lookup'
 /**
  * When each lab becomes available.
  *
@@ -248,7 +249,10 @@ export const LAB_UNLOCKS: Readonly<Record<string, LabUnlock>> = {
  * own would quietly shorten their path.
  */
 export function isLabUnlockedAt(labName: string, tier: number, wave: number): boolean {
-  const requirement = LAB_UNLOCKS[labName]
+  // Own keys only: lab names arrive from saves and the sheet. A prototype name otherwise
+  // makes `requirement` a function, whose `.tier` is undefined — so every comparison below
+  // is false and the lab silently reads as locked.
+  const requirement = ownLookup(LAB_UNLOCKS, labName)
   if (!requirement || requirement === UNLOCKED_BY_ULTIMATE) return true
   if (tier > requirement.tier) return true
   return tier === requirement.tier && wave >= requirement.wave
@@ -269,9 +273,9 @@ export function isLabUnlockedByTierPersonalBests(
   labName: string,
   wavesByTier: Readonly<Record<number, number>>,
 ): boolean {
-  const requirement = LAB_UNLOCKS[labName]
+  const requirement = ownLookup(LAB_UNLOCKS, labName)
   if (!requirement || requirement === UNLOCKED_BY_ULTIMATE) return true
-  const pb = wavesByTier[requirement.tier] ?? 0
+  const pb = ownLookup(wavesByTier, requirement.tier) ?? 0
   return pb >= requirement.wave
 }
 

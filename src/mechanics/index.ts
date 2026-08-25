@@ -12,6 +12,11 @@
  * const hp = computeWaveBaseHealth({ tier: 10, wave: 4200, tournament: false })
  */
 
+export * from './assist-module-efficiency'
+export * from './roi-scaling'
+export * from './unity-random'
+export * from './uptime-core'
+export * from './uw-stat-values'
 export * from './battle-condition-config'
 export * from './battle-conditions'
 export * from './bc-counter-labs'
@@ -47,8 +52,10 @@ export * from './effective-paths-aliases'
 export * from './effective-paths-assist-efficiency'
 export * from './effective-paths-edamage-candidates'
 export * from './effective-paths-edamage-costs'
+export * from './effective-paths-edamage-coin-levels'
 export * from './effective-paths-edamage-levels'
 export * from './effective-paths-edamage-model'
+export * from './effective-paths-ehp-from-sheet'
 export * from './effective-paths-ehp-model'
 export * from './effective-paths-enhancement-costs'
 export * from './effective-paths-ehp-plan'
@@ -63,6 +70,7 @@ export * from './effective-paths-ultimate-weapons'
 export * from './effective-paths-regen-plan'
 export * from './effective-paths-input-ranges'
 export * from './effective-paths-lab-costs'
+export * from './effective-paths-path-display'
 export * from './effective-paths-planner'
 export * from './effective-paths-schema'
 export * from './effective-paths-stone-costs'
@@ -72,6 +80,8 @@ export * from './elite-spawn-chance'
 export * from './els-module-cluster'
 export * from './els-upgrade-path'
 export * from './enemy-drops-context'
+export * from './enemy-type-mix'
+export * from './ep-controls'
 export * from './enemy-drops-game-data'
 export * from './enemy-drops-simulation'
 export * from './enemy-level-skip'
@@ -83,6 +93,7 @@ export * from './enemy-wave-info-labs'
 export * from './enemy-wave-info-pipeline'
 export * from './enemy-wave-stats'
 export * from './get-resistance-level'
+export * from './golden-combo'
 export * from './guardians'
 export * from './heat-bc-index-native'
 export * from './ilm-calculator-resolve'
@@ -152,3 +163,23 @@ export * from './effective-paths-eecon-uw-cd'
 // repo-root, save-graph, sdk-graph, builders, doctor, kernel, …) import via
 // packages/sdk/src/mechanics/<path> — they must not be export* from this file or
 // Vite/CJS loads node:fs into the browser and blanks the showcase site.
+export * from './perk-benefit'
+export * from './workshop-damage'
+/*
+ * TYPES ONLY. `./calculators` re-exports `specs-generated.ts`, which is
+ * generated to declare the SDK's whole exported surface for coverage -- and
+ * that surface includes the doctor modules, which import `node:fs` and tooling that is
+ * not part of the published package.
+ *
+ * So `export * from './calculators'` dragged Node-only code into the browser
+ * barrel, in breach of the contract stated a few lines above. That tooling ships
+ * CommonJS, browser ESM cannot named-import from it, and the route chunk that reached
+ * it died with "does not provide an export named ..." -- taking every calculator page
+ * with it.
+ *
+ * `calculators/types.ts` has no imports at all, so this keeps `CalculatorSpec`
+ * -- the only thing the app uses -- without the chain. Runtime calculator
+ * surfaces are Node/AGS and import via `thetowersdk/mechanics/calculators`,
+ * exactly like the other Node surfaces listed above.
+ */
+export * from './calculators/types'

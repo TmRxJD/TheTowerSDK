@@ -1,6 +1,6 @@
 import { readDurationSecondsFromSave } from './battle-duration'
-import { TRACKER_RUN_EXTENDED_FIELDS, TRACKER_RUN_OPTIONAL_STRING_FIELDS } from '../internal/tracker-cloud-schemas'
-import { formatCompact } from '../internal/tool-formatting'
+import { TRACKER_RUN_EXTENDED_FIELDS, TRACKER_RUN_OPTIONAL_STRING_FIELDS } from './tracker-run-fields'
+import { formatCompact } from '../formatting/tool-formatting'
 
 type BattleReportStatField = (typeof TRACKER_RUN_OPTIONAL_STRING_FIELDS)[number]
 

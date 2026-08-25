@@ -7,7 +7,7 @@ import {
   damageRunEffects,
   slowMultiplier,
 } from './effective-paths-edamage-model'
-import fixture from './effective-paths-edamage-path.fixtures.json'
+import fixture from '../../fixtures/mechanics/effective-paths-edamage-path.fixtures.json'
 
 /**
  * The eDamage composition, against the factor values captured off row 5 of the

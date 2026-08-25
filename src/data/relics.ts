@@ -356,3 +356,173 @@ export function computeLabSpeedRelicBonusPercent(
   // point otherwise surfaces as 3.5000000000000004 in the input.
   return Math.round(total * 100) / 100
 }
+
+/* -------------------------------------------------------------------------- *
+ * How relics are unlocked, and the published all-relics totals.
+ *
+ * Game facts, not presentation. Prose describing what relics are *for* lives in
+ * `thetowersdk/knowledge`.
+ * -------------------------------------------------------------------------- */
+
+export type RelicUnlockMethodKey =
+  | 'milestone_wave_4500'
+  | 'tournament_placement'
+  | 'event_completion'
+  | 'event_rerun_store'
+  | 'guild_store'
+  | 'years_of_gameplay'
+
+export interface RelicUnlockMethodDefinition {
+  key: RelicUnlockMethodKey
+  label: string
+  description: string
+}
+
+export interface RelicBonusTotalRow {
+  stat: string
+  total: string
+}
+
+export type RelicBonusCategoryKey = 'misc' | 'damage' | 'defense' | 'utility'
+
+export interface RelicBonusCategoryDefinition {
+  key: RelicBonusCategoryKey
+  label: string
+  description: string
+  rows: readonly RelicBonusTotalRow[]
+}
+
+function buildRelicBonusCategory(
+  key: RelicBonusCategoryKey,
+  label: string,
+  description: string,
+  rows: readonly RelicBonusTotalRow[],
+): RelicBonusCategoryDefinition {
+  return { key, label, description, rows }
+}
+
+export const RELIC_UNLOCK_METHODS = [
+  {
+    key: 'milestone_wave_4500',
+    label: 'Milestone wave 4500 rewards',
+    description: 'Some relics are unlocked from reaching wave 4500 on milestone tiers.',
+  },
+  {
+    key: 'tournament_placement',
+    label: 'Tournament placement',
+    description: 'Some relics are awarded for tournament placement results.',
+  },
+  {
+    key: 'event_completion',
+    label: 'Event completion',
+    description: 'Some relics come from event completion thresholds rather than direct shop purchases.',
+  },
+  {
+    key: 'event_rerun_store',
+    label: 'Event rerun store purchases',
+    description: 'Event store relics can only be obtained during event reruns.',
+  },
+  {
+    key: 'guild_store',
+    label: 'Guild store',
+    description: 'Some relics can be bought through guild shop or guild-season relic offers.',
+  },
+  {
+    key: 'years_of_gameplay',
+    label: 'Years of gameplay',
+    description: 'Some relics are long-term anniversary-style rewards tied to years played.',
+  },
+] as const satisfies readonly RelicUnlockMethodDefinition[]
+
+/**
+ * Published cumulative relic bonuses.
+ *
+ * ⚠ These are transcribed figures, not derived from `RELIC_TEMPLATES`, and the
+ * two disagree: this table reports 71% total Lab Speed while summing every
+ * template's `Lab Speed` value gives 92%. Do not reconcile them by picking one
+ * — `RELIC_IMPORT_CATALOG` and the in-game save description strings are the
+ * authority for relic bonus types, and both this table and the community sheet
+ * have been wrong before. `computeLabSpeedRelicBonusPercent()` answers the
+ * different (and reliable) question of what a *specific player* has unlocked.
+ */
+/**
+ * RE-READ FROM THE WIKI ON 2026-08-20. The previous transcription was stale on
+ * 20 of these 25 rows — Free Utility Upgrade had more than doubled (4% to 10%)
+ * and Knockback Force had gone from 19% to 33% — because relics keep being
+ * added and nothing here was watching the page.
+ *
+ * Only the totals changed. The `stat` names are left exactly as they were:
+ * they are joined against elsewhere and the wiki spells several of them
+ * differently ("Cash Bonus" for `Cash`, "Defense Percent" for `Defense`), so
+ * renaming them to match the page would break the joins to fix the display.
+ *
+ * `scripts/acs/oracle-wiki-staleness.mjs` now watches the Relics page; when it
+ * reports CHANGED, this block is what to re-read.
+ */
+export const RELIC_TOTALS_READ_FROM_WIKI_ON = '2026-08-20'
+
+export const RELIC_MISC_TOTALS = [
+  { stat: 'Lab Speed', total: '79%' },
+  { stat: 'Bot Range', total: '10m' },
+] as const satisfies readonly RelicBonusTotalRow[]
+
+export const RELIC_DAMAGE_TOTALS = [
+  { stat: 'Damage', total: '116%' },
+  { stat: 'Ultimate Damage', total: '50%' },
+  { stat: 'Attack Speed', total: '19%' },
+  { stat: 'Crit Chance', total: '16%' },
+  { stat: 'Crit Factor', total: '107%' },
+  { stat: 'Damage/Meter', total: '83%' },
+  { stat: 'Super Critical Chance', total: '6%' },
+  { stat: 'Super Critical Mult', total: '5%' },
+  { stat: 'Rend Armor Mult', total: '2%' },
+] as const satisfies readonly RelicBonusTotalRow[]
+
+export const RELIC_DEFENSE_TOTALS = [
+  { stat: 'Health', total: '116%' },
+  { stat: 'Health Regen', total: '35%' },
+  { stat: 'Defense', total: '5%' },
+  { stat: 'Defense Absolute', total: '74%' },
+  { stat: 'Thorns', total: '13%' },
+  { stat: 'Knockback Force', total: '33%' },
+  { stat: 'Orb Speed', total: '28%' },
+  { stat: 'Wall Rebuild', total: '-2s' },
+] as const satisfies readonly RelicBonusTotalRow[]
+
+export const RELIC_UTILITY_TOTALS = [
+  { stat: 'Cash', total: '29%' },
+  { stat: 'Coins', total: '85%' },
+  { stat: 'Free Attack Upgrade', total: '14%' },
+  { stat: 'Free Defense Upgrade', total: '9%' },
+  { stat: 'Free Utility Upgrade', total: '10%' },
+  { stat: 'Recovery Amount', total: '18%' },
+  { stat: 'Enemy Attack Level Skip', total: '2%' },
+  { stat: 'Enemy Health Level Skip', total: '2%' },
+] as const satisfies readonly RelicBonusTotalRow[]
+
+export const RELIC_TOTAL_BONUS_CATEGORIES = [
+  buildRelicBonusCategory(
+    'misc',
+    'Misc',
+    'Misc relic totals cover passive research speed and bot reach rather than direct combat, survivability, or economy multipliers.',
+    RELIC_MISC_TOTALS,
+  ),
+  buildRelicBonusCategory(
+    'damage',
+    'Damage',
+    'Damage relic totals cover offensive throughput, critical scaling, armor breaking, and ultimate weapon damage support.',
+    RELIC_DAMAGE_TOTALS,
+  ),
+  buildRelicBonusCategory(
+    'defense',
+    'Defense',
+    'Defense relic totals cover survivability, mitigation, orb control, knockback strength, and wall rebuild timing.',
+    RELIC_DEFENSE_TOTALS,
+  ),
+  buildRelicBonusCategory(
+    'utility',
+    'Utility',
+    'Utility relic totals cover coin and cash economy, free-upgrade rates, recovery, and enemy level-skip support.',
+    RELIC_UTILITY_TOTALS,
+  ),
+] as const satisfies readonly RelicBonusCategoryDefinition[]

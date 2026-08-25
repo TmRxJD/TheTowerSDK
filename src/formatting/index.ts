@@ -6,3 +6,4 @@
  */
 export * from './numbers'
 export * from './duration'
+export * from './tool-formatting'

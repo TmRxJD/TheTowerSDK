@@ -6,10 +6,11 @@
  * used to sync from it has been deleted. Do not go looking for an endpoint to
  * refresh this from, and do not reintroduce one.
  *
- * To change lab costs or times, edit this file, or extend it from the game dump
- * under extraction-core/. Nothing fetches it at build time or at runtime. The
+ * To change lab costs or times, edit this file directly — it is hand-owned and
+ * there is no upstream to regenerate from. Nothing fetches it at build time or
+ * at runtime. The
  * numbers are checked against the community Effective Paths sheet by
- * lab-reference.test.ts -- see src/data/fixtures/README.md.
+ * lab-reference.test.ts -- see fixtures/data/README.md.
  *
  * Identity vs label:
  *  - `slug` is the stable research / save / lookup key (snake_case).
@@ -8305,6 +8306,9 @@ export const LAB_CATALOG: readonly LabCatalogRecord[] = [
       { level: 4, duration: "280:59:08", cost: 337500000000 },
       { level: 5, duration: "314:42:13", cost: 506250000000 },
       { level: 6, duration: "352:28:05", cost: 759380000000 },
+      { level: 7, duration: "394:45:50", cost: 1139062500000 },
+      { level: 8, duration: "442:08:08", cost: 1708593750000 },
+      { level: 9, duration: "495:11:31", cost: 2562890625000 },
     ],
   },
 {

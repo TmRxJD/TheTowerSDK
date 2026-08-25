@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getBasicEnemyWaveStats } from '../internal/enemy-wave-stats'
+import { getBasicEnemyWaveStats } from './enemy-wave-stats'
 import {
   getWaveInfoEnemyStats,
   WAVE_INFO_OVERCHARGE_DAMAGE_MULT,

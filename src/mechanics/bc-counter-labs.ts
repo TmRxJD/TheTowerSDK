@@ -4,9 +4,7 @@
  * Counter labs reduce effective BC benefit (global `battle_condition_reduction` + per-BC labs).
  * ELS skip lab (`enemy_level_skip_reduction`) scales tier skip-chance adjustments.
  */
-import { SITE_LAB_SLUG_ALIASES } from '../data/index'
-import { findLabResearchBySlug } from '../data/index'
-import { computeLabValueAtLevel, getSharedToolLabs, type ToolLabRecord } from '../data/index'
+import { computeLabValueAtLevel, findToolLabBySlug } from '../data/index'
 import type { TournamentLeague } from '../data/index'
 import {
   type BattleConditionSelection,
@@ -46,19 +44,6 @@ export function mergeWorkshopBcLabLevels(
     }
   }
   return merged
-}
-
-function findToolLabBySlug(slug: string): ToolLabRecord | undefined {
-  const labs = getSharedToolLabs()
-  const canonical = SITE_LAB_SLUG_ALIASES[slug] ?? slug
-  const research = findLabResearchBySlug(canonical) ?? findLabResearchBySlug(slug)
-  const displayName = research?.displayName
-  return labs.find(lab =>
-    lab.name === slug
-    || lab.name === canonical
-    || (displayName != null && (lab.displayName === displayName || lab.name === displayName))
-    || (research?.index != null && lab.saveIndex === research.index),
-  )
 }
 
 function resolveLabMitigationPct(slug: string, level: number, maxLevel: number): number {

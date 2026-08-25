@@ -5658,8 +5658,8 @@ export const LAB_RESEARCH_IMPORT_CATALOG = [
   {
     'index': 0,
     'gameField': 'researchLevel0',
-    'displayName': 'AssetsTools.NET.AssetTypeArrayInfo',
-    'slug': 'assetstools_net_assettypearrayinfo',
+    'displayName': 'Damage',
+    'slug': 'damage',
     'category': null,
   },
   {
@@ -7324,8 +7324,8 @@ export const LAB_RESEARCH_IMPORT_CATALOG = [
   {
     'index': 238,
     'gameField': 'researchLevel238',
-    'displayName': 'Dissonant Echo - Ultimate Weapons',
-    'slug': 'dissonant_echo_ultimate_weapons',
+    'displayName': 'Dissonant Echo - Utility',
+    'slug': 'dissonant_echo_utility',
     'category': null,
   },
   {
@@ -7345,8 +7345,8 @@ export const LAB_RESEARCH_IMPORT_CATALOG = [
   {
     'index': 241,
     'gameField': 'researchLevel241',
-    'displayName': 'Dissonant Echo - Utility',
-    'slug': 'dissonant_echo_utility',
+    'displayName': 'Dissonant Echo - Ultimate Weapons',
+    'slug': 'dissonant_echo_ultimate_weapons',
     'category': null,
   },
   {
@@ -7933,7 +7933,23 @@ export const VAULT_POWER_IMPORT_CATALOG = [
   },
 ] as const
 
-/** Guardian chip type enum (slot / unlock / level array index). */
+/**
+ * Guardian chip type enum (slot / unlock / level array index).
+ *
+ * `value` is the game's `ChipType`, which is also the save's chip slot order.
+ * `trackerKey` sits on the ChipType whose name matches the player-facing chip —
+ * Bounty is the one rename, on `Steal`.
+ *
+ * Corrected 2026-08-18. It previously put `attack` on `Scare`, `ally` on `Rush`
+ * and `fetch` on `Catch` — the twin of each chip rather than the chip. Settled
+ * by `Main.ApplyAllyRecoveryPackage`, which reads benefit slot 16: ChipType 5
+ * (Ally), track 1, which `guardianUpgrades.ally` calls `maxRecovery` and the
+ * chip description calls "beyond the basic Maximum Recovery limit". Function,
+ * ChipType, track and description all name Ally, not Rush.
+ *
+ * `Scout` (8) was missing entirely despite being a released chip.
+ * `Repair` (9) is deliberately absent — it is built but unreleased.
+ */
 export const GUARDIAN_CHIP_TYPE_ENUM = [
   {
     'chipType': 'None',
@@ -7950,37 +7966,37 @@ export const GUARDIAN_CHIP_TYPE_ENUM = [
   {
     'chipType': 'Catch',
     'value': 1,
-    'trackerKey': 'fetch',
-    'label': 'Fetch',
+    'trackerKey': null,
+    'label': 'Catch',
   },
   {
     'chipType': 'Attack',
     'value': 2,
-    'trackerKey': null,
+    'trackerKey': 'attack',
     'label': 'Attack',
   },
   {
     'chipType': 'Scare',
     'value': 3,
-    'trackerKey': 'attack',
-    'label': 'Attack',
+    'trackerKey': null,
+    'label': 'Scare',
   },
   {
     'chipType': 'Rush',
     'value': 4,
-    'trackerKey': 'ally',
-    'label': 'Ally',
+    'trackerKey': null,
+    'label': 'Rush',
   },
   {
     'chipType': 'Ally',
     'value': 5,
-    'trackerKey': null,
+    'trackerKey': 'ally',
     'label': 'Ally',
   },
   {
     'chipType': 'Fetch',
     'value': 6,
-    'trackerKey': null,
+    'trackerKey': 'fetch',
     'label': 'Fetch',
   },
   {
@@ -7988,6 +8004,12 @@ export const GUARDIAN_CHIP_TYPE_ENUM = [
     'value': 7,
     'trackerKey': 'summon',
     'label': 'Summon',
+  },
+  {
+    'chipType': 'Scout',
+    'value': 8,
+    'trackerKey': 'scout',
+    'label': 'Scout',
   },
 ] as const
 
@@ -8023,8 +8045,8 @@ export const GUARDIAN_CHIP_IMPORT_CATALOG = [
   {
     'index': 1,
     'chipType': 'Catch',
-    'trackerKey': 'fetch',
-    'label': 'Fetch',
+    'trackerKey': null,
+    'label': 'Catch',
     'description': null,
     'saveFields': {
       'unlocked': 'guardianChipUnlocked',
@@ -8035,7 +8057,7 @@ export const GUARDIAN_CHIP_IMPORT_CATALOG = [
   {
     'index': 2,
     'chipType': 'Attack',
-    'trackerKey': null,
+    'trackerKey': 'attack',
     'label': 'Attack',
     'description': null,
     'saveFields': {
@@ -8047,8 +8069,8 @@ export const GUARDIAN_CHIP_IMPORT_CATALOG = [
   {
     'index': 3,
     'chipType': 'Scare',
-    'trackerKey': 'attack',
-    'label': 'Attack',
+    'trackerKey': null,
+    'label': 'Scare',
     'description': null,
     'saveFields': {
       'unlocked': 'guardianChipUnlocked',
@@ -8059,8 +8081,8 @@ export const GUARDIAN_CHIP_IMPORT_CATALOG = [
   {
     'index': 4,
     'chipType': 'Rush',
-    'trackerKey': 'ally',
-    'label': 'Ally',
+    'trackerKey': null,
+    'label': 'Rush',
     'description': null,
     'saveFields': {
       'unlocked': 'guardianChipUnlocked',
@@ -8071,7 +8093,7 @@ export const GUARDIAN_CHIP_IMPORT_CATALOG = [
   {
     'index': 5,
     'chipType': 'Ally',
-    'trackerKey': null,
+    'trackerKey': 'ally',
     'label': 'Ally',
     'description': null,
     'saveFields': {
@@ -8083,7 +8105,7 @@ export const GUARDIAN_CHIP_IMPORT_CATALOG = [
   {
     'index': 6,
     'chipType': 'Fetch',
-    'trackerKey': null,
+    'trackerKey': 'fetch',
     'label': 'Fetch',
     'description': null,
     'saveFields': {
@@ -8103,7 +8125,19 @@ export const GUARDIAN_CHIP_IMPORT_CATALOG = [
       'level': 'guardianChipLevel',
       'slot': 'guardianChipSlot',
     },
+  },  {
+    'index': 8,
+    'chipType': 'Scout',
+    'trackerKey': 'scout',
+    'label': 'Scout',
+    'description': null,
+    'saveFields': {
+      'unlocked': 'guardianChipUnlocked',
+      'level': 'guardianChipLevel',
+      'slot': 'guardianChipSlot',
+    },
   },
+
 ] as const
 
 export const PLAYER_DATA_FIELD_COUNT = 610

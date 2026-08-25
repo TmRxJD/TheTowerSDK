@@ -213,6 +213,12 @@ describeSave('planning an import from a real save', () => {
      * trip the default timeout on a loaded machine — a test that fails for
      * being slow teaches nobody anything, and it failed under `pnpm verify`
      * while passing when run alone, which is the worst way to learn that.
+     *
+     * Sampling alone did not settle it: this still takes about three seconds
+     * by itself and over seven under a full parallel run, against a five
+     * second default. The timeout below is explicit so the next person sees a
+     * budget rather than a mystery, and so the fix is not to keep shrinking
+     * the sample until the coverage is gone.
      */
     const step = Math.max(1, Math.floor(keys.length / 24))
     for (const dropped of keys.filter((_, index) => index % step === 0)) {
@@ -220,5 +226,5 @@ describeSave('planning an import from a real save', () => {
       delete partial[dropped]
       expect(() => planSaveImportTrackers(partial, KEYS), `without ${dropped}`).not.toThrow()
     }
-  })
+  }, 30_000)
 })

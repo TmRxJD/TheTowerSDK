@@ -2,6 +2,7 @@ import coreRaw from './data/sdk-graph.v1.json'
 import { loadEpGraph } from '../ep-graph'
 import { SdkGraphSchema, type SdkGraph } from './schema'
 import { epGraphToSdkModule, mergeSdkGraphs } from './merge'
+import { oracleGraphToSdkModule } from './oracle-module'
 import { validateSdkGraph } from './validate'
 import { applySdkGraphMutations } from './mutate'
 import { renderSdkGraphMermaidSlices } from './render-mermaid'
@@ -21,6 +22,7 @@ export * from './render-mermaid'
 export * from './build-index'
 export * from './invariants'
 export * from './trust-report'
+export * from './oracle-module'
 
 export interface LoadSdkGraphOptions {
   mode?: TrustMode
@@ -34,7 +36,14 @@ function mergeCoreAndEp(): SdkGraph {
   const core = SdkGraphSchema.parse(coreRaw)
   const ep = loadEpGraph()
   const epMod = epGraphToSdkModule(ep)
-  const merged = mergeSdkGraphs(core, [{ name: 'ep', ...epMod }])
+  // The oracle joins as a third module. It is read-only here: mechanics
+  // knowledge is written in `src/knowledge/compartments`, and this lifts a
+  // projection so the trust and coverage layer can see it at all.
+  const oracleMod = oracleGraphToSdkModule()
+  const merged = mergeSdkGraphs(core, [
+    { name: 'ep', ...epMod },
+    { name: 'oracle', ...oracleMod },
+  ])
   merged.contentVersion = core.contentVersion + ep.contentVersion
   merged.sheetVersion = ep.sheetVersion
   return merged

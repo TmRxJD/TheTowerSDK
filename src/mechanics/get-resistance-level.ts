@@ -5,6 +5,7 @@
  *
  * Per-BC workshop bases use resistance BC table offsets.
  */
+import { ownLookup } from '../internal/own-lookup'
 import { LAB_WORKSHOP_SCALE } from './lab-workshop-constants'
 import { LAB_WORKSHOP_RESISTANCE_BASE_OFFSETS } from './lab-workshop-constants'
 
@@ -32,7 +33,5 @@ export function getResistanceLevel(input: GetResistanceLevelInput): number {
 }
 
 export function resistanceBcWorkshopBaseOffset(bcName: string): number | undefined {
-  return LAB_WORKSHOP_RESISTANCE_BASE_OFFSETS[
-    bcName as ResistanceBcName
-  ]
+  return ownLookup(LAB_WORKSHOP_RESISTANCE_BASE_OFFSETS, bcName as ResistanceBcName)
 }

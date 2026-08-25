@@ -1,3 +1,4 @@
+import { ownLookupOr } from '../own-lookup'
 import type { DissonanceTypeKey, DissonanceWaveInputs } from '../dissonance-calcs-local-state'
 
 /** Research lab slugs for Dissonant Echo labs. */
@@ -70,7 +71,7 @@ export function isDissonanceEchoResearchLabSlug(slug: string): boolean {
 }
 
 export function getDissonanceEchoLabSlug(type: DissonanceTypeKey): string {
-  return DISSONANCE_ECHO_LAB_SLUG_BY_TYPE[type]
+  return ownLookupOr(DISSONANCE_ECHO_LAB_SLUG_BY_TYPE, type, '')
 }
 
 export function getDissonanceEchoLabGameDataKey(type: DissonanceTypeKey): DissonanceEchoLabDataKey {

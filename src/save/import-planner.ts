@@ -1,3 +1,4 @@
+import { ownLookupOr } from '../internal/own-lookup'
 import { buildBotsTrackerImportPayload, readBotsFromSaveRoot } from './bots'
 import { planBattleReportImport } from './battle-reports'
 import { buildCardsTrackerImportPayload, readCardsFromSaveRoot } from './cards'
@@ -79,7 +80,12 @@ export function planSaveImportTracker(
   parsedRoot: unknown,
   options?: { existingRuns?: Array<Record<string, unknown>> },
 ): SaveImportPlannerResult {
-  const label = SAVE_IMPORT_TRACKER_LABELS[key]
+  /*
+   * Own keys only. This is the label shown next to an import row, and an unknown key made
+   * it a function rather than a name. Nothing below this reads the label, so this changes
+   * what an unrecognised key is *called* and nothing about what any import does.
+   */
+  const label = ownLookupOr(SAVE_IMPORT_TRACKER_LABELS, key, String(key))
   const root = isRecord(parsedRoot) ? parsedRoot : null
 
   if (!looksLikeSaveRoot(parsedRoot)) {

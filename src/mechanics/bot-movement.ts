@@ -1,6 +1,6 @@
 /** Bot wander movement and activation destination selection. */
 
-import { UnityRandom } from '../internal/unity-random'
+import { UnityRandom } from './unity-random'
 
 export const BOT_MOVEMENT_ARRIVAL_THRESHOLD_SQ = 0.25
 

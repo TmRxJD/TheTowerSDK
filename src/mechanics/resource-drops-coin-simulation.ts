@@ -8,9 +8,11 @@ import {
 } from '../data/index'
 import {
   buildUwStatLevelEntries,
+} from '../internal/game-input-data/uw-stat-dropdown-math'
+import {
   findUwStatSpec,
   parseUwStatNumericValue,
-} from '../internal/game-input-data/uw-stat-dropdown-math'
+} from './uw-stat-values'
 import { BOT_UPGRADES_DATA } from '../data/index'
 import { WORKSHOP_DATA } from '../data/index'
 import { empiricalTierCoinMultiplier } from './wave-base-empirical-scaling'
@@ -26,7 +28,7 @@ import {
   computeEffectiveCooldowns,
   computeUptimeRatio,
   type UptimeCoreState,
-} from '../internal/uptime-core'
+} from './uptime-core'
 import {
   enemySpawnRateCapFromWaveAcceleratorChart,
   findWaveAcceleratorMasteryForSpawnCap,
@@ -43,9 +45,46 @@ import {
   introSprintZeroCoinFraction,
 } from './resource-drops-coin-intro-sprint'
 import { coinTradeOffPerkMult } from './resource-drops-coin-trade-off'
+import { measuredAverageEnemyCoinWeight } from './enemy-type-mix'
 
-/** Approximate average enemy coin weight vs basic (fast/ranged 2×, tank 4× mix). */
-export const RESOURCE_DROPS_AVG_ENEMY_COIN_WEIGHT = 1.15
+/**
+ * Average enemy coin weight vs basic, MEASURED from a real round.
+ *
+ * Was a hand-blended 1.15 with the comment "fast/ranged 2x, tank 4x mix". The
+ * mix it assumed was never checked. Per-type kill counters in
+ * `test/playerInfo.dat` partition a round exactly, and the measured mix is near
+ * uniform (basic 27.9%, fast 25.5%, tank 24.0%, ranged 22.6%), which weights to
+ * 2.20 rather than 1.15.
+ *
+ * Derived, not retyped: change the measured counts and this follows.
+ * See `src/pages/import/utils/enemy-type-mix-vs-save.test.ts`.
+ */
+export const RESOURCE_DROPS_AVG_ENEMY_COIN_WEIGHT = measuredAverageEnemyCoinWeight()
+
+/**
+ * Enemies produced per spawn TICK, above the one the chart implies.
+ *
+ * `Main.WaveUpdate` does not spawn a single enemy per tick. It rolls against
+ * `enemySpawnChance` and calls `SpawnRandomBasicEnemy` at three separate sites
+ * — gated by cards, tournament state and `CustomizeGame.GetResistanceLevel` —
+ * then rolls `enemyDoubleSpawnChance` for one more. The wave-accelerator chart
+ * gives the tick count; this is what each tick actually yields.
+ *
+ * The STRUCTURE is from the binary; the MAGNITUDE is measured, because the
+ * three call sites are conditional on state a static read cannot resolve. Two
+ * independent estimates from `test/playerInfo.dat` agree to 2%:
+ *
+ *   one wave    350 spawned at wave 4875 / (56 ticks x 1.9 Enemy Balance) = 3.29
+ *   whole round 621,640 kills / (model total x the 45% of waves not skipped)  = 3.22
+ *
+ * Both assume full Wave Accelerator mastery. Under NO mastery the same two
+ * estimates give 3.76 and 3.95 — they disagree by 5% instead of 2%, which is
+ * the evidence for the mastery assumption rather than an assertion of it.
+ *
+ * A per-tick yield derived from the actual spawn conditions would replace this.
+ * Until then it is a calibration, and is named as one.
+ */
+export const RESOURCE_DROPS_ENEMIES_PER_SPAWN_TICK = 3.25
 
 export const COIN_BONUS_ENHANCEMENT_KEY = 'coin_bonus'
 export const COINS_KILL_WORKSHOP_KEY = 'Coins / Kill Bonus'
@@ -570,7 +609,7 @@ function killsPerWaveAt(
     wave,
     waveAcceleratorMastery,
   })
-  return cap * enemyBalanceMult
+  return cap * enemyBalanceMult * RESOURCE_DROPS_ENEMIES_PER_SPAWN_TICK
 }
 
 function sumWaveIndexRange(wStart: number, wEnd: number): number {
@@ -621,7 +660,7 @@ export function accumulateResourceDropsKillYields(input: {
 
   const accumulateSegment = (wStart: number, wEnd: number, spawnCap: number) => {
     if (wEnd < wStart) return
-    const killsPerWave = spawnCap * enemyBalanceMult
+    const killsPerWave = spawnCap * enemyBalanceMult * RESOURCE_DROPS_ENEMIES_PER_SPAWN_TICK
     const waveCount = wEnd - wStart + 1
     totalKills += killsPerWave * waveCount
     const coinStart = Math.max(wStart, introCap + 1)

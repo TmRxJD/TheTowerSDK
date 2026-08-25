@@ -1,3 +1,4 @@
+import { findRarityLabel } from './module-levels'
 import type { ModuleRarity } from './module-levels'
 
 export type ModuleCalcType = 'cannon' | 'armor' | 'generator' | 'core'
@@ -124,10 +125,27 @@ const MODULE_MULTIPLIER_INCREMENT: Record<ModuleCalcType, Array<{ start: number;
   ],
 }
 
+/**
+ * The module's stat multiplier for a rarity and level.
+ *
+ * The rarity label is normalised with `findRarityLabel` before anything else.
+ * Until 2026-08-17 this did a raw key lookup, so `Ancestral 5*` — the spelling
+ * the Effective Paths sheet uses — returned 1 while `Ancestral 5` returned
+ * 30.328. `getLevelCapForRarity` accepted both, so a caller could validate a
+ * label successfully and then compute a module worth nothing, with no error at
+ * either step.
+ *
+ * Every rarity lookup in this package now goes through the one normaliser.
+ * Returning 1 for a label that is genuinely unknown is still correct and still
+ * happens — what no longer happens is returning it for a real rarity spelled a
+ * different way.
+ */
 export function computeModuleStat(opts: { type: ModuleCalcType; rarityLabel: string; level: number }): number {
-  const { type, rarityLabel } = opts
+  const { type } = opts
   const level = Math.max(1, Math.floor(Number(opts.level) || 1))
-  const base = MODULE_MULTIPLIER_BASE[type]?.[rarityLabel as ModuleRarity]
+  const rarityLabel = findRarityLabel(opts.rarityLabel)
+  if (!rarityLabel) return 1
+  const base = MODULE_MULTIPLIER_BASE[type]?.[rarityLabel]
   if (base === undefined) return 1
   const increments = MODULE_MULTIPLIER_INCREMENT[type]
   const range = increments.find(entry => level >= entry.start && level <= entry.end)

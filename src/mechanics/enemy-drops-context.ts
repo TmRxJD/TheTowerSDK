@@ -17,7 +17,7 @@ import { getUptimeCoreStateFromSharedInputs } from '../internal/shared-uptime-in
 import {
   computeUptimeCycleWaveTimeSeconds,
   computeUptimePerWaveDurationSeconds,
-} from '../internal/uptime-core'
+} from './uptime-core'
 import {
   computeBossWaveIntervalFromTier,
   type EnemyDropsSimulationInput,

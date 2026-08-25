@@ -7,6 +7,12 @@ export {
   V283_NATIVE_HEAT_LEVELS_BY_TIER,
 } from './campaign-tier-native.generated'
 export {
+  V283_PERK_MAX_LEVEL,
+  V283_PERK_BENEFIT_UP_BASE,
+  V283_PERK_BENEFIT_UP_INCREASE,
+  V283_PERK_BENEFIT_DOWN,
+} from './perk-tables.generated'
+export {
   V283_RELIC_SLICE,
   V283_RELIC_SLICE_INDEX_MIN,
   V283_RELIC_SLICE_INDEX_MAX,

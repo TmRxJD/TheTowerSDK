@@ -35,14 +35,21 @@ describe('readPerkPreferencesFromSaveRoot', () => {
     expect(result.bannedIndices).toEqual([2, 4, 5, 14, 43, 46, 47, 49])
     expect(result.unbannedIndices).toHaveLength(26)
     expect(result.firstPerkIndex).toBe(10)
-    expect(result.firstPerkName).toBe('Free Upgrade Chance for All +5.0%')
+    /*
+     * These names come from PERK_IMPORT_CATALOG, and until 2026-08-18 thirteen
+     * of its thirty-four entries were wrong — so this assertion restated the
+     * defect rather than catching it. The indices below are real save data and
+     * were always right; only the names moved.
+     */
+    expect(result.firstPerkName).toBe('Perk Wave Requirement -20.00%')
     expect(result.firstTradeOffPerkIndex).toBeNull()
     expect(result.autoPickPerk).toBe(true)
     expect(result.autoPickOrder).toHaveLength(34)
     expect(result.autoPickOrder[0]).toBe(10)
     expect(result.bannedPerkNames).toContain('Interest x1.50')
-    expect(result.bannedPerkNames).toContain('x1.80 Coins, but Tower Max Health -70%')
-    expect(result.unbannedPerkNames).toContain('Perk Wave Requirement -20.00%')
+    // index 49, which the game applies to lifesteal.
+    expect(result.bannedPerkNames).toContain('Lifesteal x2.50, but Knockback Force -70%')
+    expect(result.unbannedPerkNames).toContain('Free Upgrade Chance for All +5.0%')
     expect(result.unbannedPerkNames).toContain('Black Hole Duration +12.0s')
   })
 

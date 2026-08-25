@@ -9,7 +9,7 @@ import {
   spotlightFinalBonus,
   spotlightMissilesDps,
 } from './effective-paths-uw-dps'
-import fixtures from './effective-paths-uw-dps.fixtures.json'
+import fixtures from '../../fixtures/mechanics/effective-paths-uw-dps.fixtures.json'
 
 /**
  * The weapon DPS functions against the sheet's own lambdas.

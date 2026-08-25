@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import fixtures from './effective-paths-parity.fixtures.json'
-import oracleFixtures from './effective-paths-oracle.fixtures.json'
+import fixtures from '../../fixtures/mechanics/effective-paths-parity.fixtures.json'
+import oracleFixtures from '../../fixtures/mechanics/effective-paths-oracle.fixtures.json'
 import {
   composeEffectiveHealth,
   DEFENSE_PERCENT_CAP,

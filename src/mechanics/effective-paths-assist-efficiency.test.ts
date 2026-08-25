@@ -16,7 +16,7 @@ import {
   ASSIST_SUBSTAT_MAX_LEVEL,
   assistUpgradeStoneCost,
 } from './effective-paths-stone-costs'
-import fixtures from './effective-paths-assist-efficiency.fixtures.json'
+import fixtures from '../../fixtures/mechanics/effective-paths-assist-efficiency.fixtures.json'
 
 /**
  * Assist module efficiency, against `Data_Val_Tables!EO:ET` — the sheet's own

@@ -292,6 +292,25 @@ export interface EffectiveHealthPlanOptions {
    * for eHP — so the gate cannot be worked out from `levels` alone.
    */
   enhancementLevels?: Readonly<Record<string, number>>
+  /**
+   * Every candidate the greedy loop prices, at every step.
+   *
+   * Exists so a parity test can compare the port's ROI against the sheet's
+   * `DI5:DY5` band candidate by candidate. Without it a path divergence is
+   * only "step N differs", and eHP's `account-8` showed how far that is from a
+   * diagnosis: it read as a mis-ranked candidate and was an unavailable one.
+   */
+  onCandidateRoi?: (entry: {
+    step: number
+    id: string
+    name: string
+    nextLevel: number
+    roi: number
+    gain: number
+    price: number
+  }) => void
+  /** Per-step availability — see `PathPlanOptions.available`. */
+  available?: (step: number, id: string) => boolean
 }
 
 export interface EffectiveHealthPlan {
@@ -337,6 +356,70 @@ function isEligible(
  * assist substat capacity through four different stats — are valued correctly
  * rather than looking worthless in isolation.
  */
+/**
+ * `eHP!DT5` — Health Mastery, priced off its own ladder and nothing else.
+ *
+ *     NOW    = 1 + 0.2*(1 + BZ5)
+ *     NEXT   = 1 + 0.2*(1 + BZ5 + 1)
+ *     FACTOR = NEXT/NOW - 1
+ *     ROI    = FACTOR / LABDURATION_SINGLE_ADJUSTED("Card Mastery", BZ5+1)
+ *
+ * The column never touches the eHP composition and never checks whether the
+ * Health CARD is equipped -- and `EPH_HEALTH` puts the mastery inside the card
+ * branch, so with the card off a mastery level moves eHP by exactly nothing.
+ * The port computed that nothing; the sheet keeps pricing the ladder.
+ *
+ * Five ROI columns have this local shape (`Health`, `Death Wave Health`,
+ * `Health Mastery`, `Assist Module Bonus - Armor`, `Dissonant Echo - Defense`)
+ * against twelve that use `(candidate/CS5 - 1)/duration`. The other four
+ * coincide with the composition on every swept account, because their terms are
+ * plain multiplicative factors and `defenseAbsolute` is 0 throughout — so only
+ * this one is ported, and only because a captured value disagreed. Porting the
+ * rest on the strength of the pattern would be inventing four formulas to fix
+ * nothing.
+ */
+function healthMasteryLocalGain(level: number): number {
+  const now = 1 + 0.2 * (1 + level)
+  const next = 1 + 0.2 * (1 + level + 1)
+  return next / now - 1
+}
+
+/**
+ * The config a CANDIDATE is priced against, where the sheet prices it against
+ * a different one than the baseline.
+ *
+ * `eHP!DE5`, the Extra Defense Mastery candidate, calls
+ *
+ *     EPH_DEF_PCT($BH$9, BQ5, 1, $AV$23, 1, CA5+1, …)
+ *
+ * with literal `1`s in the `has_card` and `has_mastery` slots -- while the GATE
+ * in the very same formula uses the real `AND($AY$16, $AY$23)` and `$AY$24`.
+ * So the upgrade is valued as though the Extra Defense card were equipped and
+ * mastered whether or not it is.
+ *
+ * It is not academic. `EPH_DEF_PCT` puts the mastery INSIDE the card branch --
+ * `IF(has_card, card_val + IF(has_mastery, 0.7%*(1+mastery_lvl), 0), 0)` -- so
+ * with the card off a mastery level is worth exactly nothing, which is what the
+ * port computed. The sheet's band prices it at 1.5376e-3 on `account-0`, whose
+ * card is off. Reproduced rather than corrected, like every other place this
+ * workbook disagrees with itself.
+ *
+ * Keyed on the candidate, so it cannot reach the baseline or any other upgrade.
+ */
+function configFor(
+  config: EffectiveHealthConfig,
+  candidate: { id: string } | undefined,
+): EffectiveHealthConfig {
+  if (candidate?.id !== 'extraDefenseMastery') return config
+  return {
+    ...config,
+    cards: {
+      ...config.cards,
+      defensePercent: { ...config.cards.defensePercent, has: true, hasMastery: true },
+    },
+  }
+}
+
 export function planEffectiveHealthPath(options: EffectiveHealthPlanOptions): EffectiveHealthPlan {
   const { config, levels, variant } = options
   const steps = options.steps ?? 145
@@ -400,6 +483,29 @@ export function planEffectiveHealthPath(options: EffectiveHealthPlanOptions): Ef
       continue
     }
 
+    /*
+     * `eHP!DT2` — Health Mastery is not a candidate without its card.
+     *
+     *     DT2 = OR(NOT(AY20), AND($AY$14, NOT(IDS_LAB_HAS_UNLOCKED(DT4))))
+     *
+     * The GAIN was already ported (`healthMasteryLocalGain`, priced off its own
+     * ladder). The GATE was not, so with the card unticked the port kept
+     * pricing that ladder and offering the upgrade while the sheet showed
+     * nothing at all. On a population where the card is sometimes off that is
+     * three accounts in ten taking Health Mastery over what the sheet takes.
+     *
+     * `masteryEquipped` is the row flag alone and NOT `hasMastery`, which is
+     * `AND($AY$16, $AY$20)`. The sheet still offers the upgrade with the card
+     * block switched off — candidacy and contribution ask different questions.
+     */
+    if (upgrade.key === 'healthMastery' && config.cards.health.masteryEquipped === false) {
+      excluded.push({
+        sheetName: upgrade.sheetName,
+        reason: 'the Health Mastery card is not equipped',
+      })
+      continue
+    }
+
     if (upgrade.currency === 'module' && levels[upgrade.key] < MODULE_COIN_PATH_MIN_LEVEL) {
       excluded.push({
         sheetName: upgrade.sheetName,
@@ -449,10 +555,10 @@ export function planEffectiveHealthPath(options: EffectiveHealthPlanOptions): Ef
   const planned = planPath({
     upgrades,
     steps,
-    evaluate: current => {
+    evaluate: (current, candidate) => {
       const next = { ...levels }
       for (const [id, level] of current) next[id as keyof EffectiveHealthLevels] = level
-      return computeEffectiveHealth(config, next).effectiveHealth
+      return computeEffectiveHealth(configFor(config, candidate), next).effectiveHealth
     },
     cost: (id, nextLevel) => {
       const upgrade = byId.get(id)
@@ -482,6 +588,11 @@ export function planEffectiveHealthPath(options: EffectiveHealthPlanOptions): Ef
       return cost ?? Number.NaN
     },
     onSkip: skip => skips.push(skip),
+    onCandidateRoi: options.onCandidateRoi,
+    available: options.available,
+    // Priced on its own ladder, never on the composition — see above.
+    relativeGain: (id, nextLevel) =>
+      (id === 'healthMastery' ? healthMasteryLocalGain(nextLevel - 1) : null),
   })
 
   appendSkipExclusions(excluded, planned, skips)

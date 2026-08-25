@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { MAX_CAMPAIGN_TIER } from '../data/campaign-tier'
-import { clampAssistModuleSlotEfficiencyPct, MAX_ASSIST_MULTIPLIER_EFFICIENCY_PCT } from './assist-module-efficiency'
+import { clampAssistModuleSlotEfficiencyPct, MAX_ASSIST_MULTIPLIER_EFFICIENCY_PCT } from '../mechanics/assist-module-efficiency'
 import {
   normalizeEnhancementSectionDiscountPercent,
   normalizeEnhancementVaultDiscountPercent,

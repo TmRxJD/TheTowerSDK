@@ -66,13 +66,20 @@ function parseMultiplierValue(raw: string): number {
   return Number.isFinite(parsed) ? parsed : 0
 }
 
-/** Game save bot stat order → tracker stat order. */
+/**
+ * Game save bot stat order to tracker stat order.
+ *
+ * Save is `[secondary, range, cooldown, primary]`; tracker is
+ * `[primary, cooldown, secondary, range]`. Kept identical to
+ * {@link remapBotLevelsFromGameSaveOrder} in `./bots`, which carries the
+ * evidence for why indices 0 and 3 swap.
+ */
 function remapBotLevelsFromGameSaveOrder(saveLevels: number[]): number[] {
   const padded = readIndexedNumberArray(saveLevels, 4)
   return [
-    padded[0] ?? 0,
-    padded[2] ?? 0,
     padded[3] ?? 0,
+    padded[2] ?? 0,
+    padded[0] ?? 0,
     padded[1] ?? 0,
   ]
 }

@@ -7,13 +7,14 @@ import {
 } from './catalogs/indexes'
 import {
   CARD_IMPORT_CATALOG,
-  LAB_RESEARCH_IMPORT_CATALOG,
   VAULT_HARMONY_IMPORT_CATALOG,
   VAULT_POWER_IMPORT_CATALOG,
 } from '../data/player-stats'
 import {
   findLabResearchDisplayName,
+  findLabResearchImportRow,
   findLabResearchSlug,
+  labResearchImportRowCount,
 } from '../data/labs-display-overrides'
 import { MODULE_RARITIES } from '../data/module-levels'
 import {
@@ -71,7 +72,7 @@ import {
   type SharedWorkshopStatLevels,
 } from '../internal/shared-tool-inputs-extended'
 import { enrichElsPlannerFromLinkedSources } from '../internal/shared-tool-inputs-field-sync'
-import { formatCompact } from '../internal/tool-formatting'
+import { formatCompact } from '../formatting/tool-formatting'
 import { listUltimateWeaponCatalogRows } from './catalogs/ultimate-weapons'
 import { POWER_VAULT_SINGLE_PURCHASE_NODE_IDS } from './catalogs/vault-overrides'
 import { CARDS_SAVE_UNLOCKED_KEY } from './cards'
@@ -277,11 +278,11 @@ function normalizeVaultPowerNodeLevel(input: {
 export function readResearchLabLevelsFromSaveRoot(
   root: Record<string, unknown>,
 ): Record<string, number> {
-  const levels = readIndexedNumberArray(root.researchLevel, LAB_RESEARCH_IMPORT_CATALOG.length)
+  const levels = readIndexedNumberArray(root.researchLevel, labResearchImportRowCount())
   const out: Record<string, number> = {}
   levels.forEach((level, index) => {
     if (!Number.isFinite(level) || level <= 0) return
-    const catalog = LAB_RESEARCH_IMPORT_CATALOG[index]
+    const catalog = findLabResearchImportRow(index)
     const displayName = findLabResearchDisplayName(index, catalog?.displayName ?? null)
     const slug = findLabResearchSlug(index, catalog?.slug ?? null)
     const normalized = Math.max(0, Math.floor(level))

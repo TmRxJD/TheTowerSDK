@@ -162,6 +162,38 @@ export interface EffectiveRegenPlanOptions {
   targetLevels?: Partial<Record<string, number>>
   excludeKeys?: readonly string[]
   labModifiers?: LabCostModifiers
+  /**
+   * Per-step availability — see `PathPlanOptions.available`.
+   *
+   * The eHP and eDamage planners have taken this since their parity sweeps
+   * needed it; regen was the one that did not, and `planPath` underneath has
+   * supported it all along. Without it the planner cannot express a candidate
+   * the sheet has WITHDRAWN, and a withdrawn candidate is indistinguishable
+   * from a mis-ranked one in the failure message.
+   *
+   * That is exactly how it read: three accounts diverged late -- steps 28, 36
+   * and 37 -- with the port buying Standard Perks Bonus where the sheet bought
+   * Assist Module Substats - Armor, which looks like a pricing disagreement.
+   * The sheet's own ROI band shows Standard Perks Bonus BLANK at every one of
+   * those steps. It was never on the board.
+   */
+  available?: (step: number, id: string) => boolean
+
+  /**
+   * Every candidate's return per step, not just the one bought.
+   *
+   * `eRegen!CB4:CH45` prices all seven the same way the shared planner does —
+   * `(Next/Now - 1)/Duration` — so the audit can compare them one for one.
+   * Without this the surface reports as unpriced, and an unpriced surface reads
+   * as a quiet one: it cannot name a mispriced candidate at all, only a path
+   * that happened to diverge.
+   */
+  onCandidateRoi?: (entry: {
+    step: number
+    id: string
+    name: string
+    roi: number
+  }) => void
 }
 
 export interface EffectiveRegenPlan {
@@ -250,6 +282,8 @@ export function planEffectiveRegenPath(options: EffectiveRegenPlanOptions): Effe
       return cost ?? Number.NaN
     },
     onSkip: skip => skips.push(skip),
+    available: options.available,
+    onCandidateRoi: options.onCandidateRoi,
   })
 
   appendSkipExclusions(excluded, planned, skips)

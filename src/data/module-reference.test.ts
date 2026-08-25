@@ -19,7 +19,7 @@ interface ModuleReference {
 }
 
 const reference = JSON.parse(
-  readFileSync(join(__dirname, 'fixtures', 'effective-paths-module-base-stats.json'), 'utf8'),
+  readFileSync(join(__dirname, '..', '..', 'fixtures', 'data', 'effective-paths-module-base-stats.json'), 'utf8'),
 ) as ModuleReference
 
 /** The sheet writes "Rare+" and "Ancestral 1*" where our labels are "Rare +" and "Ancestral 1". */

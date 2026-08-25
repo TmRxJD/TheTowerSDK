@@ -22,7 +22,16 @@ const PUBLIC_AREAS = ['data', 'save', 'node', 'formatting', 'mechanics']
 
 /** Generated tables are allowed to be enormous; hand-written code is not. */
 const MAX_LINES = 1200
-const GENERATED = /(generated|catalog|-tables|-data|player-stats|labs-research|labs-levels|workshop|reference|indexes|assets|relics|modules|cards|perks|tiers|substats|chart|milestones|schemas|vocabulary)/i
+/*
+ * `knowledge/compartments/` is in this list as a class, not by the words in its filenames.
+ * A compartment is a catalog of facts about one system — the same kind of file as the data
+ * catalogs above it, and it grows with the game rather than with anyone's design. Until now
+ * `compartments/modules.ts` and `compartments/cards.ts` were exempt and `compartments/enemies.ts`
+ * was not, purely because `modules` and `cards` happen to appear in this pattern for an
+ * unrelated reason. Splitting one sibling and not the others would make the set less readable,
+ * not more.
+ */
+const GENERATED = /(generated|catalog|-tables|-data|knowledge\/compartments\/|player-stats|labs-research|labs-levels|workshop|reference|indexes|assets|relics|modules|cards|perks|tiers|substats|chart|milestones|schemas|vocabulary)/i
 
 const problems = []
 const files = []
@@ -97,6 +106,46 @@ for (const file of files) {
   if (/from '(thetowersdk[^']*)'/.test(source) && !isTest) {
     const m = source.match(/from '(thetowersdk[^']*)'/)
     problems.push(`${rel}: imports ${m[1]}; inside src/ use a relative path`)
+  }
+
+  /*
+   * 5. Published files state what is true, never how it was established.
+   *
+   * This package is distributed. Working notes about tooling, internal paths
+   * and research method are not part of what it asserts, and they age badly:
+   * a reader six months from now needs the fact and the version it applies to,
+   * not a trail through someone's scratch directory.
+   *
+   * Checked against the RAW text, comments included — a doc comment ships just
+   * as surely as a string literal does.
+   *
+   * **A game version is not a trail.** `v28.3.0-arm64` is the build a fact was
+   * verified against, which is precisely the "version it applies to" this rule
+   * asks for — so a version token is removed before the patterns run. Without
+   * that, `-arm64` fired on twelve files whose only sin was answering the
+   * question the rule poses, and the fix would have been to delete the
+   * provenance that makes a claim checkable.
+   */
+  const trail = raw.replace(/\bv\d+(?:\.\d+)*-arm64\b/gi, ' <GAME_VERSION> ')
+
+  const INTERNAL_TRAIL = [
+    [/extraction-core/i, 'an internal tooling path'],
+    [/\bdumps?\//i, 'an internal artefact path'],
+    [/\bdump\.cs\b/i, 'an internal artefact filename'],
+    [/\bil2cpp\b/i, 'internal tooling'],
+    [/\brodata\b/i, 'internal tooling'],
+    [/\bdisassembl/i, 'internal method'],
+    [/\bdecompil/i, 'internal method'],
+    [/-arm64\b/i, 'an internal build identifier'],
+  ]
+  for (const [pattern, what] of INTERNAL_TRAIL) {
+    if (pattern.test(trail)) {
+      problems.push(
+        `${rel}: mentions ${what} (${pattern.source}); published files describe what a thing IS, `
+        + 'not how it was established — state the fact and its version instead',
+      )
+      break
+    }
   }
 
   // 5. Nothing reaches outside the package. A fork has only what is committed here.

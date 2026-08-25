@@ -11,7 +11,7 @@ import { ZERO_EFFECTIVE_DAMAGE_LEVELS } from './effective-paths-edamage-levels'
 import { planEffectiveDamagePath } from './effective-paths-edamage-plan'
 import { configFromSheet, levelsFromSheet } from './effective-paths-edamage-compute.test'
 import type { SheetCells } from './effective-paths-edamage-compute.test'
-import states from './effective-paths-edamage-states.fixtures.json'
+import states from '../../fixtures/mechanics/effective-paths-edamage-states.fixtures.json'
 
 /**
  * The damage model's input boundary.

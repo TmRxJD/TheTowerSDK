@@ -84,8 +84,16 @@ export interface PathPlanOptions {
    * The effective value — eHP, DPM, coins per hour — for a given set of levels.
    * Called once per candidate per step, so keep it cheap and free of side
    * effects.
+   *
+   * `candidate` is the upgrade whose extra level `levels` already contains, and
+   * is absent for the step's baseline. It exists because the sheet prices each
+   * upgrade in its OWN shadow column, and two of those columns disagree with
+   * the base column they are shadowing — see `EffectiveDamageShadow`. Without
+   * it an evaluator can only compare against the levels it started the whole
+   * path with, so any such adjustment stays switched on for every later
+   * candidate AND for the baseline, which silently reprices the entire board.
    */
-  evaluate: (levels: ReadonlyMap<string, number>) => number
+  evaluate: (levels: ReadonlyMap<string, number>, candidate?: PathUpgrade) => number
   /**
    * What it costs to take `id` from `nextLevel - 1` to `nextLevel`. Return the
    * currency the path is measured in: stones, coins, or seconds of lab time.
@@ -108,6 +116,60 @@ export interface PathPlanOptions {
    * keep the first step's and drop the rest — see `skipsFromFirstStep`.
    */
   onSkip?: (skip: PathSkip) => void
+  /**
+   * A candidate the sheet prices on its OWN ratio rather than on the result.
+   *
+   * Return the relative gain — `next/now - 1` in the candidate's own terms — or
+   * `null` to price it the normal way, by re-evaluating.
+   *
+   * This exists because the sheet does not price every candidate the same way,
+   * and two columns of the SAME KIND can differ. `eDamage Coins!EZ5`
+   * (`Damage +`) computes `Now, 1+1%*BO5 · Next, 1+1%*(BO5+1) · Factor,
+   * Next/Now-1` — the enhancement multiplier's own ratio — while
+   * `Critical Factor +` and `Super Crit Mult +`, two columns over, use
+   * `(shadow/$EC5 - 1)`, the change in total effective damage. A planner that
+   * re-evaluates everything cannot express that difference, and ranks the three
+   * against each other on quantities the sheet never compares.
+   *
+   * The returned factor is scaled by the current value before it becomes a
+   * gain, because `roi` here divides an ABSOLUTE gain by price while the sheet
+   * divides a relative one by cost. The two orderings agree only when every
+   * candidate is measured the same way — which is exactly what this restores.
+   */
+  relativeGain?: (id: string, nextLevel: number) => number | null
+  /**
+   * Every candidate the loop PRICED, with what it scored.
+   *
+   * `onSkip` reports the ones that dropped out; this reports the ones that
+   * stayed in, which is the half that decides the answer and the half nothing
+   * could see. The sheet shows a whole row of per-candidate ROI and the port
+   * showed one winner, so a disagreement about a pick meant re-deriving 29
+   * numbers by hand to find which one was wrong.
+   */
+  onCandidateRoi?: (entry: {
+    step: number
+    id: string
+    name: string
+    nextLevel: number
+    roi: number
+    gain: number
+    price: number
+  }) => void
+
+  /**
+   * Whether an upgrade is on the board AT THIS STEP.
+   *
+   * The sheet's candidate columns are gated per ROW, not once: `eHP!DT5` opens
+   * with `IF(OR(CU5, $DT$2, <cap>), "", …)` and row 6 evaluates the same gate
+   * against the state after step 1. So a candidate can be offered at step 1 and
+   * withdrawn at step 27, and a single up-front exclusion set cannot say that.
+   *
+   * `excludeKeys`-style filtering is still the right tool for an upgrade the
+   * currency cannot buy at all. This is for the ones that come and go.
+   *
+   * Omitted means everything stays on the board, which is the old behaviour.
+   */
+  available?: (step: number, id: string, levels: ReadonlyMap<string, number>) => boolean
 }
 
 /** Why a candidate was passed over on a given step. */
@@ -136,7 +198,7 @@ export interface PathSkip {
  * - `unevaluable` — the model returned a non-finite value for the state that
  *   buying it would produce.
  */
-export type PathSkipReason = 'capped' | 'unpriced' | 'unevaluable'
+export type PathSkipReason = 'capped' | 'unpriced' | 'unevaluable' | 'withdrawn'
 
 /**
  * The first step's skips, one per candidate.
@@ -184,6 +246,9 @@ export function describePathSkip(skip: PathSkip): string {
         : `no price for level ${skip.nextLevel}`
     case 'unevaluable':
       return `the model could not value level ${skip.nextLevel}`
+    case 'withdrawn':
+      return `not on the board at this step — the sheet's gate for level `
+        + `${skip.nextLevel} closed after an earlier purchase`
   }
 }
 
@@ -250,7 +315,9 @@ function isCapped(upgrade: PathUpgrade, nextLevel: number): boolean {
  * result as the sheet's recommendation, not a proof.
  */
 export function planPath(options: PathPlanOptions): PathStep[] {
-  const { upgrades, steps, evaluate, cost, onSkip } = options
+  const {
+    upgrades, steps, evaluate, cost, onSkip, relativeGain, onCandidateRoi, available,
+  } = options
 
   const levels = new Map<string, number>()
   for (const upgrade of upgrades) levels.set(upgrade.id, upgrade.level)
@@ -272,16 +339,35 @@ export function planPath(options: PathPlanOptions): PathStep[] {
         continue
       }
 
+      // Withdrawn for this step only — reported, never silently dropped.
+      if (available && !available(step, upgrade.id, levels)) {
+        skip('withdrawn', nextLevel)
+        continue
+      }
+
       const price = cost(upgrade.id, nextLevel)
       if (!Number.isFinite(price) || price <= 0) {
         skip('unpriced', price)
         continue
       }
 
-      const previous = levels.get(upgrade.id) ?? upgrade.level
-      levels.set(upgrade.id, nextLevel)
-      const value = evaluate(levels)
-      levels.set(upgrade.id, previous)
+      // A candidate the sheet prices on its own ratio never gets evaluated:
+      // asking the model what it is worth is the thing being overridden.
+      const relative = relativeGain?.(upgrade.id, nextLevel) ?? null
+
+      let value: number
+      if (relative === null) {
+        const previous = levels.get(upgrade.id) ?? upgrade.level
+        levels.set(upgrade.id, nextLevel)
+        value = evaluate(levels, upgrade)
+        levels.set(upgrade.id, previous)
+      }
+      else {
+        // Scaled into the same units as every other candidate's gain. The board
+        // re-settles from the BASE columns after the pick, so this number is a
+        // ranking estimate and never becomes the running total.
+        value = currentValue * (1 + relative)
+      }
 
       if (!Number.isFinite(value)) {
         skip('unevaluable', value)
@@ -302,6 +388,10 @@ export function planPath(options: PathPlanOptions): PathStep[] {
         skip('unevaluable', roi)
         continue
       }
+      onCandidateRoi?.({
+        step, id: upgrade.id, name: upgrade.name, nextLevel, roi, gain, price,
+      })
+
       // Strictly greater, so the earliest upgrade wins a tie — the sheet takes
       // the leftmost column of the joint maximum.
       if (best === null || roi > best.roi) {
@@ -313,7 +403,28 @@ export function planPath(options: PathPlanOptions): PathStep[] {
 
     levels.set(best.upgrade.id, (levels.get(best.upgrade.id) ?? best.upgrade.level) + 1)
     cumulativeCost += best.price
-    currentValue = best.value
+
+    /*
+     * Re-evaluate WITHOUT a candidate, rather than carrying `best.value`
+     * forward.
+     *
+     * The two are the same number for every evaluator whose candidate pass is
+     * a plain recomputation — which is all of them until an evaluator prices a
+     * candidate differently from the state it produces. The sheet does exactly
+     * that in two columns, and it is explicit about the consequence: the next
+     * row is computed by the BASE columns, so an upgrade priced generously
+     * delivers whatever it really delivers and no more.
+     *
+     * Carrying the priced value forward instead makes the estimate permanent.
+     * Spotlight Missiles is priced at its capped cooldown, so one purchase
+     * pinned the running total at that value for the rest of the path: every
+     * later candidate then scored a gain of zero or less, and Spotlight
+     * Missiles won each remaining step on a tie at ROI 0. Fourteen steps of an
+     * upgrade the model itself said was worth nothing — and the path still
+     * looked entirely ordinary.
+     */
+    const settled = evaluate(levels)
+    currentValue = Number.isFinite(settled) ? settled : best.value
 
     path.push({
       step,
@@ -324,7 +435,7 @@ export function planPath(options: PathPlanOptions): PathStep[] {
       cumulativeCost,
       gain: best.gain,
       roi: best.roi,
-      value: best.value,
+      value: currentValue,
     })
   }
 

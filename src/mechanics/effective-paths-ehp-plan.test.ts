@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import fixture from './effective-paths-ehp-path.fixtures.json'
+import fixture from '../../fixtures/mechanics/effective-paths-ehp-path.fixtures.json'
 import {
   type EffectiveHealthConfig,
   type EffectiveHealthLevels,

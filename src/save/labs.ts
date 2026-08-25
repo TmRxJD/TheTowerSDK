@@ -5,11 +5,13 @@ import {
   TOOL_LAB_OVERVIEW_CATEGORY_ORDER,
 } from '../data/labs'
 import { normalizeLabsTrackerLabLevelMap } from '../internal/labs-persistence'
-import { LAB_RESEARCH_IMPORT_CATALOG, RESEARCH_CATEGORY_ENUM } from '../data/player-stats'
+import { RESEARCH_CATEGORY_ENUM } from '../data/player-stats'
 import {
   findLabResearchCategory,
   findLabResearchDisplayName,
+  findLabResearchImportRow,
   findLabResearchSlug,
+  labResearchImportRowCount,
 } from '../data/labs-display-overrides'
 import { coerceSaveNumber, toNumberArray } from './read-values'
 import { readFavoriteLabSlugsFromSaveRoot, saveHasFavoriteLabs } from './favorite-labs'
@@ -83,7 +85,7 @@ function readResearchRow(
   percentComplete: number | null,
   labSpeedLevel = 0,
 ): LabResearchSaveRow {
-  const catalog = LAB_RESEARCH_IMPORT_CATALOG[index]
+  const catalog = findLabResearchImportRow(index)
   const displayName = findLabResearchDisplayName(index, catalog?.displayName ?? null)
   const slug = findLabResearchSlug(index, catalog?.slug ?? null)
   const category = findLabResearchCategory(index, displayName, catalog?.category ?? null)
@@ -108,9 +110,9 @@ export function readLabsFromSaveRoot(root: Record<string, unknown> | null): Labs
   if (researchLevels.length === 0) {
     warnings.push('No researchLevel array found in save.')
   }
-  if (researchLevels.length > 0 && researchLevels.length !== LAB_RESEARCH_IMPORT_CATALOG.length) {
+  if (researchLevels.length > 0 && researchLevels.length !== labResearchImportRowCount()) {
     warnings.push(
-      `researchLevel has ${researchLevels.length} entries; catalog expects ${LAB_RESEARCH_IMPORT_CATALOG.length}.`,
+      `researchLevel has ${researchLevels.length} entries; catalog expects ${labResearchImportRowCount()}.`,
     )
   }
 

@@ -1,0 +1,38 @@
+#!/usr/bin/env node
+/**
+ * Regenerate the file-based coverage inventories.
+ *
+ *   node scripts/link-coverage-inventories.mjs
+ *
+ * Reads dist/, so run after a build. `coverage-inventories-are-current.test.ts`
+ * fails when the checked-in JSON no longer matches what this would write.
+ */
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+
+const HERE = path.dirname(fileURLToPath(import.meta.url))
+const ROOT = path.join(HERE, '..')
+const { buildCoverageEntries } = await import(
+  pathToFileURL(path.join(ROOT, 'dist/mechanics/coverage/build-inventories.js')).href,
+)
+
+const JOBS = [
+  {
+    file: 'src/mechanics/coverage/data/sdk-modules.v1.json',
+    spec: { dir: 'src/mechanics', surface: 'sdk-module', idPrefix: 'sdk-module:' },
+  },
+  {
+    file: 'src/mechanics/coverage/data/save-schema.v1.json',
+    spec: { dir: 'src/save', surface: 'save', idPrefix: 'save:' },
+  },
+]
+
+for (const job of JOBS) {
+  const file = path.join(ROOT, job.file)
+  const inventory = JSON.parse(fs.readFileSync(file, 'utf8'))
+  inventory.entries = buildCoverageEntries(job.spec)
+  fs.writeFileSync(file, `${JSON.stringify(inventory, null, 2)}\n`)
+  const modeled = inventory.entries.filter(e => e.coverageStatus === 'modeled').length
+  console.log(`${job.file}: ${inventory.entries.length} rows, ${modeled} modeled`)
+}

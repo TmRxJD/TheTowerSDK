@@ -45,7 +45,7 @@ import {
   getTournamentLeagueTierBase,
   normalizeTierSelection,
 } from '../data/index'
-import { getBasicEnemyWaveStats } from '../internal/enemy-wave-stats'
+import { getBasicEnemyWaveStats } from './enemy-wave-stats'
 import { getEnemyWaveStats, getWaveBaseStats } from './enemy-wave-stats'
 import { skipDecayWaveInterval } from './battle-conditions'
 import { chronoSlowStrength } from './chrono-field'

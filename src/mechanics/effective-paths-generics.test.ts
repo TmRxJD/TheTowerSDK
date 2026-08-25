@@ -7,7 +7,7 @@ import {
   standardPerksBonusScale,
 } from './effective-paths-generics'
 import { effectiveArmor } from './effective-paths-hp'
-import fixtures from './effective-paths-generics.fixtures.json'
+import fixtures from '../../fixtures/mechanics/effective-paths-generics.fixtures.json'
 
 /**
  * The `EPG_*` helpers, against the live sheet.

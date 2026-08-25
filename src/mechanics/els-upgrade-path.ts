@@ -29,7 +29,7 @@ import {
 } from '../data/workshop'
 import { getWorkshopCostByKeyAndLevel, getWorkshopMaxLevelByKey } from '../data/workshop-costs'
 import { getWorkshopStatDefinitions } from '../data/workshop-tracker-definitions'
-import { computeRoiReferenceCost, formatAdaptiveRoiPct } from '../internal/roi-scaling'
+import { computeRoiReferenceCost, formatAdaptiveRoiPct } from './roi-scaling'
 
 export const ELS_ATTACK_WORKSHOP_KEY = 'Enemy Attack Level Skip'
 export const ELS_HEALTH_WORKSHOP_KEY = 'Enemy Health Level Skip'

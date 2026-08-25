@@ -20,6 +20,7 @@ import {
   computeGoldenTowerCoinMult,
   expectedTimedCoinKillMult,
   RESOURCE_DROPS_AVG_ENEMY_COIN_WEIGHT,
+  RESOURCE_DROPS_ENEMIES_PER_SPAWN_TICK,
   type ResourceDropsCoinSimulationInput,
   simulateResourceDropsCoins,
   themePassiveCoinMult,
@@ -200,7 +201,10 @@ describe('resource-drops-coin-simulation', () => {
           wave,
           waveAcceleratorMastery: input.waveAcceleratorMastery,
         })
-        const kills = cap * input.enemyBalanceMult
+        // The chart gives spawn TICKS, not enemies: `Main.WaveUpdate` yields
+        // several per tick. This brute force exists to check the segment-wise
+        // sum against a per-wave loop, so it has to carry the same factor.
+        const kills = cap * input.enemyBalanceMult * RESOURCE_DROPS_ENEMIES_PER_SPAWN_TICK
         totalKills += kills
         if (wave <= input.introSprintZeroCoinWaveCap) continue
         rawKillCoins += kills * wave * RESOURCE_DROPS_AVG_ENEMY_COIN_WEIGHT
@@ -220,7 +224,12 @@ describe('resource-drops-coin-simulation', () => {
         const fast = accumulateResourceDropsKillYields(payload)
         const slow = bruteForce(payload)
         expect(fast.totalKills).toBeCloseTo(slow.totalKills, 6)
-        expect(fast.rawKillCoins).toBeCloseTo(slow.rawKillCoins, 3)
+        // Relative, not absolute: these totals reach 1e13, where an absolute
+        // tolerance of 1e-3 is below the float64 spacing and fails on rounding
+        // alone. The claim is that the segment sum and the loop agree, not that
+        // they agree to a fixed number of decimal places at any magnitude.
+        expect(Math.abs(fast.rawKillCoins - slow.rawKillCoins) / Math.max(1, slow.rawKillCoins))
+          .toBeLessThan(1e-12)
       }
     }
   })

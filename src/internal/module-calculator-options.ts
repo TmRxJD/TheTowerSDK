@@ -25,10 +25,23 @@ export const moduleTypeItems: ModuleSelectItem[] = [
   { title: 'Core', value: 'core' },
 ]
 
-export const assistPctItems: NumericSelectItem[] = Array.from({ length: 101 }, (_, index) => ({
-  title: index === 0 ? '0 - Disabled' : `${index}%`,
-  value: index,
-}))
+/**
+ * Assist efficiency percentages a user can select.
+ *
+ * Runs to {@link ASSIST_EFFICIENCY_SELECTABLE_MAX} rather than 100, because
+ * multiplier efficiency now exceeds 100% once labs are included. Capping the
+ * input at 100 did not warn — it silently truncated a real value, which is the
+ * failure mode this codebase produces most often and notices least.
+ */
+export const ASSIST_EFFICIENCY_SELECTABLE_MAX = 130
+
+export const assistPctItems: NumericSelectItem[] = Array.from(
+  { length: ASSIST_EFFICIENCY_SELECTABLE_MAX + 1 },
+  (_, index) => ({
+    title: index === 0 ? '0 - Disabled' : `${index}%`,
+    value: index,
+  }),
+)
 
 export const discountItems: NumericSelectItem[] = Array.from({ length: 31 }, (_, index) => ({
   title: `${index}%`,

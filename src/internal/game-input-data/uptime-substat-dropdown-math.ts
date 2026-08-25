@@ -1,5 +1,5 @@
-import { clampAssistMultiplierEfficiencyPct } from '../assist-module-efficiency'
-import type { RarityPick } from '../uptime-core'
+import { clampAssistMultiplierEfficiencyPct } from '../../mechanics/assist-module-efficiency'
+import type { RarityPick } from '../../mechanics/uptime-core'
 import type { GameDropdownOptionEntry } from './types'
 
 export type UptimeSubstatPickKind =

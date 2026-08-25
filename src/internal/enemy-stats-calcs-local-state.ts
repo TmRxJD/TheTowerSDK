@@ -14,7 +14,7 @@ import {
   type ElsModuleSubstatRarityChoice,
   inferElsModuleRarityFromDisplayPct,
 } from '../mechanics/els-calculator-options'
-import type { EnemyWaveEnemyType } from './enemy-wave-stats'
+import type { EnemyWaveEnemyType } from '../mechanics/enemy-wave-stats'
 import {
   getTierSelection,
   normalizeTierSelection,

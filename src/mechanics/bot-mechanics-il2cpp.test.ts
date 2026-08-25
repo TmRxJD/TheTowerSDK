@@ -3,7 +3,7 @@ import { BOT_BENEFIT_COOLDOWN_LAB_INDICES, computeBotGetBenefit } from './bot-ge
 import { coinBotBonusMultiplier } from './bot-coin-bonus'
 import { botBotBoostedMultiplier, chainLightningShockMultiplier, enemyHitMultiplier } from './bot-hit-multiplier'
 import { pickBotActivationDestination } from './bot-movement'
-import { UnityRandom } from '../internal/unity-random'
+import { UnityRandom } from './unity-random'
 
 describe('computeBotGetBenefit', () => {
   it('applies base + perLevel', () => {

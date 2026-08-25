@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { EnemyWaveEnemyType } from '../internal/enemy-wave-stats'
+import type { EnemyWaveEnemyType } from './enemy-wave-stats'
 import {
   computeWaveInfoPanelEnemyExtras,
   computeWaveInfoPanelSummary,

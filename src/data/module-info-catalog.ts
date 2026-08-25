@@ -10,13 +10,34 @@ export interface ModuleInfoIdentity {
 }
 
 /**
- * Corrects catalog rows where icon names or legacy slots disagree with
- * module info catalog data (e.g. infoIndex 46 is NMP, not a second OA).
+ * Corrects catalog rows where icon names or legacy slots disagree with the
+ * generated module info catalog.
+ *
+ * EMPTY, and deliberately so. It previously held
+ *
+ *     18: Space Displacer      46: Negative Mass Projector
+ *
+ * on the reasoning that "infoIndex 46 is NMP, not a second OA" -- most likely
+ * because row 18's `iconName` is `armor_epic_4`, which the generic-icon table
+ * maps to Space Displacer. But the icon is the weakest signal here and the row
+ * already carries the right name, so the override replaced correct data with a
+ * guess. Four sources agree it was wrong:
+ *
+ *   - the generated catalog rows themselves: 18 Negative Mass Projector,
+ *     19 Space Displacer, 46 Orbital Augment;
+ *   - `MODULE_TEMPLATES`, which lists Orbital Augment and Negative Mass
+ *     Projector as separate Armor modules;
+ *   - the game's own documented save format, whose `moduleinfoIndex` gives the
+ *     same three names at the same three indices;
+ *   - nine real community IDS sheets, which list Orbital Augment ALONGSIDE
+ *     Negative Mass Projector as two of the six tracked Armor modules.
+ *
+ * And it was self-inconsistent: it put Space Displacer at both 18 and 19, so a
+ * player's Negative Mass Projector imported as a second Space Displacer and an
+ * Orbital Augment imported as NMP. `module-info-identity.test.ts` now holds
+ * every tracked index to the save format, which is the check that was missing.
  */
-const MODULE_INFO_INDEX_IDENTITY_OVERRIDES: Partial<Record<number, ModuleInfoIdentity>> = {
-  18: { name: 'Space Displacer', initials: 'SD', category: 'Armor' },
-  46: { name: 'Negative Mass Projector', initials: 'NMP', category: 'Armor' },
-}
+const MODULE_INFO_INDEX_IDENTITY_OVERRIDES: Partial<Record<number, ModuleInfoIdentity>> = {}
 
 /**
  * Legacy epic sprite keys (cannon_epic_2, etc.) from module info catalog.

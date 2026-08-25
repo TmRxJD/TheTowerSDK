@@ -3,7 +3,7 @@ import path from 'node:path'
 
 /**
  * Walk up from this package until the monorepo root (or fall back to package parent).
- * Kept free of governance-engine so public builds can import it.
+ * Deliberately dependency-free, so any build can import it.
  */
 export function resolveMechanicsRepoRoot(explicit?: string): string {
   if (explicit) return explicit

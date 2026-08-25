@@ -2,8 +2,9 @@ import { ULTIMATE_WEAPON_IMPORT_CATALOG } from './indexes'
 
 export type UltimateWeaponCatalogRow = (typeof ULTIMATE_WEAPON_IMPORT_CATALOG)[number]
 
+/** By save index, not array position. See findBotCatalogRow for why. */
 export function findUltimateWeaponCatalogRow(index: number): UltimateWeaponCatalogRow | null {
-  return ULTIMATE_WEAPON_IMPORT_CATALOG[index] ?? null
+  return ULTIMATE_WEAPON_IMPORT_CATALOG.find(row => row.index === index) ?? null
 }
 
 export function findUltimateWeaponCatalogName(index: number): string | null {

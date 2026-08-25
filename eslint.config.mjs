@@ -4,6 +4,11 @@ import js from '@eslint/js'
 import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
+  /*
+   * `site/**` is the documentation site, which is a SvelteKit app with its own toolchain,
+   * its own eslint config and its own rules — including default exports, which this config
+   * forbids and every Svelte module requires. It is linted by `npm run lint` inside `site/`.
+   */
   { ignores: ['dist/**', 'node_modules/**', 'src/**/*.generated.ts', 'site/**'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,

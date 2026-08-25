@@ -1,3 +1,4 @@
+import { atIndex } from '../../internal/own-lookup'
 import {
   IMPORT_CATALOG_META,
   RELIC_IMPORT_CATALOG,
@@ -22,7 +23,7 @@ const relicRows = (): readonly RelicCatalogRow[] =>
   RELIC_IMPORT_CATALOG as unknown as readonly RelicCatalogRow[]
 
 export function findRelicCatalogRow(index: number): RelicCatalogRow | null {
-  return relicRows()[index] ?? null
+  return atIndex(relicRows(), index) ?? null
 }
 
 export function findRelicLabel(index: number): string | null {

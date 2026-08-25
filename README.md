@@ -1,7 +1,20 @@
 # TheTowerSDK
 
-Game data and save-file reading for **The Tower**, so you can build your own calculators, planners
-and tools.
+Game data and save-file reading for **The Tower**, so you can build your own calculators, trackers,
+spreadsheets, charts and planners.
+
+### 📖 [Documentation, live demos and runnable examples → thetowersdk website](https://tmrxjd.github.io/TheTowerSDK/)
+
+By **TmRxJD** — proprietor of [the-tower-run-tracker.com](https://the-tower-run-tracker.com/) and a
+moderator on the Official Tower Discord.
+
+If this SDK is useful to you, you can support its development at no cost by entering creator code
+**`JDEVO`** at checkout in [The Tower webstore](https://store.techtreegames.com/thetower/), or
+with a one-time donation on [Ko-fi](https://ko-fi.com/F1F41FUGWR) or
+[PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=thetowertracker%40gmail.com).
+
+The Effective Paths formulas here are **not** my work — see [Credits](#credits) for who wrote them
+and how to support them directly.
 
 ```bash
 npm install thetowersdk
@@ -13,14 +26,20 @@ npm install thetowersdk
   what they own, what's equipped, their run history.
 - **Formulas** — enemy scaling, damage, ultimates, drops, workshop stats: the calculation layer
   behind the Run Tracker's own calculators.
+- **Charts** — every level progression is already a plot-ready series, so the shipped catalogs cover
+  [786 chartable series](#charts) without you authoring a single one.
 
 TypeScript, one runtime dependency (`zod`), MIT licensed.
 
+> **Pre-1.0.** The package is published so it can be installed and exercised, not because the API is
+> settled. Exports may be renamed or removed between releases without deprecation, and there is no
+> changelog until 1.0. Pin an exact version if you depend on it.
+
 ---
 
-## Quick start
+## Quick Start
 
-### Use the game data
+### Use The Game Data
 
 ```ts
 import { LAB_CATALOG } from 'thetowersdk/data'
@@ -36,7 +55,7 @@ Every `cost` is a plain number of coins. There is no scaling factor to apply and
 to read first — a lab that costs 1.1 quadrillion is `1.1e15`, so you can add two labs together
 without checking where either came from.
 
-### Read a save file
+### Read a Save File
 
 ```ts
 import { readFile } from 'node:fs/promises'
@@ -53,7 +72,7 @@ Decode once, then extract whatever you need.
 
 ---
 
-## How it fits together
+## How It Fits Together
 
 ```
 playerInfo.dat ──decodePlayerInfoSaveBytes()──► save root (plain object)
@@ -71,16 +90,29 @@ can run as many as you like over the same root.
 
 ---
 
-## Entry points
+## Entry Points
 
 | Import | Contains | Browser-safe |
 |---|---|---|
 | `thetowersdk/data` | Game tables — costs, levels, effects, catalogs | Yes |
+| `thetowersdk/inputs` | The account state a calculator takes |
 | `thetowersdk/save` | `extract*FromSaveRoot()` and save inspection | Yes |
 | `thetowersdk/node` | The save decoder | Node — [see below](#decoding-in-a-browser) |
 | `thetowersdk/formatting` | Number and duration formatting matching the game | Yes |
 | `thetowersdk/mechanics` | Game formulas — see [below](#formulas) | Yes |
 | `thetowersdk/wiki` | Fandom wikitext → Markdown — see [below](#reading-the-community-wiki) | Yes |
+| `thetowersdk/charts` | Curated chart catalog and its data — see [below](#charts) | Yes |
+| `thetowersdk/builders` | Ready-made calculators — see [below](#builders) | Yes |
+| `thetowersdk/bot` | Command registry, and every calculator as a command — see [below](#building-a-bot-on-this) | Yes |
+| `thetowersdk/sheets` | Google Sheets reads and writes — see [below](#google-sheets) | Yes |
+| `thetowersdk/assets` | Which artwork file belongs to which module or card — see [below](#module-and-card-artwork) | Yes |
+
+Game data lives here, not in the consuming application. Relic unlock methods and
+bonus totals, theme categories and their coin coefficients, vault tree
+summaries, daily-mission reward tables and the module pull simulator all moved
+out of `@tmrxjd/platform` into `thetowersdk/data`. What stayed behind is prose —
+the explanatory text an assistant reads — because that is documentation of a
+game, not a number anyone calculates with.
 
 `import { … } from 'thetowersdk'` re-exports `data`, `save` and `formatting` together. Prefer the
 subpaths in real projects so your bundler can drop what you don't use.
@@ -92,7 +124,7 @@ import { formatDuration } from 'thetowersdk/formatting'
 
 ---
 
-## Reading a save
+## Reading a Save
 
 | Function | Returns |
 |---|---|
@@ -112,7 +144,7 @@ import { formatDuration } from 'thetowersdk/formatting'
 
 Plus perks, "killed by" and per-run battle report fields — see [`src/save/index.ts`](src/save/index.ts).
 
-### Check before you read
+### Check Before You Read
 
 Extractors return `null` when a save has no data for that feature, rather than throwing, so older
 saves degrade instead of failing:
@@ -127,7 +159,7 @@ if (labs.warnings.length) {
 }
 ```
 
-### What's in this save?
+### What's In This Save?
 
 ```ts
 import { discoverSaveImportTrackers } from 'thetowersdk/save'
@@ -141,7 +173,7 @@ for (const found of discoverSaveImportTrackers(parsedRoot).trackers) {
 
 Useful for showing someone what you found before doing anything with it.
 
-### Run history and battle reports
+### Run History And Battle Reports
 
 Every completed run the game kept is available, with all of its stored fields:
 
@@ -163,11 +195,11 @@ const stats = buildBattleReportStatFields(runs[0])
 are not limited to the fields this SDK happens to name. There are also helpers for duration
 formatting, date parsing and deduplication — see [`src/save/index.ts`](src/save/index.ts).
 
-### Fields the SDK doesn't model
+### Reading Any Field In a Save
 
-Nothing in the save is hidden behind this SDK. `parsedRoot` is the decoded file as a plain object,
-so any field the game stores is reachable whether or not there is a named extractor for it — the
-extractors are a convenience over that object, not a gate in front of it.
+`parsedRoot` is the decoded file as a plain object, so every field the game stores is yours to read
+directly. The named extractors are a convenience layer over that same object — reach past them
+whenever you want a field they do not name.
 
 Values are loosely typed and arrays arrive in several shapes, so use the readers rather than
 hand-parsing:
@@ -184,7 +216,7 @@ Worked out a field that isn't covered? A PR adding an extractor is very welcome.
 
 ---
 
-## Reading the community wiki
+## Reading The Community Wiki
 
 The Tower's wiki is on Fandom, which serves **wikitext** rather than anything you can render:
 templates, infoboxes, `[[File:…]]` links and vertical wikitables. This converts it to Markdown.
@@ -207,29 +239,46 @@ A page that does not exist returns `200 OK` with a `missing` marker rather than 
 `fetchFandomWikitext` throws on it instead of returning an empty page.
 
 **The conversion ships here; the wiki's content does not.** Wiki text is CC-BY-SA and this package
-is MIT, so fetch what you need and honour the wiki's licence in whatever you ship. It is a
+is MIT, so fetch what you need and honor the wiki's license in whatever you ship. It is a
 volunteer-run wiki — cache what you fetch, and space out requests when pulling many pages.
 
-## Getting a save file
+## Getting a Save File
 
 `playerInfo.dat` is The Tower's save file.
 
 - **Android** — `Android/data/com.TechTreeGames.TheTower/files/playerInfo.dat`
 - **Android emulator** (BlueStacks, LDPlayer, WSA…) — the same path inside the emulated device
+- **macOS** — the native App Store build stores it in its app container under
+  `~/Library/Containers/<bundle-id>/Data/Library/Application Support/…`, with non-sandboxed installs
+  under `~/Library/Application Support/…`
 - **iOS** — inside an encrypted device backup; not practical to read directly
 
-There's no desktop build of the game, so on a PC the save always comes from an emulator.
+On Windows the save always comes from an emulator. On a Mac the native build is right there on disk.
 
-[**adb-bridge**](https://github.com/TmRxJD/adb-bridge) is a small local helper that finds and copies
-the save off a connected device or emulator, which is usually easier than doing it by hand:
+Copying that file by hand is the tedious part of building anything save-driven, so
+[**adb-bridge**](https://github.com/TmRxJD/adb-bridge) removes the step. It talks to a connected
+phone or a running emulator over ADB, or reads the macOS container directly, and hands the bytes
+straight to whatever needs them:
 
 ```bash
 npx adb-bridge
 ```
 
+- Installs Google's official platform-tools for you if `adb` isn't already on the machine (Android
+  only — the macOS path needs no tooling).
+- Serves the save to a local page over a WebSocket bound to `127.0.0.1`, so a browser app can read a
+  real account with no upload step and no file picker.
+- Can watch the save and re-send it whenever the game writes, which keeps a tracker live while you
+  play instead of forcing a manual re-import.
+- Pulls only. It never modifies anything on the device, needs no root, and touches only the games you
+  enable.
+- One install covers multiple games — adding another registers it with the bridge you already have.
+
+Feed the bytes it gives you to `decodePlayerInfoSaveBytes` and everything above applies unchanged.
+
 > Save files are personal data. If your tool uploads them anywhere, tell your users plainly.
 
-### Decoding in a browser
+### Decoding In a Browser
 
 The decoder is in `thetowersdk/node` only because it uses `node:zlib`. In a browser, gunzip with
 `DecompressionStream` and call the NRBF reader directly — both are exported and pure:
@@ -251,6 +300,89 @@ Everything in `thetowersdk/save` and `thetowersdk/data` then works on the result
 
 ---
 
+## Builders
+
+Ready-made calculators. Each one pairs the maths in `thetowersdk/mechanics` with the things a tool
+needs around it and never gets for free: a complete set of defaults, a description of every input,
+normalisation of whatever half-filled state a form is in, and a result that says what it could not
+work out.
+
+```ts
+import { labResearchCalculator } from 'thetowersdk/builders'
+
+const result = labResearchCalculator.compute({ labName: 'Damage', targetLevel: 10 })
+console.log(result.totalCoinCost, result.totalHours)
+for (const note of result.notes) console.warn(note)
+```
+
+`compute` takes a `Partial` on purpose — a form hands you half-filled state constantly, and a
+calculator that throws or returns `NaN` on that pushes the problem back into the UI.
+
+Render a form without knowing which calculator it is:
+
+```ts
+for (const field of labResearchCalculator.fields) {
+  // field.kind is 'number' | 'select' | 'boolean' | 'number-list'
+}
+```
+
+| Builder | Answers |
+|---|---|
+| `labResearchCalculator` | Coins and time to take a lab from one level to another |
+| `workshopUpgradeCalculator` | Coins to move a workshop stat between two levels |
+| `moduleCostCalculator` | Shards and coins to level a module, capped by its rarity |
+| `ultimateWeaponCalculator` | Power Stones for an ultimate weapon stat |
+| `uptimeCalculator` | What share of the time an ability is actually running |
+| `guardianCalculator` | Bits for a guardian stat |
+| `botUpgradeCalculator` | Medals for a bot stat |
+| `enemyWaveCalculator` | Health and damage per enemy kind at a tier and wave |
+| `damageReductionCalculator` | What reaches the tower after every mitigation layer |
+| `assistModuleStonesCalculator` | Stones for an assist efficiency slot |
+| `coinsPerKillCalculator` | What one enemy pays, all six bonus sources applied |
+| `thornsCalculator` | Damage returned to an enemy on contact |
+| `dissonanceCalculator` | The multiplier your tier personal bests apply to a stat |
+| `enemyDropsCalculator` | Module drop chances, reroll shards, shatter shards |
+| `innerLandMinesCalculator` | Mine damage, count, cooldown, and what charge time is worth |
+
+`CALCULATOR_BUILDERS` is all of them, and `findCalculatorBuilder(id)` looks one up — enough to
+build a calculator picker that needs no per-calculator code at all.
+
+They wrap `thetowersdk/mechanics` rather than reimplementing it, so a correction to a formula
+reaches every tool without anyone re-deriving it.
+
+### Caps, clamps and level indexing
+
+Every builder handles these the same way, so a number means the same thing whichever one produced it.
+
+| Rule | How |
+|---|---|
+| **A level is capped by its own catalog** | `clampLevel(value, cap, fallback)`, where `cap` comes from the curve that stat actually uses |
+| **An open-ended quantity is bounded so the result stays finite** | `clampMagnitude(value, fallback)`, bounded by `MAX_INPUT_MAGNITUDE` |
+| **A level buys against the previous row** | `costIndexForLevel(level)` — buying level L reads entry L−1 |
+| **Anything only a formula bounds gets a named constant** | e.g. `MAX_MODEL_WAVE`, where the wave curve stops producing a real number |
+| **Clamping is reported** | the result's `notes` say what was clamped and to what |
+
+Caps come from the data rather than a shared constant because the curves genuinely differ: workshop
+Attack Speed prices 75 levels, Enemy Level Skip 60, Damage 400. Level indexing follows tower-oracle
+`workshop.upgradeTable`: a cost row buys the **next** level, so entry L is what is charged at level L
+and buying level L costs entry L−1.
+
+### Lookups by a name you did not choose
+
+Ids, slugs and level indices arrive from saves, from the community sheet, from URLs and from tool
+arguments. Lookups keyed by them use own-key access (`ownLookup`) for records and a
+bounds-and-integer check (`atIndex`) for arrays, so an unknown key returns `undefined` rather than
+whatever sits on `Object.prototype`.
+
+The reason it is a rule rather than a caution: `record['constructor']` is the `Object` function and
+`record['toString']` is a function, and neither `??` nor `||` nor a truthiness check will reject one.
+The fallback simply never fires, and a function travels on from a signature that promised a string.
+
+Cost ladders are bounded the same way, by the table rather than by the caller: a level past the end
+of a curve is excluded rather than priced at zero.
+
+---
+
 ## Examples
 
 Runnable, in [`examples/`](examples):
@@ -259,6 +391,15 @@ Runnable, in [`examples/`](examples):
 npx tsx examples/01-browse-game-data.ts                        # the tables, no save needed
 npx tsx examples/02-read-a-save-file.ts ~/playerInfo.dat       # what one player has
 npx tsx examples/03-plan-upgrades-from-a-save.ts ~/playerInfo.dat  # a tool: what to buy next
+npx tsx examples/04-generate-a-chart.ts                        # catalogs -> plot-ready series
+npx tsx examples/05-generate-a-cost-table.ts "Golden Tower"    # the same data as a cost table
+npx tsx examples/06-read-the-community-wiki.ts "Golden Tower"  # wiki page -> Markdown
+npx tsx examples/07-format-like-the-game.ts                    # numbers in and out, both ways
+npx tsx examples/08-build-a-calculator.ts uw.stones            # a whole calculator, rendered generically
+npx tsx examples/09-build-a-bot.ts                             # every calculator as a bot command
+npx tsx examples/10-read-a-sheet.ts                            # a sheet read, and the two ways it lies
+npx tsx examples/11-build-a-knowledge-base.ts                  # chunks derived from the catalogs
+npx tsx examples/12-show-module-and-card-art.ts                # which image belongs to which module
 ```
 
 The third is the one to read if you are building something: it goes save → extractors → planner,
@@ -267,7 +408,46 @@ into the plan. They are type-checked against the package on every `npm run verif
 
 ---
 
-## Names and acronyms
+## Templates
+
+Starting points to copy into your own project, rather than scripts to read. Each is complete,
+type-checked against the package source, and commented where the shape of the SDK is easy to
+get wrong.
+
+| File | For | Runtime |
+|---|---|---|
+| [`save-cli.ts`](templates/save-cli.ts) | A command-line tool that reads a player's save | Node |
+| [`browser-widget.ts`](templates/browser-widget.ts) | A UI module with no Node built-ins anywhere | Browser |
+| [`calculator.ts`](templates/calculator.ts) | A calculator: typed input, pure compute, separate formatting | Either |
+| [`bot-starter.ts`](templates/bot-starter.ts) | A complete bot: every calculator, a hand-written command, a CLI | Node |
+| [`sheets-client.ts`](templates/sheets-client.ts) | The googleapis adapter for `thetowersdk/sheets` | Node |
+
+### The three things they encode
+
+**Decode once.** `decodePlayerInfoSaveBytes` is the only step that needs Node. The save root it
+returns is a plain object that extractors read and never mutate, so run as many as you like over
+one root.
+
+**Only `thetowersdk/node` needs Node.** `data`, `save`, `formatting`, `mechanics`, `wiki`,
+`charts`, `knowledge` and `inputs` are all browser-safe. A widget that never opens a save file
+never imports the decoder — that is why `browser-widget.ts` exists as a separate file.
+
+**Say what you could not do.** Extractors return `null` for features a save predates and carry a
+`warnings` array; `calculator.ts` returns a `notes` array for the same reason. A planner that
+silently returns `0` for an unknown lab is worse than one that says it does not know the lab.
+
+### Two traps these avoid
+
+- **Durations are text, and not all one shape.** Most catalog rows are `"HH:MM:SS"` with hours
+  running past 24 (`"500:00:00"`), but some are `"0s"`. Use `parseDurationToHours`; splitting on
+  `":"` yourself returns `NaN` on the `"0s"` rows and poisons the whole sum.
+- **Format with the game's ladder.** If your tool prints `1.4e21` where the game prints `1.4s`,
+  a player cannot check your answer against their screen — and that is the only way they can
+  trust it. `formatLargeNumber` and `parseResource` round-trip.
+
+---
+
+## Names And Acronyms
 
 The game and the community use a lot of shorthand, and plenty of it collides. `CF` is Chrono Field
 to one player and critical factor to another; `GC` is Galaxy Compressor or glass cannon. The SDK
@@ -294,7 +474,7 @@ the game's meaning and nothing else.
 Names in it are generated from the same catalogs the SDK ships, and every acronym is checked against
 those names, so a term cannot appear unless it is real.
 
-## Using it with an AI agent
+## Using It With An AI Agent
 
 There's an MCP server in [`mcp/`](mcp/README.md). Point your agent at it and it can read the real
 API and the real game data instead of guessing at both.
@@ -335,14 +515,86 @@ Do **not** also register the standalone package MCP or `tools/tower-mcp/server.m
 | `wiki_search` · `wiki_page` | How a mechanic actually behaves, from the community wiki |
 | `begin_mechanic_task` · `record_*` | Mechanics compliance session + map/ledger |
 | `sdk_graph_*` · `trust_coverage_report` · `trust_drift_check` | Mechanics graph SoT + TrustReport + drift aggregate |
+| `sdk_graph_render` · `ep_graph_render` | The graph as a **Mermaid** diagram — paste straight into Markdown |
 | `sdk_kernel_load` · `sdk_registry_get` · `mcp_contract` | Unified MechanicsContext + Registry TOC + MCP taxonomy |
 | `ep_graph_*` · sheet oracle tools | Effective Paths sheet-backed work (`sheet_info`, `eval_formula`, …) |
 
-Governance commits (`commit_*`, `enforcement_*`, `schema_*`, `pointer_*`) live on **`tower-gov`**, not on this mechanics server — see [`docs/AGENT_MCP_ONBOARDING.md`](../../docs/AGENT_MCP_ONBOARDING.md) and [`packages/governance-engine/README.md`](../governance-engine/README.md).
+Governance commits (`commit_*`, `enforcement_*`, `schema_*`, `pointer_*`) live on a separate `tower-gov` server, not on this mechanics server. The governance engine is not part of this package and is not published with it.
 
 Doctor / debug / sandbox tools are on the **full** CI harness (`tools/tower-mcp/server.mjs`) or CLIs (`pnpm sdk-doctor`, `pnpm debug-graph:*`, …), not the slim IDE `tower` catalog.
 
-### Mechanics trust & Debug Graph (monorepo)
+### The Tower Oracle
+
+A knowledge graph of game mechanics, shipped with the package as its own MCP module. Nodes are
+mechanics, edges are the relationships between them, and every claim carries its source and whether
+anything here has verified it. It answers how a mechanic behaves, what it interacts with, and the
+specific ways it has been misread before.
+
+| Tool | Ask it for |
+|---|---|
+| `oracle_traps` | **Call this first.** Every known way this mechanic has been got wrong |
+| `oracle_expand` | What an acronym means, from a closed set — `GT+`, `CF`, `DW`, `BH` |
+| `oracle_brief` | A short orientation on a mechanic before you model it |
+| `oracle_get` · `oracle_search` | One node in full, or find the node by phrasing |
+| `oracle_map` | How a mechanic connects to the rest of the game |
+| `oracle_footguns` | Cross-cutting mistakes not tied to one mechanic |
+| `oracle_coverage` | How well a compartment is actually covered |
+| `oracle_contradictions` | Claims that disagree, ranked by source authority |
+
+Three properties shape how you read its answers:
+
+- **`claimType`** marks every claim `objective` or `sentiment`, keeping measured values and community
+  opinion distinguishable.
+- **`oracle_coverage`** reports how well a compartment is covered, so an empty `oracle_traps` result
+  can be read as *unexercised* or as *clean* rather than guessed at.
+- **`oracle_contradictions`** surfaces claims that disagree, ranked by source authority
+  (`game` › `save` › `code` › `user` › `sheet` › `wiki` › `external-repo`), and returns both values.
+
+`oracle_expand` resolves acronyms from a closed set, so an unknown shorthand returns as unknown.
+
+### The Sheet Oracle
+
+Reads a live Google Sheet, so an agent can work from a spreadsheet's own calculations:
+
+| Tool | What it does |
+|---|---|
+| `sheet_info` | **Call first.** Sheet id, version, whether it is writable, and its known traps |
+| `read_range` | Values or formulas, in A1 notation |
+| `eval_formula` | **The oracle proper.** Evaluate a formula *in the sheet* and return what it computes |
+| `list_lambdas` | The sheet's named functions and their parameter order |
+| `inspect_tab_ui` | The live label+value control panel for a tab |
+| `write_cells` | Drive inputs to a known state before reading a result |
+
+The tools take a sheet id, so they work against any spreadsheet your service account can see:
+
+```bash
+EPATHS_SHEET_ID=<your sheet id> EPATHS_CREDENTIALS=<path to key.json>
+```
+
+Read-only tools need the sheet **shared** with the service account. `eval_formula` and `write_cells`
+need edit rights, since evaluating a formula writes to a scratch cell.
+
+#### Registering a service account
+
+The sheet tools authenticate as a Google Cloud **service account** — a robot identity with its own
+email address, which reaches the sheets you share with it.
+
+1. In the [Google Cloud console](https://console.cloud.google.com/), create or pick a project.
+2. Enable the **Google Sheets API** for it.
+3. **IAM & Admin → Service Accounts → Create service account.** Access is granted per-sheet by
+   sharing, so no project roles are required.
+4. On the new account, **Keys → Add key → Create new key → JSON**. It downloads once. Treat it as a
+   password and keep it out of version control.
+5. Copy the account's email — `something@project-id.iam.gserviceaccount.com`.
+6. **Share your spreadsheet with that email.** Viewer is enough for reads; Editor is required for
+   `eval_formula` and `write_cells`.
+7. Point the tools at the key with `EPATHS_CREDENTIALS=/path/to/key.json`.
+
+If a read returns nothing, check the sharing first — an unshared sheet reads as an empty range
+rather than a permissions error. To revoke a key, delete it in the console; sharing stays intact for
+its replacement.
+
+### Mechanics Trust & Debug Graph (monorepo)
 
 Agents must not claim accuracy — CI and load paths do:
 
@@ -370,7 +622,14 @@ Two of those change how an agent works on this domain:
 which candidates a variant offers, and why the rest are excluded. Pass a wrong variant and it names
 the ones that exist rather than returning an empty result.
 
-**`wiki_page`** is the one to reach for before describing game behaviour. This package supplies
+**`sdk_graph_render`** emits **Mermaid**, not an image. That matters for the same reason the charts
+below do: a diagram of how mechanics depend on each other goes stale the moment the graph changes,
+and a PNG has no way to notice. Mermaid is text generated from the graph, so it re-renders correct
+in any Markdown surface that speaks it — GitHub, your docs site, an agent's reply — and reviews as a
+readable diff instead of a binary blob. `ep_graph_render` does the same for the Effective Paths
+dependency graph.
+
+**`wiki_page`** is the one to reach for before describing game behavior. This package supplies
 values, not semantics — a table says a number changes, not what it means or what it interacts with.
 `wiki_search { query }` finds the title, `wiki_page { title, section? }` reads it. Pages are cached
 after first read; set `TOWER_WIKI_DIR` to a directory of `slug.md` files to serve them offline, and
@@ -403,12 +662,330 @@ import { computeWaveBaseHealth, abilityDamage, goldenComboBonus } from 'thetower
 
 ---
 
+## Charts
+
+Charts are built on [the formulas above](#formulas) and the catalogs — which is the whole reason
+this section follows that one. You need the numbers before you can plot them.
+
+There is no chart API here, and that is deliberate: **a level progression already is a series.** The
+level is your x-axis and each measured field on it is a line, so generating a chart is a `map`, not
+an integration. A helper would only wrap `Array.map` while forcing an opinion about rendering on you.
+
+### Why This Beats Keeping Images
+
+The usual way a project ends up with charts is somebody makes a picture. Then the game rebalances,
+or a tier gets added, and now there is a PNG showing last patch's numbers with nothing anywhere to
+flag it. The image cannot tell you it is stale, so it stays wrong until a player notices.
+
+Generating from the data inverts that. **You never make a new image — you add rows to the array and
+every chart drawn from it regenerates.** One new lab level, one rebalanced cost, one extra ultimate
+weapon, and every view over that data is correct at once: the cost curve, the comparison chart, the
+table, the tooltip. Charts stay consistent with each other because they are not separate artifacts
+that happen to agree — they are the same numbers rendered more than one way.
+
+That is also why the graph tooling emits [Mermaid rather than images](#using-it-with-an-ai-agent):
+the same argument applies to diagrams. Text regenerates; a binary does not.
+
+```ts
+import { LAB_CATALOG } from 'thetowersdk/data'
+
+const lab = LAB_CATALOG.find((l) => l.name === 'Attack Speed')
+
+const costCurve = lab.levels.map((l) => ({ x: l.level, y: l.cost }))
+const timeCurve = lab.levels.map((l) => ({ x: l.level, y: l.duration }))
+```
+
+Hand those points to whatever already draws your charts — Chart.js, D3, Vega, a spreadsheet, an SVG
+path you build yourself. The same operation across a whole catalog gives you a comparison chart:
+
+```ts
+import { uwStoneChartData } from 'thetowersdk/data'
+
+// One series per ultimate weapon: stone cost to reach each cooldown level.
+const datasets = Object.values(uwStoneChartData).map((weapon) => {
+  const cooldown = weapon.stats.find((s) => s.name === 'Cooldown')
+  return {
+    label: weapon.name,
+    data: cooldown.levels
+      .filter((l) => typeof l.cost === 'number')
+      .map((l) => ({ x: l.level, y: l.cost })),
+  }
+})
+```
+
+### A Table Is a Chart Too
+
+Most of what players actually want is a table, not a curve — "what does the next level cost, and
+what do I get for it". Same data, same `map`, different rendering:
+
+```ts
+import { uwStoneChartData } from 'thetowersdk/data'
+import { formatNumberForDisplay } from 'thetowersdk/formatting'
+
+const gt = Object.values(uwStoneChartData).find((w) => w.name === 'Golden Tower')
+const multiplier = gt.stats.find((s) => s.name === 'Multiplier')
+
+let running = 0
+for (const level of multiplier.levels) {
+  if (typeof level.cost === 'number') running += level.cost
+  console.log(level.level, level.value, level.cost, formatNumberForDisplay(running))
+}
+```
+
+```
+Golden Tower — every stat
+
+  Stat             Levels     To max  Final
+  ---------------- ------  ---------  ------------
+  Multiplier           21     8.434K  x21.0
+  Duration             39    14.052K  53s
+  Cooldown             21       4.7K  100s
+  Golden Combo         15     20.07K  0.45%
+```
+
+That table is emitted, not written. When a stat gains levels or a cost is rebalanced, the table and
+every chart over the same array update together — which is the point of
+[generating rather than keeping images](#why-this-beats-keeping-images). The same loop emits
+Markdown, so documentation tables regenerate instead of rotting.
+See [`examples/05-generate-a-cost-table.ts`](examples/05-generate-a-cost-table.ts).
+
+**How much is chartable.** The shipped catalogs support **786 distinct series** — one per measurable
+field that varies across a level range:
+
+| Source | Series | What varies |
+|---|---|---|
+| Labs | 450 | Coin cost and research time, per lab |
+| Workshop | 141 | Stat value, cash cost, coin cost |
+| Cards | 62 | Level values and mastery values |
+| Ultimate weapons | 72 | Stat value and stone cost, per stat |
+| Guardians | 36 | Chip stat value and cost |
+| Bots | 25 | Per-stat progressions, including plus variants |
+
+That is a floor, not a ceiling. It counts only fields that already vary by level, and excludes
+catalogs with nothing to plot — relics carry a single flat value, module substats are cluster
+metadata, and vault nodes are identifiers. Anything you derive from [the formulas](#formulas) is
+additional.
+
+### The Curated Catalog
+
+`thetowersdk/charts` adds a registry of chart definitions the Run Tracker ships, for when you want
+the same views rather than your own:
+
+```ts
+import { SHARED_CHART_REGISTRY, findChartByPathId } from 'thetowersdk/charts'
+```
+
+It answers *what charts exist and what is in them* — never how they look. Rendering, styling and
+localisation stay with your application. `CHART_MECHANIC_LINKS` maps each chart to the entities in
+`thetowersdk/knowledge` it documents, so a mechanic can find its chart and vice versa.
+
+See [`examples/04-generate-a-chart.ts`](examples/04-generate-a-chart.ts).
+
+---
+
+## Building a Bot On This
+
+A Tower bot answers the same few hundred questions from data that does not change between releases,
+so most of it is already written:
+
+```ts
+import { calculatorCommands, createTowerBot } from 'thetowersdk/bot'
+
+const bot = createTowerBot({ commands: calculatorCommands() })
+const reply = await bot.run('lab-research', { args: { labName: 'Damage', targetLevel: 10 } })
+```
+
+`calculatorCommands()` turns every builder into a command — options, coercion, formatting and
+`notes` — because each builder already describes its own inputs. A builder added to the SDK later
+appears in your bot with no edit. The registry handles dispatch, argument coercion, memoising and
+errors; `bot.run` never throws, so a gateway handler cannot leave someone watching a spinner until
+the interaction expires.
+
+Nothing in it knows what a gateway is, so the same commands run under discord.js, on a CLI, and at
+full speed in a test.
+
+```bash
+npm run bot:demo                                            # list the commands
+npm run bot:demo -- lab-research labName=Damage targetLevel=10
+npm run bot:test
+```
+
+[`templates/bot-starter.ts`](templates/bot-starter.ts) is a complete bot with a hand-written command
+and a CLI. [`docs/BUILDING_A_BOT.md`](docs/BUILDING_A_BOT.md) covers performance and the Discord
+adapter.
+
+### Rules that came out of running three of them
+
+The Run Tracker ships three Discord bots alongside the website, all computing from this package. The
+rules below came out of getting that wrong first, and almost none of them are Discord-specific —
+they apply to Slack, Telegram, Matrix, or anything else built around callbacks with opaque ids.
+
+**Treat the bot as a first-class client, not a bolt-on.** Domain logic — parsing, normalization,
+cost math, run shapes — belongs in a shared package that both the bot and your UI import. Only
+platform glue (embeds, components, modals, collectors) lives in the bot repo. The failure this
+prevents is subtle and expensive: a bot that reimplements a calculation drifts from the website, and
+now the same question has two answers depending on where a player asks it. That is the whole reason
+this SDK is framework-agnostic.
+
+**One router.** Every interaction dispatches through a single entry point, with persistent handlers
+registered against it. Scattered per-feature listeners are how you get two handlers responding to
+one click, and the second one erroring because the first already replied.
+
+**Component ids get exactly one owner.** Build *and* parse them in one module, and let handlers
+consume parsed values only. A custom id is a wire format — it is serialized, handed to a remote
+client, and handed back later, possibly after your process restarted. Once a handler does
+`split(':')` inline, the format is defined in as many places as it is read, and adding a field
+breaks callers nobody remembered. Registry lookup should use exact or longest-prefix matching for
+the same reason, never `slice(prefix.length)` at each call site.
+
+**Interactions are owned.** Wait on a modal by filtering on the component id **and** the initiating
+user. Without both, one user's click resolves another user's pending wait — a bug that never appears
+in single-user testing and appears constantly in a busy channel.
+
+**Guard tokens before touching session state.** Anything carrying a session token must check it is
+present and unexpired first. Callbacks arrive late, arrive twice, and arrive after a redeploy;
+treating an expired token as a valid one corrupts state rather than erroring.
+
+**Support every component kind from the start.** Buttons, all select-menu variants, and modals —
+even when the current feature only uses one. Retrofitting a router that assumed buttons is worse
+than writing it general, and it is a small amount of extra work up front.
+
+**Stay quiet when the interaction is not yours.** An unregistered submission that belongs to a
+command-local ownership flow should return silently, not log an error or reply. Otherwise normal
+operation fills your logs with noise and hides the real failures.
+
+**Keep the probe scripts.** Diagnostic tooling — "what does this record actually look like in the
+database" — belongs in a checked-in `scripts/` directory, not in a throwaway file. You will need it
+again, and next time it will be during an incident.
+
+---
+
+## Google Sheets
+
+Community workbooks hold things no save file does. `thetowersdk/sheets` reads and writes them, and
+handles the parts that mislead:
+
+```ts
+import { TowerSheets } from 'thetowersdk/sheets'
+
+const sheets = new TowerSheets({ transport, spreadsheetId, protectSpreadsheets: [COMMUNITY] })
+const grid = await sheets.readGrid('Costs!A1:C50')     // padded to the shape you asked for
+const formulas = await sheets.readFormulas('Derived!A1:A200')
+if (formulas.likelySpilled) { /* only the anchor carries a formula */ }
+```
+
+Two reads look like data and are not. A **spilled** cell has no formula of its own, so a formula
+read of an `ARRAYFORMULA` range comes back empty and reads as "plain typed values" — the opposite of
+the truth. And the API **truncates** trailing empties, so a blank cell and an absent column arrive as
+the same `undefined`. Both are reported rather than smoothed over.
+
+Writes to a spreadsheet you name as protected throw rather than skipping, because a silent refusal
+has your tool report success while the sheet never changed.
+
+There is no `googleapis` dependency: the package describes the two calls it needs and you supply
+them, which keeps it browser-safe and leaves your auth library your choice.
+[`templates/sheets-client.ts`](templates/sheets-client.ts) is the adapter, and
+[`docs/GOOGLE_SHEETS.md`](docs/GOOGLE_SHEETS.md) walks through registering a service account and
+sharing a sheet with it.
+
+---
+
+## Optional Add-ons
+
+Two packages sit alongside this one. Neither is a dependency and neither is bundled — install one
+when you want what it does, and nothing here changes if you never do.
+
+| Package | What it adds | Install |
+|---|---|---|
+| [`towerai`](https://www.npmjs.com/package/towerai) | A knowledge base and an answering layer over this SDK's data | `npm install towerai` |
+| [`adb-bridge`](https://www.npmjs.com/package/adb-bridge) | Pulls a save off an Android device to a local page | `npx adb-bridge` |
+
+**TowerAI** answers questions; this package supplies the numbers it answers with. Build a knowledge
+base by deriving prose from the catalogs rather than typing it, so a game update moves the corpus
+instead of silently invalidating it:
+
+```ts
+import { buildTrackerAiCanonicalKbChunks, validateCanonicalKbArray } from 'towerai/kb'
+import { LAB_CATALOG } from 'thetowersdk/data'
+
+const mine = LAB_CATALOG.map(lab => ({
+  chunk_id: `mine_lab_${lab.name}`,
+  disambiguation: 'How many levels this lab has — not what order to research it in.',
+  content: `The ${lab.name} lab has ${lab.levels?.length ?? 0} levels.`,
+  // …
+}))
+
+validateCanonicalKbArray([...buildTrackerAiCanonicalKbChunks(), ...mine])
+```
+
+**adb-bridge** hands you save bytes over a WebSocket on `127.0.0.1:43781`; this package reads them.
+Gate on the bridge's reported **protocol**, never its release number — the package was renamed and
+restarted at `0.x`, so a version comparison reports a working bridge as too old.
+
+[`docs/OPTIONAL_ADD_ONS.md`](docs/OPTIONAL_ADD_ONS.md) covers both in full.
+
+---
+
+## Desktop and Mobile
+
+The SDK is plain TypeScript with no runtime dependencies and no DOM assumptions, so it runs unchanged
+in an Electron renderer, an Electron main process, and a Capacitor WebView. `thetowersdk/node` is the
+**only** entry point that needs Node — which is the boundary you want, since the decoder belongs on
+the side that is allowed to read files.
+
+Pin the toolchain first, with the hash corepack verifies against:
+
+```json
+{ "packageManager": "pnpm@10.8.1+sha512.c50088ba…", "engines": { "node": ">=22 <23" } }
+```
+
+[`docs/DESKTOP_AND_MOBILE.md`](docs/DESKTOP_AND_MOBILE.md) covers the main/renderer split, the IPC
+boundary, running the bridge in-process, and what does and does not work on mobile.
+
+---
+
+## Module and Card Artwork
+
+Trackers show a module or a card as a picture, and working out which file that is turns out
+to be the hard part. `thetowersdk/assets` ships the mapping:
+
+```ts
+import { moduleAssetPath, cardAssetPath, towerAssetUrl } from 'thetowersdk/assets'
+
+moduleAssetPath('Om Chip')     // 'assets/site/modules_core/epic_oc.png'
+cardAssetPath('slow-aura')     // 'assets/site/cards/sa.jpg'
+```
+
+**The images are not in this package.** They are The Tower's artwork, owned by TechTree
+Games, and they live in [`tower-assets`](https://www.npmjs.com/package/tower-assets), which
+claims no licence over them and asserts no authorship. A list of filenames is not artwork,
+so the mapping ships here and the art stays where it is.
+
+```bash
+npm install tower-assets
+```
+
+A module's file is named after its **initials** and rarity prefix — `Om Chip` is
+`epic_oc.png`, not `om-chip.png`. Cards are named after their id, except where they are not:
+`slow-aura` is stored as `sa.jpg`. Both mistakes are silent, because a missing image does not
+throw; it renders as nothing, on one card, at one rarity. Every function returns `null` for
+something that has no art, so a caller can tell that apart from a wrong path.
+
+All 48 modules and 31 cards resolve, checked against the real files rather than against the
+manifest itself. Rarity frames come from `moduleFrameAssetPath`, which follows a different
+rule — the `+` tiers have their own frame where the module art does not.
+
+Paths are transport-agnostic; `towerAssetUrl(path, base)` joins them to whatever your
+bundler, static mount or CDN expects.
+
+---
+
 ## Effective Paths
 
 [Effective Paths][ep] is the community spreadsheet that works out the cheapest order to buy things
 in — which lab, workshop stat or module to put your next coins into for the most effect. Its authors
 take the numbers from the developers, which is why the SDK already checks its own tables against it:
-see [`src/data/fixtures/README.md`](src/data/fixtures/README.md).
+see [`fixtures/data/README.md`](fixtures/data/README.md).
 
 The solver is ported. Four models, each with the sheet's own paths:
 
@@ -442,7 +1019,24 @@ plan.excluded   // what it did not offer, and why
 plan.issues     // why it could not plan at all — empty on every plan that ran
 ```
 
-### Planning for a real player
+### Holding a Player's State
+
+`thetowersdk/inputs` is the account state a calculator takes: labs settings,
+workshop levels, uptime inputs, card progress, module options, perk preferences.
+Every schema normalises — hand it whatever you have stored and it returns a
+complete record with the defaults filled in, dropping fields that do not parse
+rather than coercing them.
+
+```ts
+import { normalizeSharedToolInputs, defaultSharedToolInputs } from 'thetowersdk/inputs'
+
+const state = normalizeSharedToolInputs(whateverYouStored)
+```
+
+These are the same shapes the SDK's own calculators read, so a plan built from
+them needs no translation layer.
+
+### Planning For a Real Player
 
 A plan takes two things, and they are different:
 
@@ -495,7 +1089,7 @@ Reading a save is a separate step, and the extractors are in
 [`thetowersdk/save`](#reading-a-save): `readLabsFromSaveRoot`, `readWorkshopFromSaveRoot`,
 `readModulesFromSaveRoot` and the rest give you the numbers to map from.
 
-### An empty plan always says why
+### An Empty Plan Always Says Why
 
 The four families — damage, eHP, economy and regen — check their levels before planning and refuse
 rather than compute against a record they cannot use. When that happens `steps` is empty and
@@ -528,13 +1122,13 @@ A path that stops after one step usually means every other candidate is at its c
 Passing a variant a planner does not publish throws, naming the ones it does. Note that `lab` is a
 damage *band* while `lab-time` is a *variant*.
 
-### Discount is a different quantity
+### Discount Is a Different Quantity
 
 `planEffectiveEconomyDiscountPath` ranks coins **saved**, not coins earned, so it is not comparable
 to the others and has its own entry point. `planEffectiveEconomyPath` refuses `discount` and says so
 rather than returning a table of zeroes.
 
-### Checking it against the sheet
+### Checking It Against The Sheet
 
 The port cites the cell behind every rule it implements — `eEcon!E6`, `eDamage Coins!EZ2` — and those
 citations are enumerated by a test that checks the tab exists. If you are changing a formula, read
@@ -552,25 +1146,95 @@ levels, why the damage and economy levels are banded, and what a step guarantees
 
 ---
 
+### Reading a Player's IDS Master
+
+Most Effective Paths users keep an **IDS Master** behind their workbook — one `_IDS` tab that is
+nothing but inputs: their labs, workshop, cards, bots, guardians, weapons, modules and vault. It is
+the same account data a save carries, in a form a player maintains by hand.
+
+The readers turn that block into typed rows:
+
+```ts
+import { readIdsLabs, readIdsWorkshop, readIdsCards } from 'thetowersdk/save'
+
+const labs = readIdsLabs(grid)          // grid: the `_IDS` range as rows of cells
+labs.rows                               // [{ name, level, target, max, saveIndex }, …]
+labs.unmatchedNames                     // names the catalog does not know
+labs.warnings                           // cells that would not read as levels
+```
+
+Every reader returns the same shape — `rows`, `unmatchedNames`, `warnings`. Blocks are located by
+their heading rather than by column, so a reader works across IDS versions that lay the `_IDS` tab
+out differently. A row's `saveIndex` is its position in the matching save array, so rows join to
+save data by index rather than by name.
+
+**These give you rows, not a player.** As with the planners above, mapping them onto your own
+stores, database or forms is yours to write.
+
+**A level is a plain number or a plain digit string.** Anything else — `"6,000"`, `"1e3"`, `"0x10"`,
+a negative, an empty cell — reads as `null`, meaning the cell says nothing about that level. Names
+are matched case- and spacing-insensitively, and a name the catalog does not know is reported in
+`unmatchedNames` rather than dropped.
+
 ## Accuracy
 
 Data tables are exact values, keyed to a specific game version — see `V283_GAME_DATA_META`.
 
 The formulas under `mechanics/` are **approximations**. They are fitted to observed in-game
-behaviour and are close but not exact, particularly at very high waves and tiers. Don't rely on
+behavior and are close but not exact, particularly at very high waves and tiers. Don't rely on
 them for anything that needs to match the game to the last digit.
 
 Wave scaling in particular builds on earlier community work — see [Credits](#credits).
 
 ## Versioning
 
+Below 1.0 the version is a build marker, not a compatibility promise: any release may rename or
+remove an export, and data values may change with the game. Pin an exact version.
+
+From 1.0:
+
 - **Patch** — fixes, new extractors, additive data.
 - **Minor** — data updated for a new game version; existing values may change.
 - **Major** — breaking API changes.
 
-Pin the version if you need reproducible numbers.
-
 Anything under `thetowersdk/internal/*` is not part of the public API and can change in any release.
+
+## Where the Docs Live
+
+| Surface | What it is | Edit it? |
+|---|---|---|
+| [thetowersdk website](https://tmrxjd.github.io/TheTowerSDK/) | Browsable docs, live demos, runnable examples | Generated |
+| This repo | The source of truth: this README, [`docs/`](docs), [`examples/`](examples), [`templates/`](templates) | **Yes** |
+| [GitHub wiki](https://github.com/TmRxJD/TheTowerSDK/wiki) | The same content, page-per-section, for reading on GitHub | **No — generated** |
+
+Three surfaces, one source. Everything downstream is rendered from the files in this repository by
+one command, so there is nothing to remember to update:
+
+```bash
+npm run docs:seed    # regenerate the wiki pages and the shared code snippets
+npm run docs:check   # fail if any of them are stale (runs in `npm run verify`)
+```
+
+The wiki is rendered by [`scripts/build-wiki.mjs`](scripts/build-wiki.mjs). A GitHub wiki is a
+separate repository that no pull request reviews, so hand-editing it would create a third docs
+surface that silently drifts — every page carries a banner saying so, and an edit made there is
+overwritten on the next push.
+
+Code samples shared with the website come out of
+[`scripts/build-doc-snippets.mjs`](scripts/build-doc-snippets.mjs), which extracts marked regions
+from files that `npm run examples:run` **executes**. A hand-copied sample is correct on the day it
+is pasted and silently wrong afterwards; an extracted one fails in CI before it can reach a page.
+
+```ts
+// >>> snippet: bot-in-one-line
+const bot = createTowerBot({ commands: calculatorCommands() })
+// <<< snippet
+```
+
+The link checker is strict on purpose: a relative link that escapes the package root resolves in the
+authoring monorepo but 404s in the published repo, and it has found live ones.
+
+---
 
 ## Contributing
 
@@ -580,10 +1244,55 @@ tools you've built.
 
 ## Credits
 
-**Mattew** (`matteweon` on Discord) — the
-[Effective Paths](https://docs.google.com/spreadsheets/d/1YwZtKP6B4WYhRba5T6APJ1YxKNdfnIGQnprgnxmO7zc)
-spreadsheets for The Tower. A large amount of the reference data here, especially the cost, mastery
-and substat tables, was compiled with the help of that work.
+### The Effective Paths team
+
+Every `effectivePaths*` export in this package is a **port, not original work**. The maths is the
+Effective Paths team's; this package only translates their
+[spreadsheet](https://docs.google.com/spreadsheets/d/1YwZtKP6B4WYhRba5T6APJ1YxKNdfnIGQnprgnxmO7zc)
+into TypeScript so other tools can reuse it. A large amount of the reference data here — the cost,
+mastery and substat tables especially — was compiled with the help of that work.
+
+- **Mattew** (`matteweon` on Discord) — IDS Master; the Effective Paths spreadsheets for The Tower.
+- **QuietFanta** — eEcon Squirrel; the eHP Workshop+ sheet and the Workshop+ additions.
+- **Bisse** — maintainer; also contributed the save-format reference this package's decoder is
+  checked against.
+- **Shiriru**, **Gladiator**, **Meringue** — maintainers and helpers.
+- And everyone the sheet lists as a contributor — the full roster ships in code as
+  `EFFECTIVE_PATHS_CONTRIBUTORS`, so a tool built on this can render the real list rather than a
+  copy that drifts.
+
+> **Support the Effective Paths team.** Enter creator code **`SHEETLORD`** at checkout in the
+> [The Tower webstore](https://store.techtreegames.com/thetower/). It costs you nothing extra and
+> supports the people who actually derived these formulas. If you ship anything built on the
+> `effectivePaths*` exports, please pass this along — `EFFECTIVE_PATHS_ATTRIBUTION_WITH_SUPPORT`
+> is a ready-made line for a footer or about box.
+
+```ts
+import {
+  EFFECTIVE_PATHS_ATTRIBUTION_WITH_SUPPORT,
+  EFFECTIVE_PATHS_AUTHORS,
+  EFFECTIVE_PATHS_CONTRIBUTORS,
+  EFFECTIVE_PATHS_MAINTAINERS,
+  EFFECTIVE_PATHS_SUPPORT,
+} from 'thetowersdk/mechanics'
+
+console.log(EFFECTIVE_PATHS_ATTRIBUTION_WITH_SUPPORT)
+console.log(EFFECTIVE_PATHS_SUPPORT.creatorCode) // 'SHEETLORD'
+```
+
+### The wiki contributors
+
+The `thetowersdk/wiki` helpers fetch and reformat pages that other people wrote. Nothing there
+produces knowledge of its own. Thank you to the volunteer editors of the
+[Fandom — The Tower: Idle Tower Defense Wiki](https://the-tower-idle-tower-defense.fandom.com/wiki/)
+and [Game Vault — The Tower Wiki and Guides](https://the-tower-idle-tower-defense.game-vault.net/wiki/).
+
+Individual editors are deliberately not listed in code: wiki authorship changes continuously and is
+recorded per page in each wiki's own history, so a snapshot would be wrong within a week and would
+silently drop people. `fetchWikiPage()` returns the source `url` so you can link back to the page and
+its edit history. `WIKI_ATTRIBUTION` is a ready-made credit line.
+
+### Wave scaling
 
 The wave scaling code builds on
 [**tower-idle-toolkit**](https://github.com/tower-idle-toolkit/tower-idle-toolkit) by **skye**,

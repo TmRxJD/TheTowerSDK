@@ -46,11 +46,29 @@ const level = finite.int().min(0)
  * rejected rather than silently reading zero for everything absent — which is
  * the failure this module exists for.
  */
-function exactRecord<K extends string>(keys: readonly K[], value: z.ZodTypeAny) {
+function exactRecord<K extends string>(
+  keys: readonly K[],
+  value: z.ZodTypeAny,
+  overrides: Partial<Record<K, z.ZodTypeAny>> = {},
+) {
   return z.object(
-    Object.fromEntries(keys.map(key => [key, value])) as Record<K, z.ZodTypeAny>,
+    Object.fromEntries(keys.map(key => [key, overrides[key] ?? value])) as Record<K, z.ZodTypeAny>,
   )
 }
+
+/**
+ * A stone level for one of the five ultimate-weapon `+` stats, where `-1` is a
+ * value and not an error.
+ *
+ * `eDamage Stone!BX5` and its four siblings are written
+ * `IFERROR(VALUE(LEFT(IDS_UW_LEVEL(...), 2)), -1)`: the level is unreadable
+ * exactly when the `+` has never been bought, and every consumer branches on
+ * `-1` to a neutral of its own (`SMCF` 0, `SLLR` 1, `PS DC` 0.5, `ILMCM` 1,
+ * `CF+` 1). Rejecting it here made the whole plan come back with zero steps and
+ * a validation issue, which reads as "the planner is broken" rather than as
+ * "the input carries a sentinel".
+ */
+const plusStoneLevel = finite.int().min(-1)
 
 const statSourceSchema = z.object({
   workshopLevel: level,
@@ -171,6 +189,13 @@ export const effectiveDamageLevelsSchema = z.object({
   stone: exactRecord(
     Object.keys(ZERO_EFFECTIVE_DAMAGE_LEVELS.stone) as Array<keyof EffectiveDamageLevels['stone']>,
     level,
+    {
+      smartMissileCoverFire: plusStoneLevel,
+      spotlightLightRange: plusStoneLevel,
+      poisonSwampDeathCreep: plusStoneLevel,
+      innerLandMineChargedMines: plusStoneLevel,
+      chronoFieldChronoLoop: plusStoneLevel,
+    },
   ),
   coin: exactRecord(
     Object.keys(ZERO_EFFECTIVE_DAMAGE_LEVELS.coin) as Array<keyof EffectiveDamageLevels['coin']>,

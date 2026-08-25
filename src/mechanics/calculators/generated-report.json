@@ -1,0 +1,123 @@
+{
+  "generatedAt": "see git history — this file is regenerated, not timestamped",
+  "curated": 83,
+  "generated": 1925,
+  "rejected": [
+    {
+      "symbol": "abilityDamage",
+      "module": "packages/sdk/src/mechanics/damage.ts",
+      "why": "destructured parameter ({\n  damagePercent,\n  dam…)"
+    },
+    {
+      "symbol": "EFFECTIVE_DAMAGE_UPGRADES",
+      "module": "packages/sdk/src/mechanics/effective-paths-edamage-plan.ts",
+      "why": "const is a parenthesised expression, not an arrow function"
+    },
+    {
+      "symbol": "MODULE_EFFECTS_TABLE",
+      "module": "packages/sdk/src/data/assets.ts",
+      "why": "const is a parenthesised expression, not an arrow function"
+    },
+    {
+      "symbol": "LAB_RESEARCH_ASSET_TABLE",
+      "module": "packages/sdk/src/data/assets.ts",
+      "why": "const is a parenthesised expression, not an arrow function"
+    },
+    {
+      "symbol": "CARDS_ASSET_TABLE",
+      "module": "packages/sdk/src/data/assets.ts",
+      "why": "const is a parenthesised expression, not an arrow function"
+    },
+    {
+      "symbol": "TECH_TREE_ASSET_TABLE",
+      "module": "packages/sdk/src/data/assets.ts",
+      "why": "const is a parenthesised expression, not an arrow function"
+    },
+    {
+      "symbol": "GUARDIANS_ASSET_TABLE",
+      "module": "packages/sdk/src/data/assets.ts",
+      "why": "const is a parenthesised expression, not an arrow function"
+    },
+    {
+      "symbol": "maxDefinedWorkshopSectionDiscountPercent",
+      "module": "packages/sdk/src/data/workshop-discount-normalize.ts",
+      "why": "rest parameter"
+    },
+    {
+      "symbol": "maxDefinedEnhancementSectionDiscountPercent",
+      "module": "packages/sdk/src/data/workshop-discount-normalize.ts",
+      "why": "rest parameter"
+    },
+    {
+      "symbol": "maxDefinedEnhancementVaultDiscountPercent",
+      "module": "packages/sdk/src/data/workshop-discount-normalize.ts",
+      "why": "rest parameter"
+    },
+    {
+      "symbol": "mergeNumberRecords",
+      "module": "packages/sdk/src/internal/shared-tool-inputs.ts",
+      "why": "rest parameter"
+    },
+    {
+      "symbol": "mergeNumberArrayRecords",
+      "module": "packages/sdk/src/internal/shared-tool-inputs.ts",
+      "why": "rest parameter"
+    },
+    {
+      "symbol": "mergeNestedNumberRecords",
+      "module": "packages/sdk/src/internal/shared-tool-inputs.ts",
+      "why": "rest parameter"
+    },
+    {
+      "symbol": "collectTrackerRunScalarFields",
+      "module": "packages/sdk/src/save/tracker-run-fields.ts",
+      "why": "rest parameter"
+    },
+    {
+      "symbol": "getFirstMeaningfulRunDataValue",
+      "module": "packages/sdk/src/save/tracker-run-normalization.ts",
+      "why": "rest parameter"
+    },
+    {
+      "symbol": "UW_SAVE_SLOT_WEAPON_NAMES",
+      "module": "packages/sdk/src/save/ultimate-weapons.ts",
+      "why": "const is a parenthesised expression, not an arrow function"
+    },
+    {
+      "symbol": "DISSONANCE_ECHO_MAX_BENEFIT",
+      "module": "packages/sdk/src/knowledge/compartments/dissonance.ts",
+      "why": "const is a parenthesised expression, not an arrow function"
+    },
+    {
+      "symbol": "ENEMY_TYPES",
+      "module": "packages/sdk/src/knowledge/compartments/enemies.ts",
+      "why": "const is a parenthesised expression, not an arrow function"
+    },
+    {
+      "symbol": "GENERATED_ENEMY_TYPE_NODES",
+      "module": "packages/sdk/src/knowledge/compartments/enemies.ts",
+      "why": "const is a parenthesised expression, not an arrow function"
+    },
+    {
+      "symbol": "RELIC_TOTALS_STATS_WHERE_PUBLISHED_IS_HIGHER",
+      "module": "packages/sdk/src/knowledge/compartments/progression.ts",
+      "why": "const is a parenthesised expression, not an arrow function"
+    },
+    {
+      "symbol": "THEME_TOWER_QUANTITY_SHORTFALL_POINTS",
+      "module": "packages/sdk/src/knowledge/compartments/themes.ts",
+      "why": "const is a parenthesised expression, not an arrow function"
+    },
+    {
+      "symbol": "THEME_AMBIGUOUS_NAMES",
+      "module": "packages/sdk/src/knowledge/compartments/themes.ts",
+      "why": "const is a parenthesised expression, not an arrow function"
+    },
+    {
+      "symbol": "ENHANCEMENT_COST_CURVE_GROUPS",
+      "module": "packages/sdk/src/knowledge/compartments/workshop.ts",
+      "why": "const is a parenthesised expression, not an arrow function"
+    }
+  ],
+  "duplicates": []
+}

@@ -133,7 +133,7 @@ describe('the sheet cells the port cites', () => {
     expect(
       distinct.size,
       'a cell reference was added or removed — verify it against the sheet, then update this',
-    ).toBe(84)
+    ).toBe(155)
   })
 
   it('maps cited eEcon control/hide cells through the EP graph index when present', async () => {

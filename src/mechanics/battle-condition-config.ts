@@ -135,7 +135,7 @@ export const BC_ENEMY_STAT_EFFECTS: Partial<Record<BattleConditionName, BattleCo
   "Tank's Ultimate": {
     counterLabSlug: 'tanks_ultimate',
   },
-  'Scatter Ultimate': {
+  "Scatter's Ultimate": {
     counterLabSlug: 'scatter_ultimate',
   },
   'Saboteur\'s Ultimate': {

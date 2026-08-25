@@ -1,0 +1,143 @@
+/**
+ * Coins per kill: what one enemy is worth once everything that boosts coins is applied.
+ *
+ * Coin bonuses come from six unrelated places — workshop, lab, module substats, the
+ * workshop enhancement, perks and the vault — and a tool that models any one of them alone
+ * reports a number that is wrong by whatever the others contribute. They are all inputs
+ * here for that reason.
+ *
+ * The enhancement is **squared**, unlike every other enhancement in the game. That is
+ * reproduced from the Effective Paths sheet rather than explained; see
+ * `CoinsPerKillInput.enhancementLevel`.
+ */
+import { coinsPerKill, coinsPerKillWorkshopValue } from '../mechanics/index'
+import {
+  type CalculatorBuilder,
+  type CalculatorResultBase,
+  clampMagnitude,
+} from './types'
+
+export interface CoinsPerKillInputs {
+  /** Coins / Kill Bonus workshop LEVEL. Converted to its value for you. */
+  workshopLevel: number
+  /** Coins / Kill Bonus lab level; 2% each. */
+  labLevel: number
+  /** Coin Bonus workshop enhancement level. Applied squared. */
+  enhancementLevel: number
+  /** Coin substat on the primary module, as a multiplier (1 = none). */
+  primarySubstat: number
+  /** Coin substat on the assist module, as a multiplier (1 = none). */
+  assistSubstat: number
+  hasCoinPerk: boolean
+  hasCoinTradeOffPerk: boolean
+  /** Standard Perks Bonus lab level, which raises ordinary perks. */
+  standardPerksBonusLabLevel: number
+  /** Improve Trade-off Perks lab level, which raises the trade-off perk. */
+  improveTradeOffPerksLabLevel: number
+  /** Vault coin bonus, as a percentage. */
+  vaultPercent: number
+}
+
+export interface CoinsPerKillResult extends CalculatorResultBase {
+  readonly coinsPerKill: number
+  /** The workshop VALUE the level resolved to, so a UI can show both. */
+  readonly workshopValue: number
+}
+
+const defaults: CoinsPerKillInputs = {
+  workshopLevel: 0,
+  labLevel: 0,
+  enhancementLevel: 0,
+  primarySubstat: 1,
+  assistSubstat: 1,
+  hasCoinPerk: false,
+  hasCoinTradeOffPerk: false,
+  standardPerksBonusLabLevel: 0,
+  improveTradeOffPerksLabLevel: 0,
+  vaultPercent: 0,
+}
+
+export const coinsPerKillCalculator: CalculatorBuilder<CoinsPerKillInputs, CoinsPerKillResult> = {
+  id: 'economy.coins-per-kill',
+  title: 'Coins per kill',
+  summary: 'What one enemy pays once workshop, labs, modules, perks and the vault are applied.',
+
+  fields: [
+    { key: 'workshopLevel', label: 'Coins / Kill workshop level', kind: 'number', min: 0 },
+    { key: 'labLevel', label: 'Coins / Kill lab level', kind: 'number', min: 0 },
+    {
+      key: 'enhancementLevel',
+      label: 'Coin Bonus enhancement',
+      kind: 'number',
+      min: 0,
+      help: 'Applied squared — unlike every other enhancement.',
+    },
+    { key: 'primarySubstat', label: 'Primary coin substat', kind: 'number', min: 0, help: '1 means none.' },
+    { key: 'assistSubstat', label: 'Assist coin substat', kind: 'number', min: 0, help: '1 means none.' },
+    { key: 'hasCoinPerk', label: 'Coin perk taken', kind: 'boolean' },
+    { key: 'standardPerksBonusLabLevel', label: 'Standard Perks Bonus lab', kind: 'number', min: 0 },
+    { key: 'hasCoinTradeOffPerk', label: 'Coin trade-off perk taken', kind: 'boolean' },
+    { key: 'improveTradeOffPerksLabLevel', label: 'Improve Trade-off Perks lab', kind: 'number', min: 0 },
+    { key: 'vaultPercent', label: 'Vault coin bonus', kind: 'number', unit: 'percent', min: 0 },
+  ],
+
+  defaults,
+
+  normalize(input = {}) {
+    const number = (value: unknown, fallback: number) =>
+      clampMagnitude(value, fallback)
+    return {
+      workshopLevel: Math.floor(number(input.workshopLevel, defaults.workshopLevel)),
+      labLevel: Math.floor(number(input.labLevel, defaults.labLevel)),
+      enhancementLevel: Math.floor(number(input.enhancementLevel, defaults.enhancementLevel)),
+      primarySubstat: number(input.primarySubstat, defaults.primarySubstat),
+      assistSubstat: number(input.assistSubstat, defaults.assistSubstat),
+      hasCoinPerk: input.hasCoinPerk === true,
+      hasCoinTradeOffPerk: input.hasCoinTradeOffPerk === true,
+      standardPerksBonusLabLevel: Math.floor(
+        number(input.standardPerksBonusLabLevel, defaults.standardPerksBonusLabLevel),
+      ),
+      improveTradeOffPerksLabLevel: Math.floor(
+        number(input.improveTradeOffPerksLabLevel, defaults.improveTradeOffPerksLabLevel),
+      ),
+      vaultPercent: number(input.vaultPercent, defaults.vaultPercent),
+    }
+  },
+
+  compute(rawInput = {}) {
+    const input = this.normalize(rawInput)
+    const notes: string[] = []
+
+    const workshopValue = coinsPerKillWorkshopValue(input.workshopLevel)
+
+    /*
+     * The caps are what the account could reach, not what it has. Passing the current
+     * levels keeps the model honest: this reports the account as configured, not as it
+     * would be at maximum.
+     */
+    const value = coinsPerKill({
+      workshopValue,
+      labLevel: input.labLevel,
+      stoneCap: input.workshopLevel,
+      labCap: input.labLevel,
+      primarySubstat: input.primarySubstat,
+      assistSubstat: input.assistSubstat,
+      enhancementLevel: input.enhancementLevel,
+      hasCoinPerk: input.hasCoinPerk,
+      standardPerksBonusLabLevel: input.standardPerksBonusLabLevel,
+      hasCoinTradeOffPerk: input.hasCoinTradeOffPerk,
+      improveTradeOffPerksLabLevel: input.improveTradeOffPerksLabLevel,
+      vaultPct: input.vaultPercent,
+    })
+
+    if (input.primarySubstat === 0 || input.assistSubstat === 0) {
+      notes.push('A coin substat is a multiplier and one is 0, which zeroes the result. Use 1 for none.')
+    }
+    if (!Number.isFinite(value)) {
+      notes.push('The inputs did not produce a finite result; check the substat multipliers.')
+      return { coinsPerKill: 0, workshopValue, notes }
+    }
+
+    return { coinsPerKill: value, workshopValue, notes }
+  },
+}

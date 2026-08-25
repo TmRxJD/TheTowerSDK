@@ -1,0 +1,138 @@
+/**
+ * Golden Combo (GT+) payout, read from `GoldenTower.HandleGoldenTowerPlusReward`.
+ *
+ * ## The correction this file exists for
+ *
+ * The oracle described this as paying "X% per combo", which reads as linear in
+ * the combo count. It is not. The multiplier is a POWER of the combo:
+ *
+ *     multiplier = ultimateWeaponPlusBenefit[5] ^ goldenTowerPlusCombo - 1
+ *     cash  gained = goldenTowerPlusCashBonus  * multiplier
+ *     coins gained = goldenTowerPlusCoinsBonus * multiplier
+ *
+ * At combo 10 with a base of 1.05 that is 0.63x, where a linear reading of
+ * "5% per combo" gives 0.50x. At combo 50 it is 10.5x against 2.5x. The two
+ * agree closely at low combos, which is exactly why the linear reading survived.
+ *
+ * ## Where the numbers come from
+ *
+ * `GoldenTower.HandleGoldenTowerPlusReward` @ RVA 0x1E42F38, v28.3.0-arm64:
+ *
+ *     x8 = main.ultimateWeaponPlusBenefit   (0x1138, double[])
+ *     if (x8.Length <= 5) return            (guard: index 5 must exist)
+ *     s0 = (float)x8[5]                     (0x48 = 0x20 + 5*8)
+ *     s1 = (float)main.goldenTowerPlusCombo (0x117c, int)
+ *     s0 = powf(s0, s1)
+ *     s8 = s0 - 1.0
+ *     d9  = main.goldenTowerPlusCashBonus  (0x1180) * s8
+ *     d10 = main.goldenTowerPlusCoinsBonus (0x1188) * s8
+ *
+ * Cash lands in `cash`, `totalCashEarned`, `cashEarnedThisRound` and
+ * `cashEarnedThisWave`. Coins land in `coins`, `coinsEarnedThisRound`,
+ * `coinsEarnedThisRoundWithoutFetch`, `coinsEarnedThisWave`,
+ * `totalCoinsEarned`, `totalCoinsEarnedFromKills` and
+ * `goldenTowerPlusCoinsThisRound` — and `mostCoinsFromGoldenComboThisRound`
+ * keeps the maximum single payout rather than a sum.
+ *
+ * The float32 detail matters: the power is computed in SINGLE precision
+ * (`fcvt` down, `powf`, then `fcvt` back up) even though every accumulator is a
+ * double. A float64 model drifts from the game at large combos.
+ */
+
+import { uwStoneChartData } from '../data/ultimate-weapon-stones'
+
+/** Index into `ultimateWeaponPlusBenefit` that Golden Combo reads. */
+export const GOLDEN_COMBO_BENEFIT_INDEX = 5
+
+/** The array must be longer than this or the reward is skipped entirely. */
+export const GOLDEN_COMBO_MIN_BENEFIT_LENGTH = 6
+
+export interface GoldenComboInput {
+  /** `ultimateWeaponPlusBenefit[5]`, the per-combo growth base. */
+  benefitBase: number
+  /** `goldenTowerPlusCombo` at the moment the window ended. */
+  combo: number
+  /** `goldenTowerPlusCashBonus`. */
+  cashBonus: number
+  /** `goldenTowerPlusCoinsBonus`. */
+  coinsBonus: number
+}
+
+export interface GoldenComboPayout {
+  multiplier: number
+  cash: number
+  coins: number
+}
+
+/** Round-trip a value through float32, as the game's `fcvt`/`powf` pair does. */
+function toFloat32(value: number): number {
+  return Math.fround(value)
+}
+
+/**
+ * The multiplier a Golden Combo payout is scaled by.
+ *
+ * `pow(base, combo) - 1`, computed in float32. Returns 0 at combo 0 — the
+ * `- 1` is what makes an empty combo pay nothing rather than a full bonus.
+ */
+export function goldenComboMultiplier(benefitBase: number, combo: number): number {
+  return toFloat32(toFloat32(Math.pow(toFloat32(benefitBase), toFloat32(combo))) - 1)
+}
+
+/** Cash and coins from one Golden Combo window ending. */
+export function goldenComboPayout(input: GoldenComboInput): GoldenComboPayout {
+  const multiplier = goldenComboMultiplier(input.benefitBase, input.combo)
+  return {
+    multiplier,
+    cash: input.cashBonus * multiplier,
+    coins: input.coinsBonus * multiplier,
+  }
+}
+
+/**
+ * Invert the payout to recover the combo that produced it.
+ *
+ * This is what makes the mechanic checkable against a save. A battle report
+ * carries `largestGoldenCombo` and the largest single payout, and those two are
+ * tied by the formula above — so a save can confirm or refute the reading
+ * without needing the per-trigger history the report does not keep.
+ */
+export function goldenComboFromCoins(
+  coins: number,
+  coinsBonus: number,
+  benefitBase: number,
+): number | null {
+  if (!(coinsBonus > 0) || !(benefitBase > 1) || !(coins > 0)) return null
+  const multiplier = coins / coinsBonus
+  return Math.log(multiplier + 1) / Math.log(benefitBase)
+}
+
+/**
+ * The Golden Combo growth base for a given UW+ tier.
+ *
+ * The stone chart lists this tier as a percentage — `0.03%` at tier 0 rising by
+ * `0.03` per tier — and the game stores `1 + percent/100` in
+ * `ultimateWeaponPlusBenefit[5]`. Reading the chart directly rather than
+ * hard-coding the step means a chart correction reaches this formula.
+ *
+ * Note how small the base is: 1.0003 at tier 0. That is why the exponential and
+ * linear readings agree at small combos, and why they cannot at large ones —
+ * Golden Combo counts every kill in the window, which is hundreds, not tens.
+ */
+export function goldenComboBenefitBase(tier: number): number | null {
+  const stat = uwStoneChartData.golden_tower?.stats.find(entry => entry.name === 'Golden Combo')
+  if (!stat) return null
+  const wanted = Math.max(0, Math.floor(tier))
+  const level = stat.levels.find(entry => entry.level === wanted)
+  if (!level) return null
+  const percent = Number(String(level.value).replace('%', ''))
+  if (!Number.isFinite(percent)) return null
+  return 1 + percent / 100
+}
+
+/** Highest Golden Combo tier the stone chart defines. */
+export function goldenComboMaxTier(): number {
+  const stat = uwStoneChartData.golden_tower?.stats.find(entry => entry.name === 'Golden Combo')
+  if (!stat || stat.levels.length === 0) return 0
+  return Math.max(...stat.levels.map(entry => entry.level))
+}

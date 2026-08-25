@@ -66,6 +66,7 @@
  * Round counters: `enemyAttackLevelSkips`, `enemyHealthLevelSkips` (increment when skip procs).
  */
 
+import { ownLookup } from '../internal/own-lookup'
 import workshopData from '../data/workshop.json'
 import { LEVEL_SKIP_WAVE_POW_BASE } from './constants'
 import { clamp, safeMul } from './math'
@@ -470,7 +471,7 @@ export function rollEnemyLevelSkipsForWave(
 }
 
 export function levelSkipKindConfig(kind: LevelSkipKind) {
-  return KIND_CONFIG[kind]
+  return ownLookup(KIND_CONFIG, kind) ?? KIND_CONFIG.attack
 }
 
 /** Raw in-run attack skip before tier BCs (`CalculateEnemyLevelSkipChances`). */

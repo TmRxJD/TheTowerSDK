@@ -147,15 +147,37 @@ describe('planning a path', () => {
   }
 
   it('takes the best return first', () => {
-    // The greedy rule the sheet uses: relative return per unit spent, never
-    // increasing as the path goes on for a fixed set of candidates.
-    const plan = planEffectiveDamagePath({
+    /*
+     * Greedy: nothing available at step 1 beats what it picked at step 1.
+     *
+     * This used to assert that ROI never increases along the path, and it
+     * passed for a reason worth recording — the stone band's 24 weapon stats
+     * were not wired into the damage model, so every stone candidate gained
+     * exactly zero and the ROIs being compared were artifacts. The assertion
+     * was green because the thing it measured was inert.
+     *
+     * With the stats live, ROI rises steadily: 5.41e1 at step 2 to 1.15e3 at
+     * step 20. That is correct, not a regression. The stat charts are CONVEX —
+     * Chain Lightning's damage goes 2, 3, 5, 9 by level — so a level's gain can
+     * grow faster than its cost, and a greedy path over convex candidates has
+     * no monotone ROI. The sheet's own rows rise and fall the same way.
+     *
+     * So this checks the property greedy actually has, by re-planning the first
+     * step with the winner removed: the runner-up cannot beat it. A broken
+     * comparator fails this; a convex chart does not.
+     */
+    const options = {
       config: developedConfig(),
       levels: developedLevels(),
-      variant: 'stone',
-      steps: 20,
-    })
-    expect(plan.steps[0].roi).toBeGreaterThanOrEqual(plan.steps.at(-1)?.roi ?? 0)
+      variant: 'stone' as const,
+      steps: 1,
+    }
+    const best = planEffectiveDamagePath(options).steps[0]
+    const runnerUp = planEffectiveDamagePath({ ...options, excludeIds: [best.id] }).steps[0]
+    expect(best.roi).toBeGreaterThanOrEqual(runnerUp.roi)
+    // And the two really are different upgrades, or this compares one thing
+    // with itself and holds no matter what the comparator does.
+    expect(runnerUp.id).not.toBe(best.id)
   })
 
   it('respects a target level the player set', () => {
@@ -291,6 +313,14 @@ describe('lab candidates whose prerequisite is unmet', () => {
     for (const name of [
       'Damage Mastery', 'Standard Perks Bonus', 'Improve Trade-off Perks',
       'Demon Mode Mastery', 'Shock Multiplier',
+      // The amplifier labs, `eDamage!FF2:FN2`. On a bare account no weapon is
+      // owned and no rend is in play, so all six are off the table — and the
+      // same reasoning applies: each scores exactly zero rather than badly,
+      // which is why "a zero still wins a tie-break" is the whole comment
+      // above. Attack Disso is where that actually bit.
+      'Death Wave Damage Amplifier', 'Missile Amplifier', 'Spotlight Missiles',
+      'Inner Land Mine - Chrono Jump', 'Swamp Rend', 'Max Rend Armor Multiplier',
+      'Super Tower Bonus', 'Ultimate Crit Mastery',
     ]) {
       expect(reasons.get(name), name).toMatch(/not taken yet/)
     }
@@ -309,13 +339,20 @@ describe('lab candidates whose prerequisite is unmet', () => {
         ...bare().cards,
         'Damage Mastery': { ...bare().cards['Damage Mastery'], active: true },
         'Demon Mode Mastery': { ...bare().cards['Demon Mode Mastery'], active: true },
+        'Super Tower': { ...bare().cards['Super Tower'], active: true },
+        'Ultimate Crit Mastery': { ...bare().cards['Ultimate Crit Mastery'], active: true },
       },
       perksEquipped: true,
       perks: { ...bare().perks, 'Damage': true, 'Boss Health Trade-off': true },
-      ultimateWeapons: {
-        ...bare().ultimateWeapons,
-        'Chain Lightning': { ...bare().ultimateWeapons['Chain Lightning'], unlocked: true },
-      },
+      // Every weapon owned, because the six amplifier labs each gate on one —
+      // `BH30:BH37`, in the same order as this list. Naming them individually
+      // would let a new one be added without this test noticing.
+      ultimateWeapons: Object.fromEntries(
+        Object.entries(bare().ultimateWeapons)
+          .map(([name, row]) => [name, { ...row, unlocked: true }]),
+      ) as EffectiveDamageConfig['ultimateWeapons'],
+      // `AL69` — Swamp Rend and Max Rend Armor Multiplier both need it.
+      hasRendArmour: true,
       // `AL75`'s F33 half — Chain Lightning Shock lab bought.
       shockMultiplierUnlocked: true,
     }

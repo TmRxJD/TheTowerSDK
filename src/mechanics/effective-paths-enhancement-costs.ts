@@ -258,6 +258,50 @@ export const ENHANCEMENT_SPEND_UNLOCKS: Readonly<Record<string, number>> = {
 }
 
 /**
+ * The ATTACK category's equivalent, read off `eDamage Coins!EG5:EX5`.
+ *
+ * Each candidate opens `OR(NOT(GTE(EF5, <threshold>)), …)` and `EF5` is the
+ * running total of `WSPCOST_SINGLE_ADJUSTED_CUMULATIVE` over the six attack
+ * enhancements at LEVEL + 1 — so it climbs as the coin path spends, and an
+ * enhancement appears on the board partway down rather than being available
+ * from step 1.
+ *
+ * `Damage` and `Cash Bonus` are ungated, which is why they are absent here
+ * rather than present at zero: absent means "no gate", and a zero threshold
+ * would read as "gated, and always open".
+ */
+export const ATTACK_ENHANCEMENT_SPEND_UNLOCKS: Readonly<Record<string, number>> = {
+  'Rend Armor': 50_000_000_000,
+  'Critical Factor': 500_000_000_000,
+  'Damage/Meter': 5_000_000_000_000,
+  'Super Crit Mult': 50_000_000_000_000,
+  'Attack Speed': 500_000_000_000_000,
+}
+
+/** `eDamage Coins!EF5` — the running attack-enhancement spend, at level + 1. */
+export function attackEnhancementSpend(
+  levels: Readonly<Record<string, number>>,
+  discounts: WorkshopEnhancementDiscounts = {},
+): number {
+  let total = 0
+  for (const [stat, group] of Object.entries(WORKSHOP_ENHANCEMENT_CATEGORIES)) {
+    if (group !== 'attack') continue
+    /*
+     * NO `+ 1`, despite the sheet writing `…_CUMULATIVE("Damage", BO5+1)`.
+     *
+     * `enhancementCoinSpend(stat, L)` is the sheet's `CUMULATIVE(stat, L + 1)`:
+     * it sums the table BELOW `L`, so at level 0 it is 0 while the sheet's
+     * one-argument is 0 at 1. Transcribing the `+ 1` on top of that shifts the
+     * whole total a level and made an empty account read 3e10 spent against
+     * the sheet's 0 — which would open the Rend Armor gate at 5e10 far too
+     * early.
+     */
+    total += enhancementCoinSpend(stat, workshopEnhancementLevelFromMap(levels, stat), discounts)
+  }
+  return total
+}
+
+/**
  * Utility enhancement spend gates on the econ time/coin path — `eEcon!EO2` /
  * `eEcon!EP2`.
  *

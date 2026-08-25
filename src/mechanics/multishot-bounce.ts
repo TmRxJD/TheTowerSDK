@@ -41,6 +41,7 @@
  *   where distSq < thresholdSq and not in alreadyHit[]
  */
 
+import { atIndex } from '../internal/own-lookup'
 import { BOUNCE_ANGLE_HALF_CIRCLE, BOUNCE_DISTANCE_EPSILON } from './constants'
 import { isEnemyInMultishotRange } from './distances'
 
@@ -102,7 +103,7 @@ export function enemyTypePriorityBucket(
 ): number {
   if (enemyType < 0 || enemyType > MAX_ENEMY_TYPE_INDEX) return 0
   const src = table === 'sort' ? ENEMY_TYPE_TO_SORT_BUCKET : ENEMY_TYPE_TO_PRIORITY_BUCKET
-  return src[enemyType] ?? 0
+  return atIndex(src, enemyType) ?? 0
 }
 
 /** Phase-1 mask test: `(tierBit << enemyType) & priorityMask`. */

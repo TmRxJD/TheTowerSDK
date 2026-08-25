@@ -12,13 +12,8 @@
  */
 import { readFile } from 'node:fs/promises'
 import { decodePlayerInfoSaveBytes } from 'thetowersdk/node'
-import { readLabsFromSaveRoot } from 'thetowersdk/save'
-import {
-  EFFECTIVE_ECONOMY_UPGRADES,
-  planEffectiveEconomyPath,
-  ZERO_EFFECTIVE_ECONOMY_LEVELS,
-  zeroEffectiveEconomyConfig,
-} from 'thetowersdk/mechanics'
+import { buildEffectiveEconomyInputsFromSave, computeCoinsPerHourFromSaveRoot } from 'thetowersdk/save'
+import { EFFECTIVE_ECONOMY_UPGRADES, planEffectiveEconomyPath } from 'thetowersdk/mechanics'
 
 async function main(): Promise<void> {
   const savePath = process.argv[2]
@@ -29,57 +24,43 @@ async function main(): Promise<void> {
 
   const { parsedRoot } = decodePlayerInfoSaveBytes(await readFile(savePath))
 
-  const labs = readLabsFromSaveRoot(parsedRoot)
-  if (!labs) {
-    console.error('This save has no lab data.')
-    process.exit(1)
-  }
-
   /*
-   * Step 1 — index the player's labs by the name the game displays.
+   * Step 1 — turn the save into planner inputs.
    *
-   * Effective Paths candidates carry a `sheetName`, and for labs it is the
-   * same string, so that is the join. If a name ever diverges the candidate
-   * lands in the unmapped list below rather than silently reading as zero.
-   */
-  const labLevelByName = new Map(labs.researches.map(row => [row.displayName, row.level]))
-
-  /*
-   * Step 2 — fill a complete levels record.
+   * `levels` is what the player has bought and `config` is what they own and
+   * have unlocked. The candidates are spread across labs, ultimate weapons,
+   * bots, workshop enhancements and equipped modules, so this reads all five
+   * rather than one — a labs-only pass reaches about two thirds of them and
+   * leaves every weapon locked.
    *
-   * Always start from the zero record. Building one by hand leaves keys
-   * `undefined`, which become `NaN` inside the model, and the planner refuses
-   * the whole plan rather than rank against them.
+   * Whatever the save cannot answer comes back in `unmapped` with a reason,
+   * instead of sitting at zero and reading like a real level.
    */
-  const levels = structuredClone(ZERO_EFFECTIVE_ECONOMY_LEVELS)
-  // The bands hold different level shapes; one narrowing keeps the loop plain.
-  const bands = levels as unknown as Record<string, Record<string, number>>
-  const unmapped: string[] = []
+  const { config, levels, mapped, unmapped } = buildEffectiveEconomyInputsFromSave(parsedRoot)
 
-  for (const candidate of EFFECTIVE_ECONOMY_UPGRADES) {
-    const level = labLevelByName.get(candidate.sheetName)
-    if (level === undefined) {
-      unmapped.push(candidate.sheetName)
-      continue
+  console.log(`Mapped ${mapped.length} of ${EFFECTIVE_ECONOMY_UPGRADES.length} candidates from this save.`)
+  if (unmapped.length > 0) {
+    console.log('Not mapped:')
+    for (const entry of unmapped) {
+      console.log(`  ${entry.sheetName.padEnd(28)} ${entry.reason}`)
     }
-    bands[candidate.band][candidate.key] = level
   }
+  console.log(`Ultimate weapons unlocked: ${config.unlockedUltimateWeaponCount}`)
 
-  const mapped = EFFECTIVE_ECONOMY_UPGRADES.length - unmapped.length
-  console.log(`Mapped ${mapped} of ${EFFECTIVE_ECONOMY_UPGRADES.length} candidates from this save's labs.`)
-  console.log('Not mapped — these are workshop enhancements and module levels rather than labs,')
-  console.log('so they come from readWorkshopFromSaveRoot and readModulesFromSaveRoot instead:')
-  console.log(`  ${unmapped.join(', ')}\n`)
+  const coinsPerHour = computeCoinsPerHourFromSaveRoot(parsedRoot)
+  console.log(coinsPerHour === null
+    ? 'No battle history to derive a farm rate from — using the sheet default.\n'
+    : `Farm rate from this save's best runs: ${coinsPerHour.toExponential(2)} coins/hour\n`)
 
   /*
-   * Step 3 — plan.
+   * Step 2 — plan.
    *
-   * The config is the other half of an account: what is unlocked, owned and
-   * equipped. A zero config owns nothing, which is why weapon-gated candidates
-   * appear in `excluded` below. Fill it from the other extractors to see them.
+   * `estimates` is the one block no save records — kills a second, the share
+   * of enemies dying inside a Black Hole — so it keeps the model's defaults.
+   * Override them with what the player answers to match their account.
    */
   const plan = planEffectiveEconomyPath({
-    config: zeroEffectiveEconomyConfig(),
+    config,
     levels,
     variant: 'time',
     steps: 10,
@@ -87,10 +68,14 @@ async function main(): Promise<void> {
      * The time path costs a purchase in days: a lab's research duration plus
      * the time to farm its coins. That second half needs a rate, and the
      * default is the sheet's own 100,000 coins/hour — far below a developed
-     * account, which makes every cost look astronomical. Pass the player's
-     * real rate, or set `daysOnly: true` to price research time alone.
+     * account, which makes every cost look astronomical.
+     *
+     * The save can answer it. `computeCoinsPerHourFromSaveRoot` averages the
+     * player's best runs, so the days below are their days rather than a
+     * placeholder's. It is a peak and not a sustained rate; a player who farms
+     * below their best should pass their own number instead.
      */
-    coinsPerHour: 5e11,
+    coinsPerHour: coinsPerHour ?? undefined,
   })
 
   if (plan.issues.length > 0) {

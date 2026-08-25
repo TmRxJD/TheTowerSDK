@@ -29,7 +29,7 @@ interface ReferenceLab {
 }
 
 const reference = JSON.parse(
-  readFileSync(join(__dirname, 'fixtures', 'effective-paths-labs.json'), 'utf8'),
+  readFileSync(join(__dirname, '..', '..', 'fixtures', 'data', 'effective-paths-labs.json'), 'utf8'),
 ) as { labs: ReferenceLab[] }
 
 /** Ignores case, separators and punctuation: `a_b_c` and "A B - C" are the same lab. */
@@ -161,6 +161,74 @@ describe('lab tables against the Effective Paths reference', () => {
     // 188 of 221 today. The unmatched remainder is mostly the 31 per-card
     // masteries, which the sheet models as a single shared "Card Mastery" row.
     expect(matched).toBeGreaterThanOrEqual(185)
+  })
+
+  /**
+   * The comparison above walks OUR levels and looks each one up in the
+   * reference. That direction alone cannot see a level the reference has and we
+   * do not — and it did not: `swamp_rend_additional_enemies` stopped at L6 while
+   * the sheet carried 11, and every cost and duration check passed, because the
+   * five missing levels were never iterated over.
+   *
+   * Both remainders have to be empty for a join to mean anything. This asserts
+   * the other direction.
+   *
+   * The allowlist is for levels the sheet LISTS but has not PRICED. Its author
+   * uses round sentinels for those — swamp rend L10 is 1e16 coins at exactly
+   * 1000:00:00 and L11 is 1e18 at 2000:00:00, where the curve (x1.5 cost,
+   * x1.12 duration, exact for L1-L9) predicts 3.84e12 and 5.77e12. Importing
+   * those would ship invented costs, so the levels stay out of the catalog and
+   * stay named here instead of vanishing.
+   */
+  it('has every level the reference has, or explains the gap', () => {
+    const UNPRICED_IN_REFERENCE: Record<string, number[]> = {
+      'Swamp Rend - Additional Enemies': [10, 11],
+    }
+
+    const gaps: string[] = []
+    let compared = 0
+    for (const lab of ourLabs) {
+      const ref = referenceFor(lab)
+      if (!ref) continue
+      compared += 1
+      const ours = new Set(lab.levels.map(level => level.level))
+      const allowed = new Set(UNPRICED_IN_REFERENCE[lab.name] ?? [])
+      const missing = ref.levels
+        .map(level => level.level)
+        .filter(level => !ours.has(level) && !allowed.has(level))
+      if (missing.length > 0) {
+        gaps.push(`${lab.name}: reference has L${missing.join(', L')} and we do not`)
+      }
+    }
+    expect(gaps).toEqual([])
+    expect(compared).toBeGreaterThanOrEqual(185)
+  })
+
+  it('does not allowlist a level the reference has since priced', () => {
+    // An allowlist that outlives its reason is how a gap becomes permanent.
+    const stale: string[] = []
+    for (const [name, levels] of Object.entries({
+      'Swamp Rend - Additional Enemies': [10, 11],
+    })) {
+      const ref = referenceByKey.get(matchKey(name))
+      if (!ref) {
+        stale.push(`${name}: no longer in the reference at all`)
+        continue
+      }
+      for (const level of levels) {
+        const row = ref.levels.find(entry => entry.level === level)
+        if (!row) {
+          stale.push(`${name} L${level}: no longer in the reference`)
+          continue
+        }
+        // The sentinel shape: an exact power of ten, far off the x1.5 curve.
+        const isSentinel = row.cost !== null && Math.log10(row.cost) % 1 === 0
+        if (!isSentinel) {
+          stale.push(`${name} L${level}: reference now carries a real cost ${row.cost}; import it`)
+        }
+      }
+    }
+    expect(stale).toEqual([])
   })
 
   it('never lets a lab get cheaper as it levels', () => {

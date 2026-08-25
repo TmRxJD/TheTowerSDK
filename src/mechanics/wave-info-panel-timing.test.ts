@@ -4,7 +4,7 @@ import {
 
   UPTIME_WAVE_INTER_COOLDOWN_AT_MAX_WA_SECONDS,
 
-} from '../internal/uptime-core'
+} from './uptime-core'
 
 import {
 

@@ -42,7 +42,7 @@ export interface BotData extends BotUpgradeTierData {
 export type BotLabLevels = Record<string, number | undefined>
 export type BotUpgradeTier = 'base' | 'plus'
 
-import { computeUptimeRatio } from '../internal/uptime-core'
+import { computeUptimeRatio } from '../mechanics/uptime-core'
 import { botBotBoostedMultiplier } from '../mechanics/bot-hit-multiplier'
 
 export interface BotBotOverlapArgs {

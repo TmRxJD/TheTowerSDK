@@ -2,8 +2,14 @@ import { BOT_IMPORT_CATALOG } from './indexes'
 
 export type BotCatalogRow = (typeof BOT_IMPORT_CATALOG)[number]
 
+/**
+ * By save index, not array position. Dense and ordered today, so the two agree —
+ * which is exactly the state `WORKSHOP_IMPORT_CATALOG` was in until a row moved
+ * and fourteen upgrades silently renamed themselves. Correct by coincidence is
+ * not a state worth keeping.
+ */
 export function findBotCatalogRow(index: number): BotCatalogRow | null {
-  return BOT_IMPORT_CATALOG[index] ?? null
+  return BOT_IMPORT_CATALOG.find(row => row.index === index) ?? null
 }
 
 export function getBotSaveLabel(index: number): string {

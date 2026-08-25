@@ -6,7 +6,7 @@ import { SITE_LAB_SLUG_ALIASES } from '../../data/index'
 import {
   computeLabValueAtLevel,
   getLabMaxLevel,
-  getSharedToolLabs,
+  findToolLabBySlug,
   isLabsTrackerResearchLabName,
   type ToolLabRecord,
 } from '../../data/index'
@@ -18,29 +18,8 @@ export const MAX_IMPROVE_TRADE_OFF_LAB_LEVEL = 10
 export const MAX_BC_GLOBAL_REDUCTION_LAB_LEVEL = 10
 export const MAX_BC_SPECIFIC_LAB_LEVEL = 20
 
-let cachedLabs: ToolLabRecord[] | null = null
-
-function getLabs(): ToolLabRecord[] {
-  if (!cachedLabs) cachedLabs = getSharedToolLabs()
-  return cachedLabs
-}
-
 export function isBcCounterResearchLabSlug(slug: string): boolean {
   return (ENEMY_STATS_BC_COUNTER_LAB_SLUGS as readonly string[]).includes(slug)
-}
-
-function findLabRecord(slug: string): ToolLabRecord | undefined {
-  const labs = getLabs()
-  const canonical = SITE_LAB_SLUG_ALIASES[slug] ?? slug
-  const research = findLabResearchBySlug(canonical) ?? findLabResearchBySlug(slug)
-  const displayName = research?.displayName
-
-  return labs.find(lab =>
-    lab.name === slug
-    || lab.name === canonical
-    || (displayName != null && (lab.displayName === displayName || lab.name === displayName))
-    || (research?.index != null && lab.saveIndex === research.index),
-  )
 }
 
 export function getResearchLabDisplayName(slug: string): string {
@@ -56,7 +35,7 @@ export function getResearchLabDisplayName(slug: string): string {
 function resolvePlainResearchLabMaxLevel(slug: string): number {
   const canonical = SITE_LAB_SLUG_ALIASES[slug] ?? slug
   const research = findLabResearchBySlug(canonical) ?? findLabResearchBySlug(slug)
-  const labRecord = findLabRecord(slug)
+  const labRecord = findToolLabBySlug(slug)
   if (labRecord) return getLabMaxLevel(labRecord)
   return research?.levelMax ?? 30
 }
@@ -76,7 +55,7 @@ export function buildResearchLabLevelEntries(slug: string): readonly GameDropdow
 }
 
 function formatBcCounterLabMitigationPct(slug: string, level: number): number {
-  const lab = findLabRecord(slug)
+  const lab = findToolLabBySlug(slug)
   if (!lab || level <= 0) return 0
   const raw = computeLabValueAtLevel(lab, level)
   if (slug === 'battle_condition_reduction') return raw
@@ -87,7 +66,7 @@ export function buildResearchLabOptionLabel(slug: string, level: number): string
   if (level === 0) return '0'
 
   if (slug === IMPROVE_TRADE_OFF_LAB_SLUG) {
-    const lab = findLabRecord(slug)
+    const lab = findToolLabBySlug(slug)
     const pct = lab ? computeLabValueAtLevel(lab, level) : level
     return `+${pct}%`
   }
@@ -118,7 +97,7 @@ export function findResearchLabSlugFromLabName(labName: string | null | undefine
   const byDisplay = findLabResearchByDisplayName(trimmed)
   if (byDisplay?.slug) return byDisplay.slug
 
-  const labRecord = findLabRecord(trimmed)
+  const labRecord = findToolLabBySlug(trimmed)
   if (labRecord?.name && isLabsTrackerResearchLabName(labRecord.name)) {
     return SITE_LAB_SLUG_ALIASES[labRecord.name] ?? labRecord.name
   }

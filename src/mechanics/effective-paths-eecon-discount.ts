@@ -285,6 +285,27 @@ export interface EffectiveEconomyDiscountPlanOptions {
   labModifiers?: LabCostModifiers
   /** A stop the player set, below the lab's own maximum. */
   targetLevels?: Partial<Record<EffectiveEconomyDiscountKey, number>>
+  /**
+   * Every candidate's return per step, not just the one bought.
+   *
+   * `eEcon Discount!CL4:CQ45` prices with the same two shapes `relativeRoi`
+   * uses — `(New/Old-1)/Dur` for the multiplier and `(Old/New-1)/Dur` for the
+   * rest — so the audit can compare them one for one.
+   *
+   * It fires for the CONTENDERS, which is the sheet's own board rather than all
+   * six: `CM5` opens `CK5<>"Laboratory", ,` and each of the others gates on its
+   * own category, so the sheet blanks every candidate except the multiplier and
+   * the current priority. Emitting all six would invent a board neither side
+   * ranks.
+   */
+  onCandidateRoi?: (entry: {
+    step: number
+    key: EffectiveEconomyDiscountKey
+    name: string
+    nextLevel: number
+    roi: number
+  }) => void
+
   /** Candidates to leave out entirely — a lab the player has not unlocked. */
   excludeKeys?: readonly EffectiveEconomyDiscountKey[]
   /**
@@ -413,6 +434,9 @@ export function planEffectiveEconomyDiscountPath(
 
       const roi = relativeRoi(key, level, totals, days)
       if (roi <= 0) continue
+      options.onCandidateRoi?.({
+        step, key, name: DISCOUNT_LAB_NAMES[key], nextLevel: level + 1, roi,
+      })
       if (!best || roi > best.roi) best = { key, roi, days, level: level + 1 }
     }
 

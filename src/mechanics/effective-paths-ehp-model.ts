@@ -156,6 +156,20 @@ export interface EffectiveHealthCardSource {
   /** The card's multiplier (or additive share, for defense percent). */
   value: number
   hasMastery?: boolean
+  /**
+   * The mastery's OWN row flag, without the card block's master switch.
+   *
+   * `hasMastery` is `AND($AY$16, $AY$20)`, which is what `EPH_HEALTH` reads
+   * when it composes -- with cards switched off a mastery level is worth
+   * nothing. But the mastery's CANDIDACY is gated on the row alone:
+   *
+   *     eHP!DT2 = OR(NOT(AY20), AND($AY$14, NOT(IDS_LAB_HAS_UNLOCKED(DT4))))
+   *
+   * so the sheet offers Health Mastery whenever the row is ticked, master
+   * switch or not, and hides it entirely when the row is not. The two are
+   * genuinely different questions and conflating them costs a candidate.
+   */
+  masteryEquipped?: boolean
 }
 
 /**
@@ -243,7 +257,8 @@ export function zeroEffectiveHealthConfig(): EffectiveHealthConfig {
     primarySubstat: 0,
     assistSubstat: 0,
   })
-  const card = (): EffectiveHealthCardSource => ({ has: false, value: 0, hasMastery: false })
+  const card = (): EffectiveHealthCardSource =>
+    ({ has: false, value: 0, hasMastery: false, masteryEquipped: false })
 
   return {
     health: stat(),
@@ -284,7 +299,7 @@ export function zeroEffectiveRegenConfigSource(): {
       primarySubstat: 0,
       assistSubstat: 0,
     },
-    card: { has: false, value: 0, hasMastery: false },
+    card: { has: false, value: 0, hasMastery: false, masteryEquipped: false },
     hasSecondWindMastery: false,
   }
 }

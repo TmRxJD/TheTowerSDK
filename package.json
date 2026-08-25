@@ -1,7 +1,7 @@
 {
   "name": "thetowersdk",
-  "version": "0.5.2",
-  "description": "Game data and save-file reading for The Tower — build your own calculators and tools.",
+  "version": "0.5.3",
+  "description": "Game data and save-file reading for The Tower \u2014 build your own calculators and tools.",
   "license": "MIT",
   "author": "TmRxJD (https://github.com/TmRxJD)",
   "homepage": "https://tmrxjd.github.io/TheTowerSDK/",
@@ -15,6 +15,9 @@
   "type": "commonjs",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "bin": {
+    "thetowersdk-mcp": "./mcp/server.mjs"
+  },
   "sideEffects": false,
   "keywords": [
     "the-tower",
@@ -33,7 +36,8 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "npm run clean && tsc -p tsconfig.build.json && node scripts/copy-assets.mjs",
+    "build": "npm run clean && tsc -p tsconfig.build.json && node scripts/copy-assets.mjs && npm run knowledge:emit",
+    "knowledge:emit": "node scripts/emit-knowledge-graph.mjs",
     "clean": "node -e \"const fs=require('fs');fs.rmSync('dist',{recursive:true,force:true})\"",
     "test": "vitest run",
     "type-check": "tsc -p tsconfig.build.json --noEmit",
@@ -41,11 +45,25 @@
     "prepublishOnly": "npm run clean && npm run build",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "lint:docs": "node scripts/check-readme-links.mjs",
+    "wiki:build": "node scripts/build-wiki.mjs",
+    "wiki:publish": "node scripts/publish-wiki.mjs",
+    "wiki:check": "node scripts/build-wiki.mjs --check",
+    "lint:published": "node scripts/audit-published-surface.mjs",
+    "examples:run": "node scripts/run-examples.mjs",
     "lint:conventions": "node scripts/check-conventions.mjs",
+    "lint:acronyms": "tsx scripts/check-acronym-expansions.ts",
     "test:schema": "vitest run src/data/schemas.test.ts",
-    "verify": "npm run lint && npm run lint:conventions && npm run type-check && npm run type-check:examples && npm run build && npm test",
+    "verify": "npm run lint && npm run lint:conventions && npm run lint:acronyms && npm run lint:docs && npm run wiki:check && npm run lint:published && npm run type-check && npm run type-check:examples && npm run build && npm test && npm run docs:check",
     "mcp": "node mcp/server.mjs",
-    "glossary": "npm run build && node scripts/generate-glossary.mjs"
+    "glossary": "npm run build && node scripts/generate-glossary.mjs",
+    "bot:demo": "tsx templates/bot-starter.ts",
+    "bot:test": "vitest run src/bot",
+    "sheets:test": "vitest run src/sheets",
+    "docs:snippets": "node scripts/build-doc-snippets.mjs",
+    "docs:seed": "npm run docs:snippets && npm run wiki:build",
+    "docs:check": "node scripts/build-doc-snippets.mjs --check && npm run wiki:check && node scripts/check-readme-links.mjs && node scripts/build-asset-manifest.mjs --check",
+    "assets:manifest": "node scripts/build-asset-manifest.mjs"
   },
   "exports": {
     ".": {
@@ -73,6 +91,17 @@
       "require": "./dist/formatting/index.js",
       "default": "./dist/formatting/index.js"
     },
+    "./inputs": {
+      "types": "./dist/inputs/index.d.ts",
+      "require": "./dist/inputs/index.js",
+      "default": "./dist/inputs/index.js"
+    },
+    "./builders": {
+      "types": "./dist/builders/index.d.ts",
+      "import": "./dist/builders/index.js",
+      "require": "./dist/builders/index.js",
+      "default": "./dist/builders/index.js"
+    },
     "./mechanics": {
       "types": "./dist/mechanics/index.d.ts",
       "require": "./dist/mechanics/index.js",
@@ -83,17 +112,59 @@
       "require": "./dist/wiki/index.js",
       "default": "./dist/wiki/index.js"
     },
+    "./charts": {
+      "types": "./dist/charts/index.d.ts",
+      "require": "./dist/charts/index.js",
+      "default": "./dist/charts/index.js"
+    },
+    "./knowledge": {
+      "types": "./dist/knowledge/index.d.ts",
+      "require": "./dist/knowledge/index.js",
+      "default": "./dist/knowledge/index.js"
+    },
     "./internal/*": {
       "types": "./dist/*.d.ts",
       "require": "./dist/*.js",
       "default": "./dist/*.js"
     },
-    "./package.json": "./package.json"
+    "./knowledge-graph.json": "./dist/knowledge/knowledge-graph.v1.json",
+    "./knowledge.schema.json": "./dist/knowledge/knowledge.schema.json",
+    "./package.json": "./package.json",
+    "./sheets": {
+      "types": "./dist/sheets/index.d.ts",
+      "import": "./dist/sheets/index.js",
+      "require": "./dist/sheets/index.js",
+      "default": "./dist/sheets/index.js"
+    },
+    "./bot": {
+      "types": "./dist/bot/index.d.ts",
+      "import": "./dist/bot/index.js",
+      "require": "./dist/bot/index.js",
+      "default": "./dist/bot/index.js"
+    },
+    "./assets": {
+      "types": "./dist/assets/index.d.ts",
+      "import": "./dist/assets/index.js",
+      "require": "./dist/assets/index.js",
+      "default": "./dist/assets/index.js"
+    }
   },
   "typesVersions": {
     "*": {
+      "inputs": [
+        "dist/inputs/index.d.ts"
+      ],
+      "builders": [
+        "dist/builders/index.d.ts"
+      ],
       "data": [
         "dist/data/index.d.ts"
+      ],
+      "charts": [
+        "dist/charts/index.d.ts"
+      ],
+      "knowledge": [
+        "dist/knowledge/index.d.ts"
       ],
       "save": [
         "dist/save/index.d.ts"
@@ -115,6 +186,15 @@
       ],
       "*": [
         "dist/index.d.ts"
+      ],
+      "sheets": [
+        "dist/sheets/index.d.ts"
+      ],
+      "bot": [
+        "dist/bot/index.d.ts"
+      ],
+      "assets": [
+        "dist/assets/index.d.ts"
       ]
     }
   },
@@ -125,18 +205,15 @@
     "CONTRIBUTING.md",
     "AGENTS.md",
     "LICENSE",
-    "NOTICE"
+    "NOTICE",
+    "!dist/mechanics/doctor/**",
+    "!dist/mechanics/kernel/**",
+    "!dist/mechanics/registry/**",
+    "!dist/mechanics/sandbox/**",
+    "!dist/mechanics/calculators/specs-generated.*"
   ],
   "dependencies": {
     "zod": "^4.3.6"
-  },
-  "peerDependencies": {
-    "@tmrxjd/governance-engine": ">=0.1.0"
-  },
-  "peerDependenciesMeta": {
-    "@tmrxjd/governance-engine": {
-      "optional": true
-    }
   },
   "devDependencies": {
     "@eslint/js": "^9.18.0",

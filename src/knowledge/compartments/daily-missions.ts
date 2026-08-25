@@ -1,0 +1,313 @@
+/**
+ * Daily missions, as an income source rather than a checklist.
+ *
+ * They are the only reward in the game that arrives without playing a run, and
+ * they pay in five currencies at once — coins, gems, module shards, medals and
+ * stones, plus guild tokens. A weekly planner that leaves them out is wrong by
+ * a fixed amount every week, which is the easiest kind of wrong to avoid.
+ *
+ * The tables are derived from the shipped catalog, and the cumulative-versus-
+ * highest question — the one that changes the answer by seven times — is
+ * settled against the wiki's own totals row rather than assumed.
+ */
+import {
+  DAILY_MISSION_REROLL_LAB_LEVELS,
+  DAILY_MISSION_TIER_REWARDS,
+  DAILY_MISSION_WEEKLY_REWARDS,
+  DAILY_MISSION_WEEKLY_TOTALS,
+} from '../../data/daily-missions'
+import { MAX_CAMPAIGN_TIER } from '../../data/campaign-tier'
+import type { KnowledgeEdge, KnowledgeNode } from '../substrate/schema'
+
+const CATALOG_DAILY = {
+  origin: 'code',
+  ref: 'thetowersdk/data DAILY_MISSION_TIER_REWARDS, DAILY_MISSION_WEEKLY_REWARDS',
+  verifiedAt: '2026-08-18',
+} as const
+
+const WIKI_DAILY = {
+  origin: 'wiki',
+  ref: 'Daily Missions',
+  verifiedAt: '2026-08-18',
+} as const
+
+/** Reward tiers in the shipped catalog — one per campaign tier. */
+export const DAILY_MISSION_TIER_COUNT = DAILY_MISSION_TIER_REWARDS.length
+
+/**
+ * The wiki's table stops three tiers short of ours.
+ *
+ * It lists tiers 1 to 21; the catalog carries 22, 23 and 24 as well, which is
+ * what the current tier cap needs. So the catalog is AHEAD of the wiki here,
+ * not in conflict with it — but those three rows have no wiki backing and
+ * nothing else in the repo corroborates them either. Recorded so that a later
+ * disagreement is read as the wiki catching up rather than as our data being
+ * wrong.
+ */
+export const DAILY_MISSION_TIERS_ON_WIKI = 21
+
+export const DAILY_MISSION_TIERS_BEYOND_WIKI = DAILY_MISSION_TIER_REWARDS
+  .filter(row => row.tier > DAILY_MISSION_TIERS_ON_WIKI)
+  .map(row => row.tier)
+
+/**
+ * Weekly rewards are CUMULATIVE, not a single highest-threshold payout.
+ *
+ * This is the one fact that changes a weekly income estimate by a factor of
+ * seven, and it is settled: the wiki publishes a Totals row summing all seven
+ * thresholds, and `DAILY_MISSION_WEEKLY_TOTALS` — derived independently from
+ * the rows — reproduces every figure in it exactly. Hitting 35 missions pays
+ * all seven brackets, not just the last.
+ */
+export const DAILY_MISSION_WEEKLY_REWARDS_ARE_CUMULATIVE = true
+
+/** Missions completed at each weekly bracket. */
+export const DAILY_MISSION_WEEKLY_THRESHOLDS: readonly number[] = DAILY_MISSION_WEEKLY_REWARDS
+  .map(row => row.missionsCompleted)
+
+/** Gems paid by every completed mission, on top of coins and shards. */
+export const DAILY_MISSION_GEMS_PER_MISSION = 3
+
+/** Gems to reroll one mission. */
+export const DAILY_MISSION_REROLL_GEM_COST = 5
+
+/**
+ * Tier 1 pays no shards, and the catalog says so with a STRING.
+ *
+ * `shards` is `'N/A'` at tier 1 and a decimal string everywhere else. Parsing
+ * the column numerically gives NaN for that one row, and NaN coalesced to zero
+ * happens to be right — which is the dangerous kind of accident, because the
+ * same coercion applied to the coin column is wrong everywhere.
+ */
+export const DAILY_MISSION_TIERS_WITHOUT_SHARDS: readonly number[] = DAILY_MISSION_TIER_REWARDS
+  .filter(row => !/^\d+$/.test(row.shards))
+  .map(row => row.tier)
+
+/**
+ * The coin column is display text in four different shapes.
+ *
+ * `25`, `10,000`, `1.00 Mil` and `500 Mil` all appear — plain, comma-grouped,
+ * decimal-with-unit and integer-with-unit. There is no single parse that gets
+ * all four, and `Number()` returns NaN for three of them.
+ */
+export const DAILY_MISSION_COIN_STRING_FORMATS = 4
+
+export const DAILY_MISSION_KNOWLEDGE_NODES: readonly KnowledgeNode[] = [
+  {
+    id: 'dailyMission',
+    label: 'Daily mission',
+    kind: 'system',
+    claimType: 'objective',
+    verification: 'verified_here',
+    summary:
+      `A progress-based challenge that pays ${DAILY_MISSION_GEMS_PER_MISSION} gems plus coins and `
+      + 'module shards scaled to the highest tier unlocked. Completing enough in a week opens a '
+      + 'second, larger reward track.',
+    units: 'gems, coins and module shards per mission',
+    validRange:
+      `Tier reward rows for tiers 1 to ${DAILY_MISSION_TIER_COUNT}, matching the tier cap of `
+      + `${MAX_CAMPAIGN_TIER}.`,
+    traps: [
+      'THE TIER IS THE HIGHEST TIER UNLOCKED, not the tier being played. A player farming tier 1 '
+      + 'still collects at their unlocked ceiling, so mission income does not fall when they drop '
+      + 'down to farm.',
+      'MISSIONS ARE HANDED OUT BY PROGRESS, so two accounts get different challenges. Anything '
+      + 'that models a fixed mission list is modelling one account.',
+      'TIER 1 PAYS NO SHARDS AND THE CATALOG SAYS SO AS THE STRING \'N/A\'. Numeric parsing gives '
+      + 'NaN there. It coalesces to zero, which is the right answer by accident — the same habit '
+      + 'applied to the coin column is wrong on every row.',
+      `THE COIN COLUMN IS DISPLAY TEXT IN ${DAILY_MISSION_COIN_STRING_FORMATS} SHAPES — 25, `
+      + '10,000, 1.00 Mil and 500 Mil. `Number()` returns NaN for three of the four. It is a label, '
+      + 'not a quantity, and treating it as one silently zeroes most of the table.',
+      `The catalog carries tiers ${DAILY_MISSION_TIERS_BEYOND_WIKI.join(', ')} that the wiki table `
+      + 'does not. Those rows are unattributed — the wiki is behind rather than in conflict, but '
+      + 'nothing corroborates them.',
+    ],
+    implementedBy: [
+      'DAILY_MISSION_TIER_REWARDS',
+      'DAILY_MISSION_TIER_COUNT',
+      'DAILY_MISSION_TIERS_WITHOUT_SHARDS',
+      'DAILY_MISSION_TIERS_BEYOND_WIKI',
+    ],
+    assertions: [
+      {
+        subject: 'dailyMission',
+        predicate: 'tierRewardRows',
+        value: DAILY_MISSION_TIER_COUNT,
+        provenance: CATALOG_DAILY,
+        verification: 'verified_here',
+      },
+      {
+        subject: 'dailyMission',
+        predicate: 'gemsPerMission',
+        value: DAILY_MISSION_GEMS_PER_MISSION,
+        provenance: WIKI_DAILY,
+        verification: 'verified_here',
+      },
+      {
+        subject: 'dailyMission',
+        predicate: 'tierRowsOnWiki',
+        value: DAILY_MISSION_TIERS_ON_WIKI,
+        provenance: WIKI_DAILY,
+        verification: 'verified_here',
+      },
+      {
+        subject: 'dailyMission',
+        predicate: 'tierRowsWithoutShards',
+        value: DAILY_MISSION_TIERS_WITHOUT_SHARDS.length,
+        provenance: CATALOG_DAILY,
+        verification: 'verified_here',
+      },
+    ],
+    sources: [CATALOG_DAILY, WIKI_DAILY],
+  },
+  {
+    id: 'dailyMission.weeklyReward',
+    label: 'Daily mission weekly reward',
+    kind: 'rule',
+    claimType: 'objective',
+    verification: 'verified_here',
+    summary:
+      `Seven brackets at ${DAILY_MISSION_WEEKLY_THRESHOLDS.join(', ')} missions completed, and they `
+      + `all pay. A full week is ${DAILY_MISSION_WEEKLY_TOTALS.coinsMultiplier} coins, `
+      + `${DAILY_MISSION_WEEKLY_TOTALS.gems} gems, ${DAILY_MISSION_WEEKLY_TOTALS.medals} medals, `
+      + `${DAILY_MISSION_WEEKLY_TOTALS.stones} stones and ${DAILY_MISSION_WEEKLY_TOTALS.tokens} `
+      + 'guild tokens.',
+    units: 'gems, medals, stones and tokens per week; coins as a multiplier',
+    traps: [
+      'THE BRACKETS ARE CUMULATIVE. Reaching 35 missions pays all seven, not the last one. Taking '
+      + 'the highest bracket alone reports 50 gems where the week actually pays '
+      + `${DAILY_MISSION_WEEKLY_TOTALS.gems}, and 5 tokens where it pays `
+      + `${DAILY_MISSION_WEEKLY_TOTALS.tokens}. The wiki's own totals row settles this; it is not `
+      + 'an inference.',
+      'THE COIN REWARD IS A MULTIPLIER, NOT AN AMOUNT. Each bracket multiplies the tier coin '
+      + `figure, so the weekly total is ${DAILY_MISSION_WEEKLY_TOTALS.coinsMultiplier} of that `
+      + 'tier value. Adding it to a coin count instead of multiplying is off by orders of '
+      + 'magnitude at high tiers.',
+      'STONES ARRIVE LATE. Four of the seven brackets pay no stones at all, so a player finishing '
+      + 'twenty missions gets none. Averaging the weekly stone total over the brackets invents an '
+      + 'income that does not exist below 25 missions.',
+      'Medals are zero in the first bracket too. Neither medals nor stones scale smoothly.',
+      'Guild tokens are a flat 5 per bracket regardless of how many missions the bracket needed — '
+      + 'the only reward here that does not grow.',
+    ],
+    implementedBy: [
+      'DAILY_MISSION_WEEKLY_REWARDS',
+      'DAILY_MISSION_WEEKLY_TOTALS',
+      'DAILY_MISSION_WEEKLY_THRESHOLDS',
+      'DAILY_MISSION_WEEKLY_REWARDS_ARE_CUMULATIVE',
+    ],
+    assertions: [
+      {
+        subject: 'dailyMission.weeklyReward',
+        predicate: 'bracketsAreCumulative',
+        value: DAILY_MISSION_WEEKLY_REWARDS_ARE_CUMULATIVE,
+        provenance: WIKI_DAILY,
+        verification: 'verified_here',
+      },
+      {
+        subject: 'dailyMission.weeklyReward',
+        predicate: 'bracketCount',
+        value: DAILY_MISSION_WEEKLY_REWARDS.length,
+        provenance: CATALOG_DAILY,
+        verification: 'verified_here',
+      },
+      {
+        subject: 'dailyMission.weeklyReward',
+        predicate: 'weeklyGems',
+        value: DAILY_MISSION_WEEKLY_TOTALS.gems,
+        provenance: WIKI_DAILY,
+        verification: 'verified_here',
+      },
+      {
+        subject: 'dailyMission.weeklyReward',
+        predicate: 'weeklyMedals',
+        value: DAILY_MISSION_WEEKLY_TOTALS.medals,
+        provenance: WIKI_DAILY,
+        verification: 'verified_here',
+      },
+      {
+        subject: 'dailyMission.weeklyReward',
+        predicate: 'weeklyStones',
+        value: DAILY_MISSION_WEEKLY_TOTALS.stones,
+        provenance: WIKI_DAILY,
+        verification: 'verified_here',
+      },
+      {
+        subject: 'dailyMission.weeklyReward',
+        predicate: 'weeklyGuildTokens',
+        value: DAILY_MISSION_WEEKLY_TOTALS.tokens,
+        provenance: WIKI_DAILY,
+        verification: 'verified_here',
+      },
+    ],
+    sources: [WIKI_DAILY, CATALOG_DAILY],
+  },
+  {
+    id: 'dailyMission.reroll',
+    label: 'Reroll Daily Mission',
+    kind: 'rule',
+    claimType: 'objective',
+    verification: 'verified_here',
+    summary:
+      `A one-level lab that lets a mission be rerolled for ${DAILY_MISSION_REROLL_GEM_COST} gems. `
+      + 'The reroll always produces a different mission.',
+    units: 'gems per reroll',
+    traps: [
+      'THE LAB IS THE UNLOCK, NOT THE REROLL. It has one level and its value is "Unlocked"; every '
+      + `reroll after that still costs ${DAILY_MISSION_REROLL_GEM_COST} gems. Treating the lab as `
+      + 'buying free rerolls overstates it completely.',
+      `A reroll costs more gems than a mission pays (${DAILY_MISSION_REROLL_GEM_COST} against `
+      + `${DAILY_MISSION_GEMS_PER_MISSION}), so rerolling for gem income is always a loss. It is `
+      + 'bought for the weekly bracket count, not for the mission reward.',
+      'The reroll is guaranteed to differ, so it is not a random redraw and cannot be modelled as '
+      + 'one.',
+    ],
+    implementedBy: ['DAILY_MISSION_REROLL_LAB_LEVELS', 'DAILY_MISSION_REROLL_GEM_COST'],
+    assertions: [
+      {
+        subject: 'dailyMission.reroll',
+        predicate: 'labLevels',
+        value: DAILY_MISSION_REROLL_LAB_LEVELS.length,
+        provenance: CATALOG_DAILY,
+        verification: 'verified_here',
+      },
+      {
+        subject: 'dailyMission.reroll',
+        predicate: 'gemCost',
+        value: DAILY_MISSION_REROLL_GEM_COST,
+        provenance: WIKI_DAILY,
+        verification: 'verified_here',
+      },
+    ],
+    sources: [WIKI_DAILY, CATALOG_DAILY],
+  },
+]
+
+export const DAILY_MISSION_KNOWLEDGE_EDGES: readonly KnowledgeEdge[] = [
+  {
+    from: 'dailyMission.weeklyReward',
+    kind: 'gates',
+    to: 'dailyMission',
+    note:
+      'The weekly track only opens by completing missions, so the two cannot be costed '
+      + 'separately — the missions are the entry fee for the larger reward.',
+    sources: [WIKI_DAILY],
+  },
+  {
+    from: 'dailyMission.reroll',
+    kind: 'memberOf',
+    to: 'dailyMission',
+    note: 'Bought to reach a weekly bracket, not to improve any single mission reward.',
+    sources: [WIKI_DAILY],
+  },
+  {
+    from: 'dailyMission',
+    kind: 'scales',
+    to: 'currency.gem',
+    note:
+      `Every completed mission pays ${DAILY_MISSION_GEMS_PER_MISSION} gems, and the weekly track `
+      + `pays ${DAILY_MISSION_WEEKLY_TOTALS.gems} more — the largest gem income that needs no run.`,
+    sources: [WIKI_DAILY],
+  },
+]

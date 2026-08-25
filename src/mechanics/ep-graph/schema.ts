@@ -19,6 +19,19 @@ export const EpGraphNodeTypeSchema = z.enum([
   'stat',
   'display',
   'path',
+  /**
+   * A flag that decides whether something contributes at all.
+   *
+   * Distinct from `control`: a control is a switch the player sets, a gate is a
+   * condition the sheet derives — the eDamage `BH` column holds one per
+   * ultimate weapon, true only when it is owned. Typing them the same would
+   * make "the user turned this off" and "the account cannot use this"
+   * indistinguishable in every query.
+   *
+   * The SDK graph already had this type; adding it here keeps the EP-to-SDK
+   * type passthrough in `merge.ts` valid.
+   */
+  'gate',
 ])
 export type EpGraphNodeType = z.infer<typeof EpGraphNodeTypeSchema>
 
@@ -115,6 +128,19 @@ export const EpEdgeEvidenceSchema = z.object({
   sourceCells: z.array(EpSourceCellSchema).optional(),
   wikiTitle: z.string().optional(),
   lambdaName: z.string().optional(),
+  /**
+   * The consuming formula, quoted, so the dependency can be checked rather than
+   * trusted.
+   *
+   * Two edges were committed and retracted on 2026-08-19 because a search tool
+   * moved the cursor and the landing cell was recorded as the consumer. Neither
+   * would have survived this field: the excerpt has to CONTAIN the referenced
+   * cell, and `ep-edge-evidence.test.ts` checks that it does.
+   *
+   * Optional because older edges predate it. New formula-derived edges should
+   * carry one.
+   */
+  formulaExcerpt: z.string().optional(),
 }).superRefine((ev, ctx) => {
   const hasCell = (ev.sourceCells?.length ?? 0) > 0
   if (!hasCell && !ev.wikiTitle && !ev.lambdaName) {

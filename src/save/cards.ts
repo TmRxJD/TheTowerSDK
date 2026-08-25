@@ -55,7 +55,7 @@ export function findCardCatalogFromSaveIndex(saveIndex: number): {
     }
   }
 
-  const fallback = CARD_IMPORT_CATALOG[saveIndex]
+  const fallback = CARD_IMPORT_CATALOG.find(row => row.index === saveIndex)
   return {
     slug: fallback?.slug ?? null,
     name: fallback?.name ?? null,

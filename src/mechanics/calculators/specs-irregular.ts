@@ -1,0 +1,330 @@
+import type { CalculatorSpec } from './types'
+
+/**
+ * The four the generator could not read, declared by hand.
+ *
+ * `generate-calculator-specs.mjs` parses a signature into named parameters so a
+ * handle can be called by name. Two shapes have no names to call by:
+ *
+ *   - a **destructured** parameter — `abilityDamage({ damagePercent, … })`;
+ *   - a **rest** parameter — `(...values: Array<number | null | undefined>)`.
+ *
+ * The generator reported them rather than skipping them, which is the only
+ * reason this file exists. A generator that quietly dropped what it could not
+ * parse would have produced a coverage number of 967 out of 971 and called it
+ * complete.
+ *
+ * Both shapes are wrapped here in a single named parameter — an object for the
+ * destructured one, an array for the rest ones — so they are callable like
+ * everything else. The wrapping is written down rather than inferred, because
+ * it is the one place a caller's arguments do NOT match the signature.
+ */
+
+const DATA = 'packages/sdk/src/data'
+const MECH = 'packages/sdk/src/mechanics'
+const INT = 'packages/sdk/src/internal'
+
+export const IRREGULAR_CALCULATORS: readonly CalculatorSpec[] = [
+  {
+    id: 'damage.ability',
+    title: 'Damage an ability deals',
+    entry: 'mechanics',
+    module: 'packages/sdk/src/mechanics/damage.ts',
+    symbol: 'abilityDamage',
+    because:
+      'What an ability hits for, shown wherever an ability is costed against its damage. Takes a '
+      + 'destructured options bag, so the whole object is one declared parameter.',
+    params: [{
+      name: 'input',
+      kind: 'object',
+      describes: 'the destructured bag: damagePercent, damage, critFactor, critChance and the rest',
+    }],
+    returns: { kind: 'number', describes: 'damage dealt' },
+    invariants: [
+      'never returns NaN for a bag whose numbers are all finite',
+      'is a pure function of the bag — the same object gives the same answer',
+    ],
+    reads: ['damage.abilityInputs'],
+    produces: ['damage.ability'],
+    dependsOn: [],
+  },
+  {
+    id: 'workshop.maxSectionDiscountPct',
+    title: 'The largest workshop section discount among several',
+    entry: 'data',
+    module: `${DATA}/workshop-discount-normalize.ts`,
+    symbol: 'maxDefinedWorkshopSectionDiscountPercent',
+    because:
+      'Picks the binding discount when more than one source supplies one, skipping the ones that '
+      + 'are absent rather than treating a missing value as zero.',
+    params: [{
+      name: 'values',
+      kind: 'object',
+      describes: 'an array of candidate percentages, any of which may be null or undefined',
+    }],
+    returns: { kind: 'number', unit: 'percent', describes: 'the largest defined percentage' },
+    invariants: [
+      'ignores null, undefined and non-finite entries rather than counting them as 0',
+      'returns 0 when nothing is defined',
+    ],
+    reads: ['workshop.discountPct'],
+    produces: ['workshop.discountPct'],
+    dependsOn: [],
+  },
+  {
+    id: 'workshop.maxEnhancementDiscountPct',
+    title: 'The largest enhancement discount among several',
+    entry: 'data',
+    module: `${DATA}/workshop-discount-normalize.ts`,
+    symbol: 'maxDefinedEnhancementSectionDiscountPercent',
+    because: 'The same for the enhancement half of the workshop.',
+    params: [{
+      name: 'values',
+      kind: 'object',
+      describes: 'an array of candidate percentages, any of which may be null or undefined',
+    }],
+    returns: { kind: 'number', unit: 'percent', describes: 'the largest defined percentage' },
+    invariants: [
+      'ignores null, undefined and non-finite entries',
+      'returns 0 when nothing is defined',
+    ],
+    reads: ['workshop.discountPct'],
+    produces: ['workshop.discountPct'],
+    dependsOn: [],
+  },
+  {
+    id: 'workshop.maxVaultDiscountPct',
+    title: 'The largest enhancement vault discount among several',
+    entry: 'data',
+    module: `${DATA}/workshop-discount-normalize.ts`,
+    symbol: 'maxDefinedEnhancementVaultDiscountPercent',
+    because: 'The same again for the vault discount, which has its own maximum.',
+    params: [{
+      name: 'values',
+      kind: 'object',
+      describes: 'an array of candidate percentages, any of which may be null or undefined',
+    }],
+    returns: { kind: 'number', unit: 'percent', describes: 'the largest defined percentage' },
+    invariants: [
+      'ignores null, undefined and non-finite entries',
+      'returns 0 when nothing is defined',
+    ],
+    reads: ['workshop.discountPct'],
+    produces: ['workshop.discountPct'],
+    dependsOn: [],
+  },
+
+  /*
+   * And four more the generator does not see at all: it matches
+   * `export function`, and these are `export const … = (…) =>`.
+   *
+   * Worth stating rather than widening the generator's pattern. The generator
+   * derives a parameter list by walking a signature, and an arrow's signature
+   * sits in a different place; teaching it a second shape to cover four
+   * functions is more surface than writing the four down.
+   */
+  {
+    id: 'els.workshopAttackLevelOptions',
+    title: 'Workshop attack levels the ELS calculator offers',
+    entry: 'mechanics',
+    module: `${MECH}/els-calculator-options.ts`,
+    symbol: 'ELS_WORKSHOP_ATTACK_LEVEL_OPTIONS',
+    because: 'The list a player picks from on the enemy level skip calculator.',
+    params: [],
+    returns: { kind: 'object', describes: 'the level options' },
+    invariants: ['returns the same options on every call'],
+    reads: ['workshop.catalog'],
+    produces: ['els.attackLevelOptions'],
+    dependsOn: [],
+  },
+  {
+    id: 'els.workshopHealthLevelOptions',
+    title: 'Workshop health levels the ELS calculator offers',
+    entry: 'mechanics',
+    module: `${MECH}/els-calculator-options.ts`,
+    symbol: 'ELS_WORKSHOP_HEALTH_LEVEL_OPTIONS',
+    because: 'The same for the health half of that calculator.',
+    params: [],
+    returns: { kind: 'object', describes: 'the level options' },
+    invariants: ['returns the same options on every call'],
+    reads: ['workshop.catalog'],
+    produces: ['els.healthLevelOptions'],
+    dependsOn: [],
+  },
+  {
+    id: 'enemy.healthWave100Multiplier',
+    title: 'Enemy health multiplier from century milestones',
+    entry: 'mechanics',
+    module: `${MECH}/wave-base-empirical-scaling.ts`,
+    symbol: 'healthWave100Multiplier',
+    because:
+      'Enemy health does not scale smoothly — it steps at every hundredth wave, and this is the '
+      + 'stack of those steps. Shown on the enemy pages and behind every survivability estimate.',
+    params: [
+      { name: 'w', kind: 'number', unit: 'waves', describes: 'the wave number' },
+      { name: 'tournament', kind: 'boolean', optional: true, describes: 'tournament scaling' },
+    ],
+    returns: { kind: 'number', unit: 'multiplier', describes: 'health multiplier at that wave' },
+    invariants: [
+      'is exactly 1 at EVERY wave outside a tournament — the century milestones are a tournament mechanic, measured across waves 1 to 10,000',
+      'never decreases as the wave rises',
+      'is at least 1 at wave 1',
+    ],
+    reads: ['run.wave', 'run.isTournament'],
+    produces: ['enemy.healthMultiplier'],
+    dependsOn: [],
+  },
+  {
+    id: 'enemy.damageWave100Multiplier',
+    title: 'Enemy damage multiplier from century milestones',
+    entry: 'mechanics',
+    module: `${MECH}/wave-base-empirical-scaling.ts`,
+    symbol: 'damageWave100Multiplier',
+    because: 'The same stepping for enemy damage, which is what decides when a run ends.',
+    params: [
+      { name: 'w', kind: 'number', unit: 'waves', describes: 'the wave number' },
+      { name: 'tournament', kind: 'boolean', optional: true, describes: 'tournament scaling' },
+    ],
+    returns: { kind: 'number', unit: 'multiplier', describes: 'damage multiplier at that wave' },
+    invariants: [
+      'is exactly 1 at EVERY wave outside a tournament, like its health twin',
+      'never decreases as the wave rises',
+      'is at least 1 at wave 1',
+    ],
+    reads: ['run.wave', 'run.isTournament'],
+    produces: ['enemy.damageMultiplier'],
+    dependsOn: [],
+  },
+  /*
+   * Five more rest-parameter functions, from `internal/`. Each merges or picks
+   * across a VARIADIC list, so the declared parameter is the list itself.
+   *
+   * Order matters in every one of them — later sources win, or the first
+   * meaningful value is taken — which is precisely the sort of thing a caller
+   * gets wrong from the name alone.
+   */
+  {
+    id: 'inputs.mergeNumberRecords',
+    title: 'Merge number records, later sources winning',
+    entry: 'mechanics',
+    module: `${INT}/shared-tool-inputs.ts`,
+    symbol: 'mergeNumberRecords',
+    because:
+      'How a tool page combines its own inputs with the shared hub ones. Precedence is the whole '
+      + 'behaviour: get the order backwards and a page silently ignores what the player just typed.',
+    params: [{
+      name: 'sources',
+      kind: 'object',
+      describes: 'an array of number records, any of which may be undefined',
+    }],
+    returns: { kind: 'object', describes: 'one merged record' },
+    invariants: [
+      'later sources override earlier ones',
+      'skips undefined sources rather than throwing',
+    ],
+    reads: ['inputs.shared'],
+    produces: ['inputs.merged'],
+    dependsOn: [],
+  },
+  {
+    id: 'inputs.mergeNumberArrayRecords',
+    title: 'Merge records of number arrays',
+    entry: 'mechanics',
+    module: `${INT}/shared-tool-inputs.ts`,
+    symbol: 'mergeNumberArrayRecords',
+    because: 'The same precedence rule for inputs that hold a list per key.',
+    params: [{
+      name: 'sources',
+      kind: 'object',
+      describes: 'an array of records of number arrays, any of which may be undefined',
+    }],
+    returns: { kind: 'object', describes: 'one merged record' },
+    invariants: ['later sources override earlier ones', 'skips undefined sources'],
+    reads: ['inputs.shared'],
+    produces: ['inputs.merged'],
+    dependsOn: [],
+  },
+  {
+    id: 'inputs.mergeNestedNumberRecords',
+    title: 'Merge two-level number records',
+    entry: 'mechanics',
+    module: `${INT}/shared-tool-inputs.ts`,
+    symbol: 'mergeNestedNumberRecords',
+    because: 'The same again where inputs are keyed twice — by group and then by field.',
+    params: [{
+      name: 'sources',
+      kind: 'object',
+      describes: 'an array of nested number records, any of which may be undefined',
+    }],
+    returns: { kind: 'object', describes: 'one merged record' },
+    invariants: ['later sources override earlier ones', 'skips undefined sources'],
+    reads: ['inputs.shared'],
+    produces: ['inputs.merged'],
+    dependsOn: [],
+  },
+  {
+    id: 'run.collectScalarFields',
+    title: 'Collect the scalar fields of a tracker run',
+    entry: 'mechanics',
+    module: 'packages/sdk/src/save/tracker-run-fields.ts',
+    symbol: 'collectTrackerRunScalarFields',
+    because: 'The scalar fields of a run, gathered from several partial sources.',
+    params: [{
+      name: 'sources',
+      kind: 'object',
+      describes: 'an array of partial run records, any of which may be null or undefined',
+    }],
+    returns: { kind: 'object', describes: 'the collected scalar fields' },
+    invariants: ['skips null and undefined sources rather than throwing'],
+    reads: ['run.record'],
+    produces: ['run.scalarFields'],
+    dependsOn: [],
+  },
+  {
+    id: 'run.firstMeaningfulValue',
+    title: 'The first value that actually says something',
+    entry: 'mechanics',
+    module: 'packages/sdk/src/save/tracker-run-normalization.ts',
+    symbol: 'getFirstMeaningfulRunDataValue',
+    because:
+      'A run field can arrive from several places, most of them blank. This picks the first that '
+      + 'is not — and "meaningful" is its own judgement, not just non-null, which is why reading '
+      + 'the function beats guessing from the name.',
+    params: [{
+      name: 'values',
+      kind: 'object',
+      describes: 'an array of candidate values, in precedence order',
+    }],
+    returns: { kind: 'object', nullable: true, describes: 'the first meaningful value, or undefined' },
+    invariants: [
+      'returns undefined when nothing is meaningful',
+      'takes the FIRST meaningful value, so the array order is the precedence',
+    ],
+    reads: ['run.record'],
+    produces: ['run.fieldValue'],
+    dependsOn: [],
+  },
+  {
+    id: 'inputs.enrichFromResearch',
+    title: 'Fill a tool payload from the research lab levels',
+    entry: 'mechanics',
+    module: `${INT}/shared-tool-inputs-from-research.ts`,
+    symbol: 'enrichSharedToolInputs',
+    because:
+      'Turns the research levels a player has into every derived input the tool pages read -- '
+      + 'module discounts, workshop discounts, lab economy, uptime. A page that skipped it shows '
+      + 'defaults where the player has research, which reads as a fresh account rather than a bug.',
+    params: [
+      { name: 'payload', kind: 'object', describes: 'the shared tool inputs to enrich' },
+      { name: 'options', kind: 'object', optional: true, describes: 'enrichment options' },
+    ],
+    returns: { kind: 'object', describes: 'the payload with the derived fields filled in' },
+    invariants: [
+      'returns the same shape it was given, never a narrower one',
+      'derives from researchLabLevels only -- it does not read stored settings',
+    ],
+    reads: ['lab.level'],
+    produces: ['inputs.enriched'],
+    dependsOn: [],
+  },
+]

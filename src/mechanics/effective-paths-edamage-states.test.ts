@@ -3,7 +3,7 @@ import { computeEffectiveDamage } from './effective-paths-edamage-compute'
 import { configFromSheet, levelsFromSheet } from './effective-paths-edamage-compute.test'
 import type { SheetCells } from './effective-paths-edamage-compute.test'
 import type { EffectiveDamageLabLevels } from './effective-paths-edamage-levels'
-import states from './effective-paths-edamage-states.fixtures.json'
+import states from '../../fixtures/mechanics/effective-paths-edamage-states.fixtures.json'
 
 /**
  * Effective damage across ten accounts, and every single-level move on each.

@@ -9,7 +9,7 @@
  *   2. battleConditions + typeRules + enemyLabs — in `wave-info-enemy-stats.ts`
  *   3. pagePerks    — global perks on wave base first; rows add boss/ranged-only deltas
  */
-import type { EnemyWaveEnemyType } from '../internal/enemy-wave-stats'
+import type { EnemyWaveEnemyType } from './enemy-wave-stats'
 import type { BattleConditionSelection } from './battle-condition-config'
 import {
   type EnemyHeaderPerkToggles,

@@ -27,7 +27,7 @@ import {
   ECONOMY_FUNCTIONS_PORTED,
 } from './effective-paths-eecon-stats'
 import { ultimateWeaponStatValue } from './effective-paths-edamage-costs'
-import fixtures from './effective-paths-eecon-stats.fixtures.json'
+import fixtures from '../../fixtures/mechanics/effective-paths-eecon-stats.fixtures.json'
 
 /**
  * The economy stats against the sheet's own `EPC_*` lambdas.

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Refreshes the Effective Paths reference fixtures under `src/data/fixtures/`.
+ * Refreshes the Effective Paths reference fixtures under `fixtures/data/`.
  *
  * These are *references*, not sources: nothing in the SDK is generated from
  * them. They exist so the reference tests can check our tables against an
@@ -27,7 +27,7 @@ import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)))
-const FIXTURES = path.join(ROOT, 'src', 'data', 'fixtures')
+const FIXTURES = path.join(ROOT, 'fixtures', 'data')
 
 const SHEET_ID = '1YwZtKP6B4WYhRba5T6APJ1YxKNdfnIGQnprgnxmO7zc'
 const sheetUrl = gid => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${gid}`

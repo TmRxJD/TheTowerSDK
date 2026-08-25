@@ -2187,11 +2187,31 @@ export const WSP_WORKSHOP_COSTS = WSP_WORKSHOP_COST_LEVELS
 
 export type WorkshopCostKey = keyof typeof WSP_WORKSHOP_COST_LEVELS
 
+/**
+ * The cost curve for a workshop stat key, or `null` when there is no such curve.
+ *
+ * Own keys only. A `typeof === 'object'` check passes for `Object.prototype` itself, so
+ * a key of `__proto__` returned an empty curve rather than `null` — and an empty curve
+ * prices every level at nothing, which reads as a real answer rather than a missing one.
+ */
 export function getWorkshopCostLevelsByKey(key: string): WorkshopCostLevels | null {
+  if (!Object.prototype.hasOwnProperty.call(WSP_WORKSHOP_COST_LEVELS, key)) return null
   const levels = WSP_WORKSHOP_COST_LEVELS[key as WorkshopCostKey]
   return levels && typeof levels === 'object' ? (levels as WorkshopCostLevels) : null
 }
 
+/**
+ * What is charged **at** `level` — that is, the price of moving from `level` to `level + 1`.
+ *
+ * Not "what level N cost". tower-oracle `workshop.upgradeTable` records that a row's cost
+ * buys the NEXT level, and names reading it the other way as an off-by-one. Both readings
+ * appear in real code and neither is wrong on its own:
+ *
+ *   - summing this from `a` to `b - 1` gives the cost of going from level `a` to level `b`;
+ *   - `buildWorkshopLevelCostRows` prices *buying* level L, so it reads entry `L - 1`.
+ *
+ * `workshop-cost-conventions.test.ts` pins the two together so they cannot drift apart.
+ */
 export function getWorkshopCostByKeyAndLevel(key: string, level: number): number | null {
   const levels = getWorkshopCostLevelsByKey(key)
   if (!levels) return null

@@ -53,10 +53,38 @@ export interface EconomySubstat {
 const NO_SUBSTAT: EconomySubstat = { primary: 0, assist: 0 }
 
 /** A card as the tab reads it: active in `AZ`, level in `AV`, value in `AW`. */
+/**
+ * `eEcon!AX29` — the tab's "Compare Masteries at" level.
+ *
+ * The stone path values a card mastery as though it were unlocked AT THIS
+ * LEVEL, not at the account's own: `eEcon!AX36` and its siblings pass
+ * `RIGHT($AX$29, 1)` into `EPC_WS_FUP`/`EPC_WSM` rather than the mastery's lab
+ * level. The path display uses the same cell, which is why every mastery step
+ * prints `lvl 0` on a copy where this is 0.
+ *
+ * `RIGHT(..., 1)` is the sheet's, not a typo here: it takes the last DIGIT, so
+ * a setting of 10 reads as 0. Reproduced rather than corrected.
+ */
+export const COMPARE_MASTERIES_AT_DEFAULT = 0
+
 export interface EconomyCard {
   active: boolean
   level: number
   value: number
+  /**
+   * The card's MASTERY is unlocked on the account — the sheet's
+   * `IDS_CARD_MASTERY`, which comes from the save import and has no cell of
+   * its own.
+   *
+   * Deliberately separate from `active`, which is the equipped toggle. The
+   * stone path used to read `active` for this and the two are not the same
+   * question: `eEcon Stones!EA2` hides a mastery candidate on
+   * `IDS_CARD_MASTERY`, never on whether the card is equipped.
+   *
+   * Optional and defaulting to false, because a copy with a blank `_IDS` has
+   * nothing unlocked and that is the honest answer for it.
+   */
+  masteryUnlocked?: boolean
 }
 
 const NO_CARD: EconomyCard = { active: false, level: 0, value: 0 }
@@ -71,6 +99,11 @@ export interface EconomyWorkshopStat {
 const NO_WORKSHOP: EconomyWorkshopStat = { value: 0, relicPct: 0, vaultPct: 0 }
 
 export interface EffectiveEconomyConfig {
+  /**
+   * `eEcon!AX29` — "Compare Masteries at". Optional; see
+   * {@link COMPARE_MASTERIES_AT_DEFAULT}.
+   */
+  compareMasteriesAt?: number
   /** `CP6` — the coins a kill is worth before anything multiplies it. */
   baseCoinsPerKill: number
   /** `CP5` — how long a wave lasts, in seconds. */
@@ -232,9 +265,97 @@ export interface EffectiveEconomyBreakdown {
 const WAVE_SKIP_HORIZON = 13
 
 /** `eEcon!DS5` — average coins per kill for a player at a given set of levels. */
+/** The sheet's candidate columns, where they disagree with its base columns. */
+export interface EffectiveEconomyShadow {
+  /**
+   * `eEcon!DW5` and `eEcon!EL5` — Recovery Package Chance and Assist Module
+   * Substats - Generator, the only two candidate columns that rebuild the
+   * weapon cooldowns instead of reading `DB5`/`DF5`/`DI5`.
+   *
+   * Their rebuild compares EVERY coin weapon's uptime against GOLDEN TOWER's
+   * cooldown:
+   *
+   *     GTcd, IFS(AND(MVNcd=0, DA5>=GTcd1*GComp), 1, …)
+   *     BHcd, IFS(AND(MVNcd=0, DE5>=GTcd1*GComp), 1, …)
+   *     DWcd, IFS(AND(MVNcd=0, DH5>=GTcd1*GComp), 1, …)
+   *
+   * Only the duration cell changes down the three lines; the threshold stays
+   * `GTcd1`. The Gold Bot beneath them does use its own (`IF(DK5>=DL5, …)`),
+   * and the BASE columns use each weapon's own, so this is the sheet
+   * disagreeing with itself in two named places.
+   *
+   * It is not cosmetic. `EPC_GTCD(FALSE, …)` is 0, so on an account with no
+   * Golden Tower every threshold is `duration >= 0` -- true -- and all three
+   * cooldowns collapse to 1, i.e. every weapon permanently up. The candidate's
+   * sync is then far above the base's and the upgrade rockets to the top of
+   * the path.
+   *
+   * Predicted and checked: across the ten swept accounts, the sheet buys
+   * Recovery Package Chance on exactly the accounts with Golden Tower unowned,
+   * and none of the seven that own it diverge.
+   */
+  candidateCooldownGuardUsesGoldenTower?: boolean
+
+  /**
+   * `eEcon!EF5` — the Wave Skip Mastery candidate, which computes the
+   * free-upgrade term with the WRONG CARD.
+   *
+   * The base column `CU5` calls
+   *
+   *     EPC_FUP($BJ$6, $AZ$33, $AW$33, …)
+   *
+   * where row 33 is the Free Upgrades card. `EF5` calls
+   *
+   *     EPC_FUP($BJ$6, $AZ$35, $AW$35, …)
+   *
+   * and row 35 is WAVE SKIP -- the card the candidate is about, substituted
+   * into the slot that wants Free Upgrades. All three of `ATK`, `DEF` and `UTI`
+   * carry it, so the whole free-upgrade contribution to the candidate's economy
+   * is computed from a card that has nothing to do with it.
+   *
+   * Enumerated by `scripts/effective-paths/candidate-vs-base-diff.mjs`, which
+   * names `eEcon!AW35` as a reference this column makes and its base row does
+   * not. Two earlier guesses at the same divergence -- a wave-time sign flip,
+   * then floating-point noise -- were both wrong, and both were reached by
+   * reasoning from the symptom rather than reading the column.
+   */
+  freeUpgradeCardFromWaveSkip?: boolean
+
+  /**
+   * `eEcon!EG5` / `EH5` — Intro Sprint Mastery and Wave Accelerator Mastery,
+   * whose wave-skip term is gated on `$AO$32` rather than on the Wave Skip card.
+   *
+   * Compared term by term, their `New` differs from the base row `DR5` in
+   * exactly two places: the bumped level, and this gate.
+   *
+   *     DR5   WS, EPC_WSM(13, $AZ$35, $AV$35, $AZ$36, CA5, WAm, ISd)
+   *     EH5   WS, IF($AO$32, SUM(MAP(SEQUENCE(13), …))*(WAm-ISd), 0)
+   *
+   * `EPC_WSM` opens `IF(has_card, …, 0)` on the Wave Skip card; the candidates
+   * inline the identical sum and gate it on `$AO$32` instead. Dropping the term
+   * makes the denominator larger and the gain NEGATIVE, which is exactly the
+   * signature the sheet shows on the accounts that disagree.
+   *
+   * `$AO$32` is the GOLDEN TOWER level: `$AM$32` names the row and `$AO$32`
+   * carries a level exactly when the weapon is owned — 60 of 60 swept accounts,
+   * against both `BK15` and `weapons.goldenTower.unlocked`. So the term is kept
+   * when Golden Tower is owned and dropped when it is not.
+   *
+   * It is NOT a constant, and assuming it was cost three wrong fixes. The demo
+   * state has it blank, so dropping the term unconditionally looked right;
+   * doing that simply moved the drift onto a different set of accounts, which
+   * is only possible if the cell varies. It was also filtered out of the
+   * capture by `CONTRACT`, so its per-account value could not be checked at
+   * all — and a filtered-out input reads as a constant.
+   */
+  waveSkipDroppedByCandidateGate?: boolean
+
+}
+
 export function computeEffectiveEconomy(
   config: EffectiveEconomyConfig,
   levels: EffectiveEconomyLevels,
+  shadow: EffectiveEconomyShadow = {},
 ): EffectiveEconomyBreakdown {
   const time = levels.time
   const stone = levels.stone
@@ -291,8 +412,14 @@ export function computeEffectiveEconomy(
     stat: EconomyWorkshopStat, substat: EconomySubstat,
   ) => freeUpgradeChance({
     workshopValue: stat.value,
-    hasFreeUpgradesCard: config.cards.freeUpgrades.active,
-    cardValue: config.cards.freeUpgrades.value,
+    // See `EffectiveEconomyShadow.freeUpgradeCardFromWaveSkip` — one candidate
+    // column reads the Wave Skip card here instead of Free Upgrades.
+    hasFreeUpgradesCard: shadow.freeUpgradeCardFromWaveSkip
+      ? config.cards.waveSkip.active
+      : config.cards.freeUpgrades.active,
+    cardValue: shadow.freeUpgradeCardFromWaveSkip
+      ? config.cards.waveSkip.value
+      : config.cards.freeUpgrades.value,
     hasPerk: perk('freeUpgrades'),
     standardPerksBonusLabLevel: time.standardPerksBonus,
     stoneCap: caps.generatorSubstat,
@@ -462,11 +589,26 @@ export function computeEffectiveEconomy(
     labSeconds: config.goldBotCooldownLabSeconds,
   })
 
+  /**
+   * The uptime threshold `cycle` compares a duration against.
+   *
+   * Normally a weapon's own cooldown. Under
+   * {@link EffectiveEconomyShadow.candidateCooldownGuardUsesGoldenTower} it is
+   * Golden Tower's for all three coin weapons -- see that flag. `nukeCooldown`
+   * takes over when a Multiverse Nexus is equipped, matching the sheet's
+   * `IF(MVNcd<>0, MVNcd, GTcd1)`.
+   */
+  const sharedThreshold = shadow.candidateCooldownGuardUsesGoldenTower
+    ? (nukeCooldown !== 0 ? nukeCooldown : rawGoldenTowerCooldown) * timeBoost
+    : null
+
   /** `DM5`. A weapon up for its whole cycle has no cycle — the sheet uses 1. */
   const cycle = (
     active: boolean, multiplier: number, duration: number, cooldown: number,
+    threshold: number | null = null,
   ) => {
-    const scaledCooldown = duration >= cooldown ? 1 : cooldown * config.timeMultiplier
+    const limit = threshold ?? cooldown
+    const scaledCooldown = duration >= limit ? 1 : cooldown * config.timeMultiplier
     return {
       active,
       multiplier,
@@ -481,14 +623,17 @@ export function computeEffectiveEconomy(
       goldenTowerMultiplier * goldenComboMultiplier,
       goldenTowerDurationSeconds,
       goldenTowerCooldownSeconds,
+      sharedThreshold,
     ),
     blackHole: cycle(
       weapons.blackHole.unlocked, blackHoleMultiplier,
       blackHoleDurationSeconds, blackHoleCooldownSeconds,
+      sharedThreshold,
     ),
     deathWave: cycle(
       weapons.deathWave.unlocked, deathWaveMultiplier,
       deathWaveQuantity, deathWaveCooldownSeconds,
+      sharedThreshold,
     ),
     goldBot: cycle(
       weapons.goldBot.unlocked, goldBotMultiplier,
@@ -513,7 +658,7 @@ export function computeEffectiveEconomy(
       * Math.min(1, spotlightAngleDegrees * spotlights / 360)
 
   /** `DR5`. */
-  const waveBoost = resolveWaveBoost(config, levels)
+  const waveBoost = resolveWaveBoost(config, levels, shadow)
 
   const effectiveEconomy = base * sync * spotlight * waveBoost
 
@@ -565,6 +710,9 @@ export function computeEffectiveEconomy(
  * runs on its own. Otherwise it is pulled toward their shared cooldown, floored
  * at 50 seconds and capped at two minutes.
  */
+/** The `IFERROR` fallback on `eEcon!DL5`, and NOT `120 + the lab`. */
+const GOLD_BOT_COOLDOWN_ON_ERROR = 120
+
 function resolveGoldBotCooldown(input: {
   weapons: EffectiveEconomyConfig['weapons']
   compressorValue: number
@@ -575,7 +723,6 @@ function resolveGoldBotCooldown(input: {
   labSeconds: number
 }): number {
   const own = input.weapons.goldBot.cooldown + input.labSeconds
-  if (input.compressorValue !== 0) return own
 
   const cooldowns = [
     input.weapons.goldenTower.unlocked ? input.goldenTowerCooldownSeconds : 0,
@@ -587,7 +734,31 @@ function resolveGoldBotCooldown(input: {
     input.weapons.blackHole.unlocked,
     input.weapons.deathWave.unlocked,
   ].filter(Boolean).length
-  if (unlocked === 0) return own
+
+  /*
+   * `IFS` IS lazy here, so the compressor branch outranks the divide by zero.
+   *
+   *     IFS($AO$7+$AS$7<>0,                             $BN$19+$BH$29,
+   *         MAX(GTcd,BHcd,DWcd) <> SUM(…)/UWCount,      $BN$19+$BH$29,
+   *         TRUE, MIN(MAX(50, …), 120+$BH$29))
+   *
+   * wrapped in `IFERROR(…, 120)`. With no coin weapon `UWCount` is 0 and the
+   * SECOND condition divides by it -- but only if evaluation gets that far.
+   *
+   * An earlier version of this function had the two the other way round, on the
+   * strength of a probe that set `$AO$7` non-zero with no weapons owned and
+   * read 120. That probe could not tell the branches apart: `$BH$29` was 0 at
+   * the time, so the compressor branch returns `$BN$19 + 0` = 120 and the
+   * fallback returns 120. Both hypotheses predicted the same number.
+   *
+   * The sweep settles it. `account-0` owns no coin weapon and has
+   * `$AO$7+$AS$7 = -13`, and reads 99 -- which is `$BN$19+$BH$29` = 120-21, not
+   * the fallback. `account-5` likewise reads 119 = 120-1. Meanwhile `account-4`
+   * owns two weapons and reads 120 from `MIN(…, 120+$BH$29)` with `$BH$29` at
+   * 0, which is the cap and not the fallback either.
+   */
+  if (input.compressorValue !== 0) return own
+  if (unlocked === 0) return GOLD_BOT_COOLDOWN_ON_ERROR
 
   const total = cooldowns.reduce((sum, value) => sum + value, 0)
   const average = total / unlocked
@@ -608,6 +779,7 @@ function resolveGoldBotCooldown(input: {
 function resolveWaveBoost(
   config: EffectiveEconomyConfig,
   levels: EffectiveEconomyLevels,
+  shadow: EffectiveEconomyShadow = {},
 ): number {
   const WAVE_UNITS = 6500
   const time = levels.time
@@ -632,7 +804,16 @@ function resolveWaveBoost(
 
   const skipped = waveSkipTimeSaved(
     WAVE_SKIP_HORIZON,
-    config.cards.waveSkip.active,
+    /*
+     * BOTH, not either. The candidate's OUTER gate is `$AO$32` — the Golden
+     * Tower level, set exactly when the weapon is owned — but the inner
+     * `EPC_CARD_WS(ix, $AZ$35, …)` still takes the Wave Skip CARD, so the term
+     * survives only when both hold. Replacing the card flag outright instead of
+     * conjoining flipped the drift positive on four accounts.
+     */
+    shadow.waveSkipDroppedByCandidateGate
+      ? config.weapons.goldenTower.unlocked && config.cards.waveSkip.active
+      : config.cards.waveSkip.active,
     config.cards.waveSkip.level,
     config.cards.waveSkipMastery.active,
     time.waveSkipMastery,

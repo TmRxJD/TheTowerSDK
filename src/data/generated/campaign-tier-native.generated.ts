@@ -2,13 +2,13 @@
 export const V283_MAX_CAMPAIGN_TIER = 24 as const
 
 export const V283_COIN_BONUS_BY_TIER = {
-  '22': 75,
-  '23': 92,
-  '24': 115,
+  "22": 72,
+  "23": 86,
+  "24": 103,
 } as const
 
 export const V283_NATIVE_HEAT_LEVELS_BY_TIER = {
-  '22': [
+  "22": [
     95,
     95,
     95,
@@ -29,7 +29,7 @@ export const V283_NATIVE_HEAT_LEVELS_BY_TIER = {
     1,
     20,
   ],
-  '23': [
+  "23": [
     95,
     95,
     95,
@@ -51,7 +51,7 @@ export const V283_NATIVE_HEAT_LEVELS_BY_TIER = {
     35,
     20,
   ],
-  '24': [
+  "24": [
     95,
     95,
     95,

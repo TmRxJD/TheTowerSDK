@@ -21,8 +21,12 @@
       "thetowersdk/node": ["./src/node/index.ts"],
       "thetowersdk/formatting": ["./src/formatting/index.ts"],
       "thetowersdk/mechanics": ["./src/mechanics/index.ts"],
-      "thetowersdk/wiki": ["./src/wiki/index.ts"]
+      "thetowersdk/wiki": ["./src/wiki/index.ts"],
+      "thetowersdk/charts": ["./src/charts/index.ts"],
+      "thetowersdk/knowledge": ["./src/knowledge/index.ts"],
+      "thetowersdk/inputs": ["./src/inputs/index.ts"],
+      "thetowersdk/builders": ["./src/builders/index.ts"]
     }
   },
-  "include": ["examples/**/*.ts"]
+  "include": ["examples/**/*.ts", "templates/**/*.ts"]
 }

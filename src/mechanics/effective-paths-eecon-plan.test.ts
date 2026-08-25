@@ -163,8 +163,10 @@ describe('nothing is dropped without a reason', () => {
         cards: {
           ...developedConfig().cards,
           coins: { active: true, value: 1.5, level: 5 },
-          coinsMastery: { active: true, value: 1, level: 1 },
-          extraOrbMastery: { active: true, value: 1, level: 1 },
+          // `masteryUnlocked`, not `active`: the sheet's hide row reads
+          // `IDS_CARD_MASTERY`, never the equipped toggle.
+          coinsMastery: { active: true, value: 1, level: 1, masteryUnlocked: true },
+          extraOrbMastery: { active: true, value: 1, level: 1, masteryUnlocked: true },
         },
       },
       levels: developedLevels(),

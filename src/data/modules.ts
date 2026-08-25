@@ -675,6 +675,9 @@ export const MODULE_TEMPLATE_MAP: Record<string, ModuleTemplate> = MODULE_TEMPLA
 }, {} as Record<string, ModuleTemplate>)
 
 export function getModuleTemplate(id: string): ModuleTemplate | undefined {
+  // Module ids come from saves, so own keys only — `getModuleTemplate('constructor')`
+  // otherwise returns a function rather than a template or `undefined`.
+  if (!Object.prototype.hasOwnProperty.call(MODULE_TEMPLATE_MAP, id)) return undefined
   return MODULE_TEMPLATE_MAP[id]
 }
 

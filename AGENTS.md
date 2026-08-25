@@ -15,7 +15,7 @@ Everything here is about that one game. Nothing in this package is generic infra
 
 1. **Look up the mechanic before you describe it.** This package gives values, not meaning. See
    [Consult the wiki](#consult-the-wiki-before-describing-a-mechanic) and the monorepo contract
-   [`docs/AGENT_GAME_MECHANICS_CONTRACT.md`](../../docs/AGENT_GAME_MECHANICS_CONTRACT.md) —
+   `docs/AGENT_GAME_MECHANICS_CONTRACT.md` —
    `begin_mechanic_task` is mandatory when MCP is available. It is not optional.
 2. **Find the export; do not invent one.** There are 2,007 exports across six entry points. Use the
    map below, then `list_exports` with a filter, then `get_export`. A plausible-looking name you
@@ -23,8 +23,8 @@ Everything here is about that one game. Nothing in this package is generic infra
 
 **Never claim a mechanic change is finished** until the human tested and approved. Ledger statuses:
 `researching` | `implementing` | `awaiting_user` | `user_approved` | `blocked` — never `done`.
-Monorepo commits: [`docs/AGENT_COMMIT_SCHEMA.md`](../../docs/AGENT_COMMIT_SCHEMA.md) (`status/checkpoint` default).
-Living map: [`docs/mechanics-map/MAP.md`](../../docs/mechanics-map/MAP.md).
+Monorepo commits: `docs/AGENT_COMMIT_SCHEMA.md` (`status/checkpoint` default).
+Living map: `docs/mechanics-map/MAP.md`.
 
 ## Where things are
 
@@ -244,7 +244,7 @@ citations and pins how many there are. When it fails because you added one, **re
 updating the count**; that failure is the prompt, not paperwork.
 
 Before deriving a number in this area, read
-[`EFFECTIVE_PATHS_ORACLE.md`](../../docs/EFFECTIVE_PATHS_ORACLE.md) in the tracker repo. It lists the
+`EFFECTIVE_PATHS_ORACLE.md` in the tracker repo. It lists the
 ways the spreadsheet API misleads — chiefly that a spilled range reads as *empty* through both
 `read_range` and `FORMULA` render while `COUNTA` sees a hundred rows of it. That has twice been
 mistaken for a missing feature.
@@ -276,6 +276,29 @@ they publish. Do not soften that into a default.
   your own `index.ts` creates a cycle.
 - **The package never imports itself by name.** Inside `src/`, use relative paths — `thetowersdk/...`
   only resolves when a build happens to exist and breaks as soon as `clean` runs.
+
+## Anchor an oracle node to the code that implements it
+
+When you write a knowledge-oracle node for a mechanic that has an implementation in
+`src/mechanics/` or `src/save/`, name that implementation in `implementedBy`.
+
+This is not bookkeeping. `src/mechanics/coverage/oracle-links.ts` resolves those symbols back to
+the file that exports them, which is the only thing joining the knowledge graph to the source
+tree. Today it links **10 of 192** mechanics modules and **3 of 48** save modules — small because
+194 of the 336 `implementedBy` symbols are defined inside the knowledge compartments themselves,
+which is fine for a claim about a game constant and no use at all for a claim about a mechanic
+this package computes.
+
+- `implementedBy` must name something **public** — re-exported from `src/data`, `src/mechanics`,
+  `src/save` or `src/knowledge`. `knowledge-exports.test.ts` enforces it and its failure message
+  gives the two valid fixes.
+- Do not name a symbol just to raise the count. A node whose claim is about a game constant should
+  keep pointing at that constant; forcing an implementation link fabricates coverage.
+- `coverage-inventories-are-current.test.ts` carries a **ratchet** on the linked counts. Raise it
+  when the number grows; never lower it to make a change pass. A drop means a node lost its
+  `implementedBy` or a module was renamed out from under one.
+- After changing `implementedBy`, rebuild and run
+  `node scripts/link-coverage-inventories.mjs`, or the inventory drift test fails.
 
 ## Checking things without writing a script
 

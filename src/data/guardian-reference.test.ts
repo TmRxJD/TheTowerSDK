@@ -22,7 +22,7 @@ interface GuardianReference {
 }
 
 const reference = JSON.parse(
-  readFileSync(join(__dirname, 'fixtures', 'effective-paths-guardians.json'), 'utf8'),
+  readFileSync(join(__dirname, '..', '..', 'fixtures', 'data', 'effective-paths-guardians.json'), 'utf8'),
 ) as GuardianReference
 
 /**

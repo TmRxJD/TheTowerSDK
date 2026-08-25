@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { syncMultiplier } from './effective-paths-eecon-stats'
 import type { SyncWeaponCycle } from './effective-paths-eecon-stats'
-import fixtures from './effective-paths-eecon-sync.fixtures.json'
+import fixtures from '../../fixtures/mechanics/effective-paths-eecon-sync.fixtures.json'
 
 /**
  * `EPC_SYNC`, against the sheet's own array machinery.

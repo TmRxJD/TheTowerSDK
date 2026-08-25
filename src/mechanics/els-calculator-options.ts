@@ -1,4 +1,4 @@
-import { MAX_ASSIST_MULTIPLIER_EFFICIENCY_PCT } from '../internal/assist-module-efficiency'
+import { MAX_ASSIST_MULTIPLIER_EFFICIENCY_PCT } from './assist-module-efficiency'
 import { MODULE_SUBSTAT_CANONICAL_DATA } from '../data/module-substats'
 import { buildLevelOptions } from '../data/module-levels'
 import { parseModuleElsBonusPercent } from './els-module-cluster'

@@ -17,6 +17,47 @@ export interface UwStoneChartWeapon extends Omit<UwWeaponValue, 'stats'> {
 
 export type UwStoneChartDataMap = Record<string, UwStoneChartWeapon>
 
+/**
+ * The ultimate weapon upgrade ladders, by weapon and stat.
+ *
+ * ## Five stats were short, and nothing said so
+ *
+ * Checked stat by stat against the Effective Paths sheet's `DVT_UW_STAT` on
+ * 2026-08-20 — all 36 pairs, each probed at our maximum AND one past it, so a
+ * name that failed to resolve showed up as a null at BOTH levels rather than
+ * as a false "no more levels". 31 pairs matched exactly. Five did not:
+ *
+ *     Spotlight Multiplier      25 -> 30
+ *     Spotlight Light Range     14 -> 19
+ *     Poison Swamp Damage       30 -> 35
+ *     Inner Land Mines Damage   30 -> 35
+ *     Smart Missiles Damage     30 -> 35
+ *
+ * The damage ladders share one value series (3,776 · 4,720 · 5,900 · 7,375 ·
+ * 9,219) and differ in cost per weapon, which is why the costs are listed
+ * separately rather than shared.
+ *
+ * It was not a harmless gap. The stone path stopped offering Inner Land Mines
+ * Damage at 30 while the sheet keeps buying to 35, so the planner switched to
+ * another stat five levels early and two swept accounts diverged there.
+ *
+ * ## Provenance
+ *
+ * Read from the Effective Paths sheet's `DVT_UW_STAT` and `DVT_UW_COST`, which
+ * is the right source for this: upgrade ladders and costs are explicit,
+ * long-curated data there, and they are not the kind of thing that needs
+ * re-deriving from the binary. What does warrant that scrutiny is MECHANICS —
+ * how a value is combined, gated or capped — and none of that is decided here.
+ *
+ * Every appended level was read individually rather than interpolated,
+ * including the Spotlight ladders where the step looked like an obvious +1.4.
+ * That is cheap and keeps a transcription error from hiding inside a pattern.
+ *
+ * The join was checked before anything was appended: our existing cost at each
+ * table's old maximum matches `DVT_UW_COST` exactly (ILM 1448, Poison Swamp
+ * 2228, Smart Missiles 2636, Spotlight Multiplier 1400, Light Range 2700). Two
+ * tables agreeing at the boundary is what makes appending past it meaningful.
+ */
 export const uwStoneChartData: UwStoneChartDataMap = {
   spotlight: {
     name: 'Spotlight',
@@ -49,6 +90,11 @@ export const uwStoneChartData: UwStoneChartDataMap = {
           { level: 23, value: 'x40.2', cost: 1000 },
           { level: 24, value: 'x41.6', cost: 1175 },
           { level: 25, value: 'x43.0', cost: 1400 },
+          { level: 26, value: 'x44.4', cost: 1650 },
+          { level: 27, value: 'x45.8', cost: 1925 },
+          { level: 28, value: 'x47.2', cost: 2225 },
+          { level: 29, value: 'x48.6', cost: 2550 },
+          { level: 30, value: 'x50.0', cost: 2900 },
         ],
       },
       {
@@ -141,6 +187,11 @@ export const uwStoneChartData: UwStoneChartDataMap = {
           { level: 12, value: 'x0.13', cost: 2200 },
           { level: 13, value: 'x0.14', cost: 2450 },
           { level: 14, value: 'x0.15', cost: 2700 },
+          { level: 15, value: 'x0.16', cost: 3000 },
+          { level: 16, value: 'x0.17', cost: 3300 },
+          { level: 17, value: 'x0.18', cost: 3600 },
+          { level: 18, value: 'x0.19', cost: 3900 },
+          { level: 19, value: 'x0.20', cost: 4200 },
         ],
       },
     ],
@@ -278,6 +329,11 @@ export const uwStoneChartData: UwStoneChartDataMap = {
           { level: 28, value: 'x2,209', cost: 1616 },
           { level: 29, value: 'x2,585', cost: 1902 },
           { level: 30, value: 'x3,021', cost: 2228 },
+          { level: 31, value: 'x3,776', cost: 2594 },
+          { level: 32, value: 'x4,720', cost: 2800 },
+          { level: 33, value: 'x5,900', cost: 3006 },
+          { level: 34, value: 'x7,375', cost: 3212 },
+          { level: 35, value: 'x9,219', cost: 3418 },
         ],
       },
       {
@@ -589,6 +645,11 @@ export const uwStoneChartData: UwStoneChartDataMap = {
           { level: 28, value: 'x2,209', cost: 1182 },
           { level: 29, value: 'x2,585', cost: 1312 },
           { level: 30, value: 'x3,021', cost: 1448 },
+          { level: 31, value: 'x3,776', cost: 1592 },
+          { level: 32, value: 'x4,720', cost: 1742 },
+          { level: 33, value: 'x5,900', cost: 1898 },
+          { level: 34, value: 'x7,375', cost: 2060 },
+          { level: 35, value: 'x9,219', cost: 2228 },
         ],
       },
       {
@@ -777,6 +838,11 @@ export const uwStoneChartData: UwStoneChartDataMap = {
           { level: 28, value: 'x2,209', cost: 1804 },
           { level: 29, value: 'x2,585', cost: 2180 },
           { level: 30, value: 'x3,021', cost: 2636 },
+          { level: 31, value: 'x3,776', cost: 2742 },
+          { level: 32, value: 'x4,720', cost: 2848 },
+          { level: 33, value: 'x5,900', cost: 2954 },
+          { level: 34, value: 'x7,375', cost: 3060 },
+          { level: 35, value: 'x9,219', cost: 3166 },
         ],
       },
       {

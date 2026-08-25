@@ -1,3 +1,4 @@
+import { ownLookupOr } from '../own-lookup'
 import { guardianUpgrades } from '../../data/index'
 import type { UptimeGuardianFieldMap } from '../shared-uptime-inputs'
 
@@ -13,7 +14,7 @@ const GUARDIAN_KEY_PREFIX: Record<string, string> = {
 }
 
 export function getGuardianGameInputPrefix(guardianKey: string): string {
-  return GUARDIAN_KEY_PREFIX[guardianKey] ?? guardianKey
+  return ownLookupOr(GUARDIAN_KEY_PREFIX, guardianKey, guardianKey)
 }
 
 export function getGuardianSourceMinLevel(guardianKey: string): number {

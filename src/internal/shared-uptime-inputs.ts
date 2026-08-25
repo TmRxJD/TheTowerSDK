@@ -4,7 +4,7 @@ import { buildGuardianDefinitions } from '../data/guardians'
 import { guardianUpgrades } from '../data/guardian-upgrades'
 import { normalizeUptimePersistedPayload } from './uptime-persistence'
 import { buildUptimeCoreStateFromRecord } from './uptime-state-builder'
-import type { UptimeCoreState } from './uptime-core'
+import type { UptimeCoreState } from '../mechanics/uptime-core'
 import { findUwStatByName, findUwWeaponByName, type UwWeaponValue } from '../data/ultimate-weapons'
 
 export const uptimeRarityPickSchema = z.enum([
@@ -39,68 +39,9 @@ export const UPTIME_BOT_FIELD_MAP: ReadonlyArray<UptimeBotFieldMap> = [
   { prefix: 'tb', botLabel: 'Thunder Bot', cdStat: 'Cooldown', durStat: 'Duration', cdLab: 'Cooldown', durLab: null },
 ]
 
-export interface UptimeUwFieldMap {
-  weaponName: string
-  cdLevelKey: string
-  cdStatKey: string
-  cdAssistKey: string
-  cdStatName: string
-  durLevelKey?: string
-  durStatKey?: string
-  durAssistKey?: string
-  durStatName?: string
-  qtyLevelKey?: string
-  qtyStatKey?: string
-  qtyAssistKey?: string
-  qtyStatName?: string
-  angleLevelKey?: string
-  angleStatKey?: string
-  angleAssistKey?: string
-  angleStatName?: string
-}
+import { UPTIME_UW_FIELD_MAP, type UptimeUwFieldMap } from './uptime-uw-field-map'
 
-export const UPTIME_UW_FIELD_MAP: ReadonlyArray<UptimeUwFieldMap> = [
-  {
-    weaponName: 'Golden Tower',
-    cdLevelKey: 'gtCdLevel', cdStatKey: 'gtCdStat', cdAssistKey: 'gtCdAssist', cdStatName: 'Cooldown',
-    durLevelKey: 'gtDurLevel', durStatKey: 'gtDurStat', durAssistKey: 'gtDurAssist', durStatName: 'Duration',
-  },
-  {
-    weaponName: 'Death Wave',
-    cdLevelKey: 'dwCdLevel', cdStatKey: 'dwCdStat', cdAssistKey: 'dwCdAssist', cdStatName: 'Cooldown',
-    qtyLevelKey: 'dwBaseWavesLevel', qtyStatKey: 'dwQtyStat', qtyAssistKey: 'dwQtyAssist', qtyStatName: 'Quantity',
-  },
-  {
-    weaponName: 'Black Hole',
-    cdLevelKey: 'bhCdLevel', cdStatKey: 'bhCdStat', cdAssistKey: 'bhCdAssist', cdStatName: 'Cooldown',
-    durLevelKey: 'bhDurLevel', durStatKey: 'bhDurStat', durAssistKey: 'bhDurAssist', durStatName: 'Duration',
-  },
-  {
-    weaponName: 'Poison Swamp',
-    cdLevelKey: 'psCdLevel', cdStatKey: 'psCdStat', cdAssistKey: 'psCdAssist', cdStatName: 'Cooldown',
-    durLevelKey: 'psDurLevel', durStatKey: 'psDurStat', durAssistKey: 'psDurAssist', durStatName: 'Duration',
-  },
-  {
-    weaponName: 'Chrono Field',
-    cdLevelKey: 'cfCdLevel', cdStatKey: 'cfCdStat', cdAssistKey: 'cfCdAssist', cdStatName: 'Cooldown',
-    durLevelKey: 'cfDurLevel', durStatKey: 'cfDurStat', durAssistKey: 'cfDurAssist', durStatName: 'Duration',
-  },
-  {
-    weaponName: 'Smart Missiles',
-    cdLevelKey: 'smCdLevel', cdStatKey: 'smCdStat', cdAssistKey: 'smCdAssist', cdStatName: 'Cooldown',
-    qtyLevelKey: 'smQtyLevel', qtyStatKey: 'smQtyStat', qtyAssistKey: 'smQtyAssist', qtyStatName: 'Quantity',
-  },
-  {
-    weaponName: 'Inner Land Mines',
-    cdLevelKey: 'ilmCdLevel', cdStatKey: 'ilmCdStat', cdAssistKey: 'ilmCdAssist', cdStatName: 'Cooldown',
-  },
-  {
-    weaponName: 'Spotlight',
-    cdLevelKey: 'slCdLevel', cdStatKey: 'slCdStat', cdAssistKey: 'slCdAssist', cdStatName: 'Cooldown',
-    angleLevelKey: 'slAngleLevel', angleStatKey: 'slAngleStat', angleAssistKey: 'slAngleAssist', angleStatName: 'Angle',
-    qtyLevelKey: 'slQtyLevel', qtyStatKey: 'slQtyStat', qtyAssistKey: 'slQtyAssist', qtyStatName: 'Quantity',
-  },
-]
+export { UPTIME_UW_FIELD_MAP, type UptimeUwFieldMap }
 
 export interface UptimeGuardianFieldMap {
   guardianKey: string

@@ -308,6 +308,29 @@ export const WORKSHOP_IMPORT_CATALOG = [
     'categoryIndex': 16,
     'maxLevel': 1800,
   },
+  /*
+   * Defense slot 17. The game writes 18 defense upgrades and this catalog
+   * carried 17, so a player's Wall Rebuild levels were read by nothing.
+   *
+   * Every field comes from a source rather than inference: `categoryIndex`
+   * from the save format's `upgradeIndices.Defense`, `maxLevel` from
+   * `data/workshop.json` (levels 0–300), `trackerKey` from
+   * `workshop-tracker-definitions.ts`, `saveField` from the other defense rows.
+   *
+   * `index` is 47 rather than 34 because it is ordering only — the sole
+   * consumer, `shared-tool-inputs-from-save-extended.ts`, looks rows up by
+   * `saveField` + `categoryIndex` — and renumbering the utility block to keep
+   * it contiguous would touch thirteen rows for no functional gain.
+   */
+  {
+    'index': 47,
+    'category': 'defense',
+    'name': 'Wall Rebuild',
+    'trackerKey': 'Wall Rebuild',
+    'saveField': 'upgradeWorkshopDefenseLevel',
+    'categoryIndex': 17,
+    'maxLevel': 300,
+  },
   {
     'index': 34,
     'category': 'utility',
@@ -1283,6 +1306,61 @@ export const MODULE_INFO_CATALOG = [
 
 /** Save guardianChipUnlocked[i] / guardianChipLevel[i] → chip identity (GuildManager.guardianChips). */
 export const GUARDIAN_CHIP_CATALOG = [
+  /*
+   * `chipType` on every row is the game's `ChipType` enum value for that save
+   * slot. The save format's own `chipOrder` is that enum in order — Steal,
+   * Catch, Attack, Scare, Rush, Ally, Fetch, Summon, Scout — which is what makes
+   * the mapping decidable rather than a guess.
+   *
+   * Three rows previously carried their TWIN's chipType: slot 2 said `Scare`,
+   * slot 5 said `Rush`, slot 6 said `Catch`. Three more (slots 1, 3, 4) carried
+   * null and rendered as `Chip N`. `chipType` is the display fallback when the
+   * asset table has no name, so slot 2 was showing "Scare" for the Attack chip.
+   *
+   * `label` and `trackerKey` are UNTOUCHED. Those decide identity for the
+   * tracker and the two catalogs do not agree about them — see the
+   * `guardian.chipEncoding` node. Fixing a display fallback is not licence to
+   * re-point save decoding.
+   */
+  {
+    'index': 9,
+    'slotIndex': 1,
+    'chipType': 'Catch',
+    'trackerKey': null,
+    'label': 'Catch',
+    'description': null,
+    'saveFields': {
+      'unlocked': 'guardianChipUnlocked',
+      'level': 'guardianChipLevel',
+      'slot': 'guardianChipSlot',
+    },
+  },
+  {
+    'index': 10,
+    'slotIndex': 3,
+    'chipType': 'Scare',
+    'trackerKey': null,
+    'label': 'Scare',
+    'description': null,
+    'saveFields': {
+      'unlocked': 'guardianChipUnlocked',
+      'level': 'guardianChipLevel',
+      'slot': 'guardianChipSlot',
+    },
+  },
+  {
+    'index': 11,
+    'slotIndex': 4,
+    'chipType': 'Rush',
+    'trackerKey': null,
+    'label': 'Rush',
+    'description': null,
+    'saveFields': {
+      'unlocked': 'guardianChipUnlocked',
+      'level': 'guardianChipLevel',
+      'slot': 'guardianChipSlot',
+    },
+  },
   {
     'index': 0,
     'slotIndex': 0,
@@ -1299,7 +1377,7 @@ export const GUARDIAN_CHIP_CATALOG = [
   {
     'index': 1,
     'slotIndex': 6,
-    'chipType': 'Catch',
+    'chipType': 'Fetch',
     'trackerKey': 'fetch',
     'label': 'Fetch',
     'description': 'Tower Guardian retrieves hidden loot (Coins, Gems, Medals, Shards, Modules).',
@@ -1312,7 +1390,7 @@ export const GUARDIAN_CHIP_CATALOG = [
   {
     'index': 2,
     'slotIndex': 2,
-    'chipType': 'Scare',
+    'chipType': 'Attack',
     'trackerKey': 'attack',
     'label': 'Attack',
     'description': 'Tower Guardian attacks enemies with the most missing health, dealing a percentage of their lost health as damage (50% damage to bosses)',
@@ -1325,7 +1403,7 @@ export const GUARDIAN_CHIP_CATALOG = [
   {
     'index': 3,
     'slotIndex': 5,
-    'chipType': 'Rush',
+    'chipType': 'Ally',
     'trackerKey': 'ally',
     'label': 'Ally',
     'description': 'Converts an enemy into an Ally Recovery Package that can heal the tower beyond the basic Maximum Recovery limit',
@@ -1589,6 +1667,24 @@ export const GUARDIAN_SKIN_IMPORT_CATALOG = [
     'index': 18,
     'name': 'Disco',
     'label': 'Disco',
+    'saveFields': {
+      'unlocked': 'guardianSkinUnlocked',
+      'selected': 'guardianSkinIndex',
+    },
+  },
+  {
+    'index': 19,
+    'name': 'Hermie',
+    'label': 'Hermie',
+    'saveFields': {
+      'unlocked': 'guardianSkinUnlocked',
+      'selected': 'guardianSkinIndex',
+    },
+  },
+  {
+    'index': 20,
+    'name': 'Waddles',
+    'label': 'Waddles',
     'saveFields': {
       'unlocked': 'guardianSkinUnlocked',
       'selected': 'guardianSkinIndex',
@@ -6323,6 +6419,42 @@ export const THEME_CATALOG = [
     'label': 'Cake',
   },
   {
+    'category': 'tower',
+    'catalogIndex': 76,
+    'name': 'Meteorite',
+    'label': 'Meteorite',
+  },
+  {
+    'category': 'tower',
+    'catalogIndex': 77,
+    'name': 'Seahorse',
+    'label': 'Seahorse',
+  },
+  {
+    'category': 'tower',
+    'catalogIndex': 78,
+    'name': 'Vortex',
+    'label': 'Vortex',
+  },
+  {
+    'category': 'tower',
+    'catalogIndex': 79,
+    'name': 'Stellar',
+    'label': 'Stellar',
+  },
+  {
+    'category': 'tower',
+    'catalogIndex': 80,
+    'name': 'Cosmic',
+    'label': 'Cosmic',
+  },
+  {
+    'category': 'tower',
+    'catalogIndex': 81,
+    'name': 'Baby Dino',
+    'label': 'Baby Dino',
+  },
+  {
     'category': 'background',
     'catalogIndex': 1,
     'name': 'Interstellar',
@@ -6641,6 +6773,24 @@ export const THEME_CATALOG = [
     'label': '5th Anniversary',
   },
   {
+    'category': 'background',
+    'catalogIndex': 54,
+    'name': 'Meteor Shower',
+    'label': 'Meteor Shower',
+  },
+  {
+    'category': 'background',
+    'catalogIndex': 55,
+    'name': 'Coral Reef',
+    'label': 'Coral Reef',
+  },
+  {
+    'category': 'background',
+    'catalogIndex': 56,
+    'name': 'Jurassic Forest',
+    'label': 'Jurassic Forest',
+  },
+  {
     'category': 'menu',
     'catalogIndex': 1,
     'name': 'Dark Being',
@@ -6693,6 +6843,12 @@ export const THEME_CATALOG = [
     'catalogIndex': 9,
     'name': 'Magician',
     'label': 'Magician',
+  },
+  {
+    'category': 'menu',
+    'catalogIndex': 10,
+    'name': 'Coral Reef',
+    'label': 'Coral Reef',
   },
   {
     'category': 'profileBanner',
@@ -6753,6 +6909,12 @@ export const THEME_CATALOG = [
     'catalogIndex': 10,
     'name': 'Magician',
     'label': 'Magician',
+  },
+  {
+    'category': 'profileBanner',
+    'catalogIndex': 11,
+    'name': 'Coral Reef',
+    'label': 'Coral Reef',
   },
   {
     'category': 'guardian',
@@ -6867,6 +7029,36 @@ export const THEME_CATALOG = [
     'catalogIndex': 18,
     'name': 'Disco',
     'label': 'Disco',
+  },
+  {
+    'category': 'guardian',
+    'catalogIndex': 19,
+    'name': 'Hermie',
+    'label': 'Hermie',
+  },
+  {
+    'category': 'guardian',
+    'catalogIndex': 20,
+    'name': 'Waddles',
+    'label': 'Waddles',
+  },
+  {
+    'category': 'song',
+    'catalogIndex': 6,
+    'name': 'Krisu - Oceans Sings',
+    'label': 'Krisu - Oceans Sings',
+  },
+  {
+    'category': 'song',
+    'catalogIndex': 7,
+    'name': 'Krisu - Hiding in Himalaya',
+    'label': 'Krisu - Hiding in Himalaya',
+  },
+  {
+    'category': 'song',
+    'catalogIndex': 8,
+    'name': 'Krisu - Forest Bathing',
+    'label': 'Krisu - Forest Bathing',
   },
 ] as const
 

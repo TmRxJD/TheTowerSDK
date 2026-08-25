@@ -2,9 +2,33 @@
  * Wave-base enemy scaler.
  *
  * Models base enemy health and damage as polynomial × milestone × growth ×
- * tier-pressure terms. Coefficients are empirical: they are fitted to observed
- * in-game values rather than derived, so treat them as a close approximation
- * and not an exact reproduction.
+ * tier-pressure terms.
+ *
+ * ## Accuracy: exact, not approximate
+ *
+ * This docstring used to say the coefficients were "fitted to observed in-game
+ * values rather than derived" and should be treated as "a close approximation
+ * and not an exact reproduction". That is wrong, and wrong in the expensive
+ * direction: it tells anyone building on this that the foundation is
+ * approximate, which is a reason not to build.
+ *
+ * The chain, verified 2026-08-18:
+ *
+ *   Game binary, `GetWaveBaseHealth` @ 0x15BBBB4 and
+ *   `GetWaveBaseDamage` @ 0x15BC318, with the constants read out of the binary
+ *     -> wave/_reference/wave-base-constants.ts  (all 12 health polynomial
+ *        terms and every body coefficient compared: zero mismatches)
+ *     -> wave/_reference/wave-base-scaling-legacy.ts
+ *     -> THIS FILE, held to it by wave-base-empirical-parity.test.ts, which
+ *        asserts `toBe` — exact equality, not a tolerance — across 21 tiers,
+ *        34 waves and 8 contexts.
+ *
+ * So "empirical" describes how the STRUCTURE was first discovered, not the
+ * fidelity of the result. The numbers are the game's own.
+ *
+ * The decoded dump itself is gitignored and unavailable in CI, which is why the
+ * chain is recorded here rather than pinned by a test that would silently skip.
+ * The RVAs above are what makes it re-checkable when the binary changes.
  *
  * Derived from `statFormula.ts` in tower-idle-toolkit by skye (ISC) —
  * https://github.com/tower-idle-toolkit/tower-idle-toolkit

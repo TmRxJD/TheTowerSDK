@@ -1,0 +1,79 @@
+/**
+ * Assist module efficiency: Stones to take an assist slot from one level to another.
+ *
+ * This is a cumulative ladder, so the cost of a stretch is not the per-level cost times the
+ * number of levels — it climbs. `cumulativeAssistStoneCost` returns `null` for a range the
+ * table does not price, which is reported rather than folded into a total, because a
+ * missing tail silently priced as zero is how a plan comes out cheaper than reality.
+ */
+import { ASSIST_MODULE_STONE_COSTS } from '../data/index'
+import { cumulativeAssistStoneCost } from '../mechanics/index'
+import { type CalculatorBuilder, type CalculatorResultBase, clampNumber } from './types'
+
+/** Levels are 1-indexed in the game and the table is 0-indexed. */
+const MAX_LEVEL = ASSIST_MODULE_STONE_COSTS.length
+
+export interface AssistModuleStonesInput {
+  currentLevel: number
+  targetLevel: number
+}
+
+export interface AssistModuleStonesResult extends CalculatorResultBase {
+  readonly levels: readonly { readonly level: number, readonly stoneCost: number }[]
+  readonly totalStones: number
+  readonly maxLevel: number
+}
+
+const defaults: AssistModuleStonesInput = { currentLevel: 0, targetLevel: 10 }
+
+export const assistModuleStonesCalculator: CalculatorBuilder<
+  AssistModuleStonesInput,
+  AssistModuleStonesResult
+> = {
+  id: 'assist.stones',
+  title: 'Assist module stones',
+  summary: 'Stones to raise an assist module efficiency slot between two levels.',
+
+  fields: [
+    { key: 'currentLevel', label: 'Current level', kind: 'number', min: 0, max: MAX_LEVEL },
+    { key: 'targetLevel', label: 'Target level', kind: 'number', min: 0, max: MAX_LEVEL },
+  ],
+
+  defaults,
+
+  normalize(input = {}) {
+    return {
+      currentLevel: Math.floor(clampNumber(input.currentLevel, 0, MAX_LEVEL, defaults.currentLevel)),
+      targetLevel: Math.floor(clampNumber(input.targetLevel, 0, MAX_LEVEL, defaults.targetLevel)),
+    }
+  },
+
+  compute(rawInput = {}) {
+    const input = this.normalize(rawInput)
+    const notes: string[] = []
+
+    if (typeof rawInput.targetLevel === 'number' && rawInput.targetLevel > MAX_LEVEL) {
+      notes.push(`Assist efficiency caps at level ${MAX_LEVEL}; the target was clamped.`)
+    }
+    if (input.targetLevel <= input.currentLevel) {
+      notes.push('Target level is not above the current level, so there is nothing to buy.')
+      return { levels: [], totalStones: 0, maxLevel: MAX_LEVEL, notes }
+    }
+
+    const total = cumulativeAssistStoneCost(input.currentLevel, input.targetLevel)
+    if (total === null) {
+      notes.push(`No stone cost is charted between level ${input.currentLevel} and ${input.targetLevel}.`)
+      return { levels: [], totalStones: 0, maxLevel: MAX_LEVEL, notes }
+    }
+
+    // Per-level rows for a table, from the same ladder the total came from.
+    const levels: { level: number, stoneCost: number }[] = []
+    for (let level = input.currentLevel + 1; level <= input.targetLevel; level += 1) {
+      const stoneCost = ASSIST_MODULE_STONE_COSTS[level - 1]
+      if (stoneCost === undefined) continue
+      levels.push({ level, stoneCost })
+    }
+
+    return { levels, totalStones: total, maxLevel: MAX_LEVEL, notes }
+  },
+}

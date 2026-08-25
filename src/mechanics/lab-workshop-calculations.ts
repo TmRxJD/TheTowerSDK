@@ -3,6 +3,7 @@
  *
  * Wave Info reads persisted CustomizeGame floats only — never recomputes labs at display.
  */
+import { ownLookup } from '../internal/own-lookup'
 import {
   LAB_WORKSHOP_COIN_DISCOUNT_POW_EXP,
   LAB_WORKSHOP_ENEMY_EXTENDED_OFFSETS,
@@ -138,9 +139,7 @@ export function labWorkshopEnemyExtendedFloat(
 }
 
 export function workshopOffsetForEnemyLabSlug(labSlug: string): number | undefined {
-  return LAB_WORKSHOP_ENEMY_EXTENDED_OFFSETS[
-    labSlug as keyof typeof LAB_WORKSHOP_ENEMY_EXTENDED_OFFSETS
-  ]
+  return ownLookup(LAB_WORKSHOP_ENEMY_EXTENDED_OFFSETS, labSlug)
 }
 
 export const LAB_WORKSHOP_META_LAB_SLUGS = [

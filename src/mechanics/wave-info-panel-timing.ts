@@ -8,7 +8,7 @@ import {
   computeWaveCombatDurationSeconds,
   computeWaveInterCooldownSeconds,
   UPTIME_WAVE_COMBAT_DURATION_SECONDS,
-} from '../internal/uptime-core'
+} from './uptime-core'
 
 /** Standard-tier combat wave timer (26s). */
 export const WAVE_INFO_PANEL_WAVE_TIME_SECONDS = UPTIME_WAVE_COMBAT_DURATION_SECONDS

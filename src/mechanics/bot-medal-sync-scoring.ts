@@ -1,4 +1,4 @@
-import { computeUptimeRatio } from '../internal/uptime-core'
+import { computeUptimeRatio } from './uptime-core'
 
 /** Weight profiles for natural-sync decisions (lab, secondary admission, plan objective). */
 export const BOT_MEDAL_SYNC_SCORE_WEIGHTS = {

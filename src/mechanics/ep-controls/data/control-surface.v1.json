@@ -1,0 +1,1116 @@
+{
+  "sheetVersion": "v5.09.03.07",
+  "capturedAt": "2026-08-18",
+  "source": "inspect_tab_ui",
+  "tabs": {
+    "eEcon": {
+      "labelCol": "AU",
+      "valueCol": "AZ",
+      "reportedControlCount": 46,
+      "rows": [
+        {
+          "row": 3,
+          "label": "User Inputs",
+          "value": null
+        },
+        {
+          "row": 4,
+          "label": "PRESETS",
+          "value": "Farming"
+        },
+        {
+          "row": 5,
+          "label": "Workshop",
+          "value": "Farming"
+        },
+        {
+          "row": 6,
+          "label": "Cards",
+          "value": "Farming"
+        },
+        {
+          "row": 7,
+          "label": "Modules",
+          "value": "Farming"
+        },
+        {
+          "row": 8,
+          "label": "Bots",
+          "value": "Farming"
+        },
+        {
+          "row": 9,
+          "label": "Perks",
+          "value": "Farming"
+        },
+        {
+          "row": 10,
+          "label": "Lab Specific Inputs",
+          "value": null
+        },
+        {
+          "row": 11,
+          "label": "Hide Non-unlocked Labs",
+          "value": false
+        },
+        {
+          "row": 12,
+          "label": "Show Labs",
+          "value": "All"
+        },
+        {
+          "row": 13,
+          "label": "Show Enhancements",
+          "value": "All"
+        },
+        {
+          "row": 14,
+          "label": "Hide Retroactive Discount Labs",
+          "value": true
+        },
+        {
+          "row": 15,
+          "label": "Ignore Lab Target Levels",
+          "value": false
+        },
+        {
+          "row": 16,
+          "label": "UW Specific Inputs",
+          "value": null
+        },
+        {
+          "row": 17,
+          "label": "Keep GT|BH|DW CD Synced",
+          "value": false
+        },
+        {
+          "row": 18,
+          "label": "Ignore UW Target Levels",
+          "value": false
+        },
+        {
+          "row": 19,
+          "label": "% of Enemies that die in BH while it is active",
+          "value": 1
+        },
+        {
+          "row": 20,
+          "label": "// // Requires GT+ // //",
+          "value": 7
+        },
+        {
+          "row": 21,
+          "label": "Bot Specific Inputs",
+          "value": null
+        },
+        {
+          "row": 22,
+          "label": "% of Enemies that die in GB while active",
+          "value": 1
+        },
+        {
+          "row": 23,
+          "label": "GB Sync Desired Ratio:",
+          "value": "1"
+        },
+        {
+          "row": 24,
+          "label": "Other Inputs",
+          "value": null
+        },
+        {
+          "row": 25,
+          "label": "Boss spawns every # of waves",
+          "value": 10
+        },
+        {
+          "row": 26,
+          "label": "Extra Orb % enemies tagged",
+          "value": 0.9
+        },
+        {
+          "row": 28,
+          "label": "Cards",
+          "value": true
+        },
+        {
+          "row": 29,
+          "label": "Compare Masteries at",
+          "value": null
+        },
+        {
+          "row": 30,
+          "label": "Name",
+          "value": "Active",
+          "isHeader": true
+        },
+        {
+          "row": 31,
+          "label": "Coins",
+          "value": false,
+          "isComputedDisplay": true,
+          "computedNote": "Card/perk Active rows are formulas over the presets, not toggles."
+        },
+        {
+          "row": 32,
+          "label": "Coins Mastery",
+          "value": false,
+          "isComputedDisplay": true,
+          "computedNote": "Card/perk Active rows are formulas over the presets, not toggles."
+        },
+        {
+          "row": 33,
+          "label": "Free Upgrades",
+          "value": false,
+          "isComputedDisplay": true,
+          "computedNote": "Card/perk Active rows are formulas over the presets, not toggles."
+        },
+        {
+          "row": 34,
+          "label": "Extra Orb Mastery",
+          "value": false,
+          "isComputedDisplay": true,
+          "computedNote": "Card/perk Active rows are formulas over the presets, not toggles."
+        },
+        {
+          "row": 35,
+          "label": "Wave Skip",
+          "value": false,
+          "isComputedDisplay": true,
+          "computedNote": "Card/perk Active rows are formulas over the presets, not toggles."
+        },
+        {
+          "row": 36,
+          "label": "Wave Skip Mastery",
+          "value": false,
+          "isComputedDisplay": true,
+          "computedNote": "Card/perk Active rows are formulas over the presets, not toggles."
+        },
+        {
+          "row": 37,
+          "label": "Intro Sprint",
+          "value": false,
+          "isComputedDisplay": true,
+          "computedNote": "Card/perk Active rows are formulas over the presets, not toggles."
+        },
+        {
+          "row": 38,
+          "label": "Intro Sprint Mastery",
+          "value": false,
+          "isComputedDisplay": true,
+          "computedNote": "Card/perk Active rows are formulas over the presets, not toggles."
+        },
+        {
+          "row": 39,
+          "label": "Recovery Package Chance",
+          "value": false,
+          "isComputedDisplay": true,
+          "computedNote": "Card/perk Active rows are formulas over the presets, not toggles."
+        },
+        {
+          "row": 40,
+          "label": "Wave Accelerator",
+          "value": false,
+          "isComputedDisplay": true,
+          "computedNote": "Card/perk Active rows are formulas over the presets, not toggles."
+        },
+        {
+          "row": 41,
+          "label": "Wave Accelerator Mastery",
+          "value": false,
+          "isComputedDisplay": true,
+          "computedNote": "Card/perk Active rows are formulas over the presets, not toggles."
+        },
+        {
+          "row": 43,
+          "label": "Perks",
+          "value": true
+        },
+        {
+          "row": 44,
+          "label": "Name",
+          "value": "Active",
+          "isHeader": true
+        },
+        {
+          "row": 45,
+          "label": "Coins",
+          "value": true,
+          "isComputedDisplay": true,
+          "computedNote": "Card/perk Active rows are formulas over the presets, not toggles."
+        },
+        {
+          "row": 46,
+          "label": "Free Upgrades",
+          "value": true,
+          "isComputedDisplay": true,
+          "computedNote": "Card/perk Active rows are formulas over the presets, not toggles."
+        },
+        {
+          "row": 47,
+          "label": "x1.8 Coins / Health - 70%",
+          "value": false,
+          "isComputedDisplay": true,
+          "computedNote": "Card/perk Active rows are formulas over the presets, not toggles."
+        },
+        {
+          "row": 48,
+          "label": "Golden Tower Bonus x1.5",
+          "value": false,
+          "isComputedDisplay": true,
+          "computedNote": "Card/perk Active rows are formulas over the presets, not toggles."
+        },
+        {
+          "row": 49,
+          "label": "Black Hole Duration",
+          "value": false,
+          "isComputedDisplay": true,
+          "computedNote": "Card/perk Active rows are formulas over the presets, not toggles."
+        },
+        {
+          "row": 50,
+          "label": "Death Wave Quantity",
+          "value": false,
+          "isComputedDisplay": true,
+          "computedNote": "Card/perk Active rows are formulas over the presets, not toggles."
+        }
+      ],
+      "playerVisible": true
+    },
+    "eHP": {
+      "labelCol": "AT",
+      "valueCol": "AY",
+      "reportedControlCount": 32,
+      "rows": [
+        {
+          "row": 3,
+          "label": "PRESETS",
+          "value": "Farming",
+          "valueColumn": "AX"
+        },
+        {
+          "row": 4,
+          "label": "Workshop",
+          "value": "Farming",
+          "valueColumn": "AX"
+        },
+        {
+          "row": 5,
+          "label": "Cards",
+          "value": "Farming",
+          "valueColumn": "AX"
+        },
+        {
+          "row": 6,
+          "label": "Modules",
+          "value": "Farming",
+          "valueColumn": "AX"
+        },
+        {
+          "row": 7,
+          "label": "Perks",
+          "value": "Farming",
+          "valueColumn": "AX"
+        },
+        {
+          "row": 9,
+          "label": "User Specific Guesses",
+          "value": null
+        },
+        {
+          "row": 10,
+          "label": "Simulated Tier",
+          "value": "T1"
+        },
+        {
+          "row": 11,
+          "label": "Enemies Attacking Together",
+          "value": 1
+        },
+        {
+          "row": 12,
+          "label": "CL DMG does % of Total Damage:",
+          "value": 0.01
+        },
+        {
+          "row": 13,
+          "label": "Ignore Target Levels",
+          "value": false
+        },
+        {
+          "row": 14,
+          "label": "Hide Non-unlocked Labs",
+          "value": false
+        },
+        {
+          "row": 16,
+          "label": "Cards",
+          "value": true
+        },
+        {
+          "row": 17,
+          "label": "Compare Masteries at",
+          "value": null
+        },
+        {
+          "row": 18,
+          "label": "Name",
+          "value": "Active",
+          "isHeader": true
+        },
+        {
+          "row": 19,
+          "label": "Health",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 20,
+          "label": "Health Mastery",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 21,
+          "label": "Health Regen",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 22,
+          "label": "Health Regen Mastery",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 23,
+          "label": "Extra Defense",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 24,
+          "label": "Extra Defense Mastery",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 25,
+          "label": "Fortress",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 26,
+          "label": "Second Wind Mastery",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 28,
+          "label": "Perks",
+          "value": true
+        },
+        {
+          "row": 29,
+          "label": "Name",
+          "value": "Active",
+          "isHeader": true
+        },
+        {
+          "row": 30,
+          "label": "Max Health",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 31,
+          "label": "Health Regen",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 32,
+          "label": "Defense %",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 33,
+          "label": "Defense Absolute",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 34,
+          "label": "E. Dmg -50% / Dmg -50%",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 35,
+          "label": "E. HP -50% / Rgn & Lifesteal -90%",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 36,
+          "label": "x1.8 Coin / Health -70%",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 37,
+          "label": "Regen x8 / Health -60%",
+          "value": false,
+          "isComputedDisplay": true
+        }
+      ],
+      "playerVisible": true
+    },
+    "eRegen": {
+      "labelCol": "AT",
+      "valueCol": "AY",
+      "reportedControlCount": 32,
+      "rows": [
+        {
+          "row": 3,
+          "label": "PRESETS",
+          "value": null,
+          "mirroredFrom": "eHP"
+        },
+        {
+          "row": 4,
+          "label": "Workshop",
+          "value": "Farming",
+          "valueColumn": "AX",
+          "mirroredFrom": "eHP"
+        },
+        {
+          "row": 5,
+          "label": "Cards",
+          "value": "Farming",
+          "valueColumn": "AX",
+          "mirroredFrom": "eHP"
+        },
+        {
+          "row": 6,
+          "label": "Modules",
+          "value": "Farming",
+          "valueColumn": "AX",
+          "mirroredFrom": "eHP"
+        },
+        {
+          "row": 7,
+          "label": "Perks",
+          "value": "Farming",
+          "valueColumn": "AX",
+          "mirroredFrom": "eHP"
+        },
+        {
+          "row": 9,
+          "label": "User Specific Guesses",
+          "value": null,
+          "mirroredFrom": "eHP"
+        },
+        {
+          "row": 10,
+          "label": "Simulated Tier",
+          "value": "T1",
+          "mirroredFrom": "eHP"
+        },
+        {
+          "row": 11,
+          "label": "Enemies Attacking Together",
+          "value": 1,
+          "mirroredFrom": "eHP"
+        },
+        {
+          "row": 12,
+          "label": "CL DMG does % of Total Damage:",
+          "value": 0.01,
+          "mirroredFrom": "eHP"
+        },
+        {
+          "row": 13,
+          "label": "Ignore Target Levels",
+          "value": false,
+          "mirroredFrom": "eHP"
+        },
+        {
+          "row": 14,
+          "label": "Hide Non-unlocked Labs",
+          "value": false,
+          "mirroredFrom": "eHP"
+        },
+        {
+          "row": 16,
+          "label": "Cards",
+          "value": true,
+          "mirroredFrom": "eHP"
+        },
+        {
+          "row": 17,
+          "label": "Compare Masteries at",
+          "value": null,
+          "mirroredFrom": "eHP"
+        },
+        {
+          "row": 18,
+          "label": "Name",
+          "value": "Active",
+          "mirroredFrom": "eHP"
+        },
+        {
+          "row": 19,
+          "label": "Health",
+          "value": false,
+          "mirroredFrom": "eHP"
+        },
+        {
+          "row": 20,
+          "label": "Health Mastery",
+          "value": false,
+          "mirroredFrom": "eHP"
+        },
+        {
+          "row": 21,
+          "label": "Health Regen",
+          "value": false,
+          "mirroredFrom": "eHP"
+        },
+        {
+          "row": 22,
+          "label": "Health Regen Mastery",
+          "value": false,
+          "mirroredFrom": "eHP"
+        },
+        {
+          "row": 23,
+          "label": "Extra Defense",
+          "value": false,
+          "mirroredFrom": "eHP"
+        },
+        {
+          "row": 24,
+          "label": "Extra Defense Mastery",
+          "value": false,
+          "mirroredFrom": "eHP"
+        },
+        {
+          "row": 25,
+          "label": "Fortress",
+          "value": false,
+          "mirroredFrom": "eHP"
+        },
+        {
+          "row": 26,
+          "label": "Second Wind Mastery",
+          "value": false,
+          "mirroredFrom": "eHP"
+        },
+        {
+          "row": 28,
+          "label": "Perks",
+          "value": true,
+          "mirroredFrom": "eHP"
+        },
+        {
+          "row": 29,
+          "label": "Name",
+          "value": "Active",
+          "mirroredFrom": "eHP"
+        },
+        {
+          "row": 30,
+          "label": "Max Health",
+          "value": false,
+          "mirroredFrom": "eHP"
+        },
+        {
+          "row": 31,
+          "label": "Health Regen",
+          "value": false,
+          "mirroredFrom": "eHP"
+        },
+        {
+          "row": 32,
+          "label": "Defense %",
+          "value": false,
+          "mirroredFrom": "eHP"
+        },
+        {
+          "row": 33,
+          "label": "Defense Absolute",
+          "value": false,
+          "mirroredFrom": "eHP"
+        },
+        {
+          "row": 34,
+          "label": "E. Dmg -50% / Dmg -50%",
+          "value": false,
+          "mirroredFrom": "eHP"
+        },
+        {
+          "row": 35,
+          "label": "E. HP -50% / Rgn & Lifesteal -90%",
+          "value": false,
+          "mirroredFrom": "eHP"
+        },
+        {
+          "row": 36,
+          "label": "x1.8 Coin / Health -70%",
+          "value": false,
+          "mirroredFrom": "eHP"
+        },
+        {
+          "row": 37,
+          "label": "Regen x8 / Health -60%",
+          "value": false,
+          "mirroredFrom": "eHP"
+        }
+      ],
+      "mirrorNote": "AL3:BM37 is ={eHP!AL3:BM37}; the whole control panel is a spilled mirror of eHP.",
+      "playerVisible": false
+    },
+    "eDamage": {
+      "labelCol": "AT",
+      "valueCol": "AY",
+      "reportedControlCount": 65,
+      "rows": [
+        {
+          "row": 3,
+          "label": "Bullet Damage %",
+          "value": null,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 4,
+          "label": "UW* Damage %",
+          "value": null,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 5,
+          "label": "Death Wave",
+          "value": null,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 6,
+          "label": "Chain Lightning",
+          "value": null,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 7,
+          "label": "Smart Missiles",
+          "value": null,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 8,
+          "label": "Spotlight",
+          "value": null,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 9,
+          "label": "Spotlight Missiles",
+          "value": null,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 10,
+          "label": "Inner Land Mines",
+          "value": null,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 12,
+          "label": "PRESETS",
+          "value": "Tourney",
+          "valueColumn": "AX"
+        },
+        {
+          "row": 13,
+          "label": "Workshop",
+          "value": "Tourney",
+          "valueColumn": "AX"
+        },
+        {
+          "row": 14,
+          "label": "Cards",
+          "value": "Tourney",
+          "valueColumn": "AX"
+        },
+        {
+          "row": 15,
+          "label": "Modules",
+          "value": "Tourney",
+          "valueColumn": "AX"
+        },
+        {
+          "row": 16,
+          "label": "Perks",
+          "value": "Farming",
+          "valueColumn": "AX"
+        },
+        {
+          "row": 18,
+          "label": "User Specific Guesses",
+          "value": null
+        },
+        {
+          "row": 19,
+          "label": "Run Type",
+          "value": "Tourney",
+          "valueColumn": "AX"
+        },
+        {
+          "row": 20,
+          "label": "Simulated Tier",
+          "value": "Tourney",
+          "valueColumn": "AX",
+          "isComputedDisplay": true,
+          "note": "AX20 is =IF(AX19=\"Tourney\", \"Tourney\", IDS_PS_FARMING_TIER()) - derived from Run Type, not an input."
+        },
+        {
+          "row": 21,
+          "label": "Game Speed",
+          "value": 5
+        },
+        {
+          "row": 22,
+          "label": "DPM - Damage at % range :",
+          "value": 0.25
+        },
+        {
+          "row": 23,
+          "label": "Ignore Lab Target Levels",
+          "value": false,
+          "valueColumn": "AU",
+          "note": "Two checkboxes share this row. AU23 is this one - every lab target in BD5:BD50 reads $AU$23. AY23, in the value column the panel reader defaults to, is a different checkbox labelled from AV23."
+        },
+        {
+          "row": 23,
+          "label": "Ignore UW Target Levels",
+          "value": false,
+          "labelColumn": "AV",
+          "note": "Second checkbox on row 23, labelled from AV23. No consumer located on eDamage.",
+          "discoveredBy": "formula-read"
+        },
+        {
+          "row": 24,
+          "label": "Hide UW Cooldown",
+          "value": false
+        },
+        {
+          "row": 25,
+          "label": "Hide non-UW Upgrades",
+          "value": false
+        },
+        {
+          "row": 26,
+          "label": "Hide Non-unlocked Labs",
+          "value": false
+        },
+        {
+          "row": 27,
+          "label": "Show Labs on Coin path",
+          "value": "All"
+        },
+        {
+          "row": 28,
+          "label": "// Equip Galaxy Compressor //",
+          "value": 10,
+          "labelIsConditional": true,
+          "labelWhenUnlocked": "Boss spawns every # of waves",
+          "unlockCondition": "Galaxy Compressor equipped",
+          "valueIsComputed": true
+        },
+        {
+          "row": 29,
+          "label": "// Unlock SM //",
+          "value": 10,
+          "labelIsConditional": true,
+          "labelWhenUnlocked": "SM - Hits on same target",
+          "unlockCondition": "Smart Missiles unlocked",
+          "valueIsComputed": false
+        },
+        {
+          "row": 30,
+          "label": "// Unlock SM //",
+          "value": 20,
+          "labelIsConditional": true,
+          "labelWhenUnlocked": "SM - Enemies inside SM Area",
+          "unlockCondition": "Smart Missiles unlocked",
+          "valueIsComputed": false
+        },
+        {
+          "row": 31,
+          "label": "// Unlock PS and enalbe PS Beta Testing //",
+          "value": 20,
+          "labelIsConditional": true,
+          "labelWhenUnlocked": "PS - Average Enemies poisoned",
+          "unlockCondition": "Poison Swamp unlocked and PS Beta Testing enabled",
+          "valueIsComputed": false
+        },
+        {
+          "row": 32,
+          "label": "// Unlock PS and enable PS Beta Testing //",
+          "value": 30,
+          "labelIsConditional": true,
+          "labelWhenUnlocked": "PS Death Creep - PS average Ticks before enemy dies",
+          "unlockCondition": "Poison Swamp unlocked and PS Beta Testing enabled",
+          "valueIsComputed": false
+        },
+        {
+          "row": 33,
+          "label": "// Unlock CF //",
+          "value": false,
+          "labelIsConditional": true,
+          "labelWhenUnlocked": "CF - Enable CF Slow",
+          "unlockCondition": "Chrono Field owned",
+          "valueIsComputed": false
+        },
+        {
+          "row": 34,
+          "label": "// Equip Project Funding //",
+          "value": "100B",
+          "labelIsConditional": true,
+          "labelWhenUnlocked": "Project Funding Cash",
+          "unlockCondition": "Project Funding equipped",
+          "valueIsComputed": false
+        },
+        {
+          "row": 35,
+          "label": "// Equip Amplifying Strike //",
+          "value": 3,
+          "labelIsConditional": true,
+          "labelWhenUnlocked": "Elites per Wave",
+          "unlockCondition": "Amplifying Strike equipped",
+          "valueIsComputed": false
+        },
+        {
+          "row": 36,
+          "label": "// Unlock ILM //",
+          "value": 50,
+          "labelIsConditional": true,
+          "labelWhenUnlocked": "ILM - Enemies inside ILM Area",
+          "unlockCondition": "Inner Land Mines unlocked",
+          "valueIsComputed": false
+        },
+        {
+          "row": 37,
+          "label": "// Unlock ILM+ //",
+          "value": null,
+          "labelIsConditional": true,
+          "labelWhenUnlocked": "ILM+ - Hits on same targets",
+          "unlockCondition": "Inner Land Mines+ unlocked",
+          "valueIsComputed": true
+        },
+        {
+          "row": 39,
+          "label": "Cards",
+          "value": true
+        },
+        {
+          "row": 40,
+          "label": "Compare Masteries at",
+          "value": null
+        },
+        {
+          "row": 41,
+          "label": "Name",
+          "value": "Active",
+          "isHeader": true
+        },
+        {
+          "row": 42,
+          "label": "Damage",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 43,
+          "label": "Damage Mastery",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 44,
+          "label": "Berserker",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 45,
+          "label": "Attack Speed",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 46,
+          "label": "Attack Speed Mastery",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 47,
+          "label": "Critical Chance",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 48,
+          "label": "Critical Chance Mastery",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 49,
+          "label": "Range",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 50,
+          "label": "Range Mastery (DPM)",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 51,
+          "label": "Enemy Balance",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 52,
+          "label": "Super Tower",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 53,
+          "label": "Super Tower Mastery",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 54,
+          "label": "Ultimate Crit",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 55,
+          "label": "Ultimate Crit Mastery",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 56,
+          "label": "Recovery Package Chance",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 57,
+          "label": "Wave Accelerator",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 58,
+          "label": "Demon Mode Mastery",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 59,
+          "label": "Area of Effect",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 61,
+          "label": "Perks",
+          "value": false
+        },
+        {
+          "row": 62,
+          "label": "Name",
+          "value": "Active",
+          "isHeader": true
+        },
+        {
+          "row": 63,
+          "label": "Damage",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 64,
+          "label": "Bounce Shot",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 65,
+          "label": "x1.5 Damage / Boss Health x8",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 66,
+          "label": "E. Dmg -50% / Dmg -50%",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 67,
+          "label": "Death Wave Quantity",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 68,
+          "label": "Spotlight Damage Bonus",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 69,
+          "label": "More Smart Missiles",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 70,
+          "label": "Chain Lightning Damage",
+          "value": false,
+          "isComputedDisplay": true
+        },
+        {
+          "row": 71,
+          "label": "Extra set of Inner Mines",
+          "value": false,
+          "isComputedDisplay": true
+        }
+      ],
+      "playerVisible": true
+    }
+  },
+  "visibleTabs": [
+    "Home Page",
+    "IDS",
+    "Giveaways",
+    "eHP",
+    "eDamage",
+    "eEcon",
+    "Master Sheet"
+  ],
+  "visibilityNote": "Read from the rendered tab bar, not from the API: 23 of the workbook's 30 tabs are HIDDEN, eRegen among them. A tab list from sheet_info shows all 30 and says nothing about which a player can reach."
+}

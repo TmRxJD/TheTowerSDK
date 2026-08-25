@@ -1,13 +1,103 @@
-/** Re-export enemy wave stats; keep waveBands for level-skip wave scaling. */
-export {
-  ENEMY_TYPE_MULT,
-  getBasicEnemyWaveStats,
-  getEnemyWaveStats,
-  getWaveBaseStats,
-  type EnemyWaveBaseStats,
-  type EnemyWaveEnemyType,
-  type EnemyWaveStats,
-} from '../internal/enemy-wave-stats'
+/**
+ * Enemy stats for a wave, and the band helper the level-skip maths uses.
+ *
+ * Previously two files: the implementation under `internal/` and a re-export
+ * here. The shim added nothing but a second name for the same module and a
+ * collision that stopped the implementation moving, so they are one file.
+ */
+import { clampCampaignTier } from '../data/campaign-tier'
+import {
+  computeWaveBaseDamage,
+  computeWaveBaseHealth,
+} from './wave-base-scaling'
+import { ENEMY_TYPE_MULT_TABLE } from './enemy-type-mults'
+
+export type EnemyWaveEnemyType = keyof typeof ENEMY_TYPE_MULT_TABLE
+
+export interface EnemyWaveBaseStats {
+  hp: number
+  damage: number
+}
+
+export interface EnemyWaveStats extends EnemyWaveBaseStats {
+  tier: number
+  wave: number
+  enemyType: EnemyWaveEnemyType
+  tournament: boolean
+}
+
+export const ENEMY_TYPE_MULT = ENEMY_TYPE_MULT_TABLE
+
+export interface EnemyWaveScalingContext {
+  tournament?: boolean
+  /** CustomizeGame.isTestingTournamentConditions — dev BC test mode only. */
+  isTestingTournamentConditions?: boolean
+  /** @deprecated Use isTestingTournamentConditions */
+  tournamentLeague?: boolean
+}
+
+function resolveWaveInput(
+  tier: number,
+  wave: number,
+  context: boolean | EnemyWaveScalingContext = false,
+) {
+  const t = clampCampaignTier(tier)
+  const w = Math.max(1, Math.floor(wave))
+  const tournament = typeof context === 'boolean' ? context : (context.tournament ?? false)
+  const tournamentLeague = typeof context === 'boolean'
+    ? undefined
+    : context.tournamentLeague
+  const isTesting = typeof context === 'boolean'
+    ? undefined
+    : context.isTestingTournamentConditions
+  return {
+    wave: w,
+    tier: t,
+    tournament,
+    ...(isTesting != null ? { isTestingTournamentConditions: isTesting } : {}),
+    ...(tournamentLeague != null && isTesting == null
+      ? { tournamentLeague }
+      : {}),
+  }
+}
+
+export function getBasicEnemyWaveStats(
+  tier: number,
+  wave: number,
+  context: boolean | EnemyWaveScalingContext = false,
+): EnemyWaveBaseStats {
+  const input = resolveWaveInput(tier, wave, context)
+  return {
+    hp: computeWaveBaseHealth(input),
+    damage: computeWaveBaseDamage(input),
+  }
+}
+
+export function getWaveBaseStats(wave: number): EnemyWaveBaseStats {
+  return getBasicEnemyWaveStats(1, wave, false)
+}
+
+export function getEnemyWaveStats(
+  tier: number,
+  wave: number,
+  enemyType: EnemyWaveEnemyType = 'Basic',
+  context: boolean | EnemyWaveScalingContext = false,
+): EnemyWaveStats | null {
+  const input = resolveWaveInput(tier, wave, context)
+  const typeMult = ENEMY_TYPE_MULT[enemyType]
+  if (!typeMult) return null
+
+  const base = getBasicEnemyWaveStats(input.tier, input.wave, context)
+
+  return {
+    tier: input.tier,
+    wave: input.wave,
+    enemyType,
+    tournament: input.tournament,
+    hp: Math.floor(base.hp * typeMult.hp),
+    damage: Math.floor(base.damage * typeMult.damage),
+  }
+}
 
 /** Legacy band helper used by enemy-level-skip.ts (not GetWaveBaseHealth bands). */
 export function waveBands(wave: number) {

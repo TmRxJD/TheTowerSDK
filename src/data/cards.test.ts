@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { CARD_TEMPLATES } from './cards'
+import {
+  CARD_MASTERY_EFFECT_LEVELS,
+  CARD_MASTERY_LEVELS,
+  CARD_TEMPLATES,
+  CARDS_BY_RARITY,
+} from './cards'
 
 /**
  * Card level values, checked against the curves the Effective Paths sheet
@@ -43,5 +48,56 @@ describe('card level values against the Effective Paths sheet', () => {
     for (const template of CARD_TEMPLATES) {
       expect(template.levelValues, template.id).toHaveLength(7)
     }
+  })
+})
+
+/**
+ * The two derived groupings, pinned to the templates they come from.
+ *
+ * Both of these were wrong on 2026-08-17 and neither failed anything:
+ *
+ * - `CARDS_BY_RARITY` was a hand-written literal whose `rare` bucket omitted
+ *   `ws` (Wave Skip). The card import preview falls through to `'common'` for
+ *   an unlisted id, and `getEffectiveChance` divides by the bucket length, so
+ *   every rare card's draw odds came out 8/7 too high.
+ * - `masteryValues` is indexed from level 0, not level 1. The interface comment
+ *   said otherwise and platform's chart library followed it.
+ */
+describe('card groupings stay derived from the templates', () => {
+  it('buckets every template by rarity, with none dropped', () => {
+    const bucketed = Object.values(CARDS_BY_RARITY).flat()
+
+    expect(bucketed).toHaveLength(CARD_TEMPLATES.length)
+    expect(new Set(bucketed).size, 'a card is bucketed twice').toBe(bucketed.length)
+
+    for (const template of CARD_TEMPLATES) {
+      expect(
+        CARDS_BY_RARITY[template.rarity]?.includes(template.id),
+        `${template.id} (${template.name}) is missing from the ${template.rarity} bucket`,
+      ).toBe(true)
+    }
+  })
+
+  it('keeps Wave Skip rare — the exact card that went missing', () => {
+    expect(card('ws').rarity).toBe('rare')
+    expect(CARDS_BY_RARITY.rare).toContain('ws')
+    expect(CARDS_BY_RARITY.rare).toHaveLength(8)
+  })
+
+  it('covers mastery levels 0-9, one more value than there are lab levels', () => {
+    // The wiki's Card Mastery Overview table is headed 0-9 (ten columns); its
+    // lab time/coin table runs 1-9. Unlocking grants the level-0 effect, so the
+    // two are consistent and the arrays must differ in length by exactly one.
+    expect(CARD_MASTERY_EFFECT_LEVELS).toHaveLength(CARD_MASTERY_LEVELS.length + 1)
+    expect(CARD_MASTERY_EFFECT_LEVELS[0]).toBe(0)
+
+    for (const template of CARD_TEMPLATES) {
+      expect(template.masteryValues, `${template.id} mastery values`)
+        .toHaveLength(CARD_MASTERY_EFFECT_LEVELS.length)
+    }
+
+    // Damage's row on the wiki: x1.4 at level 0 through x5 at level 9.
+    expect(card('dmg').masteryValues[0], 'mastery level 0').toBe(1.4)
+    expect(card('dmg').masteryValues[9], 'mastery level 9').toBe(5)
   })
 })

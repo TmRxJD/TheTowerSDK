@@ -2,10 +2,12 @@ import { evaluateDropdownOptions } from './dropdown-evaluator'
 import type { StandardDropdownOption } from './types'
 import {
   buildUwStatFieldLabel,
+} from './uw-stat-dropdown-math'
+import {
   computeDefaultUwStatStoneLevel,
   findUwStatSpec,
   type UwStatSpec,
-} from './uw-stat-dropdown-math'
+} from '../../mechanics/uw-stat-values'
 
 export type UwStatDropdownBinding = {
   dataKey: 'uw_stat_level'

@@ -1,3 +1,4 @@
+import { ownLookup } from '../internal/own-lookup'
 import {
   TIER_BATTLE_CONDITION_DEFINITIONS,
   type TierBattleConditionDefinition,
@@ -312,6 +313,9 @@ export const TOURNAMENT_ENEMY_LEVEL_SKIP_HEAT_SUBTRACT: Readonly<Record<Tourname
 
 export function getTournamentEnemyLevelSkipHeatSubtract(league: TournamentLeague | null | undefined): number {
   if (!league) return 0
+  // Own keys only: a league name from a save or a URL that happens to be `constructor`
+  // otherwise resolves to a function, and `?? 0` does not catch it.
+  if (!Object.prototype.hasOwnProperty.call(TOURNAMENT_ENEMY_LEVEL_SKIP_HEAT_SUBTRACT, league)) return 0
   return TOURNAMENT_ENEMY_LEVEL_SKIP_HEAT_SUBTRACT[league] ?? 0
 }
 
@@ -339,6 +343,7 @@ export function isTournamentLeague(value: unknown): value is TournamentLeague {
 }
 
 export function getTournamentLeagueTierBase(league: TournamentLeague): number {
+  if (!Object.prototype.hasOwnProperty.call(TOURNAMENT_LEAGUE_TIER_BASES, league)) return 0
   return TOURNAMENT_LEAGUE_TIER_BASES[league]
 }
 
@@ -357,9 +362,10 @@ export type LegacyTournamentTierAlias = keyof typeof LEGACY_TOURNAMENT_TIER_ALIA
 
 export function normalizeLegacyTournamentTierAlias(value: unknown): TournamentLeague | null {
   if (typeof value !== 'string') return null
-  if (value in LEGACY_TOURNAMENT_TIER_ALIASES) {
-    return LEGACY_TOURNAMENT_TIER_ALIASES[value as LegacyTournamentTierAlias]
-  }
+  // `in` walks the prototype chain, so `'constructor' in map` is true and the lookup
+  // then returned the `Object` function from a `TournamentLeague | null` signature.
+  const alias = ownLookup(LEGACY_TOURNAMENT_TIER_ALIASES, value)
+  if (alias !== undefined) return alias
   return isTournamentLeague(value) ? value : null
 }
 

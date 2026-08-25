@@ -1,5 +1,59 @@
 # Changelog
 
+## 0.5.3
+
+Nine new entry points. Nothing was removed or renamed, so this is additive for
+anything already on 0.5.2.
+
+Enough to build a tool end to end without writing any of the plumbing:
+
+- **`thetowersdk/builders`** — the calculators as data. Each one declares its
+  fields, their units and their caps, so a UI, a bot command or a test can be
+  generated from the same declaration rather than hand-written three times.
+- **`thetowersdk/bot`** — `createTowerBot()` and `calculatorCommands()`, which
+  turn every builder into a slash command. Transport-agnostic: it produces
+  commands and replies, and never touches a Discord client.
+- **`thetowersdk/sheets`** — a Google Sheets reader that knows the two ways a
+  sheet lies to you. A spilled cell carries no formula, and the API truncates
+  trailing empties, so a short row means "unknown", not "zero".
+- **`thetowersdk/inputs`** — the shared input vocabulary the builders parse,
+  including a decimal separator that follows the reader's locale.
+- **`thetowersdk/assets`** — which image file is a given module or card. A
+  module's file is named after its INITIALS and rarity (`Om Chip` at Epic is
+  `epic_oc.png`), which is not guessable from its name. Every function returns
+  `null` for something with no art, so a caller can tell that apart from a
+  wrong path. The artwork itself is NOT in this package: it belongs to
+  TechTree Games and ships separately.
+
+Conventions that now hold across every calculator, because each was a real bug
+first: a level past the end of a cost table is refused rather than priced at
+zero, caps come from each curve rather than a shared constant, and any lookup
+keyed by a name from a save, a sheet or a URL uses own-key access — `??` cannot
+reject an inherited function.
+
+And the game data that used to live in the consuming application.
+
+- **`thetowersdk/charts`** — the shared chart registry, its data, and the links
+  from each chart to the mechanics it documents. A chart is a view over game
+  data, so its definition is game data.
+- **`thetowersdk/knowledge`** — the Tower Oracle graph: mechanics, how they
+  relate, and the specific ways each has been misread.
+
+Moved into `thetowersdk/data` from `@tmrxjd/platform`, which now re-exports them
+so existing consumers keep working:
+
+- Relic unlock methods and the published bonus-total categories.
+- Theme category definitions, the passive coin-bonus coefficients, and the full
+  theme catalog. The formula string and the 169 per-item bonus literals are gone
+  — both are derived from one rate per category now.
+- Vault tree summaries, derived from the node lists rather than transcribed.
+- Daily mission tier and weekly reward tables, with weekly totals derived from
+  the rows they sum.
+- The module pull simulator: pity counters, rarity rates, pool sizes, RNG walk.
+
+`@tmrxjd/platform` depends on this version for `thetowersdk/charts` and
+`thetowersdk/knowledge`; neither existed in 0.5.2.
+
 ## 0.5.2
 
 Keep `node:fs` modules (repo-root, planner codegen, debug-graph session/trace, coverage

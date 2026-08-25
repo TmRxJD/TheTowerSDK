@@ -72,6 +72,15 @@ const highest = (values: number[]) => (values.length ? Math.max(...values) : nul
  * is asserted exactly in the test: a *new* name failing to resolve fails the
  * suite rather than joining a silent exception list.
  */
+/**
+ * The most path rows the sheet will render, whatever the control is set to.
+ *
+ * `EPP_ITEM_NAME(<range>, MIN(145, <rowsCalculated>))` on every planner tab, so
+ * the truncation is in the path formula rather than in the control. Asking for
+ * more returns the same 145 items and no warning.
+ */
+export const EP_PATH_ROW_CAP = 145
+
 export const NOT_LABS: Readonly<Record<string, string>> = {
   'Primary Module - Armor': 'a module level, bought with coins rather than a lab',
   'Assist Module - Armor': 'a module level, bought with coins rather than a lab',
@@ -404,7 +413,12 @@ const CONTROL_RANGES: readonly InputRange[] = [
   { id: 'control.hideUwCooldown', kind: 'boolean', source: 'eDamage!AY24', min: 0, max: 1, options: [false, true] },
   { id: 'control.hideNonUwUpgrades', kind: 'boolean', source: 'eDamage!AY25', min: 0, max: 1, options: [false, true] },
   { id: 'control.perksEquipped', kind: 'boolean', source: 'eDamage!AY61, eEcon!AZ43', min: 0, max: 1, options: [false, true] },
-  { id: 'control.useCards', kind: 'boolean', source: 'eDamage!AY39', min: 0, max: 1, options: [false, true] },
+  /*
+   * All three authored tabs, not just eDamage. eRegen has one too and it is
+   * deliberately absent: that tab's panel is a spilled mirror of eHP, so citing
+   * it would name the same control twice.
+   */
+  { id: 'control.useCards', kind: 'boolean', source: 'eDamage!AY39, eHP!AY16, eEcon!AZ28', min: 0, max: 1, options: [false, true] },
   /*
    * The three "how many levels to show" dropdowns.
    *
@@ -441,10 +455,26 @@ const CONTROL_RANGES: readonly InputRange[] = [
   {
     id: 'control.rowsCalculated',
     kind: 'enum',
+    // Both citations are correct, and this line was briefly "fixed" to AJ23 on
+    // 2026-08-18 by miscounting rows in a multi-row read. On eHP the label sits
+    // one row above the value, and the sheet's own path formula reads
+    // MIN(145, AJ22), which settles which of the two is which.
+    //
+    // Written without a second Tab!Cell reference on purpose: the citation
+    // scanner counts every one it finds, so a cell named in prose becomes a
+    // coverage row that has to exist.
     source: 'eDamage!AI21 / eHP!AJ22 — the sheet ships this at 1',
     min: 1,
-    max: 150,
-    options: [1, 25, 50, 100, 150],
+    // 145, not the 150 this carried before. The path formula truncates:
+    // `EPP_ITEM_NAME(<range>, MIN(145, <rowsCalculated>))`. Whatever the cell
+    // accepts, the rendered path stops at 145 items, so 150 was a maximum this
+    // package offered and the sheet cannot honour.
+    max: EP_PATH_ROW_CAP,
+    // The option list is unverified against the sheet's data validation — it
+    // was authored here, not read from the sheet, and the sheet's own default
+    // is 1 while eEcon derives 25. Recorded as a guess rather than presented as
+    // the control's choices.
+    options: [1, 25, 50, 100, EP_PATH_ROW_CAP],
   },
 ]
 

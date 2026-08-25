@@ -10,7 +10,7 @@ import {
   rangeDamageMultiplier,
 } from './effective-paths-damage-stats'
 import { workshopStatValue } from './effective-paths-workshop-values'
-import fixtures from './effective-paths-damage-stats2.fixtures.json'
+import fixtures from '../../fixtures/mechanics/effective-paths-damage-stats2.fixtures.json'
 
 /** The rest of the `EPD_*` layer, against the live sheet. */
 

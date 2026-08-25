@@ -28,8 +28,8 @@ import { bossWaveIntervalForTier, DEFAULT_BOSS_WAVE_INTERVAL } from '../data/ene
 import { clamp } from './math'
 import { cardLevelUpgradeGemCost } from './card-costs'
 import { clampCardGameLevel, clampCardMasteryLevel } from './enemy-drops-context'
-import { formatCompact } from '../internal/tool-formatting'
-import { computeEconomyScaledRoiPct, computeRoiReferenceCost } from '../internal/roi-scaling'
+import { formatCompact } from '../formatting/tool-formatting'
+import { computeEconomyScaledRoiPct, computeRoiReferenceCost } from './roi-scaling'
 
 /** Skipped-wave resource multiplier from Wave Skip card description. */
 export const WAVE_SKIP_SKIPPED_WAVE_MULT = 1.10
@@ -385,13 +385,22 @@ function fetchUpgradeAtLevel(level: number): FetchUpgrade {
   return rows[idx] ?? rows[0]
 }
 
+/**
+ * Cost of raising one fetch stat between two levels.
+ *
+ * Bounded by the upgrade table. `fetchUpgradeAtLevel` clamps its index to the last row, so
+ * an unbounded `toLevel` did not merely run long — it charged the final level's cost once
+ * more for every level past the end, returning a total that grew without limit for
+ * upgrades that cannot be bought.
+ */
 function cumulativeFetchStatCost(
   stat: 'cooldownCost' | 'findChanceCost' | 'doubleFindChanceCost',
   fromLevel: number,
   toLevel: number,
 ): number {
+  const lastLevel = Math.min(toLevel, guardianUpgrades.fetch.length)
   let total = 0
-  for (let level = fromLevel + 1; level <= toLevel; level += 1) {
+  for (let level = fromLevel + 1; level <= lastLevel; level += 1) {
     const row = fetchUpgradeAtLevel(level)
     const cost = row[stat]
     if (typeof cost === 'number' && Number.isFinite(cost)) total += cost

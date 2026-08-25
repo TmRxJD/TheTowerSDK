@@ -19,7 +19,7 @@ import {
   ultimateWeaponHeatUp,
   ultimateWeaponTotalDamage,
 } from './effective-paths-ultimate-weapons'
-import fixtures from './effective-paths-ultimate-weapons.fixtures.json'
+import fixtures from '../../fixtures/mechanics/effective-paths-ultimate-weapons.fixtures.json'
 
 /**
  * The ultimate weapon layer, against the live sheet.

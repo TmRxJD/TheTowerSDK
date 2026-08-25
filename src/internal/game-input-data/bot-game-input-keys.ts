@@ -1,3 +1,4 @@
+import { ownLookupOr } from '../own-lookup'
 import { UPTIME_BOT_FIELD_MAP, type UptimeBotFieldMap } from '../shared-uptime-inputs'
 import {
   BOT_CD_LAB_COUNT,
@@ -62,7 +63,7 @@ export const BOT_GAME_INPUT_SPEC_BY_KEY = Object.fromEntries(
 ) as Record<BotGameDataKey, BotGameInputSpec>
 
 export function normalizeGameDataKey(key: string): string {
-  return (GAME_DATA_KEY_ALIASES as Record<string, string>)[key] ?? key
+  return ownLookupOr(GAME_DATA_KEY_ALIASES as Record<string, string>, key, key)
 }
 
 export function findBotStatGameDataKey(botLabel: string, statName: string): BotGameDataKey | null {

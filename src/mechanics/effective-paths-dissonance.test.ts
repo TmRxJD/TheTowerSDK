@@ -4,7 +4,7 @@ import {
   dissonantBoost,
   dissonantBoostOfType,
 } from './effective-paths-ehp-model'
-import fixtures from './effective-paths-dissonance.fixtures.json'
+import fixtures from '../../fixtures/mechanics/effective-paths-dissonance.fixtures.json'
 
 /**
  * The dissonance boost, against the live sheet.

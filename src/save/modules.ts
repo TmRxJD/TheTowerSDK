@@ -4,7 +4,8 @@ import { MODULE_RARITIES } from '../data/module-levels'
 import { IMPORT_CATALOG_META } from './catalogs/indexes'
 import { findModuleInfoIdentity } from '../data/module-info-catalog'
 import { buildModuleEquippedSubstatsFromSave, buildModuleSaveSubstatSlotPreviews, decodeSingleModuleSaveSubstat } from './module-effects-ids'
-import { coerceSaveNumber } from './read-values'
+import {
+  coerceSaveNumber, readSaveListItems } from './read-values'
 
 export type ModuleEquippedSlotKey =
   | 'primary:Cannon'
@@ -87,6 +88,14 @@ export interface ModulesSaveEquippedItem {
   rarityLabel: string | null
   effects: number[]
   effectLocked: boolean[]
+  /** Per-module investment and instance identity, as the game stores it. */
+  guid: string | null
+  rerollCounter: number | null
+  shardsSpent: number | null
+  /** Approximate above ~9.0e15 — Int64 in the save, lossy once decoded. */
+  coinsSpent: number | null
+  isNew: boolean
+  favorite: boolean
   mappedInitials: string | null
   mappedName: string | null
 }
@@ -100,6 +109,14 @@ export interface ModulesSaveInventoryItem {
   rarityLabel: string | null
   effects: number[]
   effectLocked: boolean[]
+  /** Per-module investment and instance identity, as the game stores it. */
+  guid: string | null
+  rerollCounter: number | null
+  shardsSpent: number | null
+  /** Approximate above ~9.0e15 — Int64 in the save, lossy once decoded. */
+  coinsSpent: number | null
+  isNew: boolean
+  favorite: boolean
   mappedInitials: string | null
   mappedName: string | null
 }
@@ -198,9 +215,20 @@ function readSaveModuleItem(raw: unknown): {
   rarityLabel: string | null
   effects: number[]
   effectLocked: boolean[]
+  guid: string | null
+  rerollCounter: number | null
+  shardsSpent: number | null
+  coinsSpent: number | null
+  isNew: boolean
+  favorite: boolean
 } {
   if (!raw || typeof raw !== 'object') {
-    return { infoIndex: null, level: null, rarityEnum: null, rarityLabel: null, effects: [], effectLocked: [] }
+    return {
+      infoIndex: null, level: null, rarityEnum: null, rarityLabel: null,
+      effects: [], effectLocked: [],
+      guid: null, rerollCounter: null, shardsSpent: null, coinsSpent: null,
+      isNew: false, favorite: false,
+    }
   }
 
   const item = raw as Record<string, unknown>
@@ -215,7 +243,38 @@ function readSaveModuleItem(raw: unknown): {
     ? item.effectLocked.map(value => readSaveBoolean(value))
     : []
 
-  return { infoIndex, level, rarityEnum, rarityLabel, effects, effectLocked }
+  /*
+   * The rest of what the game stores per module. These were parsed by nothing
+   * until now, so a player's investment in a specific module — shards, coins,
+   * rerolls — was not readable at all.
+   *
+   * `guid` identifies the instance, which is the only way to follow one module
+   * across two saves: `infoIndex` says which *type* it is, and a player can
+   * own several of the same type.
+   */
+  const guid = typeof item.guid === 'string' && item.guid.trim() ? item.guid : null
+
+  return {
+    infoIndex,
+    level,
+    rarityEnum,
+    rarityLabel,
+    effects,
+    effectLocked,
+    guid,
+    rerollCounter: coerceSaveNumber(item.rerollCounter),
+    shardsSpent: coerceSaveNumber(item.shardsSpent),
+    /*
+     * Approximate above ~9.0e15. The game stores this as Int64 and a developed
+     * account exceeds `Number.MAX_SAFE_INTEGER` — an observed value is
+     * 2.58e19, whose trailing zeros are float64 rounding. The precision is
+     * lost when the save is decoded, not here, so treat it as a magnitude
+     * rather than an exact coin count.
+     */
+    coinsSpent: coerceSaveNumber(item.coinsSpent),
+    isNew: readSaveBoolean(item.isNew),
+    favorite: readSaveBoolean(item.favorite),
+  }
 }
 
 /** @deprecated alias */
@@ -223,13 +282,16 @@ function readEquippedModuleItem(raw: unknown) {
   return readSaveModuleItem(raw)
 }
 
+/**
+ * The modules a player actually holds.
+ *
+ * Delegates so that `_size` is honoured: `inventory` is a 32-slot array with 17
+ * live entries in the repo's save, and the fifteen past the end are only
+ * harmless because they happen to be null there. Other lists in the same file
+ * carry non-null stale entries, so that is luck rather than a guarantee.
+ */
 function readSaveModuleList(raw: unknown): unknown[] {
-  if (Array.isArray(raw)) return raw
-  if (!raw || typeof raw !== 'object') return []
-  const list = raw as Record<string, unknown>
-  if (Array.isArray(list._items)) return list._items
-  if (Array.isArray(list.items)) return list.items
-  return []
+  return readSaveListItems(raw)
 }
 
 export function isOwnedModuleSaveItem(
@@ -299,6 +361,12 @@ export function readModulesFromSaveRoot(parsedRoot: unknown): ModulesSaveExtract
         rarityLabel: parsed.rarityLabel,
         effects: parsed.effects,
         effectLocked: parsed.effectLocked,
+        guid: parsed.guid,
+        rerollCounter: parsed.rerollCounter,
+        shardsSpent: parsed.shardsSpent,
+        coinsSpent: parsed.coinsSpent,
+        isNew: parsed.isNew,
+        favorite: parsed.favorite,
         mappedInitials: mapping?.initials ?? null,
         mappedName: mapping?.name ?? null,
       })
@@ -346,6 +414,12 @@ export function readModulesFromSaveRoot(parsedRoot: unknown): ModulesSaveExtract
         rarityLabel: parsed.rarityLabel,
         effects: parsed.effects,
         effectLocked: parsed.effectLocked,
+        guid: parsed.guid,
+        rerollCounter: parsed.rerollCounter,
+        shardsSpent: parsed.shardsSpent,
+        coinsSpent: parsed.coinsSpent,
+        isNew: parsed.isNew,
+        favorite: parsed.favorite,
         mappedInitials: mapping?.initials ?? null,
         mappedName: mapping?.name ?? null,
       })
@@ -376,6 +450,12 @@ export function readModulesFromSaveRoot(parsedRoot: unknown): ModulesSaveExtract
       rarityLabel: parsed.rarityLabel,
       effects: parsed.effects,
       effectLocked: parsed.effectLocked,
+      guid: parsed.guid,
+      rerollCounter: parsed.rerollCounter,
+      shardsSpent: parsed.shardsSpent,
+      coinsSpent: parsed.coinsSpent,
+      isNew: parsed.isNew,
+      favorite: parsed.favorite,
       mappedInitials: mapping!.initials,
       mappedName: mapping!.name,
     })

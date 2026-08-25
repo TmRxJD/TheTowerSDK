@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { MAX_ASSIST_MULTIPLIER_EFFICIENCY_PCT } from './assist-module-efficiency'
+import { MAX_ASSIST_MULTIPLIER_EFFICIENCY_PCT } from '../mechanics/assist-module-efficiency'
 
 export type ModuleType = 'cannon' | 'defense' | 'generator' | 'core'
 
@@ -55,8 +55,6 @@ export type ShardSplitterSnapshot = {
   shardDiscount: number
 }
 
-export const SHARD_SPLITTER_COLLECTION = 'settings'
-export const SHARD_SPLITTER_RECORD_ID = 'shard-splitter-v1'
 
 const defaultSplitterData: SplitterData = {
   budget: null,

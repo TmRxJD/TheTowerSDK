@@ -49,13 +49,39 @@ function normalizeKey(value: string): string {
     .replace(/\bstar\b/gi, '★')
     .replace(/\s*\+\s*/g, ' + ')
     .replace(/\s+/g, ' ')
+    // A star binds to the number regardless of spacing: "Ancestral 5 *" and
+    // "Ancestral 5*" are one rarity written two ways.
+    .replace(/\s*★/g, '★')
     .trim()
     .toLowerCase()
 }
 
+/**
+ * Every spelling of every rarity that is actually in circulation.
+ *
+ * `normalizeKey` has always folded `*`, the open star and the word "star" into
+ * `★` — but until 2026-08-17 only the plain labels were ever registered, so a
+ * starred input normalised to a key that was in no map and resolved to null.
+ * The capability was there and nothing used it, which is why `Ancestral 5*` —
+ * the spelling the Effective Paths sheet writes — silently failed every lookup
+ * and `computeModuleStat` returned a bonus of 1 for a maxed module.
+ *
+ * Four forms per rarity, derived rather than listed:
+ *
+ * - the label itself — `Ancestral 5`
+ * - starred, as the sheet writes it — `Ancestral 5*`, `Ancestral 5 *`, `Ancestral 5★`
+ * - unspaced, as the save enum writes it — `Ancestral5`
+ * - both — `Ancestral5*`
+ */
 const RARITY_ALIAS_MAP: Map<string, ModuleRarity> = new Map()
 for (const rarity of MODULE_RARITIES) {
-  RARITY_ALIAS_MAP.set(normalizeKey(rarity), rarity)
+  const unspaced = rarity.replace(/\s+/g, '')
+  // `Rare +` is written `RarePlus` in the save enum.
+  const worded = rarity.replace(/\s*\+\s*/g, 'Plus')
+  for (const form of [rarity, unspaced, worded]) {
+    RARITY_ALIAS_MAP.set(normalizeKey(form), rarity)
+    RARITY_ALIAS_MAP.set(normalizeKey(`${form}★`), rarity)
+  }
 }
 
 export function findRarityLabel(rarity: string | null | undefined): ModuleRarity | null {
@@ -63,6 +89,45 @@ export function findRarityLabel(rarity: string | null | undefined): ModuleRarity
   const key = normalizeKey(rarity)
   if (!key) return null
   return RARITY_ALIAS_MAP.get(key) || null
+}
+
+/* ------------------------------------------------------------------ *
+ * The save enum, and the off-by-one that comes with it
+ * ------------------------------------------------------------------ */
+
+/**
+ * Save-file rarity value for a display label, or `null`.
+ *
+ * The save enum is **1-based with a `None` at 0**, so its value is NOT an index
+ * into `MODULE_RARITIES`. Reading `MODULE_RARITIES[value]` shifts every rarity
+ * up by one — a saved `Ancestral 5` (15) reads past the end as `undefined`, and
+ * a saved `Common` (1) reads as `Rare`. Use these two helpers rather than
+ * indexing, so the offset lives in exactly one place.
+ *
+ * The mapping is positional by construction and checked below, so it cannot
+ * drift if the enum gains an entry.
+ */
+export function saveValueForRarity(rarity: string | null | undefined): number | null {
+  const resolved = findRarityLabel(rarity)
+  if (!resolved) return null
+  return MODULE_RARITIES.indexOf(resolved) + 1
+}
+
+/** Display label for a save-file rarity value. `0` is `None`, not a rarity. */
+export function rarityFromSaveValue(value: number | null | undefined): ModuleRarity | null {
+  // `Number(x) ?? NaN` was dead: Number() returns NaN, never null or undefined,
+  // so the fallback could not fire. It read as a NaN guard and was not one --
+  // the real guard is the isFinite check below. Note Number(null) is 0, which
+  // the range check rejects because 0 is `None` rather than a rarity.
+  if (value == null) return null
+  const index = Math.floor(Number(value))
+  if (!Number.isFinite(index) || index < 1 || index > MODULE_RARITIES.length) return null
+  return MODULE_RARITIES[index - 1]
+}
+
+/** `true` when the save value means "no module", which is distinct from an unknown value. */
+export function isEmptyRaritySaveValue(value: number | null | undefined): boolean {
+  return Number(value) === 0
 }
 
 export function getLevelCapForRarity(rarity: string | null | undefined): number {

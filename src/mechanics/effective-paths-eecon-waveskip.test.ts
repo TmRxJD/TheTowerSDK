@@ -4,7 +4,7 @@ import {
   waveSkipFreeUpgrades,
   waveSkipTimeSaved,
 } from './effective-paths-eecon-stats'
-import fixtures from './effective-paths-eecon-waveskip.fixtures.json'
+import fixtures from '../../fixtures/mechanics/effective-paths-eecon-waveskip.fixtures.json'
 
 /**
  * The Wave Skip lookup, against the sheet's own `EP_HELPER` table.

@@ -1,6 +1,6 @@
 import { CARD_LEVELS } from '../../data/index'
 import { BOT_UPGRADES_DATA, findBotByName } from '../../data/index'
-import { waveAcceleratorCooldownReductionFraction } from '../uptime-core'
+import { waveAcceleratorCooldownReductionFraction } from '../../mechanics/uptime-core'
 import type { GameDropdownOptionEntry } from './types'
 
 const GOLDEN_BOT_COOLDOWN_MIN_SECONDS = 50

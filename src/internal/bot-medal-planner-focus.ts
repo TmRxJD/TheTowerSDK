@@ -1,3 +1,4 @@
+import { ownLookupOr } from './own-lookup'
 export const BOT_MEDAL_PLANNER_FOCUS_GOALS = [
   'farming',
   'tournament',
@@ -39,7 +40,7 @@ const FOCUS_GOAL_LABELS: Record<BotMedalPlannerFocusGoal, string> = {
 }
 
 export function botMedalPlannerFocusGoalLabel(goal: BotMedalPlannerFocusGoal): string {
-  return FOCUS_GOAL_LABELS[goal]
+  return ownLookupOr(FOCUS_GOAL_LABELS, goal, String(goal))
 }
 
 export function normalizeBotMedalPlannerFocusOrder(value: unknown): BotMedalPlannerFocusGoal[] {

@@ -1,6 +1,6 @@
 import { formatNumberForDisplay, normalizeNumericValue } from '../formatting/index'
 import { parseSaveDateTimeToMs } from '../formatting/index'
-import { normalizeTrackerLifetimeDate } from '../internal/tracker-lifetime'
+import { normalizeTrackerLifetimeDate } from './tracker-lifetime-fields'
 import { coerceSaveNumber } from './read-values'
 
 export interface LifetimeImportEntryFields {

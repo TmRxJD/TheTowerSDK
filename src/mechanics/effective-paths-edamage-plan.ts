@@ -16,12 +16,14 @@
  * the pairing rather than trusting it.
  */
 
+import { ownLookup } from '../internal/own-lookup'
 import {
   EFFECTIVE_DAMAGE_CANDIDATES,
 } from './effective-paths-edamage-candidates'
 import {
   ZERO_EFFECTIVE_DAMAGE_LEVELS,
 } from './effective-paths-edamage-levels'
+import { COIN_BAND_DELTA_FIELDS } from './effective-paths-edamage-coin-levels'
 import type {
   EffectiveDamageCoinLevels,
   EffectiveDamageKeysLevels,
@@ -29,15 +31,21 @@ import type {
   EffectiveDamageLevels,
   EffectiveDamageStoneLevels,
 } from './effective-paths-edamage-levels'
-import { computeEffectiveDamage } from './effective-paths-edamage-compute'
+import {
+  computeEffectiveDamage,
+  ENHANCEMENT_MULTIPLIER_PER_LEVEL,
+} from './effective-paths-edamage-compute'
+import type { EffectiveDamageShadow } from './effective-paths-edamage-compute'
 import { checkEffectiveDamageInputs } from './effective-paths-edamage-schema'
 import type { EffectiveDamageInputIssue } from './effective-paths-edamage-schema'
 import type { DamageCard, EffectiveDamageConfig } from './effective-paths-edamage-config'
 import {
+  KEYS_CANDIDATE_NODES,
   keysCandidateCost,
   keysCandidateMaxLevel,
   resolveUltimateWeaponStat,
   ultimateWeaponMaxLevel,
+  ultimateWeaponStatValue,
   ultimateWeaponStoneCost,
 } from './effective-paths-edamage-costs'
 import {
@@ -50,6 +58,8 @@ import {
   moduleUpgradeCoinCost,
 } from './effective-paths-coin-costs'
 import {
+  ATTACK_ENHANCEMENT_SPEND_UNLOCKS,
+  attackEnhancementSpend,
   enhancementCoinCost,
   enhancementMaxLevel,
 } from './effective-paths-enhancement-costs'
@@ -137,13 +147,48 @@ const LAB_PREREQUISITES: Readonly<Record<string, (config: EffectiveDamageConfig)
   'Damage Mastery': config => card(config, 'Damage Mastery'),
   // `NOT(AND($AY$61, $AY$63))` — perks on, and the Damage perk among them.
   'Standard Perks Bonus': config => config.perksEquipped && config.perks.Damage,
-  // `NOT(AND($AY$61, $AY$65))` — `AY65` is the third perk row, Boss Health.
+  /*
+   * `NOT(AND($AY$61, $AY$65))` — `AY65` is the third perk row, Boss Health.
+   *
+   * VERIFIED against `eDamage!FY2` on 2026-08-19, after the Demon Mode Mastery
+   * gate turned out to cite a formula nobody had read back. This one is right:
+   * the sheet does AND the perks master with the row.
+   *
+   * It is also NOT the cause of the four Improve Trade-off Perks mismatches in
+   * the 150-account sweep. On every one of them the lab is a candidate, not an
+   * excluded one, and the port's gain for +1 level matches the sheet exactly
+   * (0.009709 on `account-26`), as does the cost (2.8194 days at level 3→4). So
+   * the gate, the gain and the cost are all eliminated; what remains is the
+   * ranking as the path progresses, and that is still open.
+   */
   'Improve Trade-off Perks': config =>
     config.perksEquipped && config.perks['Boss Health Trade-off'],
-  // `NOT(AND($AY$39, $AY$58))` — the cards switch at the block's head, and row
-  // 58, which `AT58` names "Demon Mode Mastery ⚠️".
-  'Demon Mode Mastery': config =>
-    config.cardsEquipped && card(config, 'Demon Mode Mastery'),
+  /*
+   * `NOT($AY$58)` — row 58 alone, and NOT the cards master beside it.
+   *
+   * This read `NOT(AND($AY$39, $AY$58))` and required `cardsEquipped` too. The
+   * sheet's flag at `GA2` is:
+   *
+   *     =OR(NOT($AY$58), $AX$19="Attack Disso",
+   *         EPG_LEVEL_CHECK(BC44+1, BD44, BE44),
+   *         AND($AY$26, NOT(IDS_LAB_HAS_UNLOCKED(GA4))))
+   *
+   * There is no `$AY$39` in it. The extra condition excluded the lab from the
+   * plan on every account with the cards master off, and a 300-account parity
+   * sweep is what surfaced it: the sheet opened its path with Demon Mode
+   * Mastery while the port would not consider it at all — on an account where
+   * the port's own damage model scored the same level at +33%.
+   *
+   * The comment was wrong before the code was. Both cited a formula nobody had
+   * read back.
+   *
+   * It also does NOT go through {@link card}: that helper ANDs `cardsEquipped`
+   * itself, so the first attempt at this fix removed one copy of the condition
+   * and left the other, and the sweep reported exactly the same mismatches.
+   * Reading the card row directly is the only way to express a gate the sheet
+   * writes without the master switch.
+   */
+  'Demon Mode Mastery': config => Boolean(config.cards['Demon Mode Mastery']?.active),
   /*
    * `NOT(AND($BH$31, $AL$75))`.
    *
@@ -156,6 +201,88 @@ const LAB_PREREQUISITES: Readonly<Record<string, (config: EffectiveDamageConfig)
   'Shock Multiplier': config =>
     Boolean(config.ultimateWeapons['Chain Lightning']?.unlocked)
     && config.shockMultiplierUnlocked,
+  /*
+   * The six ultimate-weapon amplifier labs, from `eDamage!FF2:FN2`, read back
+   * on 2026-08-19. `BH30:BH37` is the ownership column and its rows are in the
+   * same order as {@link DAMAGE_ULTIMATE_WEAPONS}, which is what lets a row
+   * number be named rather than repeated.
+   *
+   * ## Why an unowned weapon's lab has to be EXCLUDED, not merely worth zero
+   *
+   * The port already gave these labs no gain when the weapon is missing — the
+   * amplifier multiplies a term that is zero — so under most run types they
+   * simply sorted last and nothing looked wrong. Attack Disso is where that
+   * stops working: it blanks most other columns, so on `account-12` the two
+   * surviving candidates had ROI `1.17e-2` and `2.87e-6`, and a zero-gain
+   * Missile Amplifier tied its way to the front of the port's path while the
+   * sheet had hidden the column outright.
+   *
+   * A ranking cannot distinguish "no benefit" from "not applicable" — that is
+   * the whole reason the sheet writes these as flags and not as gains.
+   */
+  'Death Wave Damage Amplifier': config =>
+    Boolean(config.ultimateWeapons['Death Wave']?.unlocked),
+  'Missile Amplifier': config =>
+    Boolean(config.ultimateWeapons['Smart Missiles']?.unlocked),
+  // `NOT(AND($BH$33, $BH$34))` — this one needs BOTH, the emitter and the
+  // missiles it fires.
+  'Spotlight Missiles': config =>
+    Boolean(config.ultimateWeapons.Spotlight?.unlocked)
+    && Boolean(config.ultimateWeapons['Spotlight Missiles']?.unlocked),
+  'Inner Land Mine - Chrono Jump': config =>
+    Boolean(config.ultimateWeapons['Inner Land Mines']?.unlocked),
+  /*
+   * `NOT($BH$35), NOT($AL$69), $AX$19="Attack Disso"` — and the same rend
+   * conditions guard `Max Rend Armor Multiplier` at `FH2` without a weapon.
+   *
+   * Attack Disso appears here as a gate rather than as a zero for the same
+   * reason as above: under that run type the armour-rend path does not run at
+   * all, so its multiplier is not a small benefit, it is not on offer.
+   */
+  'Swamp Rend': config =>
+    Boolean(config.ultimateWeapons['Poison Swamp']?.unlocked)
+    && config.hasRendArmour
+    && config.runType !== 'Attack Disso',
+  'Max Rend Armor Multiplier': config =>
+    config.hasRendArmour && config.runType !== 'Attack Disso',
+  /*
+   * `NOT(AND($AY$39, $AY$52))` at `FF2` — the cards master AND the Super Tower
+   * card, so this one DOES go through {@link card}, unlike Demon Mode Mastery
+   * above. The sheet is not consistent about which of the two it writes, which
+   * is exactly why each gate is read back rather than inferred from its
+   * neighbour.
+   */
+  'Super Tower Bonus': config => card(config, 'Super Tower'),
+  // `NOT($AY$55)` — row alone, no master. Plus the Attack Disso blanket.
+  'Ultimate Crit Mastery': config =>
+    Boolean(config.cards['Ultimate Crit Mastery']?.active)
+    && config.runType !== 'Attack Disso',
+}
+
+/**
+ * Stone candidates the sheet hides, from `eDamage Stone!FH2:FK2` and `GK2`.
+ *
+ * An assist module's substat ladder does nothing without the module: the cap
+ * `EPG_ASSIST_SUB_CAP` returns a flat zero rather than a smaller scale. So the
+ * gain is exactly zero — and a zero still wins a tie-break, which is how the
+ * stone path opened with an assist upgrade on all ten accounts of the first
+ * sweep.
+ *
+ * Two more in that row are gated on the IDS import — `NOT('_IDS'!$BG$2)` for
+ * Assist Module Bonus - Cannon and `NOT('_IDS'!$BV$2)` for Assist Module
+ * Substats - Core. That is save data, not player state the port models, so
+ * they are NOT here; see the sweep test, which excludes them explicitly and
+ * says why rather than quietly matching.
+ */
+const STONE_PREREQUISITES: Readonly<Record<string, (config: EffectiveDamageConfig) => boolean>> = {
+  // `OR(NOT(AN4), $AX$19="Attack Disso", CN5>=69)` — `AN4` is the Cannon
+  // module's own assist flag. The level cap is the candidate's max, not a gate.
+  'Assist Module Substats - Cannon': config =>
+    config.modules.cannon.hasAssist && config.runType !== 'Attack Disso',
+  // `OR(NOT(AN47), CO5>=69)`
+  'Assist Module Substats - Armor': config => config.modules.armor.hasAssist,
+  // `OR(NOT(AN23), CP5>=99)`
+  'Assist Module Bonus - Core': config => config.modules.core.hasAssist,
 }
 
 /** Whether a card is equipped and switched on, as the cards block reads it. */
@@ -255,6 +382,40 @@ export interface EffectiveDamagePlanOptions {
   workshopEnhancementsUnlocked?: boolean
   /** Upgrades to leave out entirely — the sheet's "Hide non-unlocked". */
   excludeIds?: readonly string[]
+  /**
+   * Why a given `excludeIds` entry was left out, by id.
+   *
+   * `excludeIds` is one flat set fed from several places -- a lab the account
+   * has not unlocked, and the sheet's display toggles -- and the reason it was
+   * reported with was hard-coded to "not unlocked yet" for all of them. So
+   * turning on "Hide UW Cooldown" told a player `DW Cooldown - not unlocked
+   * yet` about a stat they had MAXED, which is a false statement about their
+   * own account and sends them to the wrong screen to fix it.
+   *
+   * Callers that know the cause supply it here; anything unlabelled keeps the
+   * old wording.
+   */
+  excludeReasons?: Readonly<Record<string, string>>
+  /**
+   * Whether an upgrade is on the board AT THIS STEP.
+   *
+   * The coin tab's enhancements UNLOCK partway down the path as coins
+   * accumulate: `eDamage Coins!EM5` (Damage / Meter +) opens with
+   * `OR(NOT(GTE(EF5, 5000000000000)), …)` and `EI5` (Super Crit Mult +) with
+   * `GTE(EF5, 50000000000000)`. `excludeIds` is a single up-front set and
+   * cannot express that; this can. See `PathPlanOptions.available`.
+   */
+  available?: (step: number, id: string, levels: ReadonlyMap<string, number>) => boolean
+  /** Every candidate the loop prices, at every step. */
+  onCandidateRoi?: (entry: {
+    step: number
+    id: string
+    name: string
+    nextLevel: number
+    roi: number
+    gain: number
+    price: number
+  }) => void
   /** Lab coin discount and lab speed. */
   labModifiers?: LabCostModifiers
   /** Module upgrade coin discount, as a percentage. */
@@ -265,6 +426,14 @@ export interface EffectiveDamagePlanOptions {
 
 export interface EffectiveDamagePlan {
   steps: PathStep[]
+  /**
+   * What every candidate scored on the first step — the port's own version of
+   * the sheet's per-candidate ROI row.
+   *
+   * Diagnostic, not a result: it exists so a disagreement about a pick names
+   * the candidate instead of requiring 29 numbers to be re-derived by hand.
+   */
+  firstStepRoi: Array<{ name: string, roi: number, gain: number, cost: number }>
   /** Effective damage before any of it. */
   startingEffectiveDamage: number
   /** Effective damage after the last step. */
@@ -328,6 +497,245 @@ function resolveMaxLevel(upgrade: EffectiveDamageUpgrade): number | null {
  * Candidates keep their matrix order, because the planner breaks a tie by
  * taking the earliest — which is the sheet taking the leftmost column.
  */
+
+/**
+ * The sheet's shadow columns, where they disagree with its base columns.
+ *
+ * `eDamage!EV5` — the Critical Chance Mastery shadow — writes `CC, DJ5 + 1%`
+ * flat, while the base column reaches crit chance through `EPD_CRIT_CHANCE`,
+ * whose mastery term sits inside `IF(has_card, …)` with
+ * `has_card = AND($AY$39, $AY$47)`. With the cards master off the two disagree:
+ * the shadow credits a percentage point per mastery level, the base credits
+ * none.
+ *
+ * The bonus is applied ONLY while pricing the candidate. The state after the
+ * purchase goes back through the base column, so the level is bought and
+ * delivers nothing — which is exactly what the sheet does to itself, and why
+ * its path buys Critical Chance Mastery at a point where the port would not.
+ *
+ * When the card IS on, the base already credits the mastery and this returns
+ * nothing, so ordinary accounts are untouched.
+ */
+/**
+ * Where the sheet stops offering CF Slow, expressed as a target level.
+ *
+ * `eDamage Stone!FF5` blanks the column on `EB5>=10`, and `EB5` is
+ * `1/(1 - MIN(90%, reduction + substat))`. That reaches 10 exactly when the
+ * `MIN` starts binding, so "the slow has hit ten" and "the 90% cap has been
+ * reached" are the same condition, and the gate can be resolved once up front
+ * instead of re-checked every step.
+ *
+ * The level that FIRST crosses 90% is still buyable — the gate reads the slow
+ * BEFORE the purchase — and the one after it is not. So the ceiling is that
+ * crossing level, not the one below it. Getting this off by one leaves the port
+ * either one level short of the sheet or one past it, and both look like a
+ * ranking bug rather than a boundary.
+ *
+ * Returns `undefined` when nothing binds, so the normal maximum applies.
+ */
+function chronoSlowCeiling(
+  config: EffectiveDamageConfig,
+  levels: EffectiveDamageLevels,
+  upgrade: EffectiveDamageUpgrade,
+  maxLevel: number,
+): number | undefined {
+  if (!upgrade.id.startsWith('stone.') || upgrade.sheetName !== 'CF Slow') return undefined
+
+  // Found by asking the model, not by re-deriving the substat. The sheet's
+  // `Substat` weights the assist half by an assist CAPACITY that depends on
+  // other levels, and a second copy of that arithmetic here would be one more
+  // thing to drift. Comparing the clamped slow against the unclamped one says
+  // exactly when `MIN(90%, …)` starts binding, which is the same moment
+  // `EB5` reaches 10.
+  const base = levels.stone.chronoFieldSlow ?? 0
+  for (let level = base + 1; level <= maxLevel; level += 1) {
+    const at: EffectiveDamageLevels = {
+      ...levels,
+      stone: { ...levels.stone, chronoFieldSlow: level },
+    }
+    const clamped = computeEffectiveDamage(config, at, STONE_PATH_SHADOW).slow
+    const free = computeEffectiveDamage(
+      config, at, { ...STONE_PATH_SHADOW, chronoSlowUnclamped: true }).slow
+    if (free > clamped * (1 + 1e-12)) return level
+  }
+  return undefined
+}
+
+/** The stone path's baseline shadow, which its own ceiling search needs too. */
+const STONE_PATH_SHADOW: EffectiveDamageShadow = { weaponStatsFromStoneLevels: true }
+
+/** The keys candidates that rebuild Spotlight rather than reading `$CY5`. */
+const KEYS_RECOMPUTE_SPOTLIGHT = new Set(['keys.damagePerMeter', 'keys.damage'])
+
+/** `eDamage Keys!CH5` — the vault's super crit chance node is 2% a level. */
+const SUPER_CRIT_CHANCE_PER_VAULT_LEVEL = 0.02
+
+function shadowFor(
+  config: EffectiveDamageConfig,
+  candidate: PathUpgrade | undefined,
+  keysSpotlightVaultPct?: number,
+  keysFrozenSpotlight?: number,
+): EffectiveDamageShadow {
+  /*
+   * Keyed on the CANDIDATE, not on a level delta.
+   *
+   * This compared the levels being priced against the levels the path STARTED
+   * from. Once Spotlight Missiles had been bought once, every later candidate
+   * — and the step's own baseline — still satisfied "its level went up", so
+   * the cooldown override stayed switched on for the whole rest of the path
+   * and repriced the entire board. Parity went from 96/100 to 89/100 and the
+   * failures moved in both directions at once, which is what a distorted
+   * baseline looks like rather than a mis-valued upgrade.
+   *
+   * The sheet has no such ambiguity: each upgrade is priced in its own column,
+   * and a column's quirk cannot reach any other. Naming the candidate is how
+   * the port gets the same property.
+   */
+  if (candidate === undefined) return {}
+
+  // The keys band prices every candidate against the base row's Spotlight.
+  if (keysSpotlightVaultPct !== undefined && candidate.id.startsWith('keys.')) {
+    return {
+      spotlightVaultPct: keysSpotlightVaultPct,
+      /*
+       * Nine of the eleven end on the base row's Spotlight; `Damage / Meter`
+       * and `Damage` do not.
+       *
+       * Read off the columns, not assumed from the family: `DR5` names no
+       * `CY5` at all — it recomputes Spotlight, because the light range it
+       * feeds is what Damage / Meter moves — and `DW5` is the local ladder
+       * that touches none of this. Freezing all eleven put Damage / Meter
+       * behind Damage on the first three steps of five accounts.
+       */
+      ...(keysFrozenSpotlight !== undefined && !KEYS_RECOMPUTE_SPOTLIGHT.has(candidate.id)
+        ? { frozenSpotlightBonus: keysFrozenSpotlight }
+        : {}),
+      /*
+       * Super crit chance carries NO vault term in the composition — neither
+       * `eDamage!DL5` nor the port's `superCritChance()` has one — so the two
+       * keys candidates that move it have to say so themselves. The keys tab
+       * does it by subtracting `$BM$20` and adding its own band back:
+       *
+       *   DL5 (Critical Chance)     CC, CF5+1%   and   SCC, CH5+1%
+       *   DN5 (Super Crit Chance)   CC, CF5      and   SCC, CH5+2%
+       *
+       * Without these the port valued both at nothing on this axis and ranked
+       * them below the sheet on four of the five readable real accounts.
+       */
+
+    }
+  }
+
+  if (candidate.name === 'Spotlight Missiles') {
+    return { spotlightMissilesCooldownSeconds: SHEET_SPOTLIGHT_MISSILES_SHADOW_COOLDOWN }
+  }
+
+  /*
+   * STONE band only — the name alone is not enough.
+   *
+   * `Assist Module Substats - Cannon` is a candidate in the lab band too, and
+   * the lab tab's shadow for it uses `$AN$4`, the Cannon module's own flag,
+   * like everything else. Only `eDamage Stone!FH5` reaches for `$AN$23`.
+   *
+   * Keying on the name alone applied the stone tab's quirk to the lab path and
+   * broke five accounts of the 199-account lab-time sweep, all of them the
+   * sheet buying this upgrade where the port then would not. Caught because
+   * that sweep is a ratchet at zero rather than a count.
+   */
+  if (candidate.id.startsWith('stone.')
+    && candidate.name === 'Assist Module Substats - Cannon') {
+    return { cannonAssistCapUsesCoreFlag: true }
+  }
+
+  /*
+   * STONE band only, and the sheet disagrees with itself here.
+   *
+   * `eDamage Stone!EB5`, the BASE slow column, clamps:
+   *
+   *     1/(1 - MIN(90%, SpeedReduction(CK5) + Substat))
+   *
+   * `eDamage Stone!FF5`, the column that PRICES the candidate, does not:
+   *
+   *     CFSlow, 1/(1 - SpeedReduction(CK5+1) - Substat)
+   *
+   * So a level is valued as if the 90% cap did not exist and then delivers the
+   * capped amount, because the next row is computed by the base column again.
+   * That is the same shape as Spotlight Missiles, and the planner already
+   * handles the consequence by re-settling after each pick.
+   *
+   * It is not academic: on the accounts where this bites, the clamp binds at
+   * level 10 and our gain fell to a fraction of the sheet's, so the port
+   * stopped buying at 9 where the sheet buys 10.
+   *
+   * The sheet's own stop is a GATE rather than a clamp — `FF5` blanks the
+   * column on `EB5>=10`, which is the same 90% expressed as a ceiling on the
+   * result. So the candidate does disappear, one level later than a clamp would
+   * have made it worthless.
+   */
+  if (candidate.id.startsWith('stone.') && candidate.name === 'CF Slow') {
+    return { chronoSlowUnclamped: true }
+  }
+
+  /*
+   * STONE band only, and again the sheet disagreeing with itself.
+   *
+   * `eDamage Stone!EU5` and `EV5` are the only candidate columns that move
+   * Spotlight COVERAGE, so they are the only ones that rebuild Super Tower
+   * rather than reading `DB5` — and their rebuild multiplies the Super Tower
+   * lab in a second time. See
+   * {@link EffectiveDamageShadow.spotlightCandidateSuperTowerInline}.
+   *
+   * On `account-9` this is the whole of step 1: it makes the sheet's SL Angle
+   * worth 0.712 where ours was 0.0145, which is a factor of 49 and the
+   * difference between the sheet opening on SL Angle and the port opening on
+   * SL Damage.
+   */
+  if (candidate.id === 'stone.spotlightAngle' || candidate.id === 'stone.spotlightQuantity') {
+    return { spotlightCandidateSuperTowerInline: true }
+  }
+
+  /*
+   * `eDamage Coins!ET5` rebuilds the composition at the bumped cap and takes
+   * its `Rend` from `CG5+1` -- the assist module SUBSTATS column -- while the
+   * base row `DL5` takes it from `CJ5`, the BONUS column. So this one
+   * candidate REPAIRS the wrong-column difference the base row carries, and
+   * its gain includes the repair.
+   *
+   * That was previously unreproducible for a good reason: the port used the
+   * substats level everywhere, so it never had the difference to repair. Now
+   * that the base reproduces `CJ5`, switching this candidate back to the
+   * substats cap reproduces the repair too.
+   */
+  /*
+   * `eDamage!FM5` and `FS5` take the ILM cooldown from `$AY$10`, the display
+   * cell, which already carries the substat they then add again. See
+   * {@link EffectiveDamageShadow.innerLandMineCooldownFromDisplayCell}.
+   */
+  if (candidate.name === 'Inner Land Mine - Chrono Jump'
+    || candidate.name === 'Assist Module Substats - Core') {
+    return { innerLandMineCooldownFromDisplayCell: true }
+  }
+
+  if (candidate.name === 'Assist Module Substats - Cannon') {
+    return { maxRendAssistCapFromBonusLevel: false }
+  }
+
+  if (candidate.name === 'Critical Chance Mastery') {
+    const gated = config.cardsEquipped && Boolean(config.cards['Critical Chance']?.active)
+    if (gated || !config.cards['Critical Chance Mastery']?.active) return {}
+    // One level, so one percentage point — the shadow's `DJ5 + 1%` exactly.
+    return { flatCriticalChanceBonus: 0.01 }
+  }
+
+  return {}
+}
+
+/**
+ * The literal `2` in `eDamage!FI5`, named so the test can cite it rather than
+ * repeat it. `20 - 18` — the Spotlight Missiles lab at its cap.
+ */
+const SHEET_SPOTLIGHT_MISSILES_SHADOW_COOLDOWN = 2
+
 export function planEffectiveDamagePath(
   options: EffectiveDamagePlanOptions,
 ): EffectiveDamagePlan {
@@ -348,6 +756,7 @@ export function planEffectiveDamagePath(
   if (!check.ok) {
     return {
       steps: [],
+      firstStepRoi: [],
       startingEffectiveDamage: 0,
       finalEffectiveDamage: 0,
       excluded: [],
@@ -363,7 +772,10 @@ export function planEffectiveDamagePath(
     if (!BAND_VARIANTS[upgrade.band].includes(variant)) continue
 
     if (skipped.has(upgrade.id)) {
-      excluded.push({ sheetName: upgrade.sheetName, reason: 'not unlocked yet' })
+      excluded.push({
+        sheetName: upgrade.sheetName,
+        reason: options.excludeReasons?.[upgrade.id] ?? 'not unlocked yet',
+      })
       continue
     }
 
@@ -371,6 +783,47 @@ export function planEffectiveDamagePath(
     // weapon itself — `NOT($BH$35)` for Poison Swamp, `NOT($BH$37)` for Inner
     // Land Mines. Without it the planner spends stones on a weapon the player
     // does not own: the gain is zero, but a zero still wins a tie-break.
+    /*
+     * Every ultimate-weapon stone stat is gated on owning the weapon.
+     *
+     * `eDamage Stone!DZ2:GO2` is uniform about it — `NOT($BH$30)` for all
+     * three Death Wave stats, `NOT($BH$31)` for all three Chain Lightning
+     * ones, and so on for all 24. Derived from the stat name rather than
+     * listed, so a new candidate cannot arrive ungated.
+     *
+     * Chrono Field carries one more: `OR(NOT($AY$33), NOT($BH$36))`, the
+     * enable toggle beside the weapon.
+     *
+     * Not modelled: `$AY$24` "Hide UW Cooldown" also hides DW Cooldown and SM
+     * Cooldown. It is a display toggle like "Hide non-UW Upgrades", the port
+     * has no field for it, and it is false by default. Recorded here so its
+     * absence is a decision rather than an oversight.
+     */
+    if (upgrade.band === 'stone') {
+      const stat = resolveUltimateWeaponStat(upgrade.sheetName)
+      const weaponName = stat?.weapon as keyof EffectiveDamageConfig['ultimateWeapons'] | undefined
+      if (weaponName && config.ultimateWeapons[weaponName]) {
+        const owned = config.ultimateWeapons[weaponName].unlocked
+        const enabled = weaponName !== 'Chrono Field' || config.chronoFieldEnabled
+        if (!owned || !enabled) {
+          excluded.push({
+            sheetName: upgrade.sheetName,
+            reason: 'the weapon is not unlocked',
+          })
+          continue
+        }
+      }
+    }
+
+    const stoneGate = STONE_PREREQUISITES[upgrade.sheetName]
+    if (upgrade.band === 'stone' && stoneGate && !stoneGate(config)) {
+      excluded.push({
+        sheetName: upgrade.sheetName,
+        reason: 'what it multiplies is not taken yet',
+      })
+      continue
+    }
+
     const prerequisite = LAB_PREREQUISITES[upgrade.sheetName]
     if (upgrade.band === 'lab' && prerequisite && !prerequisite(config)) {
       excluded.push({
@@ -399,7 +852,36 @@ export function planEffectiveDamagePath(
       continue
     }
 
-    const level = levelOf(levels, upgrade)
+    /*
+     * `Cash Bonus +` is hidden outright on three conditions, not merely worth
+     * zero. `eDamage Coins!EJ2`:
+     *
+     *     =OR(AM45+AR45=0, $AX$19="Attack Disso", $AX$19="Util Disso")
+     *
+     * `AM45+AR45` is the Project Funding substat, which is the whole reason the
+     * candidate does anything — it reaches damage only through Perfect Freeze.
+     *
+     * The run-type half is the one that mattered. Worth-zero and hidden are not
+     * the same thing here: a zero gain still scores ROI 0 and still wins a tie,
+     * which is how three Util Disso accounts bought a candidate their sheet
+     * never offers. Same trap as the lab prerequisites above.
+     */
+    if (upgrade.key === 'enhancementCashBonus') {
+      const projectFunding
+        = config.uniques['Project Funding'].primary + config.uniques['Project Funding'].assist
+      const disallowedRun = config.runType === 'Attack Disso' || config.runType === 'Util Disso'
+      if (projectFunding === 0 || disallowedRun) {
+        excluded.push({
+          sheetName: upgrade.sheetName,
+          reason: disallowedRun
+            ? `the sheet hides it on ${config.runType}`
+            : 'no Project Funding substat, so it reaches nothing',
+        })
+        continue
+      }
+    }
+
+    const level = levelOf(levels, upgrade, config)
 
     // Below 160 a module level is cheaper in shards, so the coin path leaves
     // it alone — the same rule the eHP coin path follows.
@@ -411,7 +893,8 @@ export function planEffectiveDamagePath(
       continue
     }
 
-    const maxLevel = options.maxLevels?.[upgrade.id] ?? resolveMaxLevel(upgrade)
+    const maxLevel = (options.maxLevels ? ownLookup(options.maxLevels, upgrade.id) : undefined)
+      ?? resolveMaxLevel(upgrade)
     if (maxLevel === null) {
       excluded.push({ sheetName: upgrade.sheetName, reason: 'no maximum level known' })
       continue
@@ -422,17 +905,213 @@ export function planEffectiveDamagePath(
       name: upgrade.sheetName,
       level,
       maxLevel,
-      targetLevel: options.targetLevels?.[upgrade.id],
+      targetLevel: options.targetLevels?.[upgrade.id]
+        ?? (variant === 'stone'
+          ? chronoSlowCeiling(config, levels, upgrade, maxLevel)
+          : undefined),
     })
   }
 
   const skips: PathSkip[] = []
+  /*
+   * `$DG$5` — Perfect Freeze at row 5, held fixed for the whole fill-down.
+   *
+   * Computed once, from the levels the path STARTS at, because that is what an
+   * absolute reference means. See
+   * {@link EffectiveDamageShadow.perfectFreezeBaseline}.
+   */
+  /*
+   * The stone path rebuilds every weapon stat from its level; the others take
+   * the observed value. See
+   * {@link EffectiveDamageShadow.weaponStatsFromStoneLevels} — it has to hold
+   * for the BASELINE as well as for each candidate, or a level-1 stat gets
+   * priced against a fully-upgraded weapon and the gain comes out negative.
+   */
+  const pathShadow: EffectiveDamageShadow = variant === 'stone'
+    ? STONE_PATH_SHADOW
+    : variant === 'keys'
+      /*
+       * `eDamage Keys!CU5` computes Max Rend without the assist substat, and
+       * the tab BORROWS most of its UW total from elsewhere:
+       *
+       *     eDamage Keys!CZ5 DW      = eDamage!EE5
+       *     eDamage Keys!DC5 SLM    = eDamage!EH5
+       *     CX5 mastery = eDamage!DY5
+       *     eDamage Keys!DD5 PS     = the STONE tab's Poison Swamp
+       *
+       * Only Chain Lightning, Spotlight and the additional damage are its own.
+       * So two extra passes: one in the LAB context, one in the STONE context.
+       *
+       * The lab pass must not carry `maxRendPrimarySubstatOnly` — that is a
+       * keys-tab quirk, and it reaches Poison Swamp through
+       * `PSRend, 1+(DZ5-1)*CI5*3%`.
+       */
+      ? (() => {
+        const lab = computeEffectiveDamage(config, levels, {}).columns
+        const stone = computeEffectiveDamage(
+          config, levels, { weaponStatsFromStoneLevels: true },
+        ).columns
+        return {
+          maxRendPrimarySubstatOnly: true,
+          ultimateWeaponOverrides: {
+            deathWave: lab.EE5,
+            smartMissiles: lab.EG5,
+            spotlightMissiles: lab.EH5,
+            innerLandMines: lab.EL5,
+            superTowerUltimateMastery: lab.DY5,
+            poisonSwamp: stone.EJ5,
+          },
+        } satisfies EffectiveDamageShadow
+      })()
+      /*
+       * `eDamage Coins!DL5` caps Max Rend's assist substat off the assist
+       * module BONUS level, where the tab's other nine cap-using columns take
+       * the SUBSTATS level. See
+       * {@link EffectiveDamageShadow.maxRendAssistCapFromBonusLevel}.
+       */
+      : variant === 'coin'
+        ? { maxRendAssistCapFromBonusLevel: true }
+        : {}
+
+  const perfectFreezeBaseline
+    = computeEffectiveDamage(config, levels, pathShadow).columns.DG5
+
+  /**
+   * What every candidate scored on the FIRST step.
+   *
+   * The sheet publishes a whole row of these and the port published one winner,
+   * so any disagreement about a pick had to be localised by re-deriving the
+   * others by hand. Step 1 only: later steps depend on what was bought, so they
+   * are a consequence of the ranking rather than an independent reading of it.
+   */
+  const firstStepRoi: EffectiveDamagePlan['firstStepRoi'] = []
+
   const planned = planPath({
+    onCandidateRoi: entry => {
+      if (entry.step === 1) {
+        firstStepRoi.push({ name: entry.name, roi: entry.roi, gain: entry.gain, cost: entry.price })
+      }
+      // Chained, not replaced. This used to swallow the caller's callback
+      // entirely, so `options.onCandidateRoi` was accepted and never called --
+      // a hook that reports nothing looks exactly like a step that priced
+      // nothing, which is how a probe here read "ours=none" for every
+      // candidate.
+      options.onCandidateRoi?.(entry)
+    },
     upgrades,
     steps,
-    evaluate: current => {
+    evaluate: (current, candidate) => {
       const next = withLevels(levels, current)
-      return computeEffectiveDamage(config, next).effectiveDamage
+      /*
+       * The frozen Spotlight tracks the PATH, not the start of it.
+       *
+       * `$CY5` is column-absolute and row-RELATIVE, so on the candidate row
+       * that prices step k it reads `CY(4+k)` — that step's own base row, not
+       * row 5. Freezing at the level the account started with made the vault's
+       * marginal return decay across the path while the sheet's stayed flat
+       * (1.0014e-4, 1.0132e-4, 1.0117e-4 over three consecutive steps), so the
+       * port bought UW Damage once where the sheet bought it twice, and every
+       * account came out exactly one step short.
+       *
+       * `next` already carries the candidate's own bump, so the base level is
+       * one below it when the candidate IS the vault's UW Damage node.
+       */
+      /*
+       * Spotlight held WHOLE at this step's base row, computed from the levels
+       * before the candidate's own bump.
+       */
+      const keysFrozenSpotlight = variant === 'keys' && candidate !== undefined
+        ? (() => {
+          // `current` already carries this candidate's bump; the step's base
+          // row is that same board with the one purchase undone.
+          const beforeThisStep = new Map(current)
+          const own = beforeThisStep.get(candidate.id)
+          if (own !== undefined) beforeThisStep.set(candidate.id, own - 1)
+          return computeEffectiveDamage(config, withLevels(levels, beforeThisStep), {
+            ...pathShadow, perfectFreezeBaseline,
+          }).columns.ED5
+        })()
+        : undefined
+      const keysSpotlight = variant === 'keys'
+        ? (next.keys.ultimateWeaponDamage
+          - (candidate?.id === 'keys.ultimateWeaponDamage' ? 1 : 0))
+          * KEYS_CANDIDATE_NODES['UW Damage'].perLevel
+        : undefined
+      /*
+       * Super crit chance ACCUMULATES on the keys band, and nowhere else.
+       *
+       * `eDamage!DL5` carries no vault term at all — `Base + Substat + Lab +
+       * CardCCMastery + BAModule` — so the port's `superCritChance()` has none
+       * either, and the two agree. `eDamage Keys!CH5` then adds one back:
+       *
+       *     ... - $BM$20 + BR5*2%
+       *
+       * `BR5` is that band's level, so at the base row this cancels and after
+       * k purchases it is k*2%. A per-candidate flat 2% covered the bump being
+       * priced and NOT the levels already bought, so the error grew with the
+       * path: 0.05% at step 1 and 3.7% by step 16, which is where two accounts
+       * took Super Crit Chance over a candidate the sheet ranks 3% higher.
+       *
+       * `next` already carries the candidate's own bump, so this one term
+       * replaces both.
+       */
+      const keysSuperCrit = variant === 'keys'
+        ? (next.keys.superCritChance - levels.keys.superCritChance) * SUPER_CRIT_CHANCE_PER_VAULT_LEVEL
+        : undefined
+      return computeEffectiveDamage(config, next, {
+        ...pathShadow,
+        ...shadowFor(config, candidate, keysSpotlight, keysFrozenSpotlight),
+        ...(keysSuperCrit !== undefined
+          ? { flatSuperCritChanceBonus: keysSuperCrit
+            // `DL5` bumps `SCC, CH5+1%` alongside its own `CC, CF5+1%`.
+            + (candidate?.id === 'keys.criticalChance' ? 0.01 : 0) }
+          : {}),
+        perfectFreezeBaseline,
+      }).effectiveDamage
+    },
+    /**
+     * `Damage +` is priced on its own multiplier, not on effective damage.
+     *
+     * `eDamage Coins!EZ5` — `Now, 1+1%*BO5 · Next, 1+1%*(BO5+1) · Factor,
+     * Next/Now-1`. The two enhancement columns beside it use
+     * `(shadow/$EC5 - 1)`, the change in total effective damage, so the sheet
+     * really does compare a local ratio against a global one here.
+     *
+     * ONLY this candidate. The others were checked against the sheet on
+     * 2026-08-20 and use the global form; extending this to them because they
+     * are the same KIND of upgrade would be reasoning by category over reading.
+     */
+    relativeGain: (id, nextLevel) => {
+      if (id === 'coin.enhancementDamage') {
+        const now = 1 + ENHANCEMENT_MULTIPLIER_PER_LEVEL * (nextLevel - 1)
+        const next = 1 + ENHANCEMENT_MULTIPLIER_PER_LEVEL * nextLevel
+        return next / now - 1
+      }
+      /*
+       * The vault's Damage node, the one keys candidate priced on its own
+       * ladder: `eDamage Keys!DW5` is `Now, 1+5%*BO5 · Next, 1+5%*(BO5+1) ·
+       * Factor, Next/Now-1`, while the other TEN are `(candidate/$DI5 - 1)`,
+       * the change in total effective damage. Enumerated by reading all eleven
+       * columns, not inferred from Damage being "the same kind of upgrade".
+       *
+       * This is load-bearing rather than cosmetic. `towerDamage` takes no vault
+       * input at all -- the Damage vault node reaches the composition nowhere
+       * -- so through the global form the candidate gains exactly nothing and
+       * is never bought. The sheet spent two steps on it and the port spent
+       * none, on every account.
+       *
+       * Modelling it here rather than threading a `vaultPct` into
+       * `towerDamage` is what the sheet does: no eDamage column applies this
+       * node to the damage figure either. Wiring it into the composition would
+       * make the port disagree with the sheet everywhere else to make it agree
+       * here.
+       */
+      if (id === 'keys.damage') {
+        const now = 1 + VAULT_DAMAGE_PER_LEVEL * (nextLevel - 1)
+        const next = 1 + VAULT_DAMAGE_PER_LEVEL * nextLevel
+        return next / now - 1
+      }
+      return null
     },
     cost: (id, nextLevel) => {
       const upgrade = byId.get(id)
@@ -440,16 +1119,37 @@ export function planEffectiveDamagePath(
       return costOf(upgrade, nextLevel, variant, options) ?? Number.NaN
     },
     onSkip: skip => skips.push(skip),
+    /*
+     * The coin path's enhancement unlocks, ANDed with whatever the caller asks.
+     *
+     * `eDamage Coins!EM5` and its four siblings open with
+     * `OR(NOT(GTE(EF5, <threshold>)), …)`, where `EF5` is the running spend
+     * across the six attack enhancements. It climbs as the path buys, so an
+     * enhancement joins the board partway down — a single up-front exclusion
+     * set cannot say that, which is why this is here and not in `excludeIds`.
+     */
+    available: (step, id, current) => {
+      if (options.available && !options.available(step, id, current)) return false
+      if (variant !== 'coin') return true
+      const costStat = COIN_ENHANCEMENT_COST_STAT[id.replace(/^coin\./, '')]
+      const unlock = costStat === undefined
+        ? undefined
+        : ATTACK_ENHANCEMENT_SPEND_UNLOCKS[costStat]
+      if (unlock === undefined) return true
+      return attackEnhancementSpend(attackEnhancementLevelsAt(current, config, levels)) >= unlock
+    },
   })
 
   // Every candidate the loop passed over, named with the number that
   // disqualified it, so a short path can be explained rather than guessed at.
   appendSkipExclusions(excluded, planned, skips)
 
-  const startingEffectiveDamage = computeEffectiveDamage(config, levels).effectiveDamage
+  const startingEffectiveDamage
+    = computeEffectiveDamage(config, levels, pathShadow).effectiveDamage
 
   return {
     steps: planned,
+    firstStepRoi,
     startingEffectiveDamage,
     finalEffectiveDamage: planned.length
       ? planned[planned.length - 1].value
@@ -459,6 +1159,10 @@ export function planEffectiveDamagePath(
   }
 }
 
+
+/** `eDamage Keys!DW5` — the vault Damage node is 5% a level. */
+const VAULT_DAMAGE_PER_LEVEL = 0.05
+
 /** What it costs to take a candidate to `nextLevel`, in the path's currency. */
 function costOf(
   upgrade: EffectiveDamageUpgrade,
@@ -466,6 +1170,21 @@ function costOf(
   variant: EffectiveDamagePlanVariant,
   options: EffectiveDamagePlanOptions,
 ): number | null {
+  /*
+   * Keys are priced by the level being BOUGHT: `keysCandidateCost(name, L+1)`
+   * when the candidate sits at L, which is the sheet's
+   * `Cost = base * POW(2, BO5)` read off `eDamage Keys!DW5`.
+   *
+   * Do not "fix" this into an ordinal measured from the starting level. That
+   * was tried, on the evidence that the generated sweep priced every keys
+   * candidate `null` and planned zero steps against the sheet's forty. The
+   * real cause was the FIXTURE: it rolled vault percentages freely, so the
+   * levels came out fractional -- Damage at 0.73, UW Damage at 1.42 -- and
+   * there is no such thing as level 1.73 to price. On the nine real accounts
+   * every keys level is an integer and the sheet stops each candidate exactly
+   * at its cap. An ordinal would have undercharged every account that already
+   * owns vault levels, silently.
+   */
   if (upgrade.band === 'keys') return keysCandidateCost(upgrade.sheetName, nextLevel)
 
   if (upgrade.band === 'stone') {
@@ -491,10 +1210,50 @@ function costOf(
     )
   }
 
+  /*
+   * Spotlight Missiles is priced ALL THE WAY TO ITS CAP, alone among the 34.
+   *
+   *     eDamage!GO5 = (FI5/$ES5-1)
+   *       / SUM(ARRAYFORMULA(LABDURATION_SINGLE_ADJUSTED($GO$4,
+   *                          SEQUENCE(18-CH5+1, 1, CH5+1))))
+   *
+   * Every other ROI column divides by one level's duration. This one sums the
+   * duration of every level from the next one through 18, and its shadow `FI5`
+   * matches: it passes `EP_SLM_DPS` a cooldown of `2` — which is `20 - 18`, the
+   * value at that same cap — where the base column `EH5` passes `20 - CH5`.
+   *
+   * So the pair is self-consistent and this is NOT one of the sheet's
+   * inconsistencies: the lab's whole point is the cooldown, and the column
+   * asks "what does finishing this lab buy, per day spent finishing it". It
+   * then buys one level at a time at that ratio.
+   *
+   * Reading only the shadow made it look like a bug and priced a single level
+   * at the value of the whole run to cap — parity went 96/100 to 89/100. The
+   * cost half is what makes it honest, and the two have to move together.
+   */
+  if (variant === 'lab-time' && upgrade.sheetName === SPOTLIGHT_MISSILES) {
+    let total = 0
+    for (let level = nextLevel; level <= SPOTLIGHT_MISSILES_MAX_LEVEL; level += 1) {
+      const day = labDurationDaysToReachLevel(
+        labName(upgrade.sheetName), level, options.labModifiers,
+      )
+      // A level the catalog cannot price makes the SUM meaningless rather than
+      // smaller, so the candidate drops out instead of being flattered.
+      if (day === null || !Number.isFinite(day)) return null
+      total += day
+    }
+    return total > 0 ? total : null
+  }
+
   return variant === 'lab-time'
     ? labDurationDaysToReachLevel(labName(upgrade.sheetName), nextLevel, options.labModifiers)
     : labCoinCostToReachLevel(labName(upgrade.sheetName), nextLevel, options.labModifiers)
 }
+
+/** The one lab the sheet prices to its cap. See {@link costOf}. */
+const SPOTLIGHT_MISSILES = 'Spotlight Missiles'
+/** The `18` in `SEQUENCE(18-CH5+1, …)`, and the `20 - 18 = 2` in `FI5`. */
+const SPOTLIGHT_MISSILES_MAX_LEVEL = 18
 
 /**
  * A candidate's current level.
@@ -517,16 +1276,97 @@ function costOf(
  * Adding them gives the planner the real level while leaving the compute's sums
  * correct: a step raises the increment, and both sides agree on the total.
  */
-function levelOf(levels: EffectiveDamageLevels, upgrade: EffectiveDamageUpgrade): number {
+function levelOf(
+  levels: EffectiveDamageLevels,
+  upgrade: EffectiveDamageUpgrade,
+  config?: EffectiveDamageConfig,
+): number {
   switch (upgrade.band) {
     case 'lab': return levels.lab[upgrade.key as keyof EffectiveDamageLabLevels]
     case 'stone': return levels.stone[upgrade.key as keyof EffectiveDamageStoneLevels]
     case 'coin': {
+      // A workshop enhancement is already owned to some level, and that level
+      // lives on the CONFIG (the sheet's `BI` column) rather than in `levels`.
+      // Starting these candidates at zero made the planner offer level 1 of an
+      // enhancement the account had nine levels of, so the sheet's `@10` and
+      // ours could never line up even once the gain was wired.
+      const enhancementStatName = config && COIN_ENHANCEMENT_STAT[upgrade.key]
+      if (enhancementStatName) {
+        const owned = config.stats[enhancementStatName]?.enhancementLevel ?? 0
+        const bought = levels.coin[upgrade.key as keyof EffectiveDamageCoinLevels] ?? 0
+        // Absolute on both sides: once the planner has bought any, its own
+        // number already includes what was owned.
+        return Math.max(owned, bought)
+      }
+      // Cash Bonus is the seventh enhancement and the one with no stat row —
+      // its owned level rides on the config directly. Same absolute rule.
+      if (config && upgrade.key === 'enhancementCashBonus') {
+        return Math.max(
+          config.cashBonusEnhancementLevel,
+          levels.coin.enhancementCashBonus ?? 0,
+        )
+      }
       const shared = levels.lab[upgrade.key as keyof EffectiveDamageLabLevels] ?? 0
       return levels.coin[upgrade.key as keyof EffectiveDamageCoinLevels] + shared
     }
     case 'keys': return levels.keys[upgrade.key as keyof EffectiveDamageKeysLevels]
   }
+}
+
+/**
+ * Coin candidate key -> the workshop stat whose enhancement it raises.
+ *
+ * Mirrors `COIN_ENHANCEMENT_LEVELS` in the compute module, in the other
+ * direction. Both are needed and neither can be derived from the other without
+ * exporting one of them across a module boundary that currently has no reason
+ * to exist; they are checked against each other in the coin sweep's tests.
+ */
+/**
+ * Coin upgrade key to the name `effective-paths-enhancement-costs` uses.
+ *
+ * Deliberately its own map rather than a translation of
+ * {@link COIN_ENHANCEMENT_STAT}: the two modules spell four of these
+ * differently -- `Super Critical Mult` against `Super Crit Mult`,
+ * `Max Rend Armor Multiplier` against `Rend Armor`, `Damage / Meter` against
+ * `Damage/Meter` -- and a lookup that misses returns 0 spend, which reads as
+ * "nothing bought yet" and silently keeps an unlocked candidate off the board.
+ */
+const COIN_ENHANCEMENT_COST_STAT: Readonly<Record<string, string>> = {
+  enhancementDamage: 'Damage',
+  enhancementRendArmor: 'Rend Armor',
+  enhancementCriticalFactor: 'Critical Factor',
+  enhancementDamagePerMeter: 'Damage/Meter',
+  enhancementSuperCritMult: 'Super Crit Mult',
+  enhancementAttackSpeed: 'Attack Speed',
+}
+
+/**
+ * The six attack enhancements at their levels for THIS step: whatever the
+ * player owned, or what the path has bought, whichever is further.
+ */
+function attackEnhancementLevelsAt(
+  current: ReadonlyMap<string, number>,
+  config: EffectiveDamageConfig,
+  levels: EffectiveDamageLevels,
+): Record<string, number> {
+  const out: Record<string, number> = {}
+  for (const [key, costStat] of Object.entries(COIN_ENHANCEMENT_COST_STAT)) {
+    const statName = COIN_ENHANCEMENT_STAT[key]
+    const owned = statName ? (config.stats[statName]?.enhancementLevel ?? 0) : 0
+    const started = levels.coin[key as keyof EffectiveDamageCoinLevels] ?? 0
+    const bought = current.get(`coin.${key}`) ?? started
+    out[costStat] = Math.max(owned, bought)
+  }
+  return out
+}
+
+const COIN_ENHANCEMENT_STAT: Record<string, keyof EffectiveDamageConfig['stats'] | undefined> = {
+  enhancementDamage: 'Damage',
+  enhancementCriticalFactor: 'Critical Factor',
+  enhancementSuperCritMult: 'Super Critical Mult',
+  enhancementAttackSpeed: 'Attack Speed',
+  enhancementDamagePerMeter: 'Damage / Meter',
+  enhancementRendArmor: 'Max Rend Armor Multiplier',
 }
 
 /** The player's levels with a step's purchases applied. */
@@ -542,7 +1382,30 @@ function withLevels(
   }
   for (const [id, level] of current) {
     const [band, key] = id.split('.') as [EffectiveDamageBand, string]
-    ;(next[band] as unknown as Record<string, number>)[key] = level
+    /*
+     * The coin band's shared keys are a DELTA, and `levelOf` hands back a
+     * COMPOSITE. Writing that composite straight back double-counts the lab.
+     *
+     * For the fourteen keys in `COIN_BAND_DELTA_FIELDS` the compute reads
+     * `lab.X + levels.coin.X`, so `levelOf` returns `coin + lab` -- the level
+     * the player is actually at, which is what a cost and an `@42` label need.
+     * Round-tripping that through here made `levels.coin.X = coin + lab`, and
+     * the compute then read `lab + coin + lab`.
+     *
+     * Every evaluation the coin planner made was on that state, its own
+     * baseline included. A doubled lab is not a uniform error: it inflates the
+     * masteries and leaves the enhancements alone, so it showed up as a ~4%
+     * RANKING spread between the two -- `Damage/Meter +` scoring 4.2% above
+     * `Super Crit Mult +` where the sheet has them the other way round.
+     *
+     * Subtracting the lab restores the delta exactly, and a bumped level still
+     * arrives as `coin + 1`. Clamped at zero so a lab level above the composite
+     * cannot push it negative.
+     */
+    const value = band === 'coin' && COIN_BAND_DELTA_FIELDS.has(key as never)
+      ? Math.max(0, level - (levels.lab[key as keyof EffectiveDamageLabLevels] ?? 0))
+      : level
+    ;(next[band] as unknown as Record<string, number>)[key] = value
   }
   return next
 }

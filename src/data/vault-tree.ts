@@ -1,13 +1,10 @@
-// The SDK ships English game text only, so localization is an identity pass.
-// This matches platform exactly when no governed-text catalog is loaded:
-// resolveLocalizedSharedChartText() falls through to the trimmed input.
+// This package ships English game text only, so localization is an identity pass:
+// the value is trimmed and returned. Translation belongs to the application, which
+// can map these strings however it likes.
 //
-// This severs the closure's only edge to @tmrxjd/tracker-languages, which the
-// SDK cannot depend on for two independent reasons:
-//   1. tracker-languages imports @tmrxjd/platform, and platform will import the
-//      SDK -- that is a circular package dependency.
-//   2. tracker-languages is GPL-3.0-or-later; this package is MIT.
-// (Registry visibility is NOT the blocker -- making it public would not help.)
+// It is deliberately not delegated to a translation library. The obvious candidate is
+// GPL-3.0-or-later, and this package is MIT -- a dependency edge there would relicense
+// everything built on it.
 const resolveLocalizedSharedChartText = (value: string): string => String(value || '').trim()
 
 export interface VaultTreeNode {
@@ -154,3 +151,75 @@ export function buildVaultTreeRows(nodes: readonly VaultTreeNode[]): string[][] 
       ]
     })
 }
+
+/* -------------------------------------------------------------------------- *
+ * Tree summaries.
+ *
+ * Derived from the node lists above rather than transcribed, so a node added to
+ * either tree changes the counts and costs with it.
+ * -------------------------------------------------------------------------- */
+
+export type VaultTreeKey = 'power' | 'harmony'
+
+export interface VaultTreeDefinition {
+  key: VaultTreeKey
+  label: string
+  description: string
+  nodes: readonly VaultTreeNode[]
+  nodeCount: number
+  rootNodeIds: readonly string[]
+  rootNodeLabels: readonly string[]
+  totalKeyCost: number
+  minimumNodeCost: number
+  maximumNodeCost: number
+}
+
+/** A node's cost is either one number or a per-level array. */
+function flattenNodeCost(node: VaultTreeNode): readonly number[] {
+  return Array.isArray(node.cost) ? node.cost : [node.cost]
+}
+
+function getRootNodes(nodes: readonly VaultTreeNode[]): readonly VaultTreeNode[] {
+  return nodes.filter(node => node.parents.length === 0)
+}
+
+function buildVaultTreeDefinition(
+  key: VaultTreeKey,
+  label: string,
+  description: string,
+  nodes: readonly VaultTreeNode[],
+): VaultTreeDefinition {
+  const rootNodes = getRootNodes(nodes)
+  const allCosts = nodes.flatMap(node => [...flattenNodeCost(node)])
+
+  return {
+    key,
+    label,
+    description,
+    nodes,
+    nodeCount: nodes.length,
+    rootNodeIds: rootNodes.map(node => node.id),
+    rootNodeLabels: rootNodes.map(node => node.name),
+    totalKeyCost: allCosts.reduce((sum, cost) => sum + cost, 0),
+    minimumNodeCost: Math.min(...allCosts),
+    maximumNodeCost: Math.max(...allCosts),
+  }
+}
+
+export const VAULT_TREE_DEFINITIONS = [
+  buildVaultTreeDefinition(
+    'power',
+    'Power Tree',
+    'Power Tree focuses on tower-related combat and economy buffs.',
+    DEFAULT_POWER_VAULT_NODES,
+  ),
+  buildVaultTreeDefinition(
+    'harmony',
+    'Harmony Tree',
+    'Harmony Tree focuses on utility, automation, discounts, and quality-of-life unlocks.',
+    DEFAULT_HARMONY_VAULT_NODES,
+  ),
+] as const satisfies readonly VaultTreeDefinition[]
+
+export const POWER_VAULT_TREE = VAULT_TREE_DEFINITIONS.find(tree => tree.key === 'power') as VaultTreeDefinition
+export const HARMONY_VAULT_TREE = VAULT_TREE_DEFINITIONS.find(tree => tree.key === 'harmony') as VaultTreeDefinition

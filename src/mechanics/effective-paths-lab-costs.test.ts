@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import fixtures from './effective-paths-lab-costs.fixtures.json'
+import fixtures from '../../fixtures/mechanics/effective-paths-lab-costs.fixtures.json'
 import {
   EFFECTIVE_PATHS_LAB_KEYS,
   findEffectivePathsLabKey,
