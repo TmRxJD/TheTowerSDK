@@ -1,6 +1,7 @@
 # Shipping a desktop or mobile app
 
-The SDK is a plain TypeScript package with no runtime dependencies and no DOM assumptions,
+The SDK is a plain TypeScript package with one runtime dependency (zod, for schema
+validation) and no DOM assumptions,
 so it runs unchanged in a browser, in Node, in an Electron renderer, in an Electron main
 process, and inside a Capacitor WebView. What changes between those is not the SDK — it is
 where the save file comes from and what is allowed to talk to the network.

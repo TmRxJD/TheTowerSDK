@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { sdkFacts } from '$lib/sdk-facts';
 	import CodeBlock from '$lib/ui/CodeBlock.svelte';
 	import { href } from '$lib/paths';
 </script>
@@ -100,7 +101,7 @@ for (const chart of SHARED_CHART_REGISTRY) {
 
 <h2 class="mt-10 text-xl font-semibold">Render It As A Table</h2>
 <p class="mt-3 text-muted">
-	Because columns and rows line up by index, one loop renders any of the forty-six.
+	Because columns and rows line up by index, one loop renders any of the {sdkFacts.chartDatasets}.
 </p>
 <div class="mt-4">
 	<CodeBlock
@@ -171,7 +172,7 @@ console.log(toHtmlTable(dataset))`}
 
 <h2 class="mt-10 text-xl font-semibold">Every Renderer Key</h2>
 <p class="mt-3 text-muted">
-	<code>listChartRendererKeys</code> gives the twenty-seven distinct renderers behind the forty-six
+	<code>listChartRendererKeys</code> gives the twenty-seven distinct renderers behind the {sdkFacts.chartDatasets}
 	charts, and <code>findChartsByRendererKey</code> gives every chart that uses one.
 </p>
 <div class="mt-4">

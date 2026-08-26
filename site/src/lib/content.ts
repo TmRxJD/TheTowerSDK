@@ -26,6 +26,7 @@ export const nav = ALL_NAV.filter((item) => SHOW_GOVERNANCE || !('governance' in
 const ALL_DOCS_NAV = [
 	{ href: '/docs/', label: 'Overview' },
 	{ href: '/docs/install/', label: 'Install' },
+	{ href: '/docs/dependencies/', label: 'Dependencies' },
 	{ href: '/docs/data/', label: 'Game Data' },
 	{ href: '/docs/save/', label: 'Save Files' },
 	{ href: '/docs/mechanics/', label: 'Formulas' },
@@ -93,7 +94,7 @@ export const heroSlides = [
 	},
 	{
 		eyebrow: 'Calculators',
-		headline: 'Fifteen Calculators That Describe Themselves',
+		headline: 'Ready-Made Builders That Describe Themselves',
 		body: 'Each one lists its own inputs with their units, ranges and options — enough to generate a form, a Discord command, or a test without writing any of them by hand.'
 	}
 ] as const;

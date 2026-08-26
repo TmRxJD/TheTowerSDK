@@ -28,6 +28,22 @@ describe('builder invariants', () => {
   })
 })
 
+/** Every field name any calculator reads, each one a getter that throws when touched. */
+function throwingGetters(): Record<string, unknown> {
+  const object: Record<string, unknown> = {}
+  for (const builder of CALCULATOR_BUILDERS) {
+    for (const field of builder.fields) {
+      /* Configurable, because several calculators share a field name and this runs over all of them. */
+      Object.defineProperty(object, field.key, {
+        get() { throw new Error('hostile') },
+        enumerable: true,
+        configurable: true,
+      })
+    }
+  }
+  return object
+}
+
 describe('builders survive hostile input', () => {
   /*
    * A form hands over whatever the user typed and whatever a restored preference held, so
@@ -64,6 +80,50 @@ describe('builders survive hostile input', () => {
       for (const [k, v] of Object.entries(value)) findBad(v, `${path}.${k}`, out)
     }
   }
+
+  /**
+   * The whole input, not just one field of it.
+   *
+   * This only ever passed hostile values as the VALUE of a well-formed object, so
+   * `compute(null)` — which a JSON API, a form library and this package's own WebAssembly entry
+   * all produce routinely — went untried, and every calculator threw on it. The builders
+   * documentation promised the opposite: "takes anything and returns a complete, valid record.
+   * Nothing throws."
+   *
+   * A property whose GETTER throws is also distinct from a value whose `toString` throws, which
+   * was covered. Reading someone else's object means running their code, and three calculators
+   * died on it.
+   */
+  const HOSTILE_WHOLE_INPUTS: [string, unknown][] = [
+    ['null', null],
+    ['a string', 'not an object'],
+    ['a number', 42],
+    ['an array', []],
+    ['a __proto__ payload', JSON.parse('{"__proto__":{"polluted":true}}')],
+    ['a constructor payload', JSON.parse('{"constructor":{"prototype":{"polluted":true}}}')],
+    ['an object of throwing getters', throwingGetters()],
+    ['a proxy that throws on read', new Proxy({}, {
+      get() { throw new Error('hostile') },
+      ownKeys: () => ['currentLevel', 'stat', 'tier', 'plasmaCannonMasteryLevel'],
+      getOwnPropertyDescriptor: () => ({ enumerable: true, configurable: true }),
+    })],
+    ['a null-prototype object', Object.assign(Object.create(null), { currentLevel: 3 })],
+    ['a frozen object', Object.freeze({ currentLevel: 3 })],
+  ]
+
+  it.each(CALCULATOR_BUILDERS.map(b => [b.id, b] as const))('%s survives a hostile input object', (_id, builder) => {
+    for (const [label, input] of HOSTILE_WHOLE_INPUTS) {
+      expect(() => builder.normalize(input as never), `normalize(${label})`).not.toThrow()
+      expect(() => builder.compute(input as never), `compute(${label})`).not.toThrow()
+    }
+  })
+
+  it('leaves Object.prototype alone', () => {
+    for (const builder of CALCULATOR_BUILDERS) {
+      builder.compute(JSON.parse('{"__proto__":{"polluted":true}}'))
+    }
+    expect(({} as Record<string, unknown>).polluted).toBeUndefined()
+  })
 
   it.each(CALCULATOR_BUILDERS.map(b => [b.id, b] as const))('%s', (_id, builder) => {
     const failures: string[] = []

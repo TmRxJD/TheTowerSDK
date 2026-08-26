@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { href } from '$lib/paths';
+	import { sdkFacts, grouped, spelled } from '$lib/sdk-facts';
 
 	/**
 	 * The docs index, grouped by what you are trying to do.
@@ -15,7 +16,7 @@
 				{
 					href: '/docs/install/',
 					label: 'Install',
-					body: 'One package, the fourteen entry points, pinning a version, and using it in the browser.'
+					body: `One package, the ${spelled(sdkFacts.entryPoints)} entry points, pinning a version, and using it in the browser.`
 				},
 				{
 					href: '/docs/data/',
@@ -25,7 +26,7 @@
 				{
 					href: '/docs/mechanics/',
 					label: 'Formulas',
-					body: 'The maths the game runs: enemy scaling, weapon timing, costs and planning, as 822 callable functions.'
+					body: `The maths the game runs: enemy scaling, weapon timing, costs and planning, as ${sdkFacts.formulas} callable functions.`
 				},
 				{
 					href: '/docs/formatting/',
@@ -40,7 +41,7 @@
 				{
 					href: '/docs/builders/',
 					label: 'Builders',
-					body: 'Fifteen calculators that describe their own inputs, so a form, a command and a test come from one place.'
+					body: `${spelled(sdkFacts.builders).replace('f', 'F')} builders that describe their own inputs, so a form, a command and a test come from one place.`
 				},
 				{
 					href: '/docs/save/',
@@ -85,7 +86,7 @@
 				{
 					href: '/docs/knowledge/',
 					label: 'Knowledge Graph',
-					body: '316 mechanics, typed relationships, and 1,641 claims that each name their source and date.'
+					body: `${sdkFacts.graphNodes} mechanics, typed relationships, and ${grouped(sdkFacts.graphClaims)} claims that each name their source and date.`
 				},
 				{
 					href: '/docs/patch-notes/',

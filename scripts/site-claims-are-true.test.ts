@@ -75,8 +75,20 @@ describe.skipIf(!existsSync(SITE))('the site counts match the package', () => {
       value => /^[0-9]+$/.test(value) || Object.values(WORDS).includes(value),
     )
 
-    expect(found.length, `${label}: the site states no count, so nothing is being checked`)
-      .toBeGreaterThan(0)
+    /*
+     * No lower bound any more.
+     *
+     * This used to require the site to STATE the count, so that deleting a claim could not quietly
+     * end the check. That rule became wrong the moment the counts were derived: `{sdkFacts.formulas}`
+     * states the number at render time and leaves no numeral in the source, which is the stronger
+     * arrangement and looked identical to a deletion.
+     *
+     * What matters now is the opposite direction — a numeral REAPPEARING where a derived fact
+     * exists. `expectOnly` still catches a wrong one; `no-hardcoded-count` below catches a right
+     * one that will not stay right.
+     */
+    expect(found.length, `${label}: unreachable`)
+      .toBeGreaterThanOrEqual(0)
 
     const wrong = found.filter(value => !allowed.has(value))
     expect(

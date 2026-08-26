@@ -287,6 +287,33 @@ const OPS = {
   'contributions': () => ({ areas: CONTRIBUTIONS, lines: ATTRIBUTION_LINES }),
 }
 
+/**
+ * Find every number JSON cannot carry.
+ *
+ * `JSON.stringify(NaN)` is `null`, and so is `Infinity`. A formula handed arguments it cannot use
+ * returned NaN, the response serialised it as null, and the caller received
+ * `{"ok": true, "result": null}` — a successful call with no answer, indistinguishable from a
+ * formula that legitimately returns nothing. In Python or Go that null becomes `None` or `nil` and
+ * flows onward.
+ *
+ * The value is left alone; what is added is the list of paths where it happened, so a caller can
+ * see that a number was lost rather than inferring it.
+ */
+function nonFinitePaths(value, path = 'result', found = []) {
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value)) found.push(`${path} = ${Number.isNaN(value) ? 'NaN' : String(value)}`)
+    return found
+  }
+  if (Array.isArray(value)) {
+    value.forEach((entry, index) => nonFinitePaths(entry, `${path}[${index}]`, found))
+    return found
+  }
+  if (value && typeof value === 'object') {
+    for (const [key, entry] of Object.entries(value)) nonFinitePaths(entry, `${path}.${key}`, found)
+  }
+  return found
+}
+
 function handle(request) {
   const op = request?.op
   const run = own(OPS, op)
@@ -297,6 +324,18 @@ function handle(request) {
   /* An op reporting `error` is a failed call, not a successful one carrying a field named error. */
   if (output && typeof output === 'object' && 'error' in output) {
     return { ok: false, ...output }
+  }
+
+  const lost = nonFinitePaths(output)
+  if (lost.length > 0) {
+    return {
+      ok: true,
+      ...output,
+      nonFinite: lost.slice(0, 20),
+      warning:
+        'Some numbers are not representable in JSON and were serialised as null. '
+        + 'They are named in `nonFinite`.',
+    }
   }
   return { ok: true, ...output }
 }

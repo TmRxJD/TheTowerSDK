@@ -1,6 +1,6 @@
 {
   "name": "thetowersdk",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "Game data and save-file reading for The Tower — build your own calculators and tools.",
   "license": "MIT",
   "author": "TmRxJD (https://github.com/TmRxJD)",
@@ -52,6 +52,8 @@
     "lint:published": "node scripts/audit-published-surface.mjs",
     "examples:run": "node scripts/run-examples.mjs",
     "lint:conventions": "node scripts/check-conventions.mjs",
+    "map": "node scripts/map-the-repo.mjs",
+    "lint:map": "node scripts/map-the-repo.mjs --check",
     "lint:acronyms": "tsx scripts/check-acronym-expansions.ts",
     "test:schema": "vitest run src/data/schemas.test.ts",
     "verify": "node scripts/verify.mjs",
@@ -71,7 +73,9 @@
     "patch-notes:build": "node scripts/build-patch-notes.mjs",
     "wasm:build": "node wasm/build.mjs",
     "wasm:check": "node wasm/build.mjs --check",
-    "wasm:call": "node wasm/run.mjs"
+    "wasm:call": "node wasm/run.mjs",
+    "lint:package": "node scripts/audit-package-contents.mjs",
+    "epaths:refresh-reference": "node scripts/refresh-effective-paths-reference.mjs"
   },
   "exports": {
     ".": {
@@ -222,7 +226,16 @@
     "!dist/mechanics/kernel/**",
     "!dist/mechanics/registry/**",
     "!dist/mechanics/sandbox/**",
-    "!dist/mechanics/calculators/specs-generated.*"
+    "!dist/mechanics/coverage/**",
+    "!dist/mechanics/debug-graph/**",
+    "!dist/mechanics/mcp-contract/**",
+    "!dist/mechanics/planner-engine/**",
+    "!dist/mechanics/save-graph/**",
+    "!dist/mechanics/sdk-graph/**",
+    "!dist/mechanics/builders/**",
+    "!dist/mechanics/repo-root.*",
+    "!mcp/**/*.test.ts",
+    "!mcp/**/*.test.mjs"
   ],
   "dependencies": {
     "zod": "^4.3.6"

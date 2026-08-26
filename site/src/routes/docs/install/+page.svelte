@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { sdkFacts, spelled } from '$lib/sdk-facts';
 	import CodeBlock from '$lib/ui/CodeBlock.svelte';
 	import { SDK_VERSION } from '$lib/links';
 	import { href } from '$lib/paths';
@@ -45,8 +46,8 @@ console.log(formatNumberForDisplay(total), 'coins to max')`}
 
 <h2 class="mt-10 text-xl font-semibold">The Entry Points</h2>
 <p class="mt-3 text-muted">
-	Fourteen entry points, imported by name. Nothing is bundled that you do not import, so a tool that
-	only needs catalogs does not carry the save reader.
+	{spelled(sdkFacts.entryPoints).replace('f', 'F')} entry points, imported by name. Nothing is bundled
+	that you do not import, so a tool that only needs catalogs does not carry the save reader.
 </p>
 <div class="mt-6 overflow-x-auto rounded-lg border border-line/70">
 	<table class="w-full min-w-[36rem] text-left text-sm">
@@ -67,14 +68,14 @@ console.log(formatNumberForDisplay(total), 'coins to max')`}
 			<tr>
 				<td><code>thetowersdk/mechanics</code></td>
 				<td class="text-muted">
-					822 formulas — enemy scaling, timing, costs, damage reduction, Effective Paths.
+					{sdkFacts.formulas} formulas — enemy scaling, timing, costs, damage reduction, Effective Paths.
 					<a href={href('/docs/mechanics/')}>Docs</a>
 				</td>
 			</tr>
 			<tr>
 				<td><code>thetowersdk/builders</code></td>
 				<td class="text-muted">
-					Fifteen calculators that describe their own inputs.
+					{spelled(sdkFacts.builders).replace('f', 'F')} builders that describe their own inputs.
 					<a href={href('/docs/builders/')}>Docs</a>
 				</td>
 			</tr>
@@ -109,7 +110,8 @@ console.log(formatNumberForDisplay(total), 'coins to max')`}
 			<tr>
 				<td><code>thetowersdk/charts</code></td>
 				<td class="text-muted">
-					Forty-six chart datasets, each a finished table. <a href={href('/docs/charts/')}>Docs</a>
+					{sdkFacts.chartDatasets} chart datasets, each a finished table.
+					<a href={href('/docs/charts/')}>Docs</a>
 				</td>
 			</tr>
 			<tr>

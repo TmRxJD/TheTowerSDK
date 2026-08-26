@@ -97,9 +97,11 @@ can run as many as you like over the same root.
 | `thetowersdk/data` | Game tables — costs, levels, effects, catalogs | Yes |
 | `thetowersdk/save` | `extract*FromSaveRoot()` and save inspection | Yes |
 | `thetowersdk/node` | The save decoder | Node — [see below](#decoding-in-a-browser) |
+| `thetowersdk/save-decoder` | The same decoder with no Node imports, for the browser | Yes |
 | `thetowersdk/formatting` | Number and duration formatting matching the game | Yes |
 | `thetowersdk/mechanics` | Game formulas — see [below](#formulas) | Yes |
 | `thetowersdk/wiki` | Fandom wikitext → Markdown — see [below](#reading-the-community-wiki) | Yes |
+| `thetowersdk/contributions` | Whose work this package carries, as data | Yes |
 | `thetowersdk/charts` | Curated chart catalog and its data — see [below](#charts) | Yes |
 | `thetowersdk/builders` | Ready-made calculators — see [below](#builders) | Yes |
 | `thetowersdk/bot` | Command registry, and every calculator as a command — see [below](#building-a-bot-on-this) | Yes |
@@ -928,7 +930,8 @@ restarted at `0.x`, so a version comparison reports a working bridge as too old.
 
 ## Desktop and Mobile
 
-The SDK is plain TypeScript with no runtime dependencies and no DOM assumptions, so it runs unchanged
+The SDK is plain TypeScript with one runtime dependency (zod, for schema validation) and no DOM
+assumptions, so it runs unchanged
 in an Electron renderer, an Electron main process, and a Capacitor WebView. `thetowersdk/node` is the
 **only** entry point that needs Node — which is the boundary you want, since the decoder belongs on
 the side that is allowed to read files.

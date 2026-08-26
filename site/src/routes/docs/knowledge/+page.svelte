@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { sdkFacts, grouped } from '$lib/sdk-facts';
 	import CodeBlock from '$lib/ui/CodeBlock.svelte';
 	import { href } from '$lib/paths';
 </script>
@@ -9,10 +10,11 @@
 
 <h1 class="text-3xl font-semibold">The Knowledge Graph</h1>
 <p class="mt-3 text-muted">
-	The catalogs hold what a number is. This holds what it <em>means</em> — 316 mechanics across 29 compartments,
-	joined by 393 typed relationships, carrying 1,641 individual claims that each name their source and
-	the date it was checked. It is queryable like any other data structure, and it is built so a wrong number
-	is detectable rather than merely unlikely.
+	The catalogs hold what a number is. This holds what it <em>means</em> — {sdkFacts.graphNodes} mechanics
+	across {sdkFacts.compartments} compartments, joined by 398 typed relationships, carrying {grouped(
+		sdkFacts.graphClaims
+	)} individual claims that each name their source and the date it was checked. It is queryable like any
+	other data structure, and it is built so a wrong number is detectable rather than merely unlikely.
 </p>
 
 <h2 class="mt-10 text-xl font-semibold">A Node</h2>
@@ -111,7 +113,7 @@ for (const conflict of findContradictions()) {
 		code={`import { allNodes, GAME_KNOWLEDGE } from 'thetowersdk/knowledge'
 
 const nodes = allNodes(GAME_KNOWLEDGE)
-console.log(nodes.filter((node) => node.claimType === 'objective').length)   // 215
+console.log(nodes.filter((node) => node.claimType === 'objective').length)   // 311
 console.log(nodes.filter((node) => node.claimType === 'sentiment').length)   // 10
 
 // 'Coins per kill versus coins per wave' — the community consensus, marked as such
@@ -121,10 +123,10 @@ console.log(nodes.filter((node) => node.claimType === 'sentiment').length)   // 
 
 <h2 class="mt-10 text-xl font-semibold">Traps: What Goes Wrong Here</h2>
 <p class="mt-3 text-muted">
-	987 recorded misreadings across 316 nodes — the specific mistakes people have actually made, kept
-	next to the mechanic they belong to. Asking a mechanic what goes wrong with it is a different
-	question from asking what it is, and the answer is the more useful one when you are about to model
-	it.
+	{sdkFacts.graphTraps} recorded misreadings across {sdkFacts.graphNodes} nodes — the specific mistakes
+	people have actually made, kept next to the mechanic they belong to. Asking a mechanic what goes wrong
+	with it is a different question from asking what it is, and the answer is the more useful one when you
+	are about to model it.
 </p>
 <div class="mt-4">
 	<CodeBlock
@@ -204,7 +206,8 @@ search('golden tower')   // ranked hits, each with its node`}
 
 <h2 class="mt-10 text-xl font-semibold">Compartments, And How Well Covered They Are</h2>
 <p class="mt-3 text-muted">
-	The 29 compartments group mechanics by domain — <code>ultimate-weapons</code>,
+	The {sdkFacts.compartments} compartments group mechanics by domain —
+	<code>ultimate-weapons</code>,
 	<code>economy</code>,
 	<code>labs</code>, <code>enemies</code>, <code>jargon</code> and so on. Each one scores itself, so you
 	can see how thoroughly a domain has been checked before relying on it.

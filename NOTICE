@@ -5,6 +5,51 @@ This product includes work derived from other open source projects.
 
 
 -------------------------------------------------------------------------------
+zod
+-------------------------------------------------------------------------------
+
+https://github.com/colinhacks/zod
+https://www.npmjs.com/package/zod
+
+Author: Colin McDonnell <zod@colinhacks.com>
+License: MIT
+
+The package's only runtime dependency. It is used to declare the shapes in
+`src/data/schemas.ts` and the internal state schemas, so a data table can be
+validated against its documented shape at runtime rather than only at compile
+time.
+
+How it reaches you differs by artifact, and the distinction matters:
+
+  - The npm package REQUIRES zod. `dist` imports it and npm installs it
+    alongside; no zod source is inside the tarball.
+  - The WebAssembly build BUNDLES it. `wasm/build.mjs` runs esbuild over
+    `dist`, so zod's code is compiled into `thetowersdk.wasm`. Anywhere that
+    file is distributed, this notice goes with it.
+
+MIT License:
+
+  Copyright (c) 2025 Colin McDonnell
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+
+-------------------------------------------------------------------------------
 tower-idle-toolkit
 -------------------------------------------------------------------------------
 

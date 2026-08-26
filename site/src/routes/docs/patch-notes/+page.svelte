@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { sdkFacts } from '$lib/sdk-facts';
 	import CodeBlock from '$lib/ui/CodeBlock.svelte';
 	import { href } from '$lib/paths';
 </script>
@@ -9,10 +10,10 @@
 
 <h1 class="text-3xl font-semibold">Patch Notes</h1>
 <p class="mt-3 text-muted">
-	Five years of the developers' own announcements, in the package and ready to query — 232 notes
-	from July 2021 onward. The catalogs tell you what a number is; these tell you when it became that,
-	and what was said about it at the time. Everything here is a plain function call over data that
-	ships with the install, so it works offline and returns the same answer every time.
+	Five years of the developers' own announcements, in the package and ready to query — {sdkFacts.patchNotes}
+	notes from July 2021 onward. The catalogs tell you what a number is; these tell you when it became that,
+	and what was said about it at the time. Everything here is a plain function call over data that ships
+	with the install, so it works offline and returns the same answer every time.
 </p>
 
 <h2 class="mt-10 text-xl font-semibold">The Shape Of A Note</h2>

@@ -114,6 +114,33 @@ describe.skipIf(!built)('the WASM module answers as the library does', () => {
     expect(Array.isArray(answer.ops)).toBe(true)
   })
 
+  it('says when a number could not survive JSON', async () => {
+    /*
+     * `JSON.stringify(NaN)` is `null`. A formula given arguments it cannot use returned NaN, the
+     * response carried `{"ok": true, "result": null}`, and in Python that null becomes None and
+     * flows onward — a successful call with no answer, indistinguishable from a formula that
+     * returns nothing on purpose.
+     */
+    const call = await loadCaller()
+    const answer = await call({ op: 'mechanics.call', name: 'thornDamageOnHit', args: 'not an array' })
+
+    expect(answer.ok).toBe(true)
+    expect(answer.result).toBeNull()
+    expect(answer.nonFinite, 'the lost value must be named').toContain('result.result = NaN')
+  })
+
+  it('stays quiet when every number is representable', async () => {
+    const call = await loadCaller()
+    const answer = await call({
+      op: 'mechanics.call',
+      name: 'thornDamageOnHit',
+      args: [{ enemyFactor: 2, thornMultiplier: 5, contactDamage: 1000 }],
+    })
+
+    expect(answer.result).toBe(10000)
+    expect(answer.nonFinite).toBeUndefined()
+  })
+
   it('will not read the prototype for a catalog name', async () => {
     const call = await loadCaller()
 

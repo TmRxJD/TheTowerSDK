@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { sdkFacts, spelled } from '$lib/sdk-facts';
 	import CodeBlock from '$lib/ui/CodeBlock.svelte';
 	import { href } from '$lib/paths';
 	import { LINKS } from '$lib/links';
@@ -19,7 +20,8 @@
 	runtime you already have, running <em>the same code</em> this project ships to JavaScript.
 </p>
 <p class="mt-3 text-muted">
-	No port of the numbers, and no service to host. Every catalog, all fifteen calculators, 822
+	No port of the numbers, and no service to host. Every catalog, all {spelled(sdkFacts.builders)} builders,
+	{sdkFacts.formulas}
 	formulas, the number formatting and the save decoder run inside your own process.
 </p>
 
@@ -32,7 +34,7 @@
 </p>
 <div class="mt-4">
 	<CodeBlock
-		code={`curl -LO https://github.com/TmRxJD/TheTowerSDK/releases/latest/download/thetowersdk.wasm`}
+		code="curl -LO https://github.com/TmRxJD/TheTowerSDK/releases/latest/download/thetowersdk.wasm"
 	/>
 </div>
 
@@ -89,7 +91,7 @@ def call(**request):
         return json.loads((work / "out.json").read_text(encoding="utf-8"))
 
 print(call(op="version"))
-# {'ok': True, 'formulas': 822, 'calculators': 15, 'chartDatasets': 46}
+# {'ok': True, 'formulas': ${sdkFacts.formulas}, 'calculators': ${sdkFacts.builders}, 'chartDatasets': ${sdkFacts.chartDatasets}}
 
 print(call(op="calc.run", id="thorns.damage",
            input={"baseThorns": 120, "wallThorns": 12, "tier": 14})["result"]["atWallThorns"])`}
@@ -143,7 +145,7 @@ print(call(op="calc.run", id="thorns.damage",
 {"op": "data.get", "name": "LAB_CATALOG", "offset": 0, "limit": 100}
 {"op": "data.find", "name": "LAB_CATALOG", "where": {"category": "Attack"}}
 
-{"op": "calc.list"}                 # the calculators
+{"op": "calc.list"}                 # the builders
 {"op": "calc.describe", "id": "module.cost"}
 {"op": "calc.run", "id": "module.cost", "input": {"currentLevel": 1, "targetLevel": 20}}
 

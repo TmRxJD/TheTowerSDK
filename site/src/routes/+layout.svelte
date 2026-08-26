@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import favicon from '$lib/assets/favicon.svg';
 	import { href } from '$lib/paths';
 	import SiteFooter from '$lib/ui/SiteFooter.svelte';
 	import SiteHeader from '$lib/ui/SiteHeader.svelte';
@@ -26,7 +25,14 @@
 </script>
 
 <svelte:head>
-	<link rel="icon" href={favicon} />
+	<!--
+		No icon here. `app.html` declares it once, pointing at the real SDK logo.
+
+		This carried a second `<link rel="icon">` at a hand-drawn placeholder SVG — a dark rounded
+		square left over from the skeleton. Because the layout renders into `%sveltekit.head%`, which
+		sits AFTER the app.html link, the placeholder won every time and the logo never appeared in a
+		tab. Two declarations of one thing, and the wrong one silently taking precedence.
+	-->
 	<title>{title}</title>
 	<meta
 		name="description"

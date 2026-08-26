@@ -1,8 +1,13 @@
 /**
- * Validates every public data table against its declared schema.
+ * Validates each data table that HAS a declared schema, against that schema.
  *
  * A table can drift from its documented shape without types noticing, because
  * types are gone at runtime. This is the check that actually reads the values.
+ *
+ * It used to say "every public data table", which it never did: it iterates
+ * `DATA_TABLE_SCHEMAS`, and that holds eleven of 138 exported tables. The
+ * coverage gap is measured in `schemas-cover-what-they-claim.test.ts` rather
+ * than implied away here.
  */
 import { describe, expect, it } from 'vitest'
 

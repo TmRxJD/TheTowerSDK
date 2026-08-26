@@ -1,4 +1,5 @@
 <script lang="ts">
+	import CreatorCode from '$lib/ui/CreatorCode.svelte';
 	import { SHOW_GOVERNANCE } from '$lib/content';
 	import { LINKS } from '$lib/links';
 	import { asset, href } from '$lib/paths';
@@ -20,6 +21,14 @@
 			<p class="mt-2 max-w-sm">
 				Game data and formulas for The Tower tools. Not affiliated with Tech Tree Games.
 			</p>
+
+			<!--
+				Under the description rather than in a link column: it is an action, not a destination,
+				and the quieter footer variant keeps it from competing with the header's copy.
+			-->
+			<div class="mt-4 -ml-2">
+				<CreatorCode variant="footer" />
+			</div>
 		</div>
 		<nav class="flex flex-col gap-1" aria-label="Site">
 			<p class="mb-1 text-xs font-semibold tracking-wide text-fg uppercase">Site</p>

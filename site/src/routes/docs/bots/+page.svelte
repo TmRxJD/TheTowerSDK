@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { sdkFacts, spelled } from '$lib/sdk-facts';
 	import CodeBlock from '$lib/ui/CodeBlock.svelte';
 	import { href } from '$lib/paths';
 </script>
@@ -11,9 +12,9 @@
 <p class="mt-3 text-muted">
 	Every <a href={href('/docs/builders/')}>builder</a> is already a command.
 	<code>thetowersdk/bot</code>
-	turns the fifteen calculators into fifteen commands with their options declared, runs them, and returns
-	a reply shaped like an embed — title, description, fields. Nothing here talks to Discord, so the same
-	commands serve a Discord bot, a Slack app, or an HTTP endpoint.
+	turns the {spelled(sdkFacts.builders)} builders into {spelled(sdkFacts.builders)} commands with their
+	options declared, runs them, and returns a reply shaped like an embed — title, description, fields.
+	Nothing here talks to Discord, so the same commands serve a Discord bot, a Slack app, or an HTTP endpoint.
 </p>
 
 <h2 class="mt-10 text-xl font-semibold">The Commands</h2>
@@ -88,7 +89,7 @@ console.log(reply)
 
 const bot = createTowerBot({ commands: calculatorCommands() })
 
-console.log(bot.commands.length)   // 16 — the fifteen calculators plus help
+console.log(bot.commands.length)   // ${sdkFacts.builders + 1} — the ${spelled(sdkFacts.builders)} builders plus help
 
 const reply = await bot.run('uptime-ratio', {
   args: { durationSeconds: 23, cooldownSeconds: 220 }

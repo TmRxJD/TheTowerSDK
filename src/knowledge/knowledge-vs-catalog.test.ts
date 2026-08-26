@@ -62,7 +62,7 @@ import {
   STANDARD_PERK_MAX_QUANTITY,
   TIER_BATTLE_CONDITIONS_FROM,
   TOURNAMENT_ENEMY_LEVEL_SKIP,
-  TOURNAMENT_LEAGUES,
+  TOURNAMENT_LEAGUE_NAMES,
 } from './index'
 
 /**
@@ -537,7 +537,7 @@ describe('the oracle agrees with the catalogs', () => {
   it('gives every tournament league a level-skip entry, zero included', () => {
     // Copper and Silver are 0. A missing key and a zero are different claims,
     // and only one of them is true — this listed Gold upward until 2026-08-17.
-    for (const league of TOURNAMENT_LEAGUES) {
+    for (const league of TOURNAMENT_LEAGUE_NAMES) {
       expect(
         TOURNAMENT_ENEMY_LEVEL_SKIP[league],
         `${league} has no enemy-level-skip entry`,

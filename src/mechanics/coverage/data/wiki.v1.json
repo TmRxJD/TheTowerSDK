@@ -1,7 +1,7 @@
 {
   "version": 1,
   "surface": "wiki",
-  "generatedAt": "2026-08-24T19:46:17.529Z",
+  "generatedAt": "2026-08-26T14:48:45.332Z",
   "notes": "Seeded from mechanics graph wikiPages / byWiki (titles canonicalized via wiki-title-canonical.mjs).",
   "entries": [
     {
@@ -15,7 +15,7 @@
       "sources": [
         "node:oracle.attackSpeed"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Bot Bot",
@@ -32,12 +32,12 @@
         "node:oracle.bot.bonus",
         "node:oracle.botPlus"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
-      "id": "wiki:Bounce Shot (game-vault.net — Fandom page is an empty stub)",
+      "id": "wiki:Bounce Shot",
       "surface": "wiki",
-      "label": "Bounce Shot (game-vault.net — Fandom page is an empty stub)",
+      "label": "Bounce Shot",
       "graphNodeIds": [
         "oracle.bounceShot"
       ],
@@ -45,7 +45,7 @@
       "sources": [
         "node:oracle.bounceShot"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Card Masteries",
@@ -128,7 +128,7 @@
         "node:oracle.cardMastery.naming",
         "node:oracle.cardMastery.vocabulary"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Cards",
@@ -155,7 +155,7 @@
         "node:oracle.card.slot",
         "node:oracle.card.value"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Cash Bonus",
@@ -168,7 +168,7 @@
       "sources": [
         "node:oracle.cashBonus"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Coins Per Kill Bonus",
@@ -181,7 +181,7 @@
       "sources": [
         "node:oracle.coinsPerKill"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Coins Per Wave",
@@ -194,7 +194,7 @@
       "sources": [
         "node:oracle.coinsPerWave"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Critical Hits",
@@ -211,7 +211,7 @@
         "node:oracle.criticalFactor",
         "node:oracle.superCritMultiplier"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Currency/Gems",
@@ -224,7 +224,7 @@
       "sources": [
         "node:oracle.currency.gem"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Currency/Keys",
@@ -237,7 +237,7 @@
       "sources": [
         "node:oracle.currency.key"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Daily Missions",
@@ -254,7 +254,7 @@
         "node:oracle.dailyMission.reroll",
         "node:oracle.dailyMission.weeklyReward"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Damage",
@@ -273,7 +273,7 @@
         "node:oracle.damage.superTower",
         "node:workshop.Damage"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Damage Per Meter",
@@ -286,7 +286,7 @@
       "sources": [
         "node:oracle.damagePerMeter"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Death Defy",
@@ -303,7 +303,7 @@
         "node:oracle.deathPrevention",
         "node:oracle.energyShield"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Defense Absolute",
@@ -318,7 +318,7 @@
         "node:oracle.defenseAbsolute",
         "node:oracle.rule.enemyHeatUp"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Defense Percent",
@@ -333,7 +333,7 @@
         "node:oracle.defensePercent",
         "node:oracle.tower.hardCap"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Enemies",
@@ -366,7 +366,7 @@
         "node:oracle.enemy.typeCoverage",
         "node:oracle.enemy.vampire"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Enemy Balance",
@@ -379,7 +379,7 @@
       "sources": [
         "node:oracle.enemyBalance"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Enemy Level Skip",
@@ -392,7 +392,7 @@
       "sources": [
         "node:oracle.enemyLevelSkip"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Events",
@@ -407,7 +407,7 @@
         "node:oracle.event",
         "node:oracle.eventShop"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Footguns",
@@ -428,7 +428,7 @@
         "node:oracle.sentiment.uwPickOrder",
         "node:oracle.upgradePermanence"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Free Upgrades",
@@ -447,7 +447,7 @@
         "node:oracle.freeUpgrades",
         "node:oracle.tower.hardCap"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Game Speed",
@@ -462,7 +462,7 @@
         "node:oracle.rule.gameSpeed",
         "node:oracle.tower.hardCap"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Golden Bot",
@@ -481,7 +481,7 @@
         "node:oracle.bot.cooldown",
         "node:oracle.bot.range"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Guardian",
@@ -500,7 +500,7 @@
         "node:oracle.guardian.slot",
         "node:oracle.guardian.upgradeTrack"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Health",
@@ -515,7 +515,7 @@
         "node:oracle.effectiveHp",
         "node:oracle.health"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Health Regen",
@@ -528,7 +528,7 @@
       "sources": [
         "node:oracle.healthRegen"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Interest",
@@ -541,7 +541,7 @@
       "sources": [
         "node:oracle.interest"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Knockback",
@@ -554,12 +554,12 @@
       "sources": [
         "node:oracle.knockback"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
-      "id": "wiki:Lab (game-vault.net) — full boost cost table; Fandom has no equivalent",
+      "id": "wiki:Lab",
       "surface": "wiki",
-      "label": "Lab (game-vault.net) — full boost cost table; Fandom has no equivalent",
+      "label": "Lab",
       "graphNodeIds": [
         "oracle.lab.boost",
         "oracle.lab.slot"
@@ -569,7 +569,7 @@
         "node:oracle.lab.boost",
         "node:oracle.lab.slot"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Lab Upgrades",
@@ -590,7 +590,7 @@
         "node:oracle.lab.slot",
         "node:oracle.lab.speed"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Laboratory",
@@ -605,7 +605,7 @@
         "node:lab.AttackSpeed",
         "node:lab.Damage"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Lifesteal",
@@ -618,7 +618,7 @@
       "sources": [
         "node:oracle.lifesteal"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Milestones",
@@ -631,7 +631,7 @@
       "sources": [
         "node:oracle.milestone"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Modules",
@@ -724,12 +724,12 @@
         "node:oracle.module.upgradeCost",
         "node:oracle.rule.assistMultiplicative"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
-      "id": "wiki:Multishot (game-vault.net — Fandom page is an empty stub)",
+      "id": "wiki:Multishot",
       "surface": "wiki",
-      "label": "Multishot (game-vault.net — Fandom page is an empty stub)",
+      "label": "Multishot",
       "graphNodeIds": [
         "oracle.multishot"
       ],
@@ -737,7 +737,7 @@
       "sources": [
         "node:oracle.multishot"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Orbs",
@@ -752,7 +752,7 @@
         "node:oracle.orb",
         "node:oracle.tower.hardCap"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Perks",
@@ -777,7 +777,7 @@
         "node:oracle.perk.ultimateWeapon",
         "node:oracle.perk.wavesRequired"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Rapid Fire",
@@ -790,7 +790,7 @@
       "sources": [
         "node:oracle.rapidFire"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Recovery Packages",
@@ -805,38 +805,27 @@
         "node:oracle.deathPrevention",
         "node:oracle.recoveryPackage"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Relics",
       "surface": "wiki",
       "label": "Relics",
       "graphNodeIds": [
-        "oracle.relic"
-      ],
-      "coverageStatus": "modeled",
-      "sources": [
-        "node:oracle.relic"
-      ],
-      "reviewedAt": "2026-08-24"
-    },
-    {
-      "id": "wiki:Relics — Using Relics totals table",
-      "surface": "wiki",
-      "label": "Relics — Using Relics totals table",
-      "graphNodeIds": [
+        "oracle.relic",
         "oracle.relic.bonusSummation"
       ],
       "coverageStatus": "modeled",
       "sources": [
+        "node:oracle.relic",
         "node:oracle.relic.bonusSummation"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
-      "id": "wiki:Rend Armor (game-vault.net — Fandom page is an empty stub)",
+      "id": "wiki:Rend Armor",
       "surface": "wiki",
-      "label": "Rend Armor (game-vault.net — Fandom page is an empty stub)",
+      "label": "Rend Armor",
       "graphNodeIds": [
         "oracle.rendArmor"
       ],
@@ -844,7 +833,7 @@
       "sources": [
         "node:oracle.rendArmor"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Shockwave",
@@ -859,7 +848,7 @@
         "node:oracle.shockwave",
         "node:oracle.tower.hardCap"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Slow Aura",
@@ -872,7 +861,7 @@
       "sources": [
         "node:oracle.slowAura"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Sub-Module Effects",
@@ -885,7 +874,7 @@
       "sources": [
         "node:oracle.module.subEffect"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:The Vault",
@@ -902,7 +891,7 @@
         "node:oracle.vault.harmonyTree",
         "node:oracle.vault.powerTree"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Themes/Milestones",
@@ -915,7 +904,7 @@
       "sources": [
         "node:oracle.theme.taxonomy"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Thorn Damage",
@@ -930,7 +919,7 @@
         "node:oracle.thorns",
         "node:oracle.tower.hardCap"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Tiers",
@@ -945,7 +934,7 @@
         "node:oracle.tier",
         "node:oracle.tier.battleCondition"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Tournaments",
@@ -962,7 +951,7 @@
         "node:oracle.tournament.heat",
         "node:oracle.tournament.league"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Ultimate Weapons",
@@ -985,7 +974,7 @@
         "node:oracle.ultimateWeapon.stat",
         "node:oracle.ultimateWeapon.statNaming"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Wall",
@@ -1000,7 +989,7 @@
         "node:oracle.tower.hardCap",
         "node:oracle.wall"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Wave Skip",
@@ -1013,7 +1002,7 @@
       "sources": [
         "node:oracle.waveSkip"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Workshop Enhancement",
@@ -1068,7 +1057,7 @@
         "node:workshop.enhancement.CoinBonus",
         "node:workshop.enhancement.utilitySpend"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Workshop Enhancement/Attack/Damage",
@@ -1081,7 +1070,7 @@
       "sources": [
         "node:oracle.workshopEnhancement"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Workshop Enhancement/Utility/Coin Bonus",
@@ -1098,7 +1087,7 @@
         "node:hide.eEcon.EO2.coinBonus",
         "node:workshop.enhancement.CoinBonus"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     },
     {
       "id": "wiki:Workshop Upgrades",
@@ -1115,7 +1104,7 @@
         "node:oracle.workshop.gameStatNames",
         "node:workshop.Damage"
       ],
-      "reviewedAt": "2026-08-24"
+      "reviewedAt": "2026-08-26"
     }
   ]
 }

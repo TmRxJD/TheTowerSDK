@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { sdkFacts, spelled } from '$lib/sdk-facts';
 	import CodeBlock from '$lib/ui/CodeBlock.svelte';
 	import { href } from '$lib/paths';
 </script>
@@ -16,7 +17,9 @@
 	of them.
 </p>
 
-<h2 class="mt-10 text-xl font-semibold">The Fifteen Builders</h2>
+<h2 class="mt-10 text-xl font-semibold">
+	The {spelled(sdkFacts.builders).replace('f', 'F')} Builders
+</h2>
 <p class="mt-3 text-muted">
 	Every builder is in <code>CALCULATOR_BUILDERS</code>, and <code>findCalculatorBuilder</code> looks one
 	up by id.
@@ -236,8 +239,8 @@ function run(commandName, values) {
 
 <h2 class="mt-10 text-xl font-semibold">Test Them All At Once</h2>
 <p class="mt-3 text-muted">
-	Because every builder has the same shape, one test covers all fifteen — and covers the next one
-	automatically.
+	Because every builder has the same shape, one test covers all {spelled(sdkFacts.builders)} — and covers
+	the next one automatically.
 </p>
 <div class="mt-4">
 	<CodeBlock
