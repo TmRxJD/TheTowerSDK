@@ -97,6 +97,72 @@ console.log(sheets.isReadOnly)   // true, because that id is protected`}
 	/>
 </div>
 
+<h2 id="connecting-with-a-google-service-account" class="mt-10 text-xl font-semibold">
+	Connecting With A Google Service Account
+</h2>
+<p class="mt-3 text-muted">
+	The transport above needs a token. For a tool that runs unattended — a bot, a sync job, a build
+	step — the identity to use is a <strong>service account</strong>: a robot with its own email
+	address, which reaches exactly the sheets you share with it and nothing else. No OAuth screen and
+	no user to keep signed in.
+</p>
+<ol class="mt-4 list-decimal space-y-2 pl-5 text-muted">
+	<li>In the Google Cloud console, create or pick a project.</li>
+	<li>Enable the <strong>Google Sheets API</strong> for it.</li>
+	<li>
+		<strong>IAM &amp; Admin → Service Accounts → Create.</strong> Access is granted per sheet by sharing,
+		so it needs no project roles at all.
+	</li>
+	<li>
+		<strong>Keys → Add key → Create new key → JSON.</strong> It downloads once. Treat it as a password
+		and keep it out of version control.
+	</li>
+	<li>
+		Copy the account's email — it looks like
+		<code>something@project-id.iam.gserviceaccount.com</code>.
+	</li>
+	<li>
+		<strong>Share the spreadsheet with that email.</strong> Viewer is enough to read. Editor is only needed
+		if you write.
+	</li>
+</ol>
+<p class="mt-4 text-muted">
+	Then mint a token the way you would for any Google API and hand it to the transport. The SDK never
+	imports a Google library, so this stays entirely your choice — <code>google-auth-library</code>
+	is the usual one.
+</p>
+<div class="mt-4">
+	<CodeBlock
+		code={`import { GoogleAuth } from 'google-auth-library'
+import { TowerSheets } from 'thetowersdk/sheets'
+
+const auth = new GoogleAuth({
+  keyFile: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+  scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly']
+})
+const client = await auth.getClient()
+
+const sheets = new TowerSheets({
+  spreadsheetId: process.env.SHEET_ID,
+  transport: {
+    async readValues({ spreadsheetId, range, valueRenderOption }) {
+      const url =
+        \`https://sheets.googleapis.com/v4/spreadsheets/\${spreadsheetId}\` +
+        \`/values/\${encodeURIComponent(range)}?valueRenderOption=\${valueRenderOption}\`
+
+      const { data } = await client.request({ url })
+      return data.values ?? []
+    }
+  }
+})`}
+	/>
+</div>
+<p class="mt-3 text-muted">
+	<strong>An unshared sheet reads as an empty range, not an error.</strong> That is the single most common
+	way this looks broken: the call succeeds, the rows come back empty, and nothing says why. If a read
+	returns nothing, check the sharing before you check anything else.
+</p>
+
 <h2 class="mt-10 text-xl font-semibold">Read Values</h2>
 <p class="mt-3 text-muted">
 	<code>readValues</code> gives you what the API returned. <code>readGrid</code> gives you a

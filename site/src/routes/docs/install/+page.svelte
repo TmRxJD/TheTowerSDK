@@ -45,7 +45,7 @@ console.log(formatNumberForDisplay(total), 'coins to max')`}
 
 <h2 class="mt-10 text-xl font-semibold">The Entry Points</h2>
 <p class="mt-3 text-muted">
-	Twelve entry points, imported by name. Nothing is bundled that you do not import, so a tool that
+	Fourteen entry points, imported by name. Nothing is bundled that you do not import, so a tool that
 	only needs catalogs does not carry the save reader.
 </p>
 <div class="mt-6 overflow-x-auto rounded-lg border border-line/70">
@@ -90,6 +90,20 @@ console.log(formatNumberForDisplay(total), 'coins to max')`}
 				<td class="text-muted">
 					Decoding <code>playerInfo.dat</code> bytes. Node only.
 					<a href={href('/docs/save/')}>Docs</a>
+				</td>
+			</tr>
+			<tr>
+				<td><code>thetowersdk/save-decoder</code></td>
+				<td class="text-muted">
+					The same save reader with no Node imports, for decoding in a browser tab.
+					<a href={href('/docs/save/')}>Docs</a>
+				</td>
+			</tr>
+			<tr>
+				<td><code>thetowersdk/contributions</code></td>
+				<td class="text-muted">
+					The roster of whose work this package carries, as data you can render.
+					<a href={href('/contributions/')}>Docs</a>
 				</td>
 			</tr>
 			<tr>

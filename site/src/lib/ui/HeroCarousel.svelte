@@ -9,8 +9,10 @@
 	 *
 	 * Behaviour worth knowing before changing it:
 	 *
-	 * - **The slide region has a floor height.** Slides differ in body length, so without one the
-	 *   whole page below jumps every rotation. The floor is set to the tallest slide, not the first.
+	 * - **Every slide is rendered and stacked in one grid cell.** Slides differ in body length, so
+	 *   the stage takes its height from the tallest of them at whatever width the reader is at, and
+	 *   the controls below never move. Hand-measured heights were correct at two widths and wrong
+	 *   between them.
 	 * - **Rotation stops on hover, on focus inside, and when the tab is hidden.** A carousel that
 	 *   advances while someone is reading a slide, or mid-way through tabbing to its controls, is
 	 *   actively hostile. A hidden tab is just wasted timers.
@@ -60,7 +62,6 @@
 	}
 
 	const count = heroSlides.length;
-	let slide = $derived(heroSlides[index]);
 
 	function goTo(next: number, dir: number) {
 		direction = dir;
@@ -105,19 +106,31 @@
 	onfocusout={() => (paused = false)}
 >
 	<div class="hero-stage" aria-live="polite">
-		{#key index}
-			<div class="hero-slide" style="--slide-dir: {direction}">
+		<!--
+			Every slide is rendered, stacked in one grid cell, and all but the active one is hidden.
+
+			The stage is therefore always as tall as its tallest slide AT THE CURRENT VIEWPORT, which
+			is the only way this stays still: slide bodies differ in length, and how many lines each
+			one wraps to depends on the width. See the note in the stylesheet below.
+		-->
+		{#each heroSlides as entry, entryIndex (entry.headline)}
+			<div
+				class="hero-slide"
+				class:is-active={entryIndex === index}
+				style="--slide-dir: {direction}"
+				aria-hidden={entryIndex === index ? undefined : 'true'}
+			>
 				<p class="text-xs font-semibold tracking-[0.2em] text-accent uppercase">
-					{slide.eyebrow}
+					{entry.eyebrow}
 				</p>
 				<h1
 					class="headline-gradient mt-3 text-4xl font-bold tracking-tight text-balance sm:text-6xl"
 				>
-					{slide.headline}
+					{entry.headline}
 				</h1>
-				<p class="mx-auto mt-5 max-w-xl text-lg text-pretty text-muted">{slide.body}</p>
+				<p class="mx-auto mt-5 max-w-xl text-lg text-pretty text-muted">{entry.body}</p>
 			</div>
-		{/key}
+		{/each}
 	</div>
 
 	{@render children?.()}
@@ -153,31 +166,34 @@
 
 <style>
 	/*
-	 * A floor sized to the tallest slide, so the controls and the buttons below them do not jump on
-	 * every rotation.
+	 * The stage is as tall as its tallest slide, measured by the browser rather than by hand.
 	 *
-	 * The numbers are measured, not guessed: the tallest slide renders 268px below 640px and 252px
-	 * at and above it, so these are those heights plus a little headroom for a font fallback. An
-	 * earlier guess of 20rem/21rem left several rem of dead space under the text on every slide.
+	 * This used to be two hand-measured `min-height` values, one per breakpoint. They were correct
+	 * at the two widths they were measured at and wrong everywhere else: slide bodies differ in
+	 * length, so the tallest slide changes with the width, and between the breakpoints the buttons
+	 * below jumped on every rotation. Editing any slide's copy silently invalidated both numbers.
 	 *
-	 * Narrow is the taller case, which looks inverted but is not — the headline steps down to
-	 * `text-4xl` there, and the body gains more lines than the headline loses.
+	 * Stacking every slide in one grid cell makes the cell size to the tallest of them at whatever
+	 * width the reader is actually at. Nothing to re-measure, and a longer slide cannot reintroduce
+	 * the jump.
 	 *
-	 * Re-measure when slide copy changes: add a slide with a longer body and this silently goes back
-	 * to jumping.
+	 * `visibility: hidden` and not `display: none`: a hidden slide must still occupy the cell, or it
+	 * contributes nothing to the height and the whole point is lost.
 	 */
 	.hero-stage {
+		display: grid;
 		position: relative;
-		min-height: 17.5rem;
-	}
-
-	@media (min-width: 640px) {
-		.hero-stage {
-			min-height: 16.5rem;
-		}
 	}
 
 	.hero-slide {
+		grid-area: 1 / 1;
+		visibility: hidden;
+		pointer-events: none;
+	}
+
+	.hero-slide.is-active {
+		visibility: visible;
+		pointer-events: auto;
 		animation: hero-slide-in 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
 	}
 
@@ -236,7 +252,7 @@
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.hero-slide {
+		.hero-slide.is-active {
 			animation: none;
 		}
 		.hero-arrow,

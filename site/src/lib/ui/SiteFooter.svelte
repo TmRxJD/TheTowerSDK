@@ -30,6 +30,7 @@
 			{#if SHOW_GOVERNANCE}
 				<a href={href('/ai/')}>AI &amp; ACS</a>
 			{/if}
+			<a href={href('/contributions/')}>Contributions</a>
 			<a href={href('/docs/license/')}>License</a>
 		</nav>
 		<nav class="flex flex-col gap-1" aria-label="Related">
@@ -40,7 +41,10 @@
 			{#if SHOW_GOVERNANCE}
 				<a href={LINKS.agsSite}>Agentic Cognition Substrate</a>
 			{/if}
-			<a href={LINKS.adbBridge}>adb-bridge</a>
+			<a href={LINKS.towerai}>GitHub: TowerAI</a>
+			<a href={LINKS.towerAiNpm}>npm: towerai</a>
+			<a href={LINKS.adbBridge}>GitHub: adb-bridge</a>
+			<a href={LINKS.adbBridgeNpm}>npm: adb-bridge</a>
 		</nav>
 	</div>
 </footer>

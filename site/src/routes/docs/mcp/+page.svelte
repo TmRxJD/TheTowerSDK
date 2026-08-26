@@ -195,32 +195,16 @@
 
 <h3 class="mt-6 text-lg font-medium">Registering a Service Account</h3>
 <p class="mt-2 text-sm text-muted">
-	The sheet tools authenticate as a Google Cloud <strong>service account</strong> — a robot identity with
-	its own email address, which reaches the sheets you share with it.
+	The sheet tools reach a spreadsheet as a Google Cloud <strong>service account</strong>, the same
+	identity the <code>thetowersdk/sheets</code> client uses. The walkthrough lives with the
+	spreadsheet docs so there is one copy of it:
+	<a href={href('/docs/sheets/#connecting-with-a-google-service-account')}
+		>Connecting with a service account</a
+	>.
 </p>
-<ol class="mt-3 list-decimal space-y-1 pl-5 text-sm text-muted">
-	<li>In the Google Cloud console, create or pick a project.</li>
-	<li>Enable the <strong>Google Sheets API</strong> for it.</li>
-	<li>
-		<strong>IAM &amp; Admin → Service Accounts → Create.</strong> Access is granted per-sheet by sharing,
-		so no project roles are needed.
-	</li>
-	<li>
-		<strong>Keys → Add key → Create new key → JSON.</strong> It downloads once. Treat it as a password
-		and keep it out of version control.
-	</li>
-	<li>Copy the account email — <code>something@project-id.iam.gserviceaccount.com</code>.</li>
-	<li>
-		<strong>Share your spreadsheet with that email.</strong> Viewer is enough to read; Editor is
-		required for <code>eval_formula</code> and <code>write_cells</code>, which write to a scratch
-		cell.
-	</li>
-	<li>Point the tools at the key file and sheet id via environment variables.</li>
-</ol>
 <p class="mt-3 text-sm text-muted">
-	If a read comes back empty, check the sharing first — an unshared sheet reads as an empty range
-	rather than a permissions error. To revoke a key, delete it in the console; sharing stays intact
-	for its replacement.
+	One thing worth knowing before you debug anything else: an unshared sheet reads as an
+	<em>empty range</em>, not a permissions error. Check the sharing first.
 </p>
 
 <p class="mt-8 text-sm">

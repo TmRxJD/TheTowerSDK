@@ -22,6 +22,8 @@
       "thetowersdk/formatting": ["./src/formatting/index.ts"],
       "thetowersdk/mechanics": ["./src/mechanics/index.ts"],
       "thetowersdk/wiki": ["./src/wiki/index.ts"],
+      "thetowersdk/save-decoder": ["./src/save-decoder/index.ts"],
+      "thetowersdk/contributions": ["./src/contributions/index.ts"],
       "thetowersdk/charts": ["./src/charts/index.ts"],
       "thetowersdk/knowledge": ["./src/knowledge/index.ts"],
       "thetowersdk/builders": ["./src/builders/index.ts"],

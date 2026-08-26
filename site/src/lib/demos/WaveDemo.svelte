@@ -73,11 +73,11 @@
 
 <dl class="mt-4 grid gap-3 sm:grid-cols-2">
 	<div class="rounded-md border border-line/70 bg-bg/40 p-3">
-		<dt class="text-xs tracking-wide text-muted uppercase">Base enemy health</dt>
+		<dt class="text-xs tracking-wide text-muted uppercase">Enemy Health</dt>
 		<dd class="font-mono text-2xl text-gold">{hp}</dd>
 	</div>
 	<div class="rounded-md border border-line/70 bg-bg/40 p-3">
-		<dt class="text-xs tracking-wide text-muted uppercase">Base enemy damage</dt>
+		<dt class="text-xs tracking-wide text-muted uppercase">Enemy Damage</dt>
 		<dd class="font-mono text-2xl text-accent">{damage}</dd>
 	</div>
 </dl>

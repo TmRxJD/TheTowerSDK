@@ -160,6 +160,106 @@ console.log(cooldown.levels[8])
 	/>
 </div>
 
+<h2 class="mt-10 text-xl font-semibold">Finding An Entry By What A Player Typed</h2>
+<p class="mt-3 text-muted">
+	A catalog stores one spelling; players use several. The lookup helpers close that gap, so a form,
+	a chat command or an imported spreadsheet column can all reach the same row without you writing a
+	normaliser per surface.
+</p>
+<div class="mt-4">
+	<CodeBlock
+		code={`import {
+  findLabResearchByLooseName,
+  findLabResearchBySlug,
+  findLabResearchByIndex
+} from 'thetowersdk/data'
+
+// Case and spacing do not matter.
+findLabResearchByLooseName('attack speed')
+// { index: 1, displayName: 'Attack Speed', description: 'Firing rate of Tower Projectiles.',
+//   category: 'Attack', slug: 'attack_speed', levelMax: 99, baseCoinCost: 30, baseTime: 15,
+//   tierUnlock: 0, milestoneUnlock: 0 }
+
+findLabResearchBySlug('attack_speed')   // the stable key, for your own storage
+findLabResearchByIndex(1)               // the index a save file stores`}
+	/>
+</div>
+<p class="mt-3 text-muted">
+	Three ways in, on purpose. Use the <strong>slug</strong> as the key in your own database — it does
+	not change when a display name does. Use the <strong>index</strong> when you are reading a save,
+	because that is what the save stores. Use the <strong>loose name</strong> only at the edge, where a
+	person typed something. There are 95 helpers like these across the catalogs.
+</p>
+
+<h2 class="mt-10 text-xl font-semibold">Levels, Costs And Research Times</h2>
+<p class="mt-3 text-muted">
+	Every lab in <code>LAB_CATALOG</code> carries its own level rows, each with the coin cost and the
+	research time at that level. That is what makes "what will the next ten levels cost me" a
+	<code>reduce</code> rather than a formula you have to get right.
+</p>
+<div class="mt-4">
+	<CodeBlock
+		code={`import { LAB_CATALOG } from 'thetowersdk/data'
+import { formatNumberForDisplay, parseDurationToHours, formatHoursDuration } from 'thetowersdk/formatting'
+
+const lab = LAB_CATALOG.find((entry) => entry.name === 'Attack Speed')
+
+lab.levels[0]        // { level: 1, duration: '00:00:14', cost: 30 }
+lab.levels.length    // how far this lab goes
+
+const next = lab.levels.slice(10, 20)
+formatNumberForDisplay(next.reduce((sum, level) => sum + level.cost, 0))
+// '243.56K'
+
+formatHoursDuration(next.reduce((sum, level) => sum + parseDurationToHours(level.duration), 0))
+// '5d 19h 2m 0s'`}
+	/>
+</div>
+<p class="mt-3 text-muted">
+	Research time is stored as <code>HH:MM:SS</code>, which does not add up as a string.
+	<code>parseDurationToHours</code> is the one to reach for — see
+	<a href={href('/docs/formatting/')}>Formatting</a>.
+</p>
+
+<h2 class="mt-10 text-xl font-semibold">Categories, Derived Rather Than Listed</h2>
+<p class="mt-3 text-muted">
+	Every catalog entry carries its own category, so the groupings a UI needs come out of the data.
+	Hand-listing them is how a filter comes to be missing a category nobody noticed was added.
+</p>
+<div class="mt-4">
+	<CodeBlock
+		code={`import { LAB_CATALOG, ALL_PERKS } from 'thetowersdk/data'
+
+const categories = [...new Set(LAB_CATALOG.map((lab) => lab.category))]
+// 15 of them: 'Bots', 'Card Mastery', 'Modules', 'Attack', 'Perks', …
+
+const pools = [...new Set(ALL_PERKS.map((perk) => perk.pool))]
+// 'standard', 'ultimate_weapon', 'trade_off'
+
+ALL_PERKS[0]   // { perk: 'x1.20 Max Health', quantity: 5, pool: 'standard' }`}
+	/>
+</div>
+
+<h2 class="mt-10 text-xl font-semibold">Reading A Catalog From A Save</h2>
+<p class="mt-3 text-muted">
+	A save stores a lab as an index, not a name. <code>LAB_RESEARCH_IMPORT_CATALOG</code> is the bridge:
+	it pairs each index with the field the save actually writes and the name a player sees.
+</p>
+<div class="mt-4">
+	<CodeBlock
+		code={`import { LAB_RESEARCH_IMPORT_CATALOG } from 'thetowersdk/data'
+
+LAB_RESEARCH_IMPORT_CATALOG[0]
+// { index: 0, gameField: 'researchLevel0', displayName: 'Damage', slug: 'damage', category: null }`}
+	/>
+</div>
+<p class="mt-3 text-muted">
+	This is the mapping that turns a decoded save into named things, and getting it wrong does not
+	throw — every level reads as a plausible number against the wrong lab. It is
+	<a href={href('/contributions/')}>someone else's work</a>, and the reason the save reader can be
+	trusted at all.
+</p>
+
 <h2 class="mt-10 text-xl font-semibold">The Rest Of The Catalogs</h2>
 <p class="mt-3 text-muted">
 	They all follow the same pattern — import the constant, read the fields.

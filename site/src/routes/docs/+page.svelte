@@ -15,7 +15,7 @@
 				{
 					href: '/docs/install/',
 					label: 'Install',
-					body: 'One package, the twelve entry points, pinning a version, and using it in the browser.'
+					body: 'One package, the fourteen entry points, pinning a version, and using it in the browser.'
 				},
 				{
 					href: '/docs/data/',

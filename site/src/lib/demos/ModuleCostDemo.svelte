@@ -13,7 +13,7 @@
 </script>
 
 <label class="block max-w-xs text-sm text-muted">
-	Current module level
+	Current Level
 	<select
 		class="mt-1 w-full rounded-md border border-line bg-bg px-3 py-2 text-fg"
 		bind:value={fromLevel}

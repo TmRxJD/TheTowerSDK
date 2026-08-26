@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.8.0
+
+**Two new entry points.**
+
+- **`thetowersdk/save-decoder`** — the save reader with no Node imports, for decoding
+  `playerInfo.dat` in a browser tab. Gunzip comes from `DecompressionStream`; the NRBF reader is
+  the same one `thetowersdk/node` uses. A save never has to leave the machine it is on.
+- **`thetowersdk/contributions`** — the roster of whose work this package carries, as data, so a
+  tool can render the credit it is actually using.
+
+**Calculator labels are the game's.** Every builder field is now named the way the Run Tracker and
+the community name it: `Enable Chrono Field (CF)`, `CF Reduction (%)`, `Defense Absolute Value`,
+`Current Level`. The workshop picker offered `WSP_SUPER_CRIT_MULTI` and now offers `Super Crit
+Mult`, read from the enhancement definitions the package already carries.
+
+**Thorns is the calculator players use.** It asked for an enemy factor, a thorn multiplier and a
+module benefit — parameters of a formula, none of which a player can read anywhere — and returned
+damage per hit. It now takes base thorns, tier, plasma cannon and its mastery, the BC reduction
+labs and Sharp Fortitude, and answers in hits to kill. `thornDamageOnHit` is unchanged in
+`thetowersdk/mechanics` for a caller who has the formula's own inputs.
+
+**The MCP scratchpad works outside this repository.** `sdk_sandbox_run` shelled out to a script in
+the development monorepo, so for anyone who installed the package it was advertised and failed to
+spawn. It is now built from what the package ships — `list`, `export`, `calc`, `format`, `decode` —
+and the tools that genuinely need the monorepo are no longer advertised where they cannot run.
+
 ## 0.6.0
 
 **Removed: `thetowersdk/inputs`.** It held the account-state shapes the Run Tracker's own pages

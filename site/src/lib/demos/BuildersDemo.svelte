@@ -89,7 +89,8 @@
 
 	/** Coins and shards reach values a browser prints in exponential notation. The game does not. */
 	function readable(key: string, value: number) {
-		if (/percent|share|fraction|ratio/i.test(key)) return `${(value * (value <= 1 ? 100 : 1)).toFixed(2)}%`;
+		if (/percent|share|fraction|ratio/i.test(key))
+			return `${(value * (value <= 1 ? 100 : 1)).toFixed(2)}%`;
 		if (!Number.isFinite(value)) return String(value);
 		if (Number.isInteger(value) && Math.abs(value) < 10_000) return String(value);
 		return formatNumberForDisplay(value);

@@ -31,17 +31,18 @@ const DOCUMENTED_BY: Record<string, string> = {
   'save': '/docs/save/',
   // Loading a save from disk is what `node` is for; it reads as one subject with `save`.
   'node': '/docs/save/',
-  // Formatting exists to render the catalogs the way the game does.
-  'formatting': '/docs/data/',
+  // The browser decoder is the same subject from the other side, and that page covers both.
+  'save-decoder': '/docs/save/',
+  'formatting': '/docs/formatting/',
   'mechanics': '/docs/mechanics/',
   'charts': '/docs/charts/',
   'wiki': '/docs/wiki/',
   'builders': '/docs/builders/',
-  // The input vocabulary is what a builder's fields are parsed with.
-  'inputs': '/docs/builders/',
   'bot': '/docs/bots/',
   'sheets': '/docs/sheets/',
   'knowledge': '/docs/knowledge/',
+  // Not under /docs: the roster is for readers, not for people writing code against it.
+  'contributions': '/contributions/',
 }
 
 /**
@@ -110,7 +111,16 @@ describe.skipIf(!existsSync(SITE))('the site documents the package', () => {
      * A page nobody links to is a page nobody reads. The nav is the only route into the docs,
      * so a file existing under `routes/` is not the same as the feature being findable.
      */
+    /*
+     * Both navigation surfaces, because the site has two.
+     *
+     * This read `content.ts` alone, which is where the header and docs lists live. A page linked
+     * only from the footer -- the right home for something that is not a docs page -- therefore
+     * failed a check whose stated point is "a page nobody links to is a page nobody reads". It was
+     * linked, and read, and still failed.
+     */
     const nav = readFileSync(path.join(SITE, 'src/lib/content.ts'), 'utf8')
+      + readFileSync(path.join(SITE, 'src/lib/ui/SiteFooter.svelte'), 'utf8')
     const unlinked = [...new Set(Object.values(DOCUMENTED_BY))]
       .filter(page => page !== '/docs/')
       .filter(page => !nav.includes(`'${page}'`))

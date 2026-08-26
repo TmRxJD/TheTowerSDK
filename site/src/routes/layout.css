@@ -451,17 +451,38 @@ pre {
  * page. Placed as its own element at the top of a page: `body::before` is already spoken for by the
  * colour fields, and `main` cannot host it without covering its own content.
  */
-.page-art {
+.page-art-stack {
 	position: fixed;
 	inset: 0;
 	z-index: -1;
 	pointer-events: none;
+}
+
+/*
+ * Two of these are stacked, and the one on top fades between them as the reader passes a section
+ * boundary. Swapping the image on a single layer cuts to the page's own colour for a frame, which
+ * behind body copy reads as a fault rather than a transition.
+ */
+.page-art {
+	position: absolute;
+	inset: 0;
 	background-image: var(--section-art);
 	background-attachment: fixed;
 	background-size: cover;
 	background-position: center;
-	opacity: 0.4;
+	opacity: 0;
+	transition: opacity 900ms ease;
 	mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.55) 60%, rgba(0, 0, 0, 0.3) 100%);
+}
+
+.page-art.is-on {
+	opacity: 0.4;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.page-art {
+		transition: none;
+	}
 }
 
 /*

@@ -27,7 +27,7 @@ function siteFiles(dir: string): string[] {
 const WORDS: Record<number, string> = {
   2: 'two', 3: 'three', 4: 'four', 5: 'five', 6: 'six', 7: 'seven', 8: 'eight', 9: 'nine',
   10: 'ten', 12: 'twelve', 13: 'thirteen', 15: 'fifteen', 27: 'twenty-seven', 29: 'twenty-nine',
-  42: 'forty-two', 46: 'forty-six',
+  14: 'fourteen', 42: 'forty-two', 46: 'forty-six',
 }
 
 describe.skipIf(!existsSync(SITE))('the site counts match the package', () => {

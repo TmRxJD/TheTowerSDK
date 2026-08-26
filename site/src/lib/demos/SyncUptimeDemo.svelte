@@ -83,25 +83,25 @@
 
 	const controls = $derived([
 		{
-			label: 'Golden Tower duration',
+			label: 'Golden Tower Duration Level',
 			options: gtDuration,
 			get: () => gtDurLevel,
 			set: (v: string) => (gtDurLevel = v)
 		},
 		{
-			label: 'Golden Tower cooldown',
+			label: 'Golden Tower Cooldown Level',
 			options: gtCooldown,
 			get: () => gtCdLevel,
 			set: (v: string) => (gtCdLevel = v)
 		},
 		{
-			label: 'Black Hole duration',
+			label: 'Black Hole Duration Level',
 			options: bhDuration,
 			get: () => bhDurLevel,
 			set: (v: string) => (bhDurLevel = v)
 		},
 		{
-			label: 'Black Hole cooldown',
+			label: 'Black Hole Cooldown Level',
 			options: bhCooldown,
 			get: () => bhCdLevel,
 			set: (v: string) => (bhCdLevel = v)
@@ -131,9 +131,9 @@
 		<thead class="border-b border-line/70 text-xs tracking-wide text-muted uppercase">
 			<tr>
 				<th class="px-3 py-2 font-medium">Weapon</th>
-				<th class="px-3 py-2 font-medium">Duration</th>
-				<th class="px-3 py-2 font-medium">Cooldown</th>
-				<th class="px-3 py-2 font-medium">Uptime</th>
+				<th class="px-3 py-2 font-medium">Duration (s)</th>
+				<th class="px-3 py-2 font-medium">Cooldown (s)</th>
+				<th class="px-3 py-2 font-medium">Uptime (%)</th>
 			</tr>
 		</thead>
 		<tbody class="font-mono text-fg">

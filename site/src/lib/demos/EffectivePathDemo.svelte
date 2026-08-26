@@ -44,7 +44,7 @@
 
 <div class="grid gap-4 sm:grid-cols-3">
 	<label class="block text-sm text-muted">
-		Starting upgrade
+		Upgrade
 		<select
 			class="mt-1 w-full rounded-md border border-line bg-bg px-3 py-2 text-fg"
 			bind:value={seedKey}
@@ -55,7 +55,7 @@
 		</select>
 	</label>
 	<label class="block text-sm text-muted">
-		Starting level
+		Current Level
 		<select
 			class="mt-1 w-full rounded-md border border-line bg-bg px-3 py-2 text-fg"
 			bind:value={startLevel}

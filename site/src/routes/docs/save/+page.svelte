@@ -14,12 +14,74 @@
 	weapons, bots, guardians, vault, relics, themes, and every battle the game kept. Decode it once and
 	read whichever parts your tool needs, each as a typed object.
 </p>
-
-<h2 class="mt-10 text-xl font-semibold">Decode The File</h2>
 <p class="mt-3 text-muted">
-	<code>decodePlayerInfoSaveBytes</code> takes the raw bytes and returns the parsed account under
-	<code>parsedRoot</code>, alongside the number of battles it found and whether the file was
-	compressed. Every extractor on this page takes that <code>parsedRoot</code>.
+	The decode runs wherever you call it, including in a browser tab. There is no service to stand up
+	and nothing to upload: a player's save can go from a file input to a parsed account without ever
+	leaving their machine.
+</p>
+
+<h2 class="mt-10 text-xl font-semibold">What The File Actually Is</h2>
+<p class="mt-3 text-muted">
+	A save is gzip-compressed <strong>.NET Binary Format</strong> — NRBF, the wire format
+	<code>BinaryFormatter</code> writes. It is not JSON and not a database; it is a stream of typed records
+	describing objects, their class definitions, their members and the references between them, laid out
+	the way the .NET runtime laid them out in memory.
+</p>
+<p class="mt-3 text-muted">
+	Reading that normally means .NET. The usual shape of a save-file tool is therefore a server: the
+	player uploads their file, something on the other end deserializes it and hands back JSON. That is
+	a backend to run and pay for, and it means every player has to send their account data somewhere
+	to use your tool.
+</p>
+<p class="mt-3 text-muted">
+	This package reads it directly. The NRBF reader here is a port of the format to TypeScript,
+	written against the record types themselves — <code>ClassWithMembersAndTypes</code>,
+	<code>BinaryArray</code>, <code>MemberReference</code>, the object-null runs, the string table,
+	the reference graph that has to be resolved after the fact because records point forward as well
+	as back. It has no dependencies and touches nothing platform-specific, so the same reader runs in
+	Node and in a page.
+</p>
+
+<h2 class="mt-10 text-xl font-semibold">Decode In The Browser</h2>
+<p class="mt-3 text-muted">
+	<code>thetowersdk/save-decoder</code> is the client-side path. Gunzip comes from the platform's
+	own <code>DecompressionStream</code>, so the entry point carries no Node imports at all and a
+	bundler has nothing to shim.
+</p>
+<div class="mt-4">
+	<CodeBlock
+		code={`import { decodeSaveFile } from 'thetowersdk/save-decoder'
+import { listImportableBattleRuns } from 'thetowersdk/save'
+
+// Straight from a file input. Nothing is uploaded.
+async function onFile(file) {
+  const root = await decodeSaveFile(await file.arrayBuffer())
+  return listImportableBattleRuns(root)
+}`}
+	/>
+</div>
+<p class="mt-3 text-muted">
+	The decode is CPU-bound, so for a large save do it in a Web Worker and post the result back — the
+	Run Tracker does exactly that, and falls back to the main thread where <code>Worker</code> is
+	unavailable. <code>decodeInflatedSave</code> is there for the worker case, where the gunzip has already
+	happened.
+</p>
+<div class="mt-4">
+	<CodeBlock
+		code={`// worker.ts
+import { decodeInflatedSave } from 'thetowersdk/save-decoder'
+
+self.onmessage = (event) => {
+  self.postMessage(decodeInflatedSave(event.data))
+}`}
+	/>
+</div>
+
+<h2 class="mt-10 text-xl font-semibold">Decode In Node</h2>
+<p class="mt-3 text-muted">
+	Same reader, <code>node:zlib</code> for the gunzip. <code>decodePlayerInfoSaveBytes</code> returns
+	the parsed account under <code>parsedRoot</code>, alongside the number of battles it found and
+	whether the file was compressed. Every extractor on this page takes that <code>parsedRoot</code>.
 </p>
 <div class="mt-4">
 	<CodeBlock
@@ -34,6 +96,10 @@ console.log(decoded.wasGzip)          // true
 const root = decoded.parsedRoot       // pass this to the extractors`}
 	/>
 </div>
+<p class="mt-3 text-muted">
+	Reach for the reader itself — <code>NRBFReader</code> and <code>nrbfToJSON</code>, exported from
+	both entry points — when you want the raw record stream rather than a save root.
+</p>
 
 <h2 class="mt-10 text-xl font-semibold">Read The Run History</h2>
 <p class="mt-3 text-muted">
@@ -201,20 +267,6 @@ socket.onmessage = async (event) => {
   const bytes = new Uint8Array(await event.data.arrayBuffer())
   const decoded = decodePlayerInfoSaveBytes(bytes)
   render(listImportableBattleRuns(decoded.parsedRoot))
-}`}
-	/>
-</div>
-
-<h2 class="mt-10 text-xl font-semibold">Browser Uploads</h2>
-<p class="mt-3 text-muted">
-	The decoder takes bytes, so a file input works the same way as a file read from disk.
-</p>
-<div class="mt-4">
-	<CodeBlock
-		code={`async function onFile(file) {
-  const bytes = new Uint8Array(await file.arrayBuffer())
-  const decoded = decodePlayerInfoSaveBytes(bytes)
-  return decoded.parsedRoot
 }`}
 	/>
 </div>

@@ -24,6 +24,9 @@ export const LINKS = {
 	agsSite: 'https://tmrxjd.github.io/agent-governance-system-site/',
 	agsRepo: 'https://github.com/TmRxJD/agent-governance-system-site',
 	adbBridge: 'https://github.com/TmRxJD/adb-bridge',
+	adbBridgeNpm: 'https://www.npmjs.com/package/adb-bridge',
+	towerai: 'https://github.com/TmRxJD/TowerAI',
+	towerAiNpm: 'https://www.npmjs.com/package/towerai',
 	wiki: 'https://the-tower-idle-tower-defense.fandom.com',
 	effectivePaths:
 		'https://docs.google.com/spreadsheets/d/1YwZtKP6B4WYhRba5T6APJ1YxKNdfnIGQnprgnxmO7zc/edit',

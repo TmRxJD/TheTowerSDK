@@ -1,6 +1,6 @@
 {
   "name": "thetowersdk",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Game data and save-file reading for The Tower — build your own calculators and tools.",
   "license": "MIT",
   "author": "TmRxJD (https://github.com/TmRxJD)",
@@ -91,6 +91,12 @@
       "require": "./dist/node/index.js",
       "default": "./dist/node/index.js"
     },
+    "./save-decoder": {
+      "types": "./dist/save-decoder/index.d.ts",
+      "import": "./dist/save-decoder/index.js",
+      "require": "./dist/save-decoder/index.js",
+      "default": "./dist/save-decoder/index.js"
+    },
     "./formatting": {
       "types": "./dist/formatting/index.d.ts",
       "require": "./dist/formatting/index.js",
@@ -116,6 +122,12 @@
       "types": "./dist/charts/index.d.ts",
       "require": "./dist/charts/index.js",
       "default": "./dist/charts/index.js"
+    },
+    "./contributions": {
+      "types": "./dist/contributions/index.d.ts",
+      "import": "./dist/contributions/index.js",
+      "require": "./dist/contributions/index.js",
+      "default": "./dist/contributions/index.js"
     },
     "./knowledge": {
       "types": "./dist/knowledge/index.d.ts",
@@ -192,6 +204,12 @@
       ],
       "assets": [
         "dist/assets/index.d.ts"
+      ],
+      "contributions": [
+        "dist/contributions/index.d.ts"
+      ],
+      "save-decoder": [
+        "dist/save-decoder/index.d.ts"
       ]
     }
   },

@@ -14,7 +14,8 @@
 <h1 class="mt-2 text-3xl font-semibold">Get Started</h1>
 <p class="mt-2 max-w-2xl text-muted">
 	Install the package, point your assistant at the MCP server, and start from a working example.
-	Each step below stands on its own — the first is all you need to write code.
+	Each step below stands on its own — the first is all you need to write code, and the SDK itself
+	needs no key, no account and no network.
 </p>
 
 <div class="mt-8 max-w-3xl space-y-10">
@@ -108,7 +109,71 @@
 	</section>
 
 	<section>
-		<h2 class="text-xl font-medium">5. Ready To Build</h2>
+		<h2 class="text-xl font-medium">5. What You Can Add Alongside It</h2>
+		<p class="mt-2 text-sm text-muted">
+			None of these are dependencies. The SDK works on its own, offline, with no keys — each of
+			these adds one capability it deliberately does not carry itself.
+		</p>
+
+		<div class="mt-4 space-y-4">
+			<GlassPanel>
+				<h3 class="font-medium">TowerAI — an assistant that answers from a knowledge base</h3>
+				<p class="mt-2 text-sm text-muted">
+					<code>npm install towerai</code>. The SDK holds the numbers; TowerAI does retrieval over a
+					knowledge base you curate and prompts a model with what it found, so answers cite
+					something instead of being invented. You bring the model key — a free one from
+					<a href="https://console.groq.com" rel="noreferrer">console.groq.com</a>
+					is enough to run it.
+				</p>
+				<p class="mt-3 text-sm">
+					<a href={href('/docs/towerai/')}>TowerAI docs →</a>
+					·
+					<a href={LINKS.towerai}>GitHub</a>
+					·
+					<a href={LINKS.towerAiNpm}>npm</a>
+				</p>
+			</GlassPanel>
+
+			<GlassPanel>
+				<h3 class="font-medium">adb-bridge — read a save off a phone or emulator</h3>
+				<p class="mt-2 text-sm text-muted">
+					<code>npx adb-bridge</code>. The SDK decodes save bytes; getting those bytes off an
+					Android device is a separate job, and this is it. Your users run it on their own machine —
+					it is not a dependency of your project, and nothing about it ships to them through you.
+				</p>
+				<p class="mt-3 text-sm">
+					<a href={href('/docs/save/')}>Save docs →</a>
+					·
+					<a href={LINKS.adbBridge}>GitHub</a>
+					·
+					<a href={LINKS.adbBridgeNpm}>npm</a>
+				</p>
+			</GlassPanel>
+
+			<GlassPanel>
+				<h3 class="font-medium">discord.js — every calculator as a slash command</h3>
+				<p class="mt-2 text-sm text-muted">
+					<code>thetowersdk/bot</code> turns the builders into commands and replies and never
+					touches a Discord client, so it is transport-agnostic. Add
+					<code>discord.js</code> when you want those commands on a server.
+				</p>
+				<p class="mt-3 text-sm"><a href={href('/docs/bots/')}>Discord bot docs →</a></p>
+			</GlassPanel>
+
+			<GlassPanel>
+				<h3 class="font-medium">google-auth-library — read and write spreadsheets</h3>
+				<p class="mt-2 text-sm text-muted">
+					<code>thetowersdk/sheets</code> takes a transport you supply and imports no Google library itself,
+					so nothing about your auth is assumed. For an unattended tool, a service account is the identity
+					to use.
+				</p>
+				<p class="mt-3 text-sm"><a href={href('/docs/sheets/')}>Spreadsheet docs →</a></p>
+			</GlassPanel>
+		</div>
+	</section>
+
+	<section>
+		<h2 class="text-xl font-medium">6. Ready To Build</h2>
 		<div class="mt-3 grid gap-4 sm:grid-cols-2">
 			<GlassPanel>
 				<h3 class="font-medium">Examples</h3>

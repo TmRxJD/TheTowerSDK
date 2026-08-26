@@ -22,7 +22,7 @@
 
 <div class="grid gap-4 sm:grid-cols-2">
 	<label class="block text-sm text-muted">
-		From level
+		Current Level
 		<select
 			class="mt-1 w-full rounded-md border border-line bg-bg px-3 py-2 text-fg"
 			bind:value={fromLevel}
@@ -33,7 +33,7 @@
 		</select>
 	</label>
 	<label class="block text-sm text-muted">
-		To level
+		Target Level
 		<select
 			class="mt-1 w-full rounded-md border border-line bg-bg px-3 py-2 text-fg"
 			bind:value={toLevel}
@@ -54,7 +54,7 @@
 	<thead class="text-xs tracking-wide text-muted uppercase">
 		<tr>
 			<th class="py-1 font-normal">Level</th>
-			<th class="py-1 font-normal">Copies</th>
+			<th class="py-1 font-normal">Copies Owned</th>
 			<th class="py-1 font-normal">Gems</th>
 		</tr>
 	</thead>
