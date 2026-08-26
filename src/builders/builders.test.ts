@@ -145,32 +145,39 @@ describe('enemy wave', () => {
 })
 
 describe('thorns', () => {
-  it('returns more damage for a bigger multiplier', () => {
-    const low = thornsCalculator.compute({ contactDamage: 1000, thornMultiplier: 1 })
-    const high = thornsCalculator.compute({ contactDamage: 1000, thornMultiplier: 10 })
-    expect(high.damagePerHit).toBeGreaterThan(low.damagePerHit)
+  it('needs fewer hits to kill as wall thorns rise', () => {
+    const rows = thornsCalculator.compute({ baseThorns: 100, tier: 1 }).byWallThorns
+    expect(rows).toHaveLength(20)
+    expect(rows.at(-1)!.hitsToKillElite).toBeLessThan(rows[0].hitsToKillElite)
   })
 
-  it('scales with the enemy contact damage it is reflecting', () => {
-    const small = thornsCalculator.compute({ contactDamage: 100, thornMultiplier: 5 })
-    const big = thornsCalculator.compute({ contactDamage: 10_000, thornMultiplier: 5 })
-    expect(big.damagePerHit).toBeGreaterThan(small.damagePerHit)
+  it('reports the wall thorns level that was asked for', () => {
+    const result = thornsCalculator.compute({ baseThorns: 100, wallThorns: 7 })
+    expect(result.atWallThorns.wallThorns).toBe(7)
+    expect(result.atWallThorns).toEqual(result.byWallThorns.find(row => row.wallThorns === 7))
   })
 
-  it('treats module benefit as a multiplier, and flags a zero that would erase the result', () => {
-    // The underlying formula MULTIPLIES by moduleBenefit, so 0 means "no damage", not
-    // "no modules". The neutral value is 1.
-    const neutral = thornsCalculator.compute({ contactDamage: 1000, thornMultiplier: 5 })
-    expect(neutral.damagePerHit).toBeGreaterThan(0)
-    const zeroed = thornsCalculator.compute({ contactDamage: 1000, thornMultiplier: 5, moduleBenefit: 0 })
-    expect(zeroed.damagePerHit).toBe(0)
-    expect(zeroed.notes.join(' ')).toMatch(/multiplier and it is 0/)
+  it('takes more hits to kill a boss than an elite, and fleets sit between', () => {
+    // Boss thorn damage is halved and fleets take 85% of elite damage, so the ordering is fixed.
+    const { atWallThorns } = thornsCalculator.compute({ baseThorns: 100, wallThorns: 10, tier: 1 })
+    expect(atWallThorns.hitsToKillBoss).toBeGreaterThan(atWallThorns.hitsToKillElite)
+    expect(atWallThorns.hitsToKillFleet).toBeGreaterThanOrEqual(atWallThorns.hitsToKillElite)
   })
 
-  it('flags a zero multiplier rather than reporting a silent zero', () => {
-    const none = thornsCalculator.compute({ contactDamage: 1000, thornMultiplier: 0 })
-    expect(none.damagePerHit).toBe(0)
-    expect(none.notes.join(' ')).toMatch(/Thorn multiplier is 0/)
+  it('loses effectiveness at higher tiers, which is the whole reason the tier is an input', () => {
+    const low = thornsCalculator.compute({ baseThorns: 100, wallThorns: 10, tier: 1 })
+    const high = thornsCalculator.compute({ baseThorns: 100, wallThorns: 10, tier: 20 })
+    expect(high.atWallThorns.hitsToKillElite).toBeGreaterThan(low.atWallThorns.hitsToKillElite)
+  })
+
+  it('says so when Heat (Wave) is set outside a tournament, rather than ignoring it in silence', () => {
+    const result = thornsCalculator.compute({ tournamentTier: 'none', heatWave: 400 })
+    expect(result.notes.join(' ')).toMatch(/only applies to a tournament/)
+  })
+
+  it('will not apply Plasma Cannon mastery without Plasma Cannon, and says which', () => {
+    const result = thornsCalculator.compute({ plasmaCannonLevel: 0, plasmaCannonMasteryLevel: 5 })
+    expect(result.notes.join(' ')).toMatch(/mastery needs Plasma Cannon at level 7/)
   })
 })
 

@@ -71,9 +71,16 @@ describeServer('mcp server', () => {
 
     const list = await rpc('tools/list', {})
     const names = list.result.tools.map((tool: { name: string }) => tool.name).sort()
+    /*
+     * `wiki_page` is not in this list, and that is the point.
+     *
+     * It runs a script under the development monorepo, so the server no longer advertises it
+     * where that monorepo is absent. Asserting it here passed in the monorepo and failed in the
+     * published clone -- which is the one environment users actually install into.
+     */
     expect(names).toEqual(expect.arrayContaining([
       'decode_save', 'define_term', 'describe_schema', 'get_export', 'list_exports',
-      'plan_effective_path', 'run_extractor', 'wiki_page', 'wiki_search',
+      'plan_effective_path', 'run_extractor', 'wiki_search', 'sdk_sandbox_run',
     ]))
     expect(names.length).toBeGreaterThanOrEqual(9)
     for (const tool of list.result.tools) {

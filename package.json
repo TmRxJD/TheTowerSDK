@@ -1,6 +1,6 @@
 {
   "name": "thetowersdk",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Game data and save-file reading for The Tower — build your own calculators and tools.",
   "license": "MIT",
   "author": "TmRxJD (https://github.com/TmRxJD)",
@@ -54,7 +54,8 @@
     "lint:conventions": "node scripts/check-conventions.mjs",
     "lint:acronyms": "tsx scripts/check-acronym-expansions.ts",
     "test:schema": "vitest run src/data/schemas.test.ts",
-    "verify": "npm run lint && npm run lint:conventions && npm run lint:acronyms && npm run lint:docs && npm run wiki:check && npm run lint:published && npm run type-check && npm run type-check:examples && npm run build && npm test && npm run docs:check",
+    "verify": "node scripts/verify.mjs",
+    "verify:serial": "node scripts/verify.mjs --serial",
     "mcp": "node mcp/server.mjs",
     "glossary": "npm run build && node scripts/generate-glossary.mjs",
     "bot:demo": "tsx templates/bot-starter.ts",

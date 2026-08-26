@@ -64,15 +64,15 @@ export const moduleCostCalculator: CalculatorBuilder<ModuleCostInput, ModuleCost
   fields: [
     {
       key: 'rarity',
-      label: 'Rarity',
+      label: 'Module Rarity',
       kind: 'select',
       options: RARITIES.map(rarity => ({ value: rarity, label: `${rarity} (max ${capFor(rarity)})` })),
       help: 'Rarity sets the level cap.',
     },
-    { key: 'currentLevel', label: 'Current level', kind: 'number', min: 1 },
-    { key: 'targetLevel', label: 'Target level', kind: 'number', min: 1 },
-    { key: 'shardDiscountPercent', label: 'Shard discount', kind: 'number', unit: 'percent', min: 0, max: 100 },
-    { key: 'coinDiscountPercent', label: 'Coin discount', kind: 'number', unit: 'percent', min: 0, max: 100 },
+    { key: 'currentLevel', label: 'Current Level', kind: 'number', min: 1 },
+    { key: 'targetLevel', label: 'Target Level', kind: 'number', min: 1 },
+    { key: 'shardDiscountPercent', label: 'Shard Discount (%)', kind: 'number', unit: 'percent', min: 0, max: 100 },
+    { key: 'coinDiscountPercent', label: 'Coin Discount (%)', kind: 'number', unit: 'percent', min: 0, max: 100 },
   ],
 
   defaults,

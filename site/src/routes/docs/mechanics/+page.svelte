@@ -83,7 +83,7 @@ console.log(uptime('Black Hole', 8))     // 0.1917…`}
 
 <h2 class="mt-10 text-xl font-semibold">Start With A Builder</h2>
 <p class="mt-3 text-muted">
-	There are 819 functions here. For the fifteen questions people ask most, a
+	There are 822 functions here. For the fifteen questions people ask most, a
 	<a href={href('/docs/builders/')}>builder</a> already wraps the right ones, declares the inputs they
 	need with their units and limits, and hands back a full result. Reach for a raw function when you want
 	one value inside something larger; reach for a builder when you want a working calculator.

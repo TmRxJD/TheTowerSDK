@@ -20,6 +20,7 @@ import { createRequire } from 'node:module'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { isDirectRun, runStdioMcp } from './run-stdio.mjs'
 import { parseCliJson, runRepoTsx } from './run-repo-tsx.mjs'
+import { createScratchpad } from './scratchpad.mjs'
 import { TOWER_ORACLE_INSTRUCTIONS, TOWER_ORACLE_TOOLS } from './oracle-tools.mjs'
 
 export { TOWER_ORACLE_INSTRUCTIONS, TOWER_ORACLE_TOOLS }
@@ -52,6 +53,7 @@ function loadSdk() {
        * calculators unreachable through the MCP.
        */
       calculators: require(path.join(base, 'mechanics', 'calculators', 'index.js')),
+      builders: require(path.join(base, 'builders', 'index.js')),
       formatting: require(path.join(base, 'formatting', 'index.js')),
       wiki: require(path.join(base, 'wiki', 'index.js')),
       charts: require(path.join(base, 'charts', 'index.js')),
@@ -135,11 +137,57 @@ export const COMPLIANCE_INSTRUCTIONS = [
 
 const MONOREPO_ROOT = resolveMonorepoRoot()
 
+/*
+ * Whether the development monorepo is actually around us.
+ *
+ * Nineteen of these tools shell out to scripts under it -- the graph CLIs, the doctor, the debug
+ * tracer, the trust drift check. Installed from npm none of those files exist, so the server
+ * advertised them in `tools/list` and answered every call with a spawn failure. An assistant has
+ * no way to tell that from a tool that ran and found nothing.
+ *
+ * `resolveMonorepoRoot` falls back to a path three levels up whether or not anything is there, so
+ * the probe has to be for a file, not for the root it returns.
+ */
+const HAS_MONOREPO = fs.existsSync(path.join(MONOREPO_ROOT, 'scripts', 'sdk-graph', 'sdk-graph-cli.mjs'))
+
+const scratchpad = createScratchpad({
+  /* `fs` is not an entry point; decode mode needs to read the file it was pointed at. */
+  loadSdk: entry => {
+    if (entry === 'fs') return fs
+    if (!Object.prototype.hasOwnProperty.call(sdk, entry)) {
+      throw new Error(`no such entry point: ${entry}`)
+    }
+    return sdk[entry]
+  },
+})
+
 function runSdkGraphCli(args) {
   return parseCliJson(
     runRepoTsx(MONOREPO_ROOT, 'scripts/sdk-graph/sdk-graph-cli.mjs', args),
     'sdk-graph-cli',
   )
+}
+
+/**
+ * Canonicalise a wiki title, with or without the development monorepo.
+ *
+ * The canonicaliser lives in `scripts/mechanics-trust/`, and it was the ONLY thing standing
+ * between this tool and working everywhere -- everything else it needs, the package ships. The
+ * tool was being hidden from package users over a title-tidying helper.
+ *
+ * Without it the title goes through as written. That is a worse guess, not a broken tool: a wrong
+ * title is the ordinary case here and already answers with suggestions rather than an error.
+ */
+async function canonicalWikiTitle(title) {
+  if (!HAS_MONOREPO) return String(title ?? '').trim()
+  try {
+    const { canonicalizeWikiTitle } = await import(
+      pathToFileURL(path.join(MONOREPO_ROOT, 'scripts/mechanics-trust/wiki-title-canonical.mjs')).href
+    )
+    return canonicalizeWikiTitle(title)
+  } catch {
+    return String(title ?? '').trim()
+  }
 }
 
 function readMapText() {
@@ -471,10 +519,7 @@ export const TOOLS = {
       required: ['title'],
     },
     run: async ({ title, section, refresh, sourceId }) => {
-      const { canonicalizeWikiTitle } = await import(
-        pathToFileURL(path.join(MONOREPO_ROOT, 'scripts/mechanics-trust/wiki-title-canonical.mjs')).href
-      )
-      const resolvedTitle = canonicalizeWikiTitle(title)
+      const resolvedTitle = await canonicalWikiTitle(title)
       let page
       try {
         page = await wikiPageMarkdown(resolvedTitle, {
@@ -923,29 +968,48 @@ export const TOOLS = {
 
   sdk_sandbox_run: {
     description:
-      'Instrumented sandbox (kernel/doctor-dry/save-graph/planner/decode/vm). Never applies inventive repair. '
-      + 'mode=vm runs light Tower VM (kernel+fixture decode+citation eval+doctor-dry). '
-      + 'JSON fixtures decode immediately; .dat needs packages/sdk build. See docs/AGENT_SANDBOX_PROTOCOL.md.',
+      'A scratchpad: list what is reachable, read one export, run a calculator with its own '
+      + 'normalisation, put a number through the game notation, or decode a save. Reports what it '
+      + 'ignored as well as what it did. Never applies an inventive repair. Inside the development '
+      + 'monorepo it also offers kernel/doctor-dry/save-graph/planner/vm.',
     inputSchema: {
       type: 'object',
       properties: {
         mode: {
           type: 'string',
-          description: 'check | kernel | doctor-dry | save-graph | planner | decode | vm',
+          description:
+            'list | export | calc | format | decode. In the development monorepo also '
+            + 'check | kernel | doctor-dry | save-graph | planner | vm.',
         },
-        savePath: { type: 'string', description: 'Optional playerInfo.dat or JSON fixture path' },
+        name: { type: 'string', description: 'export mode: the export to read' },
+        entry: { type: 'string', description: 'export mode: which entry point (default data)' },
+        id: { type: 'string', description: 'calc mode: the calculator id' },
+        input: { type: 'object', description: 'calc mode: the values to compute with' },
+        value: { description: 'format mode: a number to write, or a string to read' },
+        savePath: { type: 'string', description: 'decode mode: a playerInfo.dat or JSON fixture' },
         family: { type: 'string', description: 'Planner family when mode includes planner/vm' },
       },
     },
-    run: ({ mode, savePath, family } = {}) => {
-      const args = []
-      if (mode) args.push('--mode', mode)
-      if (savePath) args.push('--save', savePath)
-      if (family) args.push('--family', family)
-      return parseCliJson(
-        runRepoTsx(MONOREPO_ROOT, 'scripts/mechanics-trust/sandbox-cli.mjs', args),
-        'mechanics-sandbox',
-      )
+    run: (input = {}) => {
+      /*
+       * Two sandboxes, and which one you get depends on what is actually installed.
+       *
+       * The monorepo one is richer -- it can load the kernel and dry-run a repair -- and it needs
+       * scripts that only exist there. Everywhere else this used to fail to spawn while still
+       * being advertised, so the package now carries its own: smaller, and reachable.
+       */
+      const MONOREPO_MODES = ['check', 'kernel', 'doctor-dry', 'save-graph', 'planner', 'vm']
+      if (HAS_MONOREPO && MONOREPO_MODES.includes(input.mode)) {
+        const args = []
+        if (input.mode) args.push('--mode', input.mode)
+        if (input.savePath) args.push('--save', input.savePath)
+        if (input.family) args.push('--family', input.family)
+        return parseCliJson(
+          runRepoTsx(MONOREPO_ROOT, 'scripts/mechanics-trust/sandbox-cli.mjs', args),
+          'mechanics-sandbox',
+        )
+      }
+      return scratchpad.run(input)
     },
   },
 
@@ -1640,6 +1704,44 @@ function replacer(key, value) {
   return value
 }
 
+/**
+ * The tools that need the development monorepo, named rather than detected.
+ *
+ * Each one runs a script under the repository root. Installed from npm those scripts are absent,
+ * so listing them promised nineteen capabilities that answered with a spawn failure — and a
+ * failed spawn reads to an assistant exactly like a tool that ran and found nothing.
+ *
+ * They are still here and still work where they work. They are simply not advertised where they
+ * cannot: a shorter list of tools that all function beats a longer one that does not.
+ */
+const MONOREPO_ONLY_TOOLS = new Set([
+  'mcp_contract',
+  'sdk_kernel_load',
+  'sdk_registry_get',
+  'sdk_save_graph_get',
+  'sdk_planner_compile',
+  'sdk_docs_generate',
+  'sdk_lsp_diagnostics',
+  'trust_drift_check',
+  'sdk_doctor_check',
+  'sdk_doctor_prescribe',
+  'sdk_doctor_repair',
+  'sdk_doctor_validate',
+  'sdk_doctor_autofix',
+  'sdk_debug_snapshot',
+  'sdk_debug_validate',
+  'sdk_debug_trace',
+  'sdk_debug_watch',
+])
+
+/** `sdk_sandbox_run` is deliberately absent from that set: it now has a standalone mode. */
+export function availableTools() {
+  if (HAS_MONOREPO) return TOOLS
+  return Object.fromEntries(
+    Object.entries(TOOLS).filter(([name]) => !MONOREPO_ONLY_TOOLS.has(name)),
+  )
+}
+
 // ---- stdio JSON-RPC (sdk-only entry; monorepo prefers tools/tower-mcp) ------
 
 if (isDirectRun(import.meta.url)) {
@@ -1649,6 +1751,6 @@ if (isDirectRun(import.meta.url)) {
     instructions: `${COMPLIANCE_INSTRUCTIONS}\n\n--- tower-oracle ---\n${TOWER_ORACLE_INSTRUCTIONS}`,
     // Standalone consumers get the oracle too; in the monorepo tower-mcp mounts
     // it as its own module, so it is kept out of TOOLS to avoid a name clash.
-    tools: { ...TOOLS, ...TOWER_ORACLE_TOOLS },
+    tools: { ...availableTools(), ...TOWER_ORACLE_TOOLS },
   })
 }

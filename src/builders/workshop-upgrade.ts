@@ -9,6 +9,7 @@ import {
   buildWorkshopLevelCostRows,
   computeWorkshopTotalDiscountPercent,
   getWorkshopCostLevelsByKey,
+  getWorkshopEnhancementDefinitions,
   workshopCostMaxLevel,
   WSP_WORKSHOP_COST_LEVELS,
 } from '../data/index'
@@ -44,6 +45,20 @@ export interface WorkshopUpgradeResult extends CalculatorResultBase {
 // Derived from the cost table itself, so a curve added there appears in the picker.
 const COST_KEYS: readonly string[] = Object.keys(WSP_WORKSHOP_COST_LEVELS)
 
+/*
+ * The names the game gives these, not the keys the cost table files them under.
+ *
+ * The picker offered `WSP_SUPER_CRIT_MULTI`, and a player looking for Super Crit Mult had to
+ * work out that it was the same thing. The package already carries the mapping -- the workshop
+ * enhancement definitions pair every key with its label -- so the picker reads from that rather
+ * than restating it. A curve nothing names keeps its key, which is the honest answer.
+ */
+const COST_KEY_LABELS = new Map(
+  getWorkshopEnhancementDefinitions().map(definition => [definition.key, definition.label]),
+)
+
+const labelForCostKey = (key: string) => COST_KEY_LABELS.get(key) ?? key
+
 const defaults: WorkshopUpgradeInput = {
   costKey: COST_KEYS[0] ?? '',
   currentLevel: 0,
@@ -60,15 +75,15 @@ export const workshopUpgradeCalculator: CalculatorBuilder<WorkshopUpgradeInput, 
   fields: [
     {
       key: 'costKey',
-      label: 'Cost curve',
+      label: 'Workshop Upgrade',
       kind: 'select',
-      options: COST_KEYS.map(key => ({ value: key, label: key })),
-      help: 'Workshop stats share a handful of cost curves; pick the one this stat uses.',
+      options: COST_KEYS.map(key => ({ value: key, label: labelForCostKey(key) })),
+      help: 'Several stats share a cost curve, so more than one upgrade can carry the same name.',
     },
-    { key: 'currentLevel', label: 'Current level', kind: 'number', min: 0 },
-    { key: 'targetLevel', label: 'Target level', kind: 'number', min: 0 },
-    { key: 'sectionDiscountPercent', label: 'Section discount', kind: 'number', unit: 'percent', min: 0, max: 100 },
-    { key: 'vaultDiscountPercent', label: 'Vault discount', kind: 'number', unit: 'percent', min: 0, max: 100 },
+    { key: 'currentLevel', label: 'Current Level', kind: 'number', min: 0 },
+    { key: 'targetLevel', label: 'Target Level', kind: 'number', min: 0 },
+    { key: 'sectionDiscountPercent', label: 'Workshop Discount (%)', kind: 'number', unit: 'percent', min: 0, max: 100 },
+    { key: 'vaultDiscountPercent', label: 'Vault Discount (%)', kind: 'number', unit: 'percent', min: 0, max: 100 },
   ],
 
   defaults,

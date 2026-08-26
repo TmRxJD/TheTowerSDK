@@ -1,103 +1,190 @@
 /**
- * Thorns: damage dealt back to an enemy that touches the tower.
+ * Thorns: how many contacts it takes to kill what is touching your wall.
  *
- * Thorns is a percentage of the *enemy's* contact damage, not of the tower's damage, so
- * the enemy factor is an input rather than something derived from a build. That is the
- * part most tools get backwards.
+ * This asks for what a player can read off their own screen — base thorns, the tier they are
+ * playing, plasma cannon and its mastery, the two BC reduction labs, Sharp Fortitude — and
+ * answers in hits to kill, which is how the community compares thorns builds.
+ *
+ * It used to ask for an enemy factor, a thorn multiplier and a module benefit, and return damage
+ * per hit. Those are the parameters of the underlying formula, not quantities anyone can look up,
+ * and the answer was in units nobody uses. `thornDamageOnHit` is still exported from
+ * `thetowersdk/mechanics` for a caller who has those values already.
  */
-import { thornDamageOnHit } from '../mechanics/index'
 import {
-  type CalculatorBuilder,
-  type CalculatorResultBase,
-  clampMagnitude,
-} from './types'
+  buildThornsBaseChart,
+  buildThornsWallChart,
+  normalizeThornsInput,
+  type ThornsCalculatorInput,
+  type ThornsWallChartRow,
+} from '../mechanics/index'
+import { type CalculatorBuilder, type CalculatorResultBase, clampNumber } from './types'
 
+/*
+ * One set of keys, and they are the player-facing ones.
+ *
+ * The first attempt kept the model's own shorter names on the input and mapped the field keys
+ * onto them. `builders.test.ts` refuses that, and is right to: a field with no default, or a
+ * default with no field, is how a control comes to be read by nothing. The translation to the
+ * model's names happens in one place, below.
+ */
 export interface ThornsInput {
-  /** The enemy's contact damage. */
-  contactDamage: number
-  /** Enemy scaling factor at the wave being modelled. */
-  enemyFactor: number
-  /** Thorn multiplier from workshop and modules, as a multiplier (1 = none). */
-  thornMultiplier: number
-  /** Whether the thorn lab is researched. */
-  thornLabActive: boolean
-  /**
-   * Module benefit, as a MULTIPLIER. 1 means no bonus.
-   *
-   * Not an additive percentage: `thornDamageOnHit` multiplies by this, so passing 0 for
-   * "no modules" returns zero damage rather than the unmodified figure.
-   */
-  moduleBenefit: number
+  baseThorns: number
+  /** The wall thorns level to report on. The chart still covers 1–20. */
+  wallThorns: number
+  tier: number
+  plasmaCannonLevel: number
+  plasmaCannonMasteryLevel: number
+  bcLabLevel: number
+  thornsBcReductionLabLevel: number
+  plasmaCannonBcReductionLabLevel: number
+  sharpFortitude: boolean
+  tournamentTier: ThornsCalculatorInput['tournamentTier']
+  heatWave: number
 }
 
 export interface ThornsResult extends CalculatorResultBase {
-  /** Damage returned to the enemy on one contact. */
-  readonly damagePerHit: number
-  /** Share of the enemy's own contact damage that comes back at it. */
-  readonly shareOfContactDamage: number
+  /** Hits to kill at the wall thorns level asked for. */
+  readonly atWallThorns: ThornsWallChartRow
+  /** Wall thorns 1–20, for a table or a chart. */
+  readonly byWallThorns: readonly ThornsWallChartRow[]
+  /** The same sweep over base thorns, from where it is now. */
+  readonly byBaseThorns: readonly { readonly baseThornsVal: number, readonly hitsToKillElite: number }[]
 }
 
 const defaults: ThornsInput = {
-  contactDamage: 1000,
-  enemyFactor: 1,
-  thornMultiplier: 1,
-  thornLabActive: false,
-  moduleBenefit: 1,
+  baseThorns: 100,
+  wallThorns: 10,
+  tier: 1,
+  plasmaCannonLevel: 0,
+  plasmaCannonMasteryLevel: 0,
+  bcLabLevel: 0,
+  thornsBcReductionLabLevel: 0,
+  plasmaCannonBcReductionLabLevel: 0,
+  sharpFortitude: false,
+  tournamentTier: 'none',
+  heatWave: 0,
 }
+
+/** The model's own names for the same quantities. */
+const toModel = (input: ThornsInput): ThornsCalculatorInput => ({
+  baseThorns: input.baseThorns,
+  tier: input.tier,
+  pcLevel: input.plasmaCannonLevel,
+  pcMasteryLevel: input.plasmaCannonMasteryLevel,
+  bcLabLevel: input.bcLabLevel,
+  bcReductionLabLevel: input.thornsBcReductionLabLevel,
+  pcReductionLabLevel: input.plasmaCannonBcReductionLabLevel,
+  tournamentTier: input.tournamentTier,
+  heatWave: input.heatWave,
+  sharpFortitude: input.sharpFortitude,
+})
+
+const TOURNAMENT_TIERS = [
+  { value: 'none', label: 'Not a tournament' },
+  { value: 't11', label: 'Tournament T11' },
+  { value: 't14', label: 'Tournament T14' },
+  { value: 't17', label: 'Tournament T17' },
+]
 
 export const thornsCalculator: CalculatorBuilder<ThornsInput, ThornsResult> = {
   id: 'thorns.damage',
-  title: 'Thorn damage',
-  summary: 'Damage returned to an enemy each time it touches the tower.',
+  title: 'Thorns',
+  summary: 'Hits to kill an elite, a fleet or a boss touching your wall.',
 
   fields: [
-    { key: 'contactDamage', label: 'Enemy contact damage', kind: 'number', min: 0 },
-    { key: 'enemyFactor', label: 'Enemy factor', kind: 'number', min: 0 },
-    { key: 'thornMultiplier', label: 'Thorn multiplier', kind: 'number', min: 0, help: '1 means no bonus.' },
-    { key: 'thornLabActive', label: 'Thorn lab researched', kind: 'boolean' },
+    { key: 'baseThorns', label: 'Base Thorns %', kind: 'number', min: 0, max: 600 },
+    { key: 'wallThorns', label: 'Wall Thorns Level', kind: 'number', min: 1, max: 20 },
+    { key: 'tier', label: 'Tier', kind: 'number', min: 1, max: 24 },
+    { key: 'plasmaCannonLevel', label: 'Plasma Cannon Level', kind: 'number', min: 0, max: 7 },
+    { key: 'plasmaCannonMasteryLevel', label: 'Plasma Cannon Mastery Level', kind: 'number', min: 0, max: 9 },
+    { key: 'bcLabLevel', label: 'BC Reduction Lab Level', kind: 'number', min: 0, max: 10 },
     {
-      key: 'moduleBenefit',
-      label: 'Module benefit',
+      key: 'thornsBcReductionLabLevel',
+      label: 'Thorns BC Reduction Lab Level',
       kind: 'number',
       min: 0,
-      help: 'A multiplier: 1 means no module bonus. 0 returns no damage at all.',
+      max: 20,
+    },
+    {
+      key: 'plasmaCannonBcReductionLabLevel',
+      label: 'Plasma Cannon BC Reduction Lab Level',
+      kind: 'number',
+      min: 0,
+      max: 20,
+    },
+    { key: 'sharpFortitude', label: 'Sharp Fortitude', kind: 'boolean' },
+    { key: 'tournamentTier', label: 'Tournament', kind: 'select', options: TOURNAMENT_TIERS },
+    {
+      key: 'heatWave',
+      label: 'Heat (Wave)',
+      kind: 'number',
+      min: 0,
+      max: 1000,
+      help: 'Only read during a tournament run, where thorn effectiveness falls with the wave.',
     },
   ],
 
   defaults,
 
   normalize(input = {}) {
-    return {
-      contactDamage: clampMagnitude(input.contactDamage, defaults.contactDamage),
-      enemyFactor: clampMagnitude(input.enemyFactor, defaults.enemyFactor),
-      thornMultiplier: clampMagnitude(input.thornMultiplier, defaults.thornMultiplier),
-      thornLabActive: input.thornLabActive === true,
-      moduleBenefit: clampMagnitude(input.moduleBenefit, defaults.moduleBenefit),
+    const source = input as Partial<ThornsInput>
+    /*
+     * No String() and no Number() on anything that came from outside.
+     *
+     * Both coerce by calling a method on the value, and a value whose toString or valueOf throws
+     * turns a normaliser into a thrower. `invariants.test.ts` passes exactly that object to every
+     * field of every builder, which is how these two were found.
+     */
+    const tournamentTier = typeof source.tournamentTier === 'string'
+      && ['none', 't11', 't14', 't17'].includes(source.tournamentTier)
+      ? (source.tournamentTier as ThornsInput['tournamentTier'])
+      : defaults.tournamentTier
+
+    const normalized: ThornsInput = {
+      baseThorns: clampNumber(source.baseThorns, 0, 600, defaults.baseThorns),
+      wallThorns: clampNumber(source.wallThorns, 1, 20, defaults.wallThorns),
+      tier: clampNumber(source.tier, 1, 24, defaults.tier),
+      plasmaCannonLevel: clampNumber(source.plasmaCannonLevel, 0, 7, 0),
+      plasmaCannonMasteryLevel: clampNumber(source.plasmaCannonMasteryLevel, 0, 9, 0),
+      bcLabLevel: clampNumber(source.bcLabLevel, 0, 10, 0),
+      thornsBcReductionLabLevel: clampNumber(source.thornsBcReductionLabLevel, 0, 20, 0),
+      plasmaCannonBcReductionLabLevel: clampNumber(source.plasmaCannonBcReductionLabLevel, 0, 20, 0),
+      sharpFortitude: source.sharpFortitude === true,
+      tournamentTier,
+      heatWave: clampNumber(source.heatWave, 0, 1000, 0),
     }
+
+    /* The model enforces the mastery/level pairing; take its answer rather than a second copy. */
+    const settled = normalizeThornsInput(toModel(normalized))
+    normalized.plasmaCannonLevel = settled.pcLevel
+    normalized.plasmaCannonMasteryLevel = settled.pcMasteryLevel
+    return normalized
   },
 
   compute(rawInput = {}) {
     const input = this.normalize(rawInput)
     const notes: string[] = []
 
-    const damagePerHit = thornDamageOnHit({
-      enemyFactor: input.enemyFactor,
-      thornMultiplier: input.thornMultiplier,
-      contactDamage: input.contactDamage,
-      thornLabActive: input.thornLabActive,
-      moduleBenefit: input.moduleBenefit,
-    })
+    const model = toModel(input)
+    const byWallThorns = buildThornsWallChart(model)
+    const atWallThorns
+      = byWallThorns.find(row => row.wallThorns === input.wallThorns) ?? byWallThorns[0]
 
-    if (input.thornMultiplier === 0) {
-      notes.push('Thorn multiplier is 0, so nothing is returned. Set it to at least 1.')
+    if (input.tournamentTier !== 'none' && input.heatWave === 0) {
+      notes.push('Tournament effectiveness is read from the heat wave, which is 0 — set the wave you are on.')
     }
-    if (input.moduleBenefit === 0) {
-      notes.push('Module benefit is a multiplier and it is 0, which zeroes the result. Use 1 for no modules.')
+    if (input.tournamentTier === 'none' && input.heatWave > 0) {
+      notes.push('Heat (Wave) only applies to a tournament run, so it is being ignored here.')
+    }
+    const masteryAsked = clampNumber((rawInput as Partial<ThornsInput>).plasmaCannonMasteryLevel, 0, 9, 0)
+    if (input.plasmaCannonLevel === 0 && masteryAsked > 0) {
+      notes.push('Plasma Cannon mastery needs Plasma Cannon at level 7, so it is not being applied.')
     }
 
     return {
-      damagePerHit,
-      shareOfContactDamage: input.contactDamage > 0 ? damagePerHit / input.contactDamage : 0,
+      atWallThorns,
+      byWallThorns,
+      byBaseThorns: buildThornsBaseChart(model),
       notes,
     }
   },

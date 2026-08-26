@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * tower-oracle — the game-knowledge MCP surface.
  *

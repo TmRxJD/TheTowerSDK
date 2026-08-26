@@ -89,8 +89,8 @@ export const botUpgradeCalculator: CalculatorBuilder<BotUpgradeInput, BotUpgrade
       options: [...new Set(BOTS.flatMap(bot => bot.statOrder))].map(stat => ({ value: stat, label: stat })),
       help: 'Stats differ per bot — read `statsForBot` off the result to narrow this list.',
     },
-    { key: 'currentLevel', label: 'Current level', kind: 'number', min: 0 },
-    { key: 'targetLevel', label: 'Target level', kind: 'number', min: 0 },
+    { key: 'currentLevel', label: 'Current Level', kind: 'number', min: 0 },
+    { key: 'targetLevel', label: 'Target Level', kind: 'number', min: 0 },
   ],
 
   defaults,

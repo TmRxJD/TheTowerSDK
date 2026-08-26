@@ -73,16 +73,16 @@ export const labResearchCalculator: CalculatorBuilder<LabResearchInput, LabResea
   fields: [
     {
       key: 'labName',
-      label: 'Lab',
+      label: 'Select Lab',
       kind: 'select',
       options: LAB_CATALOG.map(lab => ({ value: lab.name, label: lab.name })),
     },
-    { key: 'currentLevel', label: 'Current level', kind: 'number', min: 0, help: '0 if not researched yet.' },
-    { key: 'targetLevel', label: 'Target level', kind: 'number', min: 0 },
-    { key: 'coinDiscountPercent', label: 'Coin discount', kind: 'number', unit: 'percent', min: 0, max: 100 },
+    { key: 'currentLevel', label: 'Current Level', kind: 'number', min: 0, help: '0 if not researched yet.' },
+    { key: 'targetLevel', label: 'Target Level', kind: 'number', min: 0 },
+    { key: 'coinDiscountPercent', label: 'Coin Discount (%)', kind: 'number', unit: 'percent', min: 0, max: 100 },
     {
       key: 'labSpeedPercent',
-      label: 'Lab speed',
+      label: 'Lab Speed (%)',
       kind: 'number',
       unit: 'percent',
       min: 0,

@@ -98,6 +98,20 @@ const NOT_GAME_TERMS = new Set([
   'google sheets', 'private network', 'personal access', 'node options', 'discord bot',
   'my notes', 'has space', 'not found', 'total coin cost', 'player data', 'service account',
   'charged mines', 'chrono jump', 'maxed level', 'target level', 'current level',
+  /*
+   * Control labels that describe a game thing without naming one the catalogs enumerate.
+   *
+   * `Coins / Kill Workshop Level` asks which workshop level feeds the Coins / Kill stat; the
+   * slash ends the capitalised run, so the phrase reaching this check is the tail of a label
+   * rather than anything anyone would call a name.
+   */
+  'kill workshop level', 'kill lab level', 'coin bonus enhancement level',
+  'primary coin substat', 'assist coin substat', 'coin perk taken',
+  'coin trade-off perk taken', 'vault coin bonus',
+  'base thorns', 'coin discount', 'shard discount', 'workshop discount', 'vault discount',
+  'defense reduction', 'orb damage reduction', 'starting damage', 'enable flamebot',
+  'dissonance type', 'personal best wave', 'tier played', 'module rarity', 'select lab',
+  'mine age', 'reduction lab level', 'tournament run', 'ultimate weapon', 'workshop upgrade',
 ])
 
 /*
@@ -106,6 +120,38 @@ const NOT_GAME_TERMS = new Set([
  * tokenizer was the thing that was wrong.
  */
 const CANDIDATE = /[`'"]([A-Z][a-z-]+(?: [A-Z][a-z-]+){1,3})[`'"]/g
+
+/*
+ * Words a control is made of, not words the game names anything with.
+ *
+ * A label reads `Coins / Kill Workshop Level`, and the game term inside it is `Coins / Kill` --
+ * `Workshop Level` is the form asking which level. Checking the whole capitalised run reported
+ * 54 such labels as invented names the moment the labels were written the way the tracker
+ * writes them.
+ *
+ * Only these are stripped, and only from the ends, so a phrase made entirely of game words is
+ * still checked whole: `Omni Amplifier` has nothing structural to remove and still fails.
+ */
+const CONTROL_WORDS = new Set([
+  'level', 'lab', 'labs', 'enable', 'enabled', 'taken', 'value', 'active', 'researched',
+  'current', 'target', 'per', 'hit', 'own', 'your', 'times', 'by', 'at', 'to', 'not', 'a',
+])
+
+/** True when the phrase names something a catalog knows, once the control words are peeled off. */
+function isKnown(phrase: string): boolean {
+  const key = phrase.toLowerCase()
+  if (AUTHORITY.has(key) || NOT_GAME_TERMS.has(key)) return true
+
+  let words = key.split(/\s+/)
+  while (words.length > 1 && CONTROL_WORDS.has(words[0]!)) words = words.slice(1)
+  while (words.length > 1 && CONTROL_WORDS.has(words.at(-1)!)) words = words.slice(0, -1)
+
+  /* Nothing but control words: a phrase like `Current Level` names no game thing and claims none. */
+  if (words.every(word => CONTROL_WORDS.has(word))) return true
+
+  const reduced = words.join(' ')
+  return AUTHORITY.has(reduced) || NOT_GAME_TERMS.has(reduced)
+}
 
 /**
  * This package's root, resolved from the test's own location.
@@ -168,8 +214,7 @@ describe('game names that reach a person', () => {
       for (const text of texts) {
         for (const match of String(text).matchAll(/\b([A-Z][a-z-]+(?: [A-Z][a-z-]+){1,3})\b/g)) {
           const term = match[1]!
-          const key = term.toLowerCase()
-          if (AUTHORITY.has(key) || NOT_GAME_TERMS.has(key)) continue
+          if (isKnown(term)) continue
           /*
            * No "must contain a game noun" filter. An earlier version had one to cut noise,
            * and it blinded the check to exactly the case it exists for: `Omni Amplifier`

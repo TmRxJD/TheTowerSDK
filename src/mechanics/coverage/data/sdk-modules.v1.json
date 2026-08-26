@@ -2054,6 +2054,17 @@
       "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
     },
     {
+      "id": "sdk-module:thorns-calculator",
+      "surface": "sdk-module",
+      "label": "thorns-calculator",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/mechanics/thorns-calculator.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see src/mechanics/coverage/oracle-links.ts."
+    },
+    {
       "id": "sdk-module:tournament-heat-bc",
       "surface": "sdk-module",
       "label": "tournament-heat-bc",

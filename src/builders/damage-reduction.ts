@@ -93,12 +93,12 @@ export const damageReductionCalculator: CalculatorBuilder<DamageReductionInput, 
   summary: 'How much of an incoming hit reaches the tower once every mitigation layer applies.',
 
   fields: [
-    { key: 'rawDamage', label: 'Incoming damage', kind: 'number', min: 0 },
+    { key: 'rawDamage', label: 'Starting Damage', kind: 'number', min: 0 },
 
-    { key: 'useDefensePercent', label: 'Defense % enabled', kind: 'boolean' },
+    { key: 'useDefensePercent', label: 'Enable Defense %', kind: 'boolean' },
     {
       key: 'defensePercent',
-      label: 'Defense %',
+      label: 'Defense Reduction (%)',
       kind: 'number',
       unit: 'percent',
       min: 0,
@@ -106,36 +106,36 @@ export const damageReductionCalculator: CalculatorBuilder<DamageReductionInput, 
       help: `Capped at ${DEFENSE_PERCENT_CAP}% in game.`,
     },
 
-    { key: 'useDefenseAbsolute', label: 'Defense Absolute enabled', kind: 'boolean' },
+    { key: 'useDefenseAbsolute', label: 'Enable Defense Absolute', kind: 'boolean' },
     {
       key: 'defenseAbsolute',
-      label: 'Defense Absolute',
+      label: 'Defense Absolute Value',
       kind: 'number',
       min: 0,
       help: 'Flat damage removed. A large value floors everything and hides the other layers.',
     },
 
-    { key: 'useChronoField', label: 'Chrono Field enabled', kind: 'boolean' },
-    { key: 'chronoReductionPercent', label: 'Chrono Field', kind: 'number', unit: 'percent', min: 0, max: 100 },
+    { key: 'useChronoField', label: 'Enable Chrono Field (CF)', kind: 'boolean' },
+    { key: 'chronoReductionPercent', label: 'CF Reduction (%)', kind: 'number', unit: 'percent', min: 0, max: 100 },
 
-    { key: 'useFlameBot', label: 'Flame Bot enabled', kind: 'boolean' },
-    { key: 'flameBotReductionPercent', label: 'Flame Bot', kind: 'number', unit: 'percent', min: 0, max: 100 },
+    { key: 'useFlameBot', label: 'Enable Flamebot (FB)', kind: 'boolean' },
+    { key: 'flameBotReductionPercent', label: 'FB Reduction (%)', kind: 'number', unit: 'percent', min: 0, max: 100 },
 
-    { key: 'useNmp', label: 'NMP enabled', kind: 'boolean' },
-    { key: 'nmpReductionPercent', label: 'NMP', kind: 'number', unit: 'percent', min: 0, max: 100 },
+    { key: 'useNmp', label: 'Enable NMP (Orb Damage Reduction)', kind: 'boolean' },
+    { key: 'nmpReductionPercent', label: 'NMP Reduction per Hit (%)', kind: 'number', unit: 'percent', min: 0, max: 100 },
 
-    { key: 'usePrimordialCollapse', label: 'Primordial Collapse enabled', kind: 'boolean' },
+    { key: 'usePrimordialCollapse', label: 'Enable Primordial Collapse (PC)', kind: 'boolean' },
     {
       key: 'primordialCollapseReductionPercent',
-      label: 'Primordial Collapse',
+      label: 'PC Reduction (%)',
       kind: 'number',
       unit: 'percent',
       min: 0,
       max: 100,
     },
 
-    { key: 'useChainThunder', label: 'Chain Thunder enabled', kind: 'boolean' },
-    { key: 'chainThunderReductionPercent', label: 'Chain Thunder', kind: 'number', unit: 'percent', min: 0, max: 100 },
+    { key: 'useChainThunder', label: 'Enable Chain Thunder (CT)', kind: 'boolean' },
+    { key: 'chainThunderReductionPercent', label: 'CT Reduction (%)', kind: 'number', unit: 'percent', min: 0, max: 100 },
   ],
 
   defaults,

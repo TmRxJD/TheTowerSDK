@@ -67,7 +67,7 @@ console.log(formatNumberForDisplay(total), 'coins to max')`}
 			<tr>
 				<td><code>thetowersdk/mechanics</code></td>
 				<td class="text-muted">
-					819 formulas — enemy scaling, timing, costs, damage reduction, Effective Paths.
+					822 formulas — enemy scaling, timing, costs, damage reduction, Effective Paths.
 					<a href={href('/docs/mechanics/')}>Docs</a>
 				</td>
 			</tr>

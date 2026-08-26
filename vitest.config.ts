@@ -7,7 +7,14 @@ export default defineConfig({
      * `check-acronym-expansions` is a lint, not public API, so it must stay out of `src/` — and
      * a lint whose false-positive fixes are not pinned by tests drifts straight back to noise.
      */
-    include: ['src/**/*.test.ts', 'scripts/**/*.test.ts'],
+    /*
+     * `mcp/` is included because it was not, and that is why the MCP server had no tests.
+     *
+     * The server ships in the package -- it is the `thetowersdk-mcp` binary. `src/mcp-server.test.ts`
+     * drives it over stdio, but anything written beside the server was invisible to the suite,
+     * because the glob stopped at `src` and `scripts`.
+     */
+    include: ['src/**/*.test.ts', 'scripts/**/*.test.ts', 'mcp/**/*.test.ts'],
     exclude: [
       // Monorepo AGS surfaces — need @tmrxjd/governance-engine.
       //

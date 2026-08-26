@@ -38,10 +38,10 @@ export const uptimeCalculator: CalculatorBuilder<UptimeInput, UptimeResult> = {
   summary: 'What share of the time an ultimate weapon is active, from its duration and cooldown.',
 
   fields: [
-    { key: 'durationSeconds', label: 'Duration', kind: 'number', unit: 'seconds', min: 0 },
+    { key: 'durationSeconds', label: 'Duration (s)', kind: 'number', unit: 'seconds', min: 0 },
     {
       key: 'cooldownSeconds',
-      label: 'Cooldown',
+      label: 'Cooldown (s)',
       kind: 'number',
       unit: 'seconds',
       min: 0,

@@ -32,6 +32,13 @@ import {
 
 const RARITIES: ModuleShatterRarity[] = ['common', 'rare', 'rarePlus', 'epic']
 
+const RARITY_LABELS: Partial<Record<ModuleShatterRarity, string>> = {
+  common: 'Common',
+  rare: 'Rare',
+  rarePlus: 'Rare +',
+  epic: 'Epic',
+}
+
 export interface EnemyDropsInputs {
   tier: number
   commonDropLabLevel: number
@@ -102,16 +109,17 @@ export const enemyDropsCalculator: CalculatorBuilder<EnemyDropsInputs, EnemyDrop
 
   fields: [
     { key: 'tier', label: 'Tier', kind: 'number', min: 1, max: MAX_CAMPAIGN_TIER },
-    { key: 'commonDropLabLevel', label: 'Common Drop Chance lab', kind: 'number', min: 0 },
-    { key: 'rareDropLabLevel', label: 'Rare Drop Chance lab', kind: 'number', min: 0 },
-    { key: 'rerollShardsLabLevel', label: 'Reroll Shards lab', kind: 'number', min: 0 },
-    { key: 'shatterShardsLabLevel', label: 'Shatter Shards lab', kind: 'number', min: 0 },
-    { key: 'deathWaveCellsBonusLevel', label: 'Death Wave Cells Bonus lab', kind: 'number', min: 0 },
+    { key: 'commonDropLabLevel', label: 'Common Drop Chance Lab Level', kind: 'number', min: 0 },
+    { key: 'rareDropLabLevel', label: 'Rare Drop Chance Lab Level', kind: 'number', min: 0 },
+    { key: 'rerollShardsLabLevel', label: 'Reroll Shards Lab Level', kind: 'number', min: 0 },
+    { key: 'shatterShardsLabLevel', label: 'Shatter Shards Lab Level', kind: 'number', min: 0 },
+    { key: 'deathWaveCellsBonusLevel', label: 'Death Wave Cells Bonus Lab Level', kind: 'number', min: 0 },
     {
       key: 'shatterRarity',
-      label: 'Module rarity to shatter',
+      label: 'Module Rarity to Shatter',
       kind: 'select',
-      options: RARITIES.map(value => ({ value, label: value })),
+      /* The value is the key the drop tables use; the label is the rarity as the game prints it. */
+      options: RARITIES.map(value => ({ value, label: RARITY_LABELS[value] ?? value })),
     },
   ],
 

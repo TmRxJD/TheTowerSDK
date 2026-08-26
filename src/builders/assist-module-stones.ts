@@ -35,8 +35,8 @@ export const assistModuleStonesCalculator: CalculatorBuilder<
   summary: 'Stones to raise an assist module efficiency slot between two levels.',
 
   fields: [
-    { key: 'currentLevel', label: 'Current level', kind: 'number', min: 0, max: MAX_LEVEL },
-    { key: 'targetLevel', label: 'Target level', kind: 'number', min: 0, max: MAX_LEVEL },
+    { key: 'currentLevel', label: 'Current Level', kind: 'number', min: 0, max: MAX_LEVEL },
+    { key: 'targetLevel', label: 'Target Level', kind: 'number', min: 0, max: MAX_LEVEL },
   ],
 
   defaults,

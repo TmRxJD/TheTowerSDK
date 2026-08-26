@@ -62,7 +62,7 @@ export const enemyWaveCalculator: CalculatorBuilder<EnemyWaveInput, EnemyWaveRes
   fields: [
     { key: 'tier', label: 'Tier', kind: 'number', min: 1, max: 18 },
     { key: 'wave', label: 'Wave', kind: 'number', min: 1, unit: 'waves' },
-    { key: 'tournament', label: 'Tournament run', kind: 'boolean', help: 'Tournaments scale differently.' },
+    { key: 'tournament', label: 'Tournament Run', kind: 'boolean', help: 'Tournaments scale differently.' },
   ],
 
   defaults,

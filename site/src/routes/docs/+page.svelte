@@ -25,7 +25,7 @@
 				{
 					href: '/docs/mechanics/',
 					label: 'Formulas',
-					body: 'The maths the game runs: enemy scaling, weapon timing, costs and planning, as 819 callable functions.'
+					body: 'The maths the game runs: enemy scaling, weapon timing, costs and planning, as 822 callable functions.'
 				},
 				{
 					href: '/docs/formatting/',

@@ -63,7 +63,7 @@ export const ultimateWeaponCalculator: CalculatorBuilder<UltimateWeaponInput, Ul
   fields: [
     {
       key: 'weapon',
-      label: 'Ultimate weapon',
+      label: 'Ultimate Weapon',
       kind: 'select',
       options: WEAPONS.map(weapon => ({ value: weapon.name, label: weapon.name })),
     },
@@ -74,8 +74,8 @@ export const ultimateWeaponCalculator: CalculatorBuilder<UltimateWeaponInput, Ul
       options: WEAPONS.flatMap(weapon => weapon.stats).map(stat => ({ value: stat, label: stat })),
       help: 'Stats differ per weapon — read `statsForWeapon` off the result to narrow this list.',
     },
-    { key: 'currentLevel', label: 'Current level', kind: 'number', min: 0 },
-    { key: 'targetLevel', label: 'Target level', kind: 'number', min: 0 },
+    { key: 'currentLevel', label: 'Current Level', kind: 'number', min: 0 },
+    { key: 'targetLevel', label: 'Target Level', kind: 'number', min: 0 },
   ],
 
   defaults,

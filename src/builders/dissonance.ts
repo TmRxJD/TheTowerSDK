@@ -34,6 +34,13 @@ const WAVE_CAP = 5000
 
 const TYPES = Object.keys(DISSONANCE_BOOST_FACTORS) as DissonanceType[]
 
+const TYPE_LABELS: Partial<Record<DissonanceType, string>> = {
+  attack: 'Attack',
+  defense: 'Defense',
+  uw: 'Ultimate Weapon',
+  utility: 'Utility',
+}
+
 export interface DissonanceInputs {
   /** Which stat's boost to report. Utility pays half what the other three pay. */
   type: DissonanceType
@@ -76,15 +83,19 @@ export const dissonanceCalculator: CalculatorBuilder<DissonanceInputs, Dissonanc
   fields: [
     {
       key: 'type',
-      label: 'Dissonance type',
+      label: 'Dissonance Type',
       kind: 'select',
-      options: TYPES.map(value => ({ value, label: value })),
+      /*
+       * The value stays the key the data files these under; the label is what the game calls it.
+       * A picker offering "uw" asks a player to know the shape of the record behind it.
+       */
+      options: TYPES.map(value => ({ value, label: TYPE_LABELS[value] ?? value })),
       help: 'Utility pays 2× where attack, defense and UW pay 4×.',
     },
-    { key: 'tier', label: 'Tier played', kind: 'number', min: 1, max: MAX_CAMPAIGN_TIER },
+    { key: 'tier', label: 'Tier Played', kind: 'number', min: 1, max: MAX_CAMPAIGN_TIER },
     {
       key: 'tierPersonalBests',
-      label: 'Personal best wave per tier',
+      label: 'Personal Best Wave per Tier',
       kind: 'number-list',
       unit: 'waves',
       min: 0,
@@ -92,7 +103,7 @@ export const dissonanceCalculator: CalculatorBuilder<DissonanceInputs, Dissonanc
     },
     {
       key: 'echoLevel',
-      label: 'Dissonant Echo level',
+      label: 'Dissonant Echo Level',
       kind: 'number',
       min: 0,
       help: 'What every tier other than the one played is worth: 0.5% a level.',
