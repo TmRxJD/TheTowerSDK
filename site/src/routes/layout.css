@@ -471,7 +471,11 @@ pre {
 	background-size: cover;
 	background-position: center;
 	opacity: 0;
-	transition: opacity 900ms ease;
+	/*
+	 * Long and eased both ways. A backdrop change is scenery, not feedback: the reader should
+	 * notice the page looks different, not watch a transition happen.
+	 */
+	transition: opacity 1200ms cubic-bezier(0.4, 0, 0.2, 1);
 	mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.55) 60%, rgba(0, 0, 0, 0.3) 100%);
 }
 
@@ -479,11 +483,18 @@ pre {
 	opacity: 0.4;
 }
 
-@media (prefers-reduced-motion: reduce) {
-	.page-art {
-		transition: none;
-	}
-}
+/*
+ * The fade stays under `prefers-reduced-motion`, deliberately.
+ *
+ * Turning it off here was the cause of the jarring backdrop change, not a fix for one: without the
+ * transition a full-viewport image is replaced between two frames, which is a far bigger visual
+ * event than the blend it was standing in for. The preference is about MOVEMENT, and a cross-fade
+ * in place has none — nothing travels, nothing scales, only opacity changes.
+ *
+ * Windows reports this query whenever animations are turned off in the OS, which is a common
+ * setting rather than a rare one. The same assumption had already silently disabled the hero's
+ * rotation; this was the same mistake in a second place.
+ */
 
 /*
  * A section that is already full-bleed must not escape twice.

@@ -37,7 +37,6 @@
 			<p class="mb-1 text-xs font-semibold tracking-wide text-fg uppercase">Related</p>
 			<a href={LINKS.npm}>npm: thetowersdk</a>
 			<a href={LINKS.github}>GitHub: TheTowerSDK</a>
-			<a href={LINKS.tracker}>The Tower Run Tracker</a>
 			{#if SHOW_GOVERNANCE}
 				<a href={LINKS.agsSite}>Agentic Cognition Substrate</a>
 			{/if}
@@ -45,6 +44,8 @@
 			<a href={LINKS.towerAiNpm}>npm: towerai</a>
 			<a href={LINKS.adbBridge}>GitHub: adb-bridge</a>
 			<a href={LINKS.adbBridgeNpm}>npm: adb-bridge</a>
+			<!-- Last: the tool built ON the SDK, after the packages that go WITH it. -->
+			<a href={LINKS.tracker}>The Tower Run Tracker</a>
 		</nav>
 	</div>
 </footer>

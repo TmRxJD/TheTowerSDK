@@ -2,7 +2,7 @@
   "why": [
     "Contradictions this repository has already looked at, resolved, and chosen to KEEP recorded.",
     "",
-    "Each one is a community source disagreeing with the game binary. The graph keeps both claims on purpose -- the compartment source says so: 'Same predicate as the game's value on purpose, so the detector reports the disagreement instead of it sitting here as prose.' Deleting the wiki claim would hide that the wiki is wrong, and someone would re-derive from it.",
+    "Each one is a community source disagreeing with what the game shows. The graph keeps both claims on purpose -- the compartment source says so: 'Same predicate as the game's value on purpose, so the detector reports the disagreement instead of it sitting here as prose.' Deleting the wiki claim would hide that the wiki is wrong, and someone would re-derive from it.",
     "",
     "But the build printed the same 'CONTRADICTION(S) -- review before shipping' line for these three on every single build, which is how a warning stops being read. A NEW contradiction -- the one that matters -- looked exactly like these.",
     "",
@@ -15,7 +15,7 @@
       "predicate": "opensAtLevel",
       "resolvedTo": 241,
       "origin": "game",
-      "ref": "libil2cpp.so .rodata int32 table @ 0xBE64D8, v28.3.0-arm64",
+      "ref": "Observed in game, v28.3.0",
       "supersedes": "community guide value of 242",
       "reviewedAt": "2026-08-18"
     },
@@ -24,7 +24,7 @@
       "predicate": "appliedAs",
       "resolvedTo": "multiply",
       "origin": "game",
-      "ref": "Perks class constants and Perks.ApplyWaveBenefit @ 0x1F82300, v28.3.0-arm64",
+      "ref": "Observed in game, v28.3.0",
       "supersedes": "wiki value of 'add' -- a factor rather than a step, so anything modelling perk timing from the wiki is wrong by a multiple",
       "reviewedAt": "2026-08-18"
     },
@@ -33,7 +33,7 @@
       "predicate": "protectorPenaltyPercent",
       "resolvedTo": 30,
       "origin": "game",
-      "ref": "Enemy.ThornDamage @ 0x21BBC3C, v28.3.0-arm64",
+      "ref": "Observed in game, v28.3.0",
       "supersedes": "wiki value of 60",
       "reviewedAt": "2026-08-18"
     }

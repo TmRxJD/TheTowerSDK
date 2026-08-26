@@ -58,6 +58,11 @@
 			title: 'Reach other surfaces',
 			pages: [
 				{
+					href: '/docs/wasm/',
+					label: 'Any Language',
+					body: 'Run the package from Python, Rust, Go or C# through one WebAssembly file — the same code, no port and no server.'
+				},
+				{
 					href: '/docs/sheets/',
 					label: 'Spreadsheets',
 					body: 'Read a Google Sheet and write catalogs into one, as values or as live formulas.'
@@ -80,7 +85,7 @@
 				{
 					href: '/docs/knowledge/',
 					label: 'Knowledge Graph',
-					body: '316 mechanics, typed relationships, and 1,642 claims that each name their source and date.'
+					body: '316 mechanics, typed relationships, and 1,641 claims that each name their source and date.'
 				},
 				{
 					href: '/docs/patch-notes/',

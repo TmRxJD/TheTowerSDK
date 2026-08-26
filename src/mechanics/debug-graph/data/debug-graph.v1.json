@@ -20607,11 +20607,11 @@
       "status": "observed",
       "mechanicNodeIds": []
     },
-    "test.bot-mechanics-il2cpp.test": {
-      "id": "test.bot-mechanics-il2cpp.test",
+    "test.bot-mechanics-in-game.test": {
+      "id": "test.bot-mechanics-in-game.test",
       "type": "runtime.test",
-      "label": "bot-mechanics-il2cpp.test",
-      "path": "packages/sdk/src/mechanics/bot-mechanics-il2cpp.test.ts",
+      "label": "bot-mechanics-in-game.test",
+      "path": "packages/sdk/src/mechanics/bot-mechanics-in-game.test.ts",
       "status": "observed",
       "mechanicNodeIds": []
     },

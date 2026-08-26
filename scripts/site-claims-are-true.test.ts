@@ -49,7 +49,14 @@ describe.skipIf(!existsSync(SITE))('the site counts match the package', () => {
      * claim of 197 notes.
      */
     const pattern = new RegExp(
-      `(?<![A-Za-z0-9:])([0-9]{1,3}(?:,[0-9]{3})+|[0-9]+|[A-Za-z]+(?:-[a-z]+)?)\\s+${noun.source}`,
+      /*
+       * The noun goes inside a non-capturing group.
+       *
+       * Interpolated bare, a noun containing `|` split the WHOLE pattern at the top level:
+       * `(number)\s+a|b` matches either "<number> a" or the bare word "b", so `match[1]` came back
+       * undefined for the second branch and the helper threw rather than reporting anything.
+       */
+      `(?<![A-Za-z0-9:])([0-9]{1,3}(?:,[0-9]{3})+|[0-9]+|[A-Za-z]+(?:-[a-z]+)?)\\s+(?:${noun.source})`,
       'gi',
     )
     return [...corpus.matchAll(pattern)].map(match => match[1].toLowerCase().replace(/,/g, ''))
@@ -92,8 +99,28 @@ describe.skipIf(!existsSync(SITE))('the site counts match the package', () => {
     expectOnly(/chart (?:datasets|entries)\b/, charts.SHARED_CHART_REGISTRY.length, 'charts')
 
     const graph = knowledge.GAME_KNOWLEDGE
-    expectOnly(/mechanics across\b/, knowledge.allNodes(graph).length, 'graph nodes')
+    const nodes = knowledge.allNodes(graph)
+    expectOnly(/mechanics across\b/, nodes.length, 'graph nodes')
     expectOnly(/compartments\b/, graph.compartments.length, 'compartments')
+
+    /*
+     * The graph's own contents, which drifted while everything above stayed right.
+     *
+     * The site claimed 1,642 claims against 1,641, and 315 nodes on one page beside 316 on
+     * another. Both pages render perfectly and a reader has no way to tell which is lying.
+     */
+    expectOnly(
+      /individual claims\b|claims that each\b/,
+      nodes.flatMap((node: { assertions?: unknown[] }) => node.assertions ?? []).length,
+      'graph claims',
+    )
+    expectOnly(
+      /recorded misreadings\b/,
+      nodes.flatMap((node: { traps?: unknown[] }) => node.traps ?? []).length,
+      'recorded traps',
+    )
+    /* "…across 316 nodes" — the same figure as above, stated a second way on a second page. */
+    expectOnly(/nodes\b/, nodes.length, 'nodes, wherever the site counts them')
   })
 
   it('the MCP tool count is the server’s own', () => {

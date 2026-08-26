@@ -16,6 +16,7 @@
 import { CHIP_BENEFIT_INDEX_CASH_MULTIPLIER } from './guardian'
 import { CURRENCY_DEFINITIONS } from '../../data/currency'
 import type { KnowledgeEdge, KnowledgeNode } from '../substrate/schema'
+import { communityGuideSource } from '../community-guides'
 
 /** Read from the shipped catalog rather than transcribed, so it cannot drift. */
 const CATALOG_CURRENCY = {
@@ -803,7 +804,12 @@ export const ECONOMY_KNOWLEDGE_NODES: readonly KnowledgeNode[] = [
       'Guides predate the account purchases. None found mentions that the starter and epic packs '
       + 'multiply coins, which changes any absolute figure they quote by up to six times.',
     ],
-    sources: [COMMUNITY_ECON_GUIDES],
+    sources: [
+      COMMUNITY_ECON_GUIDES,
+      communityGuideSource('1410c-t14-farm'),
+      communityGuideSource('mcblue-practical'),
+      communityGuideSource('colbyjack-ilm'),
+    ],
   },
   {
     id: 'coinsPerKill',

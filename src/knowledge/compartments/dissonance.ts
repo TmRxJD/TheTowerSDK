@@ -12,6 +12,7 @@
  */
 import { LAB_CATALOG } from '../../data/labs-catalog'
 import type { KnowledgeEdge, KnowledgeNode } from '../substrate/schema'
+import { communityGuideSource } from '../community-guides'
 
 const GAME_DISSONANCE = {
   origin: 'game',
@@ -227,7 +228,7 @@ export const DISSONANCE_KNOWLEDGE_NODES: readonly KnowledgeNode[] = [
       + 'only the level-skip zeroing; the rest is the community guide, and the two agree on the '
       + 'part that overlaps.',
     ],
-    sources: [GAME_DISSONANCE],
+    sources: [GAME_DISSONANCE, communityGuideSource('nanaseiyuri-dissonance')],
   },
   {
     id: 'dissonance.boost',
@@ -284,7 +285,7 @@ export const DISSONANCE_KNOWLEDGE_NODES: readonly KnowledgeNode[] = [
       'A tier index at or above ' + `${DISSONANCE_MAX_TIER_INDEX}` + ' logs an error and returns '
       + '1, not 0. A neutral-looking result can mean the lookup failed.',
     ],
-    sources: [GAME_BOOST_FORMULA],
+    sources: [GAME_BOOST_FORMULA, communityGuideSource('nanaseiyuri-dissonance')],
   },
   {
     id: 'dissonance.echo',
@@ -368,7 +369,7 @@ export const DISSONANCE_KNOWLEDGE_NODES: readonly KnowledgeNode[] = [
       + 'paid for giving up Utility. That is the check `lab-dissonance-index.test.ts` encodes, '
       + 'against the game asset table and `LAB_RESEARCH_BY_INDEX`.',
     ],
-    sources: [GAME_BOOST_FORMULA],
+    sources: [GAME_BOOST_FORMULA, communityGuideSource('nanaseiyuri-dissonance')],
   },
   {
     id: 'dissonance.echoTierRange',

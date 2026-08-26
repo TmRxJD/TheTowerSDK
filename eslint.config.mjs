@@ -9,7 +9,11 @@ export default tseslint.config(
    * its own eslint config and its own rules — including default exports, which this config
    * forbids and every Svelte module requires. It is linted by `npm run lint` inside `site/`.
    */
-  { ignores: ['dist/**', 'node_modules/**', 'src/**/*.generated.ts', 'site/**'] },
+  /*
+   * `wasm/.build/**` is a 200k-line esbuild bundle of dist. Linting generated output reports
+   * hundreds of problems about code nobody wrote and nobody can fix in place.
+   */
+  { ignores: ['dist/**', 'node_modules/**', 'src/**/*.generated.ts', 'site/**', 'wasm/.build/**', 'wasm/.tools/**'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
@@ -41,9 +45,22 @@ export default tseslint.config(
   },
   {
     // Build and check scripts run in Node, not the browser.
-    files: ['scripts/**/*.mjs', 'mcp/**/*.mjs', 'examples/**/*.ts', '*.config.mjs'],
+    files: ['scripts/**/*.mjs', 'mcp/**/*.mjs', 'wasm/*.mjs', 'examples/**/*.ts', '*.config.mjs'],
     languageOptions: {
       globals: { console: 'readonly', process: 'readonly', fetch: 'readonly' },
+    },
+    rules: { 'no-undef': 'off' },
+  },
+  {
+    /*
+     * The WASM entry runs inside Javy's QuickJS, not Node and not a browser.
+     *
+     * `Javy.IO` is how a Javy guest reaches stdio, and it exists only there — so no environment
+     * ESLint knows about declares it.
+     */
+    files: ['wasm/entry.js'],
+    languageOptions: {
+      globals: { Javy: 'readonly', TextDecoder: 'readonly', TextEncoder: 'readonly' },
     },
     rules: { 'no-undef': 'off' },
   },

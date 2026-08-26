@@ -13,6 +13,7 @@
  *    optimistic by roughly 20%, and nothing in the game reports it.
  */
 import type { KnowledgeEdge, KnowledgeNode } from '../substrate/schema'
+import { communityGuideSource } from '../community-guides'
 
 const WIKI_HEALTH = { origin: 'wiki', ref: 'Health', verifiedAt: '2026-08-16' } as const
 const WIKI_ATTACK_SPEED = { origin: 'wiki', ref: 'Attack Speed', verifiedAt: '2026-08-16' } as const
@@ -161,12 +162,12 @@ const GAME_NO_CLAMP = {
  * and the node's numbers are game-sourced through `GAME_THORNS`. Kept as
  * attribution for where the framing came from, not as evidence. Credit is the
  * point of keeping it.
+ *
+ * The `ref` now comes from `community-guides.ts` rather than being written out here. It was the
+ * only guide cited anywhere, under a spelling nothing else knew, so the roster that credits these
+ * people could not see it.
  */
-const COMMUNITY_GUIDE = {
-  origin: 'user',
-  ref: 'Early-game tower guide by minionek (Discord), supplied by the account owner — not a wiki page and not fetchable',
-  verifiedAt: '2026-08-18',
-} as const
+const COMMUNITY_GUIDE = communityGuideSource('minionek-early-game')
 
 const WIKI_THORNS = { origin: 'wiki', ref: 'Thorn Damage', verifiedAt: '2026-08-16' } as const
 const WIKI_WALL = { origin: 'wiki', ref: 'Wall', verifiedAt: '2026-08-16' } as const
@@ -677,7 +678,7 @@ export const TOWER_KNOWLEDGE_NODES: readonly KnowledgeNode[] = [
       // direction cannot reach the total on that direction alone.
       { subject: 'orb', predicate: 'directionsSumToTotal', value: TOWER_HARD_CAPS.maxOrbsClockwise + TOWER_HARD_CAPS.maxOrbsCounterClockwise === TOWER_HARD_CAPS.maxOrbsTotal, provenance: WIKI_ORBS, verification: 'verified_here' as const },
     ],
-    sources: [WIKI_ORBS, GAME_NO_CLAMP],
+    sources: [WIKI_ORBS, GAME_NO_CLAMP, communityGuideSource('kitchensalt-reverse-orb')],
   },
   {
     id: 'thorns',

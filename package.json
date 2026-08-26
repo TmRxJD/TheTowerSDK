@@ -1,6 +1,6 @@
 {
   "name": "thetowersdk",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Game data and save-file reading for The Tower — build your own calculators and tools.",
   "license": "MIT",
   "author": "TmRxJD (https://github.com/TmRxJD)",
@@ -68,7 +68,10 @@
     "assets:manifest": "node scripts/build-asset-manifest.mjs",
     "assets:game": "node scripts/build-game-asset-manifest.mjs",
     "patch-notes:ingest": "node scripts/ingest-patch-notes.mjs",
-    "patch-notes:build": "node scripts/build-patch-notes.mjs"
+    "patch-notes:build": "node scripts/build-patch-notes.mjs",
+    "wasm:build": "node wasm/build.mjs",
+    "wasm:check": "node wasm/build.mjs --check",
+    "wasm:call": "node wasm/run.mjs"
   },
   "exports": {
     ".": {
@@ -93,7 +96,6 @@
     },
     "./save-decoder": {
       "types": "./dist/save-decoder/index.d.ts",
-      "import": "./dist/save-decoder/index.js",
       "require": "./dist/save-decoder/index.js",
       "default": "./dist/save-decoder/index.js"
     },
@@ -104,7 +106,6 @@
     },
     "./builders": {
       "types": "./dist/builders/index.d.ts",
-      "import": "./dist/builders/index.js",
       "require": "./dist/builders/index.js",
       "default": "./dist/builders/index.js"
     },
@@ -125,7 +126,6 @@
     },
     "./contributions": {
       "types": "./dist/contributions/index.d.ts",
-      "import": "./dist/contributions/index.js",
       "require": "./dist/contributions/index.js",
       "default": "./dist/contributions/index.js"
     },
@@ -144,19 +144,16 @@
     "./package.json": "./package.json",
     "./sheets": {
       "types": "./dist/sheets/index.d.ts",
-      "import": "./dist/sheets/index.js",
       "require": "./dist/sheets/index.js",
       "default": "./dist/sheets/index.js"
     },
     "./bot": {
       "types": "./dist/bot/index.d.ts",
-      "import": "./dist/bot/index.js",
       "require": "./dist/bot/index.js",
       "default": "./dist/bot/index.js"
     },
     "./assets": {
       "types": "./dist/assets/index.d.ts",
-      "import": "./dist/assets/index.js",
       "require": "./dist/assets/index.js",
       "default": "./dist/assets/index.js"
     }

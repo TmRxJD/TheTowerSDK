@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.9.0
+
+**Community guides are credited by name.** `thetowersdk/contributions` now carries the guides the
+knowledge graph draws its contextual claims from — minionek, McBlue, Evan, DrAudacious, ColbyJack,
+Kitchen Salt, 1410c and NanaSeiYuri — each with the exact `ref` the graph cites it by, and a test
+that checks the graph still cites it. A guide credited but unused would put someone's name on work
+this package never took.
+
+NanaSeiYuri's dissonance sheet is the one that states arithmetic rather than strategy, so the
+package is checked against it: the +400% and +200% caps, the 5000-wave maximum, x13.40 and x7.20
+with every tier maxed, and the rule that a tier is excluded from its own echo. All six agree.
+
+**Extraction detail removed from JSON and from a filename.** The scrubber walked `.ts` and `.mjs`
+only, so a JSON file kept three citations naming a symbol and an address, and a test file's own
+name carried the toolchain into every graph that indexes by path. Both are in scope now.
+
+**Counts corrected.** The site claimed 1,642 graph claims against 1,641, and 315 nodes beside 316.
+Both are guarded.
+
+**Docs.** A page on running the package from any language over WebAssembly, the client-side save
+decoder written up properly, the Google service-account walkthrough moved to the spreadsheet docs
+where it belongs, and a section on what `normalize` does with input nobody checked.
+
 ## 0.8.0
 
 **Two new entry points.**

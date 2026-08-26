@@ -37,6 +37,7 @@ const ALL_DOCS_NAV = [
 	{ href: '/docs/knowledge/', label: 'Knowledge' },
 	{ href: '/docs/patch-notes/', label: 'Patch Notes' },
 	{ href: '/docs/wiki/', label: 'Wiki' },
+	{ href: '/docs/wasm/', label: 'Any Language' },
 	{ href: '/docs/mcp/', label: 'MCP & AI' },
 	{ href: '/docs/towerai/', label: 'TowerAI' },
 	{ href: '/docs/ags/', label: 'ACS', governance: true },

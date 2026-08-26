@@ -26,12 +26,33 @@ import {
   EFFECTIVE_PATHS_SUPPORT,
 } from '../mechanics/effective-paths-credits'
 import { WIKI_ATTRIBUTION, WIKI_CREDIT_SOURCES } from '../wiki/wiki-credits'
+import { COMMUNITY_GUIDE_SOURCES, communityGuideRef } from '../knowledge/community-guides'
 
 export interface Contributor {
   /** Spelled the way they spell it. */
   readonly name: string
   /** What they did, in one phrase. */
   readonly role?: string
+}
+
+export interface CommunityGuide {
+  /** The guide, as its author titles it. */
+  readonly title: string
+  /** Who wrote it, spelled the way they spell it. */
+  readonly author: string
+  /** Where it can be read, when it is public. */
+  readonly url?: string
+  /** What the knowledge graph took from it. */
+  readonly informs: string
+  /** Whether it still describes the current game. A superseded guide stays credited. */
+  readonly status: 'current' | 'superseded'
+  /**
+   * The exact `ref` string the graph cites it by.
+   *
+   * `contributions-match-the-graph.test.ts` checks this appears in the shipped graph, so a guide
+   * cannot be credited here without being used, and one that stops being used stops being claimed.
+   */
+  readonly graphRef: string
 }
 
 export interface ContributionArea {
@@ -43,6 +64,23 @@ export interface ContributionArea {
   /** Where the work itself lives, when it is public. */
   readonly url?: string
 }
+
+/**
+ * Community guides the knowledge graph draws on.
+ *
+ * Derived from `COMMUNITY_GUIDE_SOURCES`, which is the registry the compartments actually cite —
+ * not a second list kept beside it. A roster maintained by hand goes out of step with the graph
+ * the first time a guide is added, and the failure is silent: the page still renders, with a name
+ * missing from it.
+ */
+export const COMMUNITY_GUIDES: readonly CommunityGuide[] = COMMUNITY_GUIDE_SOURCES.map(guide => ({
+  title: guide.title,
+  author: guide.author,
+  url: guide.url,
+  informs: guide.informs,
+  status: guide.status,
+  graphRef: communityGuideRef(guide.id),
+}))
 
 /**
  * The people whose work this package carries.
@@ -73,9 +111,19 @@ export const CONTRIBUTIONS: readonly ContributionArea[] = [
   {
     area: 'TowerToolkit',
     what:
-      'The original community toolkit. Some of the earliest game data in this package began as '
-      + 'its tables, and the shape of several catalogs still follows it.',
-    people: [{ name: 'Skye', role: 'TowerToolkit' }],
+      'The original community toolkit, no longer maintained and significantly outdated. Some of '
+      + 'the earliest game data in this package began as its tables, and the shape of several '
+      + 'catalogs still follows it.',
+    url: 'https://github.com/tower-idle-toolkit/tower-idle-toolkit',
+    people: [{ name: 'Skye', role: 'tower-idle-toolkit' }],
+  },
+  {
+    area: 'Community guides',
+    what:
+      'The written guides the knowledge graph draws its contextual claims from — the things the '
+      + 'game does not state anywhere and no file contains. See COMMUNITY_GUIDES for what each '
+      + 'one informs.',
+    people: COMMUNITY_GUIDES.map(guide => ({ name: guide.author, role: guide.title })),
   },
   {
     area: 'Community wikis',
@@ -104,6 +152,12 @@ export const CONTRIBUTION_SUPPORT = [
     creatorCode: EFFECTIVE_PATHS_SUPPORT.creatorCode,
     storeUrl: EFFECTIVE_PATHS_SUPPORT.storeUrl,
   },
+  {
+    /* Printed on the dissonance sheet itself, which is how it comes to be known here. */
+    label: 'NanaSeiYuri, for the dissonance sheet',
+    creatorCode: 'NANASEIYURI',
+    storeUrl: EFFECTIVE_PATHS_SUPPORT.storeUrl,
+  },
 ] as const
 
 /** Every attribution line the package carries, for a footer or an about box. */
@@ -111,6 +165,9 @@ export const ATTRIBUTION_LINES: readonly string[] = [
   EFFECTIVE_PATHS_ATTRIBUTION,
   WIKI_ATTRIBUTION,
   'Save enum indexes mapped by Bisse. Some early game data originates in Skye\'s TowerToolkit.',
+  `Contextual knowledge draws on community guides by ${
+    [...new Set(COMMUNITY_GUIDES.map(guide => guide.author))].join(', ')
+  }.`,
 ]
 
 export { WIKI_CREDIT_SOURCES }

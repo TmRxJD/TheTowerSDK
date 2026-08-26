@@ -22,6 +22,7 @@ import {
   TOURNAMENT_HEAT_WAVE_TABLE,
 } from '../../mechanics/tournament-heat-bc'
 import type { KnowledgeEdge, KnowledgeNode } from '../substrate/schema'
+import { communityGuideSource } from '../community-guides'
 
 const WIKI_TOURNAMENTS = { origin: 'wiki', ref: 'Tournaments', verifiedAt: '2026-08-16' } as const
 const WIKI_EVENTS = { origin: 'wiki', ref: 'Events', verifiedAt: '2026-08-16' } as const
@@ -119,7 +120,7 @@ export const META_GAME_KNOWLEDGE_NODES: readonly KnowledgeNode[] = [
       // number quietly moving.
       { subject: 'tournament', predicate: 'unprotectedLeagueCount', value: TOURNAMENT_LEAGUES.length - TOURNAMENT_PROTECTED_LEAGUES.length, provenance: WIKI_TOURNAMENTS, verification: 'verified_here' as const },
     ],
-    sources: [WIKI_TOURNAMENTS],
+    sources: [WIKI_TOURNAMENTS, communityGuideSource('evan-legend-tournament')],
   },
   {
     id: 'tournament.league',

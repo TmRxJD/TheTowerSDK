@@ -21,3 +21,7 @@ data/patch-notes/raw-messages.json
 # sprite in the game is derived from the game whoever typed it, so it stays out of the repo and
 # out of the package — `src/assets/index.ts` ships the naming RULE instead.
 src/assets/*.generated.ts
+
+# WASM build artifacts: the Javy compiler is fetched on demand, and the module is built from dist.
+wasm/.tools/
+wasm/.build/

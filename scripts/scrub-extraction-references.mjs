@@ -61,12 +61,35 @@ const mentionsExtraction = (text) =>
 	!(ALGORITHM_CONSTANTS.some((pattern) => pattern.test(text)) &&
 		!/\bIL2CPP\b|\bGhidra\b|\bRVA\b|\barm64\b|game binary|disassembl|decompil/i.test(text));
 
+/**
+ * A filename says the same thing a citation does.
+ *
+ * `bot-mechanics-il2cpp.test.ts` named the toolchain in the public repository, and every graph
+ * that indexes the tree by path repeated it — four times in the debug graph, which ships. Nothing
+ * looked at names, only at contents.
+ */
+const FORBIDDEN_IN_NAMES = /il2cpp|ghidra|arm64|disassembl|decompil|\.apk(?![a-z])/i
+
+function badFileNames(dir) {
+  return walk(dir)
+    .map(file => path.relative(process.cwd(), file))
+    .filter(file => FORBIDDEN_IN_NAMES.test(path.basename(file)))
+}
+
+/*
+ * JSON counts.
+ *
+ * This scanned `.ts` and `.mjs` only, so `known-contradictions.json` kept three citations naming
+ * a shared object, an address and an ABI — and the guard that runs this in `--check` mode passed
+ * the whole time, because it never opened the file. A rule that cannot see half the tree reports
+ * on the half it can.
+ */
 function walk(dir) {
 	const out = [];
 	for (const entry of readdirSync(dir)) {
 		const full = path.join(dir, entry);
 		if (statSync(full).isDirectory()) out.push(...walk(full));
-		else if (/\.(ts|mjs)$/.test(full)) out.push(full);
+		else if (/\.(ts|mjs|json)$/.test(full)) out.push(full);
 	}
 	return out;
 }
@@ -117,9 +140,21 @@ for (const file of files) {
 	});
 }
 
+const namedBadly = badFileNames(ROOT);
+
+if (namedBadly.length > 0) {
+	console.log(`\n${namedBadly.length} file name(s) mention extraction:\n`);
+	for (const file of namedBadly) console.log('  ' + file);
+	console.log('\n  Rename them. A name is public in the repository, and every graph that indexes');
+	console.log('  the tree by path repeats it.');
+}
+
 if (remaining.length > 0) {
 	console.log(`\n${remaining.length} line(s) still mention extraction:\n`);
 	for (const line of remaining) console.log('  ' + line);
+}
+
+if (remaining.length > 0 || namedBadly.length > 0) {
 	process.exitCode = CHECK_ONLY ? 1 : 0;
 } else {
 	console.log('no extraction references remain');

@@ -157,6 +157,55 @@ console.log(result.notes)           // anything worth showing next to the total`
 	/>
 </div>
 
+<h2 class="mt-10 text-xl font-semibold">What Happens To Input You Did Not Check</h2>
+<p class="mt-3 text-muted">
+	<code>normalize</code> is total: it takes anything and returns a complete, valid record. Nothing throws,
+	so a form, a chat command and an imported spreadsheet row can all be passed straight in without validating
+	first.
+</p>
+<div class="mt-4">
+	<CodeBlock
+		code={`const module = findCalculatorBuilder('module.cost')
+
+module.normalize({ currentLevel: -5, targetLevel: 99999, rarity: 'Nope' })
+// { rarity: 'Ancestral 5', currentLevel: 1, targetLevel: 300,
+//   shardDiscountPercent: 0, coinDiscountPercent: 0 }
+
+// Even a value that throws when read: nothing here calls String() or Number()
+// on something it did not put there.
+module.normalize({ currentLevel: { toString() { throw new Error('hostile') } } })
+// { rarity: 'Ancestral 5', currentLevel: 1, targetLevel: 20, … }`}
+	/>
+</div>
+<p class="mt-3 text-muted">
+	Out of range becomes the nearest valid value, and an unknown option becomes the default. That is
+	the safe behaviour, and it is also the one that can mislead: the answer is now to a slightly
+	different question than the one asked.
+</p>
+<p class="mt-3 text-muted">
+	So compare the input you sent with the input that was used, and show
+	<code>notes</code> — a calculator says when it changed something that matters.
+</p>
+<div class="mt-4">
+	<CodeBlock
+		code={`const asked = { rarity: 'Common', currentLevel: 1, targetLevel: 9999 }
+const used = module.normalize(asked)
+const result = module.compute(asked)
+
+result.levels.at(-1).level   // 20 — Common stops there
+result.notes
+// ['Common caps at level 20; the target was clamped.']
+
+// The general check, for any calculator:
+const changed = Object.keys(used).filter((key) => used[key] !== asked[key])`}
+	/>
+</div>
+<p class="mt-3 text-muted">
+	<strong>Not every clamp writes a note.</strong> A rarity that does not exist quietly becomes the
+	default, because there is no useful sentence to write about a value that was never a choice — so
+	the comparison above is the reliable check, and <code>notes</code> is the readable one.
+</p>
+
 <h2 class="mt-10 text-xl font-semibold">Turn Every Builder Into A Command</h2>
 <p class="mt-3 text-muted">
 	The same description registers a Discord command. Loop the builders, map each field to a command

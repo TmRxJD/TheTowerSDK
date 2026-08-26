@@ -25,6 +25,7 @@
  */
 import { ULTIMATE_WEAPON_STATS } from './ultimate-weapons'
 import type { KnowledgeEdge, KnowledgeNode } from '../substrate/schema'
+import { communityGuideSource } from '../community-guides'
 
 const COMMUNITY = {
   origin: 'user',
@@ -158,7 +159,7 @@ export const BUILD_TARGET_KNOWLEDGE_NODES: readonly KnowledgeNode[] = [
         verification: 'verified_here',
       },
     ],
-    sources: [COMMUNITY, CATALOG_UW_STATS],
+    sources: [COMMUNITY, CATALOG_UW_STATS, communityGuideSource('audacious-glass-cannon')],
   },
   {
     id: 'buildTarget.perma',
@@ -198,7 +199,7 @@ export const BUILD_TARGET_KNOWLEDGE_NODES: readonly KnowledgeNode[] = [
         verification: 'verified_here',
       },
     ],
-    sources: [COMMUNITY, CATALOG_UW_STATS],
+    sources: [COMMUNITY, CATALOG_UW_STATS, communityGuideSource('audacious-glass-cannon')],
   },
   {
     id: 'buildTarget.quantity',

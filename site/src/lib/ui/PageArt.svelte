@@ -67,10 +67,39 @@
 
 			const tile = ((startTile - 1 + next) % ART_TILE_COUNT) + 1;
 			steps = next;
-			if (showingA) tileB = tile;
-			else tileA = tile;
-			showingA = !showingA;
+
+			/*
+			 * Decode the next image BEFORE swapping to it.
+			 *
+			 * Setting the layer's image and flipping which one is visible in the same frame starts a
+			 * 900ms fade to an image the browser has not finished decoding — so the layer fades up
+			 * empty and the picture appears all at once partway through. It reads as a jump, which is
+			 * the opposite of what the fade is for.
+			 *
+			 * Waiting costs nothing on a tile already in cache, which after the first pass is all of
+			 * them.
+			 */
+			preload(tile).then(() => {
+				if (showingA) tileB = tile;
+				else tileA = tile;
+				showingA = !showingA;
+			});
 		};
+
+		const decoded = new Set<number>();
+
+		function preload(tile: number): Promise<void> {
+			if (decoded.has(tile)) return Promise.resolve();
+			return new Promise((resolve) => {
+				const image = new Image();
+				/* Resolve either way: a tile that fails to load must not stop the backdrop changing. */
+				image.onload = image.onerror = () => {
+					decoded.add(tile);
+					resolve();
+				};
+				image.src = asset(`/feature-${tile}.webp`);
+			});
+		}
 
 		let queued = false;
 		const onScroll = () => {

@@ -1,8 +1,9 @@
 <script lang="ts">
-	import { CONTRIBUTIONS, CONTRIBUTION_SUPPORT } from 'thetowersdk/contributions';
+	import { CONTRIBUTIONS, CONTRIBUTION_SUPPORT, COMMUNITY_GUIDES } from 'thetowersdk/contributions';
 	import { WIKI_CREDIT_SOURCES } from 'thetowersdk/wiki';
 	import CodeBlock from '$lib/ui/CodeBlock.svelte';
 	import { href } from '$lib/paths';
+	import { LINKS } from '$lib/links';
 
 	/*
 	 * Rendered from the package, not restated here.
@@ -53,6 +54,40 @@
 		</section>
 	{/each}
 </div>
+
+<h2 class="mt-12 text-xl font-semibold">Community Guides</h2>
+<p class="mt-2 max-w-3xl text-muted">
+	The knowledge graph carries claims the game never states and no file contains — what a mechanic is
+	worth in practice, the magnitudes behind it, the words players use for it. Those come from guides
+	somebody wrote and keeps current. Each one below is cited by the graph itself, and a test checks
+	that it still is, so nothing is credited here for work the package did not take.
+</p>
+<div class="mt-4 space-y-3">
+	{#each COMMUNITY_GUIDES as guide (guide.graphRef)}
+		<div class="tool-card">
+			<div class="flex flex-wrap items-baseline justify-between gap-3">
+				<h3 class="font-medium">
+					{#if guide.url}
+						<a href={guide.url} rel="noreferrer">{guide.title}</a>
+					{:else}
+						{guide.title}
+					{/if}
+				</h3>
+				<span class="text-sm text-muted">
+					{guide.author}
+					{#if guide.status === 'superseded'}
+						<span class="text-xs text-muted/70"> · superseded</span>
+					{/if}
+				</span>
+			</div>
+			<p class="mt-2 text-sm text-muted">{guide.informs}</p>
+		</div>
+	{/each}
+</div>
+<p class="mt-3 text-sm text-muted">
+	If a guide you wrote informs something here and is not listed, that is an omission rather than a
+	decision — <a href={LINKS.github}>open an issue</a> and it will be added.
+</p>
 
 <h2 class="mt-12 text-xl font-semibold">The Wikis</h2>
 <p class="mt-2 max-w-3xl text-muted">

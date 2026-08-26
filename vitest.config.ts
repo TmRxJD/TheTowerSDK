@@ -14,7 +14,7 @@ export default defineConfig({
      * drives it over stdio, but anything written beside the server was invisible to the suite,
      * because the glob stopped at `src` and `scripts`.
      */
-    include: ['src/**/*.test.ts', 'scripts/**/*.test.ts', 'mcp/**/*.test.ts'],
+    include: ['src/**/*.test.ts', 'scripts/**/*.test.ts', 'mcp/**/*.test.ts', 'wasm/**/*.test.ts'],
     exclude: [
       // Monorepo AGS surfaces — need @tmrxjd/governance-engine.
       //
