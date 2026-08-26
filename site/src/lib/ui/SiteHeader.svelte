@@ -11,7 +11,16 @@
 	}
 </script>
 
-<header class="border-b border-line/80 bg-bg/70 backdrop-blur-md">
+<!--
+	Sticky, so the nav is reachable from anywhere on a long docs page without scrolling back up.
+
+	`bg-bg/85` rather than a solid fill: the page carries artwork behind it, and an opaque bar would
+	cut a hard band across it while scrolling. The blur is what keeps text readable over whatever
+	passes underneath.
+-->
+<header
+	class="sticky top-0 z-50 border-b border-line/80 bg-bg/85 backdrop-blur-md supports-[backdrop-filter]:bg-bg/70"
+>
 	<div class="mx-auto max-w-6xl px-4 py-3">
 		<div class="flex items-center justify-between gap-4">
 			<a href={href('/')} class="flex items-center gap-2 text-fg no-underline">

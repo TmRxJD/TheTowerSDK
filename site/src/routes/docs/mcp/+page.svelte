@@ -10,15 +10,82 @@
 
 <h1 class="text-3xl font-semibold">MCP &amp; AI</h1>
 <p class="mt-3 text-muted">
-	The package ships an MCP server. Point Cursor, Claude Code, or Copilot at it after install so the
-	assistant can use real exports, catalogs, saves, planners, and wiki pages.
+	The package ships an MCP server, so there is nothing extra to install. Register it and your
+	editor's assistant gains forty-two tools: it can run the shipped calculators and get real numbers
+	back, work in an instrumented sandbox, decode a save, pull wiki pages, and trace and validate what
+	it produced — rather than writing game maths from memory and hoping.
 </p>
 
-<div class="mt-6">
-	<CodeBlock code={mcpJson} />
+<h2 class="mt-10 text-xl font-semibold">Register It</h2>
+<p class="mt-3 text-muted">
+	You need <code>thetowersdk</code> installed in the project first — the server runs from inside it,
+	which is why the path is under <code>node_modules</code>. Run this from the project root.
+</p>
+
+<h3 class="mt-6 text-lg font-medium">Claude Code</h3>
+<p class="mt-2 text-sm text-muted">One command, from your project directory:</p>
+<div class="mt-3">
+	<CodeBlock code="claude mcp add thetowersdk -- node ./node_modules/thetowersdk/mcp/server.mjs" />
 </div>
 
-<h2 class="mt-8 text-xl font-medium">What The Server Can Do</h2>
+<h3 class="mt-6 text-lg font-medium">Cursor, Copilot, and anything else</h3>
+<p class="mt-2 text-sm text-muted">
+	Add the server to the editor's MCP config file — <code>.cursor/mcp.json</code> in the project for Cursor,
+	or the MCP section of your editor's settings. Restart the MCP session after saving, since most editors
+	read this once at startup.
+</p>
+<div class="mt-3">
+	<CodeBlock code={mcpJson} />
+</div>
+<p class="mt-3 text-sm text-muted">
+	Ask the assistant to list the tools it has once it reconnects. If <code>list_exports</code> is among
+	them, the server is registered.
+</p>
+
+<h2 class="mt-10 text-xl font-semibold">Forty-Two Tools</h2>
+<p class="mt-3 text-muted">
+	Enough that an assistant can compute, run and check its work rather than only look things up. The
+	groups below are what it gets.
+</p>
+
+<h3 class="mt-8 text-lg font-medium">Run The Calculators Directly</h3>
+<p class="mt-2 text-muted">
+	The assistant does not have to derive game maths, or write it and hope. It can call the shipped
+	formula and get the number the SDK itself returns.
+</p>
+<ul class="mt-3 list-disc space-y-1 pl-5 text-sm text-muted">
+	<li>
+		<code>calc_list</code> — every declared calculator, with what each reads and produces. The first call
+		to make before writing any maths, so an established formula is used rather than a second one invented
+		alongside it
+	</li>
+	<li>
+		<code>calc_describe</code> — one calculator in full: parameters with their units, the invariants its
+		output must satisfy, and where its source lives
+	</li>
+	<li>
+		<code>calc_run</code> — run it on real arguments and get the shipped function's answer. An unknown
+		handle, a missing parameter or a wrong type is refused rather than answered with a plausible number
+	</li>
+	<li>
+		<code>calc_chart</code> — which formula produces a given chart's numbers. An empty list is a real
+		answer: that chart is a measured table nothing computes
+	</li>
+	<li>
+		<code>calc_graph</code> — which calculators call which, and which produce values others read. Answers
+		"what feeds this number?" without opening the source
+	</li>
+</ul>
+
+<h3 class="mt-8 text-lg font-medium">A Sandbox To Work In</h3>
+<p class="mt-2 text-muted">
+	<code>sdk_sandbox_run</code> is a scratchpad: an instrumented space where the assistant can load the
+	kernel, decode a fixture save, evaluate a citation, or dry-run a repair and see what happens — without
+	touching your project. It never applies an inventive fix; it shows you the result and leaves the decision
+	with you.
+</p>
+
+<h3 class="mt-8 text-lg font-medium">Read The Package And A Save</h3>
 <ul class="mt-3 list-disc space-y-1 pl-5 text-sm text-muted">
 	<li>
 		<code>list_exports</code> / <code>get_export</code> — what exists, one table previewed rather than
@@ -33,11 +100,51 @@
 	<li><code>define_term</code> — what an acronym means, and whether it is ambiguous</li>
 	<li><code>plan_effective_path</code> — a path, with the candidates it excluded and why</li>
 	<li>
-		<code>wiki_search</code> / <code>wiki_page</code> — how a mechanic behaves, from the community wiki
+		<code>wiki_search</code> / <code>wiki_page</code> — how a mechanic behaves, in the community's own
+		words
+	</li>
+</ul>
+
+<h3 class="mt-8 text-lg font-medium">Check Its Own Work</h3>
+<p class="mt-2 text-muted">
+	The part that makes the rest trustworthy: the assistant can diagnose, trace and validate rather
+	than declare itself finished.
+</p>
+<ul class="mt-3 list-disc space-y-1 pl-5 text-sm text-muted">
+	<li>
+		<code>sdk_doctor_check</code>, <code>_prescribe</code>, <code>_repair</code>,
+		<code>_validate</code>, <code>_autofix</code> — a diagnosis across trust, symbols, coverage and drift,
+		then a prescription, then a check that the fix held. Diagnosis never invents a fix
 	</li>
 	<li>
-		<code>sdk_graph_render</code> — the mechanics graph as a <strong>Mermaid</strong> diagram, not an
-		image
+		<code>sdk_debug_trace</code>, <code>_snapshot</code>, <code>_watch</code>,
+		<code>_validate</code> — run a mechanics export with instrumentation and get a structured trace back,
+		so a wrong number can be followed to where it went wrong
+	</li>
+	<li>
+		<code>trust_coverage_report</code> / <code>trust_drift_check</code> — what is covered, what is silently
+		uncovered, and what has moved since it was last checked
+	</li>
+	<li><code>sdk_lsp_diagnostics</code> — kernel, doctor and save-graph diagnostics in one call</li>
+</ul>
+
+<h3 class="mt-8 text-lg font-medium">Work With The Mechanics Graph</h3>
+<ul class="mt-3 list-disc space-y-1 pl-5 text-sm text-muted">
+	<li>
+		<code>sdk_graph_get</code> / <code>sdk_graph_context</code> — the graph, or just the neighbourhood
+		around one mechanic
+	</li>
+	<li>
+		<code>sdk_graph_mutate</code> / <code>sdk_graph_validate</code> — record what was learned, and have
+		it checked before it lands
+	</li>
+	<li>
+		<code>sdk_graph_render</code> — the graph as a <strong>Mermaid</strong> diagram, not an image
+	</li>
+	<li>
+		<code>sdk_kernel_load</code>, <code>sdk_registry_get</code>, <code>sdk_save_graph_get</code>,
+		<code>sdk_planner_compile</code>, <code>sdk_docs_generate</code> — the substrate underneath, for compiling
+		a planner or regenerating the mechanics map
 	</li>
 </ul>
 
@@ -117,7 +224,7 @@
 </p>
 
 <p class="mt-8 text-sm">
-	<a href={href('/ai/')}>Prompts And Example Results →</a>
+	<a href={href('/docs/knowledge/')}>Knowledge Graph →</a>
 	·
-	<a href={href('/docs/ags/')}>ACS →</a>
+	<a href={href('/docs/towerai/')}>TowerAI →</a>
 </p>

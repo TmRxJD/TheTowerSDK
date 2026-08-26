@@ -1,83 +1,58 @@
 /**
- * Showing a module or a card the way the game draws it.
+ * Pointing at artwork you supply yourself.
  *
  *   npx tsx examples/12-show-module-and-card-art.ts
  *
- * The images are not in this package — they are The Tower's artwork, owned by TechTree
- * Games, and they live in `tower-assets`:
+ * This package ships **no images and no catalogue of them**. The art belongs to TechTree Games,
+ * there is no permission to redistribute it, and a list naming every sprite in the game is derived
+ * from the game whoever typed it — so that is withheld too.
  *
- *   npm install tower-assets
- *
- * What ships here is the mapping. This example runs without the images installed, because
- * resolving a path and loading a file are different steps.
+ * What ships is the naming rule, so a tool can find a file in a directory of artwork you already
+ * have. This example runs with no artwork present at all, because building a path and loading a
+ * file are different steps: it prints where each file WOULD be.
  */
+import { gameAssetPath, gameAssetPaths, assetSlug, towerAssetUrl } from 'thetowersdk/assets'
 import { CARD_TEMPLATES, MODULE_TEMPLATES } from 'thetowersdk/data'
-import {
-  allModuleAssetPaths,
-  cardAssetPath,
-  moduleAssetPath,
-  moduleFrameAssetPath,
-  towerAssetUrl,
-} from 'thetowersdk/assets'
 
-/*
- * ---------------------------------------------------------------------------
- * 1. Why this is not a string template.
- * ---------------------------------------------------------------------------
- *
- * A module's file is named after its INITIALS and rarity prefix, not its id or its name.
- * Building the path by hand gives you a file that does not exist — and a missing image does
- * not throw, it renders as nothing.
- */
-// >>> snippet: module-art
-const chip = MODULE_TEMPLATES.find(module => module.name === 'Om Chip')
+/** Wherever you serve your own extraction from. */
+const ART_ROOT = '/art'
 
-console.log(`id:       ${chip?.id}`)
-console.log(`initials: ${chip?.initials}`)
-console.log(`art:      ${moduleAssetPath('Om Chip')}`)
-// <<< snippet
+console.log('Modules')
+for (const module of MODULE_TEMPLATES.slice(0, 5)) {
+  const path = gameAssetPath(module.name, { domain: 'modules' })
+  console.log(`  ${module.name.padEnd(22)} ${towerAssetUrl(path, ART_ROOT)}`)
+}
 
-console.log(`\nguessed by hand: modules_core/${chip?.id}.png   <- does not exist`)
-
-/*
- * ---------------------------------------------------------------------------
- * 2. Cards, and the alias that catches people out.
- * ---------------------------------------------------------------------------
- */
-console.log(`\ncard 'aoe':        ${cardAssetPath('aoe')}`)
-console.log(`card 'slow-aura':  ${cardAssetPath('slow-aura')}   <- stored as sa.jpg, not slow-aura.jpg`)
-
-/*
- * Anything without art returns `null` rather than a plausible path to nothing, so a caller
- * can tell "this has no art" from "I built the wrong path".
- */
-console.log(`card 'no-such':    ${cardAssetPath('no-such-card')}`)
-
-/*
- * ---------------------------------------------------------------------------
- * 3. Frames are per rarity, and follow a different rule.
- * ---------------------------------------------------------------------------
- *
- * The `+` tiers have their own frame; the module art underneath does not.
- */
-for (const rarity of ['Epic', 'Epic+', 'Ancestral 5']) {
-  console.log(`frame ${rarity.padEnd(12)} ${moduleFrameAssetPath('Core', rarity)}`)
+console.log('\nCards')
+for (const card of CARD_TEMPLATES.slice(0, 5)) {
+  const path = gameAssetPath(card.name, { domain: 'cards' })
+  console.log(`  ${card.name.padEnd(22)} ${towerAssetUrl(path, ART_ROOT)}`)
 }
 
 /*
- * ---------------------------------------------------------------------------
- * 4. Coverage, and turning a path into something loadable.
- * ---------------------------------------------------------------------------
+ * Every size at once, for a `srcset`. Nothing requires you to have all three — use the subset
+ * your extraction produced and ignore the rest.
  */
-const modules = allModuleAssetPaths()
-const cards = CARD_TEMPLATES.filter(card => cardAssetPath(card.id))
-console.log(`\n${modules.length}/${MODULE_TEMPLATES.length} modules and ${cards.length}/${CARD_TEMPLATES.length} cards have art.`)
+console.log('\nOne module at every size')
+const sizes = gameAssetPaths('Om Chip', { domain: 'modules' })
+for (const [size, path] of Object.entries(sizes ?? {})) {
+  console.log(`  ${size}  ${path}`)
+}
 
 /*
- * The manifest is transport-agnostic on purpose: a bundler, a static mount and a CDN each
- * want a different prefix, and baking one in would be wrong for the other two.
+ * Name your own files with `assetSlug` rather than reimplementing the rule. Two implementations
+ * of one convention is how a name silently stops matching its file — and a missing image does not
+ * throw, it renders as a gap on one card, at one size, which nobody notices for months.
  */
-// >>> snippet: asset-url
-const url = towerAssetUrl(cardAssetPath('aoe'), '/node_modules/tower-assets')
-console.log(`\nloadable URL: ${url}`)
-// <<< snippet
+console.log('\nThe slug rule')
+for (const name of ['Om Chip', 'Amplifying Strike', 'Damage / Meter']) {
+  console.log(`  ${name.padEnd(22)} -> ${assetSlug(name)}`)
+}
+
+/*
+ * A name that slugifies to nothing returns null rather than `modules/-md.webp`, which would look
+ * like a real path and resolve to nothing.
+ */
+console.log('\nRefusals')
+console.log('  empty name  ->', gameAssetPath('   ', { domain: 'modules' }))
+console.log('  no domain   ->', gameAssetPath('Om Chip', { domain: '' }))

@@ -37,7 +37,7 @@ const WIKI_CARDS = {
 const GAME_CARD_CONSTANTS = {
   origin: 'game',
   ref: 'Cards public const',
-  sourceVersion: 'v28.3.0-arm64',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-20',
 } as const
 

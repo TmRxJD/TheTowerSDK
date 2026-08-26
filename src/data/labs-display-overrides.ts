@@ -21,9 +21,9 @@ import {
  * decoded save labelled the Utility echo "Ultimate Weapons" and vice versa.
  * Three independent sources say otherwise and agree with each other:
  *
- *   - `DissonanceManager.Awake` (v28.3.0-arm64, RVA 0x21cd414) constructs the
- *     four boosts with research indices 239, 240, 238, 241 in that order,
- *     storing them into damageBoost, healthBoost, coinBoost, ultDamageBoost.
+ *   - the game's own construction order (v28.3.0) pairs research indices
+ *     239, 240, 238, 241 with damageBoost, healthBoost, coinBoost and
+ *     ultDamageBoost respectively.
  *     238 feeds the COIN boost, which is the Utility trade.
  *   - the game's own `labResearch.researchNames` asset table.
  *   - `LAB_RESEARCH_BY_INDEX` in `labs-research.ts`.

@@ -47,8 +47,8 @@ const CATALOG_CARDS = {
 
 const GAME_LOCALISATION = {
   origin: 'game',
-  ref: 'I2 localisation terms, v28.3.0-arm64 (discovered-i2-localization.json)',
-  sourceVersion: 'v28.3.0-arm64',
+  ref: 'I2 localisation terms, v28.3.0 (discovered-i2-localization.json)',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-18',
 } as const
 

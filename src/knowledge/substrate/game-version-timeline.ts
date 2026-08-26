@@ -3,7 +3,7 @@
  *
  * ## The gap this closes
  *
- * A game-sourced claim carries `sourceVersion: 'v28.3.0-arm64'`, so when a new
+ * A game-sourced claim carries `sourceVersion: 'v28.3.0'`, so when a new
  * dump lands you can tell at a glance which claims were checked against the old
  * one. A wiki claim carried only `verifiedAt`, a calendar date — and a calendar
  * date says nothing about whether the developers have rebalanced since.
@@ -56,7 +56,7 @@ export const GAME_VERSION_TIMELINE: readonly GameVersionWindow[] = [
     from: '2026-06-30',
     until: null,
     basis:
-      'The v28.3.0-arm64 build was captured 2026-06-30 and is still the newest '
+      'The v28.3.0 build was captured 2026-06-30 and is still the newest '
       + 'dump in the repo, so this build has been live across every wiki read recorded here.',
   },
 ]

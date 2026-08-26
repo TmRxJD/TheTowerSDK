@@ -20,10 +20,16 @@
 	}
 </script>
 
+<!--
+	`min-w-0` on the row and `break-all` on the command are what stop a long command running past the
+	panel. A flex item defaults to `min-width: auto`, so without the first the row refuses to shrink
+	below the command's own width; without the second the command has no break opportunity, since a
+	shell line has no spaces the browser will break inside a path.
+-->
 <div
 	class="inline-flex max-w-full flex-wrap items-center gap-2 rounded-md border border-line/80 bg-panel/60 py-1.5 pr-1.5 pl-3 font-mono text-sm text-muted"
 >
-	<code class="text-fg/90">{command}</code>
+	<code class="min-w-0 break-all whitespace-pre-wrap text-fg/90">{command}</code>
 	{#if showVersion}
 		<span aria-hidden="true">·</span>
 		<span>v{SDK_VERSION}</span>

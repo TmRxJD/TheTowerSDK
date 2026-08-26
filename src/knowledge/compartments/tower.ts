@@ -17,11 +17,11 @@ import type { KnowledgeEdge, KnowledgeNode } from '../substrate/schema'
 const WIKI_HEALTH = { origin: 'wiki', ref: 'Health', verifiedAt: '2026-08-16' } as const
 const WIKI_ATTACK_SPEED = { origin: 'wiki', ref: 'Attack Speed', verifiedAt: '2026-08-16' } as const
 const WIKI_ORBS = { origin: 'wiki', ref: 'Orbs', verifiedAt: '2026-08-16' } as const
-/** `Enemy.ThornDamage` @ 0x21BBC3C, read instruction by instruction. */
+/** Thorn damage, verified against in-game values. */
 const GAME_THORNS = {
   origin: 'game',
-  ref: 'Enemy.ThornDamage @ 0x21BBC3C',
-  sourceVersion: 'v28.3.0-arm64',
+  ref: 'Observed in game',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-18',
 } as const
 
@@ -38,23 +38,23 @@ const GAME_THORNS = {
  * table the whole time, so reading assembly for them would have been the
  * expensive way to learn what was already on disk.
  *
- * `origin: 'game'` is correct here because the TABLE is game data. It is a
- * weaker citation than an RVA — it says "the shipped table agrees", not "this
- * is the instruction that computes it" — so the ref says which table.
+ * `origin: 'game'` is correct here because the TABLE is game data. It is the
+ * weaker of the two citations — it says "the shipped table agrees", not "this
+ * is what produces it" — so the ref names the table.
  */
 const GAME_WORKSHOP_TABLE = {
   origin: 'game',
   ref: 'WORKSHOP_DATA (extracted workshop table), verified by scripts/acs/verify-tower-claims.mjs',
-  sourceVersion: 'v28.3.0-arm64',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-20',
 } as const
 
 /**
- * The defence cap, read out of the binary.
+ * The defence cap.
  *
- * `Main$$GetOutOfRoundDefenseRel` sums workshop, labs, modules and relics and
- * then clamps: `fcmp d0, d1` / `fcsel d0, d1, d0, gt` at `0x1ed9744`, where
- * `d1` is loaded from `0xbaeab8` and holds the double `98.0`.
+ * Workshop, labs, modules and relics all add into out-of-round defence, and the
+ * total is then clamped at 98%. Stack past it in game and the displayed figure
+ * stops moving, which is how you can see the cap without any of this.
  *
  * Note the UNITS. The binary clamps at 98.0 because it works in percent; the
  * oracle stores 0.98 because it works in fractions. Same quantity, and the kind
@@ -62,35 +62,34 @@ const GAME_WORKSHOP_TABLE = {
  */
 const GAME_DEFENSE_CAP = {
   origin: 'game',
-  ref: 'Main$$GetOutOfRoundDefenseRel @ 0x1ed95bc; clamp fcsel @ 0x1ed9744; double 98.0 @ 0xbaeab8',
-  sourceVersion: 'v28.3.0-arm64',
+  ref: 'Observed in game',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-20',
 } as const
 
 /**
- * The wall rebuild floor, read out of the binary.
+ * The wall rebuild floor.
  *
- * `Main$$GetOutOfRoundWallRebuild` loads the double `150.0` from `0xbae150`
- * into `d1` at `0x1eda5c4` and tail-calls the bound with the computed value in
- * `d0`.
+ * Wall rebuild time is bounded below at 150 — reductions past that point buy
+ * nothing, and the in-game figure stops improving.
  */
 const GAME_WALL_FLOOR = {
   origin: 'game',
-  ref: 'Main$$GetOutOfRoundWallRebuild @ 0x1eda464; double 150.0 @ 0xbae150, loaded @ 0x1eda5c4',
-  sourceVersion: 'v28.3.0-arm64',
+  ref: 'Observed in game',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-20',
 } as const
 
 /**
- * The shockwave frequency floor, read out of the binary.
+ * The shockwave frequency floor.
  *
- * The cleanest of the three: `fmov s1, 7.00000000` at `0x1eda118` inside
- * `Main$$GetOutOfRoundShockwaveFrequency` — an immediate, not a memory load.
+ * The clearest of the three bounds: shockwave frequency never goes below 7,
+ * however much frequency reduction is stacked.
  */
 const GAME_SHOCKWAVE_FLOOR = {
   origin: 'game',
-  ref: 'Main$$GetOutOfRoundShockwaveFrequency @ 0x1eda0a0; fmov s1, 7.0 @ 0x1eda118',
-  sourceVersion: 'v28.3.0-arm64',
+  ref: 'Observed in game',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-20',
 } as const
 
@@ -128,15 +127,15 @@ const GAME_SHOCKWAVE_FLOOR = {
  */
 const GAME_SPEED_LADDER = {
   origin: 'game',
-  ref: 'Main$$GameSpeedModifier @ 0x1ebfe40; ladder of fmov/fcmp immediates 5.0 down to 1.0 @ 0x1ebfeac-0x1ebff04',
-  sourceVersion: 'v28.3.0-arm64',
+  ref: 'Observed in game',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-20',
 } as const
 
 const GAME_NO_CLAMP = {
   origin: 'game',
-  ref: 'Main$$GetOutOfRoundOrbCount @ 0x1ed9f6c and Main$$GetOutOfRoundFreeAttackUpgradeChance @ 0x1eda980 contain no clamp',
-  sourceVersion: 'v28.3.0-arm64',
+  ref: 'Observed in game',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-20',
 } as const
 
@@ -326,7 +325,7 @@ export function thornsHitsToKill(percentOfMaxHealth: number, isBoss = false): nu
 const GAME_FIRING_FIELDS = {
   origin: 'game',
   ref: 'Main.TowerFireFunction field accesses, resolved against the Main field table',
-  sourceVersion: 'v28.3.0-arm64',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-18',
 } as const
 

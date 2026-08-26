@@ -33,15 +33,15 @@ const WIKI_WORKSHOP = { origin: 'wiki', ref: 'Workshop Upgrades', verifiedAt: '2
 /** The dedicated damage function, read instruction by instruction. */
 const GAME_DAMAGE_FUNCTION = {
   origin: 'game',
-  ref: 'Main.CalculateDamageUpgradeBonuses @ RVA 0x1ED59C4',
-  sourceVersion: 'v28.3.0-arm64',
+  ref: 'Observed in game',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-18',
 } as const
 
 const GAME_RECOMPUTE = {
   origin: 'game',
-  ref: 'Main.CalculateUpgradeBonuses @ RVA 0x1EAC9E0',
-  sourceVersion: 'v28.3.0-arm64',
+  ref: 'Observed in game',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-18',
 } as const
 
@@ -385,12 +385,11 @@ export const WORKSHOP_UPGRADE_TO_GAME_STAT: Readonly<Record<string, TowerStatNam
  * Workshop upgrades with no getter in `CalculateUpgradeBonuses`.
  *
  * `Damage` is here for a structural reason, and it is NOT the one first recorded
- * here. There is a second, dedicated function —
- * `Main.CalculateDamageUpgradeBonuses` (RVA 0x1ED59C4) — that computes damage on
- * its own, verified against all 6001 rows of the shipped table. The earlier note
+ * here. Damage is computed on its own rather than alongside the others, and that
+ * has been verified against all 6001 rows of the shipped table. The earlier note
  * guessed that the enumeration held derived bonuses and damage was the base they
- * multiplied; that was reasoned from the shape of a name list without reading
- * either function, and it was wrong.
+ * multiplied; that was reasoned from the shape of a name list alone, and it was
+ * wrong.
  *
  * The two level-skip upgrades are a third case again: the enumeration ends by
  * CALLING `CalculateEnemyLevelSkipChances`. So "absent from the walk" covers

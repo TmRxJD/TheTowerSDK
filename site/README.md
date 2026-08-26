@@ -43,6 +43,19 @@ Agents must never:
 
 Production / GitHub Pages builds set `BASE_PATH=/TheTowerSDK`, derived from the repository name by the workflow. Local HMR always uses empty `BASE_PATH`. Verify deploys in **GitHub Actions**, not by reinstalling locally.
 
+> ⚠ **On Windows, do not reproduce a base-path build from Git Bash without `MSYS_NO_PATHCONV=1`.**
+> MSYS rewrites any argument that looks like a POSIX path, so `BASE_PATH=/TheTowerSDK npm run build`
+> builds with `BASE_PATH=C:/Program Files/Git/TheTowerSDK` and emits
+> `src="/C:/Program Files/Git/TheTowerSDK/hero.jpg"` throughout. The build **succeeds**, which is the
+> danger — it looks like a passing verification of the very thing it got wrong. Use:
+>
+> ```bash
+> MSYS_NO_PATHCONV=1 BASE_PATH=/TheTowerSDK npm run build
+> ```
+>
+> CI is unaffected: the workflow sets the variable in its own `env:` block on Linux. This only bites
+> local checks, and it silently invalidates them.
+
 Enforcement: `.cursor/hooks.json` + `.cursor/hooks/block-preview-server.mjs` (reload Cursor window after clone).
 
 ## License

@@ -11,9 +11,9 @@ import { findLabResearchByIndex } from './labs-research'
  * tables for long enough to ship, and nothing caught it because every table
  * had four plausible names in it — only their PAIRING with an index was wrong.
  *
- * The authority is `DissonanceManager.Awake` (v28.3.0-arm64, RVA 0x21cd414),
- * which builds the boosts with research indices 239, 240, 238, 241 and stores
- * them into damageBoost, healthBoost, coinBoost, ultDamageBoost in that order.
+ * The authority is the game's own construction order (v28.3.0): the four
+ * boosts take research indices 239, 240, 238, 241 and land in damageBoost,
+ * healthBoost, coinBoost, ultDamageBoost respectively.
  * Utility is the trade that pays out in coin, so 238 is Utility.
  */
 const DISSONANCE_BY_INDEX: Readonly<Record<number, string>> = {

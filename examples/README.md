@@ -20,7 +20,7 @@ npx tsx examples/01-browse-game-data.ts
 | 9 | [`09-build-a-bot.ts`](09-build-a-bot.ts) | nothing | Every calculator as a bot command, with dispatch, memoising and error replies |
 | 10 | [`10-read-a-sheet.ts`](10-read-a-sheet.ts) | nothing | A Google Sheets read, and the two ways a successful read misleads |
 | 11 | [`11-build-a-knowledge-base.ts`](11-build-a-knowledge-base.ts) | nothing | Knowledge chunks derived from the catalogs, so the prose cannot go stale |
-| 12 | [`12-show-module-and-card-art.ts`](12-show-module-and-card-art.ts) | nothing | Which artwork file belongs to which module or card, and why it is not a template |
+| 12 | [`12-show-module-and-card-art.ts`](12-show-module-and-card-art.ts) | nothing | Pointing at artwork you supply yourself, and the naming rule that finds it |
 
 ## Getting a save file
 

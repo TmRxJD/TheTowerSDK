@@ -41,8 +41,22 @@ const DOCUMENTED_BY: Record<string, string> = {
   'inputs': '/docs/builders/',
   'bot': '/docs/bots/',
   'sheets': '/docs/sheets/',
-  'assets': '/docs/assets/',
   'knowledge': '/docs/knowledge/',
+}
+
+/**
+ * Entry points that ship but are deliberately not advertised.
+ *
+ * `assets` resolves The Tower's artwork, which is TechTree Games' and which this project has no
+ * permission to redistribute. The wiring stays so it works the moment permission exists; the
+ * documentation does not, because documenting it is the part that invites people to install art
+ * nobody may hand out. `tower-assets` is `private: true` and workspace-only for the same reason.
+ *
+ * This is a list of decisions, not a list of gaps. Anything here is undocumented ON PURPOSE and
+ * says why; anything undocumented and absent from here still fails the check above.
+ */
+const DELIBERATELY_UNDOCUMENTED: Record<string, string> = {
+  assets: 'artwork this project has no permission to redistribute — wiring kept, docs withheld',
 }
 
 /** Entry points from the runtime `exports` map, minus patterns and plain files. */
@@ -65,14 +79,25 @@ describe.skipIf(!existsSync(SITE))('the site documents the package', () => {
     expect(subpaths.length).toBeGreaterThan(10)
   })
 
-  it('every entry point is assigned a page', () => {
-    const undocumented = subpaths.filter(subpath => !DOCUMENTED_BY[subpath])
+  it('every entry point is assigned a page, or deliberately withheld', () => {
+    const undocumented = subpaths
+      .filter(subpath => !DOCUMENTED_BY[subpath])
+      .filter(subpath => !DELIBERATELY_UNDOCUMENTED[subpath])
     expect(
       undocumented,
       `${undocumented.length} entry point(s) the site never mentions: ${undocumented.join(', ')}.\n`
-      + 'Give each one a page under site/src/routes/docs/, or fold it into an existing page by\n'
-      + 'adding it to DOCUMENTED_BY with a comment saying why it reads as one subject.',
+      + 'Give each one a page under site/src/routes/docs/, fold it into an existing page by adding\n'
+      + 'it to DOCUMENTED_BY, or record it in DELIBERATELY_UNDOCUMENTED with the reason.',
     ).toEqual([])
+  })
+
+  it('nothing is both documented and withheld', () => {
+    /*
+     * The two lists must not overlap: an entry in both would let a page be deleted without the
+     * check noticing, which is exactly the drift it exists to catch.
+     */
+    const both = Object.keys(DELIBERATELY_UNDOCUMENTED).filter(subpath => DOCUMENTED_BY[subpath])
+    expect(both, `listed as both documented and withheld: ${both.join(', ')}`).toEqual([])
   })
 
   it('every assigned page exists', () => {

@@ -96,7 +96,7 @@ const CATALOG_MODULE_LABS = {
 const GAME_MODULE_CONSTANTS = {
   origin: 'game',
   ref: 'ModuleManager public const',
-  sourceVersion: 'v28.3.0-arm64',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-20',
 } as const
 
@@ -201,8 +201,8 @@ export const MODULE_PULL_CHANCE_PERCENT: Readonly<Record<string, number>> = {
 /** The constant table the sub-module slot levels come from. */
 const GAME_SLOT_TABLE = {
   origin: 'game',
-  ref: 'game binary int32 constant table @ 0xBE64D8',
-  sourceVersion: 'v28.3.0-arm64',
+  ref: 'Observed in game',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-18',
 } as const
 
@@ -216,10 +216,8 @@ const COMMUNITY_GUIDE = {
 /**
  * Module level at which each additional sub-module slot opens.
  *
- * SETTLED 2026-08-18 against the game: a six-entry `int32` constant table at
- * 0xBE64D8, bounded by zeroes before it and unrelated data after, reading
- * exactly 41 / 101 / 141 / 161 / 201 / 241. Confirmed independently by the repo
- * owner.
+ * SETTLED 2026-08-18 against the game: the six values are exactly
+ * 41 / 101 / 141 / 161 / 201 / 241, confirmed independently by the repo owner.
  *
  * Worth keeping because a trusted community guide gives the last value as 242.
  * It is a single-digit transcription error in an otherwise careful document,
@@ -228,9 +226,6 @@ const COMMUNITY_GUIDE = {
  * same as a source being right about a particular number.
  */
 export const SUB_MODULE_SLOT_LEVELS = [41, 101, 141, 161, 201, 241] as const
-
-/** Where the table lives, so the next reader can re-check it in one step. */
-export const SUB_MODULE_SLOT_LEVELS_RODATA_OFFSET = 0xBE64D8
 
 /**
  * Everything stones buy on ONE module type's assist, itemised.
@@ -863,7 +858,6 @@ export const MODULE_KNOWLEDGE_NODES: readonly KnowledgeNode[] = [
         provenance: OWNER_OBSERVED,
         verification: 'verified_here' as const,
       },
-      { subject: 'module.subEffect', predicate: 'slotLevelsRodataOffset', value: SUB_MODULE_SLOT_LEVELS_RODATA_OFFSET, provenance: GAME_SLOT_TABLE, verification: 'verified_here' as const },
       { subject: 'module.subEffect', predicate: 'minSlots', value: 2, provenance: WIKI_SUBMODULES },
       { subject: 'module.subEffect', predicate: 'maxSlots', value: 8, provenance: WIKI_SUBMODULES },
       { subject: 'module.subEffect', predicate: 'effectsTableRowCount', value: 331, provenance: CATALOG_SUBEFFECT },

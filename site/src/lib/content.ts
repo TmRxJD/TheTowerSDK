@@ -1,72 +1,159 @@
-export const nav = [
+/**
+ * Whether the governance system appears on the site.
+ *
+ * ACS is still in development, and a site that advertises it invites people to look for something
+ * that is not ready. Flipping this to `true` restores the navigation entries, the home-page
+ * section, the footer link, and prerendering of `/ags` and `/docs/ags` — the pages themselves are
+ * kept, not deleted, so turning it back on is one edit rather than a rewrite.
+ *
+ * The governance ENGINE is separately disabled in the monorepo; see
+ * `scripts/governance-engine-disabled.mjs`. This flag only controls what the site says.
+ */
+export const SHOW_GOVERNANCE = false;
+
+const ALL_NAV = [
 	{ href: '/start/', label: 'Get Started' },
 	{ href: '/tools/', label: 'What You Can Build' },
 	{ href: '/playground/', label: 'Examples' },
 	{ href: '/docs/', label: 'Docs' },
-	{ href: '/ai/', label: 'AI & ACS' }
+	{ href: '/ai/', label: 'AI & ACS', governance: true },
+	// Last in the bar, and last in the footer's site column, so the two orders match.
+	{ href: '/docs/license/', label: 'License' }
 ] as const;
 
-export const docsNav = [
+export const nav = ALL_NAV.filter((item) => SHOW_GOVERNANCE || !('governance' in item));
+
+const ALL_DOCS_NAV = [
 	{ href: '/docs/', label: 'Overview' },
 	{ href: '/docs/install/', label: 'Install' },
 	{ href: '/docs/data/', label: 'Game Data' },
 	{ href: '/docs/save/', label: 'Save Files' },
 	{ href: '/docs/mechanics/', label: 'Formulas' },
+	{ href: '/docs/formatting/', label: 'Formatting' },
 	{ href: '/docs/charts/', label: 'Charts' },
 	{ href: '/docs/builders/', label: 'Builders' },
 	{ href: '/docs/bots/', label: 'Bots' },
 	{ href: '/docs/sheets/', label: 'Spreadsheets' },
-	{ href: '/docs/assets/', label: 'Artwork' },
 	{ href: '/docs/knowledge/', label: 'Knowledge' },
 	{ href: '/docs/patch-notes/', label: 'Patch Notes' },
 	{ href: '/docs/wiki/', label: 'Wiki' },
 	{ href: '/docs/mcp/', label: 'MCP & AI' },
 	{ href: '/docs/towerai/', label: 'TowerAI' },
-	{ href: '/docs/ags/', label: 'ACS' },
+	{ href: '/docs/ags/', label: 'ACS', governance: true },
 	{ href: '/docs/license/', label: 'Licensing' }
 ] as const;
 
-/** Package capabilities — community-facing. */
+export const docsNav = ALL_DOCS_NAV.filter((item) => SHOW_GOVERNANCE || !('governance' in item));
+
+/**
+ * Hero slides, rotating one at a time.
+ *
+ * Each is a different answer to "what is this for", because the package has several honest answers
+ * and a single headline has to pick one. Five is the ceiling: past that the rotation outlasts any
+ * reader's attention and the later slides are never seen.
+ *
+ * Ordered the same way as `features` — the game's own numbers first, and nothing about the
+ * assistant tooling here at all. The hero is where a reader decides whether this is a serious data
+ * package, and leading with AI in a game where every number is knowable would answer that wrong.
+ *
+ * `headline` is deliberately short. It renders at display size, and a third line pushes the call to
+ * action below the fold on a laptop.
+ */
+export const heroSlides = [
+	{
+		eyebrow: 'Game Data',
+		headline: 'Build Tower Tools On Real Game Data',
+		body: 'Every catalog, formula and save field from The Tower, as typed code. Build calculators, trackers, spreadsheets, charts and bots on numbers that came out of the game.'
+	},
+	{
+		eyebrow: 'Catalogs',
+		headline: 'Every Number The Game Ships With',
+		body: 'Labs, workshop, modules, cards, relics, bots, guardians, ultimate weapons, vault trees, perks and milestones. Every level, every cost, typed and ready to query.'
+	},
+	{
+		eyebrow: 'Math',
+		headline: 'The Formulas, Not Just The Tables',
+		body: 'Enemy scaling, ultimate weapon timing, lab and workshop costs, and Effective Paths planning, as functions you call with a tier, a wave, or a level.'
+	},
+	{
+		eyebrow: 'Save Files',
+		headline: 'Read A Real Account In One Call',
+		body: 'Decode playerInfo.dat and pull research, modules, cards, ultimate weapons, vault and every stored run straight into typed objects.'
+	},
+	{
+		eyebrow: 'Output',
+		headline: 'Charts, Sheets And Bots From One Source',
+		body: 'The same catalogs render cost tables as images, build live spreadsheets, and answer Discord commands. Add rows to the data and every view regenerates.'
+	},
+	{
+		eyebrow: 'Assistant',
+		headline: 'Ship An Assistant That Knows The Game',
+		body: 'TowerAI answers from a knowledge base you curate, with the catalogs supplying live numbers. Register the MCP server and your editor builds against real exports too.'
+	},
+	{
+		eyebrow: 'Calculators',
+		headline: 'Fifteen Calculators That Describe Themselves',
+		body: 'Each one lists its own inputs with their units, ranges and options — enough to generate a form, a Discord command, or a test without writing any of them by hand.'
+	}
+] as const;
+
+/**
+ * Package capabilities, ordered by how objective they are.
+ *
+ * Catalogs and formulas first: they are the game's own numbers and the reason to install this at
+ * all. The assistant tooling is last on purpose — it is the least objective thing here, useful but
+ * a bell and whistle beside a cost table that is simply correct.
+ */
 export const features = [
 	{
 		title: 'Complete Game Catalogs',
-		body: 'Labs, workshop, enhancements, modules, cards, relics, bots, guardians, ultimate weapons, vault trees, perks, battle conditions, tiers, and milestones — ready to query in code.'
-	},
-	{
-		title: 'Player Save Reading',
-		body: 'Decode playerInfo.dat and pull labs, modules, cards, ultimate weapons, and run history from a real account. adb-bridge fetches the file from a phone or emulator.'
-	},
-	{
-		title: 'Charts And Cost Tables',
-		body: 'Every catalog with a level progression generates a chart or a table — cost curves, research time, stat scaling. Add rows to the data and every view regenerates.'
-	},
-	{
-		title: 'Spreadsheet And Bot Tooling',
-		body: 'Read live community spreadsheets through a transport you supply — padded rows, so a short row reads as unknown rather than zero — and turn every calculator into a slash command, so a website and a Discord bot return the same numbers from the same declaration.'
-	},
-	{
-		title: 'AI Development',
-		body: 'An MCP server, a game-knowledge oracle, and a sheet oracle, so an assistant builds against real exports, real mechanics, and real player saves.'
+		body: 'Labs, workshop, enhancements, modules, cards, relics, bots, guardians, ultimate weapons, vault trees, perks, battle conditions, tiers, and milestones — ready to query in code.',
+		docs: '/docs/data/'
 	},
 	{
 		title: 'Combat And Economy Math',
-		body: 'Enemy scaling, ultimate weapon timing, lab costs, workshop costs, Effective Paths planners, and more — callable formulas, not cumbersome spreadsheets.'
+		body: 'Enemy scaling by tier and wave, ultimate weapon timing, lab and workshop costs, damage reduction, resource drops, and Effective Paths planning — all as functions you call with plain numbers.',
+		docs: '/docs/mechanics/'
 	},
 	{
-		title: 'Wiki Ingestion',
-		body: 'Pull The Tower wiki into Markdown inside your app or AI session so mechanics are looked up, not guessed.'
+		title: 'Player Save Reading',
+		body: 'Decode playerInfo.dat and pull labs, modules, cards, ultimate weapons, and run history from a real account. adb-bridge fetches the file from a phone or emulator.',
+		docs: '/docs/save/'
+	},
+	{
+		title: 'Charts And Cost Tables',
+		body: 'Every catalog with a level progression generates a chart or a table — cost curves, research time, stat scaling. Add rows to the data and every view regenerates.',
+		docs: '/docs/charts/'
 	},
 	{
 		title: 'Calculators As Data',
-		body: 'Every calculator declares its fields, their units and their caps, so a form, a slash command and a test are generated from one declaration instead of written three times and drifting apart.'
+		body: 'Each calculator describes its own inputs — names, units, ranges and caps. Read that description to generate a form, a slash command, or a test straight from the calculator itself.',
+		docs: '/docs/builders/'
 	},
 	{
 		title: 'Five Years Of Patch Notes',
-		body: 'Every announcement the developers have made since July 2021, queryable by version, by date range, by text, or by “when was this first mentioned”. The catalogs say what a number is today; the notes say when it became that, and what was said about it at the time.'
+		body: 'Every announcement the developers have made since July 2021. Search by text, pull a single version, read a date range, or find the note where a mechanic first appeared.',
+		docs: '/docs/patch-notes/'
 	},
 	{
-		title: 'The Game’s Artwork',
-		body: 'A catalogue of 1,059 assets across 19 domains — modules, cards, relics, tower skins, enemies, guardians, perks, backgrounds, events and more — extracted from a known game build, at three sizes each. Resolve any of them by name, slug or in-game sprite name; the 149 sprites nobody has mapped yet are listed rather than hidden.'
+		title: 'Spreadsheets And Bots',
+		body: 'Read live community spreadsheets, write catalogs into Google Sheets as working formulas, and expose any calculator as a Discord slash command that answers with the same numbers as your site.',
+		docs: '/docs/sheets/'
+	},
+	{
+		title: 'Wiki Ingestion',
+		body: 'Pull The Tower wiki into Markdown inside your app, so mechanic descriptions live alongside the numbers they describe.',
+		docs: '/docs/wiki/'
+	},
+	{
+		title: 'Assistant Tooling',
+		body: 'An MCP server with forty-two tools your editor can register: run the shipped calculators for real numbers, work in an instrumented sandbox, decode a save, and trace the result. Plus a game-knowledge oracle and a spreadsheet oracle.',
+		docs: '/docs/mcp/'
+	},
+	{
+		title: 'TowerAI',
+		body: 'The assistant core, published alongside the package. Fill its knowledge base with the mechanics you care about and it answers from your curation, pulling live values from the catalogs as it writes.',
+		docs: '/docs/towerai/'
 	}
 ] as const;
 
@@ -95,22 +182,30 @@ const coins = next.reduce((sum, level) => sum + level.cost, 0)
 console.log(formatNumberForDisplay(coins))`
 	},
 	{
-		title: 'Death Wave × Golden Bot',
+		title: 'Golden Tower vs Black Hole Uptime',
 		blurb:
-			'DW duration comes from Quantity × 4s per wave; results match the Uptime Calculator columns.',
-		code: `import { BOT_UPGRADES_DATA, estimateBotUptimeFraction, uwStoneChartData } from 'thetowersdk/data'
+			'Two ultimate weapons compared on the same terms — duration over cooldown, at the same level.',
+		code: `import { uwStoneChartData, estimateBotUptimeFraction } from 'thetowersdk/data'
 
-const dw = Object.values(uwStoneChartData).find((w) => w.name === 'Death Wave')
-const dwCd = Number(String(dw.stats.find((s) => s.name === 'Cooldown').levels[8].value).replace(/s$/i, ''))
-const dwWaves = Number(String(dw.stats.find((s) => s.name === 'Quantity').levels[3].value).replace(/^x/i, ''))
-const dwDur = dwWaves * 4 // Uptime Calculator wave time
+function uptime(weaponName, level) {
+  const weapon = Object.values(uwStoneChartData).find((w) => w.name === weaponName)
+  // Ladders are keyed by level, but not every stat starts at the same level — find, don't index.
+  const stat = (name) =>
+    weapon.stats.find((s) => s.name === name).levels.find((l) => l.level === level).value
 
-const gb = BOT_UPGRADES_DATA.find((b) => b.name === 'Golden Bot')
-const gbCd = gb.stats.Cooldown.levels['10']
-const gbDur = gb.stats.Duration.levels['10']
-const gbUptime = estimateBotUptimeFraction(gbDur, gbCd)
+  const duration = stat('Duration')   // '23s' — a string with units, as the game writes it
+  const cooldown = stat('Cooldown')   // '220s'
 
-console.log({ dwCd, dwDur, gbCd, gbDur, gbUptime })`
+  // Pass the raw values through. estimateBotUptimeFraction parses the units itself, and
+  // throws on a number — stripping the 's' yourself is what breaks it.
+  return { duration, cooldown, uptime: estimateBotUptimeFraction(duration, cooldown) }
+}
+
+const gt = uptime('Golden Tower', 8)   // { duration: '23s', cooldown: '220s', uptime: 0.1045… }
+const bh = uptime('Black Hole', 8)     // { duration: '23s', cooldown: '120s', uptime: 0.1917… }
+
+// Same duration at this level; Black Hole comes back nearly twice as often.
+console.log({ gt, bh })`
 	},
 	{
 		title: 'Enemy Stats',
@@ -332,66 +427,103 @@ export const codeExamples = homeExamples;
  * Example tools you can build on this package.
  * Titles only — no separate type badge.
  */
+/**
+ * Tool shapes you can build, each pointing at the page that shows you how.
+ *
+ * `docs` is what makes the cards on `/tools/` actionable: a reader who sees the thing they want to
+ * build lands on the reference for it in one click, instead of having to guess which doc covers it.
+ * Every entry links to a page that exists — `src/routes/docs/` is the list.
+ */
 export const trackerExamples = [
 	{
 		title: 'Labs Calculator',
-		body: 'Coin and research time for the next lab levels, with discount-aware totals.'
+		body: 'Coin and research time for the next lab levels, with discount-aware totals.',
+		docs: '/docs/data/'
 	},
 	{
 		title: 'Cards Calculator',
-		body: 'Gem cost to raise a card across levels — each level’s copies × 20 gems.'
+		body: 'Gem cost to raise a card across levels — each level’s copies × 20 gems.',
+		docs: '/docs/data/'
 	},
 	{
 		title: 'Workshop Calculator',
-		body: 'Workshop upgrades, enhancements, and discount-aware cost curves.'
+		body: 'Workshop upgrades, enhancements, and discount-aware cost curves.',
+		docs: '/docs/data/'
 	},
 	{
 		title: 'Module Calculator',
-		body: 'Shard and coin costs for module levels, rarities, and loadouts.'
+		body: 'Shard and coin costs for module levels, rarities, and loadouts.',
+		docs: '/docs/data/'
 	},
 	{
 		title: 'Bots Calculator',
-		body: 'In-game bot upgrades, medals, and timing windows for planning.'
+		body: 'In-game bot upgrades, medals, and timing windows for planning.',
+		docs: '/docs/data/'
 	},
 	{
 		title: 'Guardians Calculator',
-		body: 'Guardian chip upgrades and related costs.'
+		body: 'Guardian chip upgrades and related costs.',
+		docs: '/docs/data/'
 	},
 	{
 		title: 'Ultimate Weapons Calculator',
-		body: 'UW stone planners for cooldowns, duration, quantity, and related stats.'
+		body: 'UW stone planners for cooldowns, duration, quantity, and related stats.',
+		docs: '/docs/mechanics/'
 	},
 	{
 		title: 'Uptime Calculator',
-		body: 'Sync windows across ultimate weapons and in-game bots — GT, DW, Golden Bot, and more.'
+		body: 'Sync windows across ultimate weapons and in-game bots — GT, Black Hole, Golden Bot, and more.',
+		docs: '/docs/mechanics/'
 	},
 	{
 		title: 'Effective Paths',
-		body: 'Next-buy planners for health, damage, economy, and regen.'
+		body: 'Next-buy planners for health, damage, economy, and regen.',
+		docs: '/docs/builders/'
 	},
 	{
 		title: 'Enemy Stats & Resource Drops',
-		body: 'Enemy toughness by wave and estimated drops.'
+		body: 'Enemy toughness by wave and estimated drops.',
+		docs: '/docs/mechanics/'
 	},
 	{
 		title: 'Thorns & Damage Reduction',
-		body: 'Combat calculators for common mid- and late-game questions.'
+		body: 'Combat calculators for common mid- and late-game questions.',
+		docs: '/docs/mechanics/'
 	},
 	{
 		title: 'CPH, Shard Splitter, Medal Splitter',
-		body: 'Coins per hour and currency-split helpers.'
+		body: 'Coins per hour and currency-split helpers.',
+		docs: '/docs/builders/'
 	},
 	{
 		title: 'Run Tracker',
-		body: 'Import battle reports from a save and keep run history across tiers and waves.'
+		body: 'Import battle reports from a save and keep run history across tiers and waves.',
+		docs: '/docs/save/'
 	},
 	{
 		title: 'Account trackers',
-		body: 'Labs, cards, modules, bots, guardians, vault, relics, themes, and UW progress from the same catalogs.'
+		body: 'Labs, cards, modules, bots, guardians, vault, relics, themes, and UW progress from the same catalogs.',
+		docs: '/docs/save/'
 	},
 	{
-		title: 'Spreadsheets & charts',
-		body: 'Feed the same catalogs into sheets, dashboards, or plotting — your layout, same numbers.'
+		title: 'Patch Note Archive',
+		body: 'Five years of patch notes, searchable by version, date, or the mechanic they changed.',
+		docs: '/docs/patch-notes/'
+	},
+	{
+		title: 'Charts & Cost Tables',
+		body: 'Render any level progression as an image — cost curves, research time, stat scaling.',
+		docs: '/docs/charts/'
+	},
+	{
+		title: 'Spreadsheets',
+		body: 'Feed the same catalogs into Google Sheets, with live formulas rather than pasted values.',
+		docs: '/docs/sheets/'
+	},
+	{
+		title: 'Discord Bots',
+		body: 'Turn any builder into a command — the bot answers with the same numbers as your site.',
+		docs: '/docs/bots/'
 	}
 ] as const;
 
@@ -440,6 +572,32 @@ export const agentPrompts = [
 ] as const;
 
 /** Build a TowerAI knowledge base from curated chunks plus package data. */
+/**
+ * What the live demo on the home page does, as code.
+ *
+ * It sits next to that demo, so it has to be the same flow: post a question to a small endpoint
+ * that holds the key and the knowledge base, then render the markdown that comes back. An example
+ * of building a knowledge base belongs on the TowerAI page, not beside a panel that does not do it.
+ */
+export const askDemoSnippet = `// Your endpoint holds the model key and the knowledge base.
+// The browser only ever sends a question and receives an answer.
+async function ask(question) {
+  const response = await fetch('/api/ask', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ question })
+  })
+
+  const { ok, answer } = await response.json()
+  if (!ok) throw new Error('The assistant could not answer.')
+  return answer
+}
+
+const answer = await ask('How do I sync Golden Bot with Death Wave?')
+
+// The reply is markdown, so render it the way you render any markdown.
+element.innerHTML = renderMarkdown(answer)`;
+
 export const towerAiSnippet = `import {
   buildTrackerAiCanonicalKbChunks,
   validateCanonicalKbArray,

@@ -134,6 +134,60 @@ export function countChartableSeries(): number {
 	return total;
 }
 
+/**
+ * Total upgrade levels across every stat of a mechanic.
+ *
+ * The counts on the home page used to be "how many stats exist" — 47 for the whole of workshop, 36
+ * for all nine ultimate weapons. Those undersell the package by orders of magnitude: what it
+ * actually carries is every level of every stat, and workshop alone is 31,079 of them. A stat is
+ * one row in a table; a level is one row of data you would otherwise have to enter by hand.
+ *
+ * Ladders come in two shapes across the catalogs — an array of level records, or an object keyed by
+ * level number — so both are counted. Anything else contributes nothing rather than guessing.
+ */
+function countLevels(ladder: unknown): number {
+	if (Array.isArray(ladder)) return ladder.length;
+	if (ladder && typeof ladder === 'object') return Object.keys(ladder).length;
+	return 0;
+}
+
+const sumLevels = <T>(items: readonly T[], ladders: (item: T) => unknown[]): number =>
+	items.reduce(
+		(total, item) =>
+			total + ladders(item).reduce<number>((sum, ladder) => sum + countLevels(ladder), 0),
+		0
+	);
+
+/** Every level of every ultimate weapon stat — nine weapons, four stats each. */
+function countUwLevels(): number {
+	return sumLevels(Object.values(uwStoneChartData), (weapon) =>
+		(weapon.stats ?? []).map((stat) => stat.levels)
+	);
+}
+
+/** Bots carry a base stat block and a "plus" block; both are upgrade ladders. */
+function countBotLevels(): number {
+	return sumLevels(BOT_UPGRADES_DATA, (bot) => [
+		...Object.values(bot.stats ?? {}).map((stat) => stat?.levels),
+		...Object.values(bot.plus?.stats ?? {}).map((stat) => stat?.levels)
+	]);
+}
+
+function countWorkshopLevels(): number {
+	return sumLevels(getWorkshopStatDefinitions(), (stat) => [stat.levels]);
+}
+
+function countGuardianLevels(): number {
+	return sumLevels(buildGuardianDefinitions(), (guardian) =>
+		Object.values(guardian.stats ?? {}).map((stat) => stat?.levels)
+	);
+}
+
+/** Cards level twice: the card itself, and its mastery, on separate ladders. */
+function countCardLevels(): number {
+	return sumLevels(CARD_TEMPLATES, (card) => [card.levelValues, card.masteryValues]);
+}
+
 /** Counts from the installed package — prefer leaf data over parent totals. */
 export const sdkStats = {
 	labs: LAB_CATALOG.length,
@@ -155,24 +209,58 @@ export const sdkStats = {
 	milestoneRewards: MILESTONE_REWARD_ROWS.length,
 	glossaryNames: GLOSSARY_NAMES.length,
 	formulas: countMechanicsFormulas(),
-	chartableSeries: countChartableSeries()
+	chartableSeries: countChartableSeries(),
+
+	// Level totals — see `countLevels`. These are what the home page shows.
+	workshopLevels: countWorkshopLevels(),
+	uwLevels: countUwLevels(),
+	botLevels: countBotLevels(),
+	guardianLevels: countGuardianLevels(),
+	cardLevels: countCardLevels()
 } as const;
 
-/** Granular package contents for the home page — leaf counts, “X Stats” labels. */
+/**
+ * Thousands separators, pinned to `en-US`.
+ *
+ * These numbers are rendered at build time on whatever machine runs the build, and the site is
+ * written in American English throughout. Left to the host locale, `31,079` would ship as `31.079`
+ * from a German CI runner — a hundredfold understatement that looks like a typo, not a bug.
+ */
+const grouped = (value: number): string => value.toLocaleString('en-US');
+
+/** Every level total added together, for the one figure that stands for the rest. */
+export const totalUpgradeLevels =
+	sdkStats.workshopLevels +
+	sdkStats.labLevels +
+	sdkStats.guardianLevels +
+	sdkStats.uwLevels +
+	sdkStats.botLevels +
+	sdkStats.cardLevels;
+
+/**
+ * Home page counts.
+ *
+ * Level totals wherever a mechanic has ladders, plain counts only where it genuinely has none —
+ * relics, vault nodes, perks and battle conditions are flat catalogs, and labelling a count as
+ * though it were a level total would be the same overselling in the other direction.
+ *
+ * Labels say "levels" when that is what the number is. The previous set said "Workshop Stats" over
+ * a count of 47, which was accurate but read as the whole of workshop being 47 things.
+ */
 export const packageContents = [
-	{ value: String(sdkStats.formulas), label: 'Formulas' },
-	{ value: String(sdkStats.chartableSeries), label: 'Chartable series' },
-	{ value: String(sdkStats.labLevels), label: 'Lab Stats' },
-	{ value: String(sdkStats.workshopStats), label: 'Workshop Stats' },
-	{ value: String(sdkStats.moduleSubstats), label: 'Module Stats' },
-	{ value: String(sdkStats.cards), label: 'Cards' },
-	{ value: String(sdkStats.relics), label: 'Relics' },
-	{ value: String(sdkStats.botStats), label: 'Bot Stats' },
-	{ value: String(sdkStats.guardianChipStats), label: 'Guardian Stats' },
-	{ value: String(sdkStats.uwStats), label: 'UW Stats' },
-	{ value: String(sdkStats.vaultNodes), label: 'Vault nodes' },
-	{ value: String(sdkStats.perks), label: 'Perks' },
-	{ value: String(sdkStats.battleConditions), label: 'Battle conditions' },
-	{ value: String(sdkStats.milestoneRewards), label: 'Milestone rewards' },
-	{ value: String(sdkStats.glossaryNames), label: 'Glossary terms' }
+	{ value: grouped(sdkStats.workshopLevels), label: 'Workshop levels' },
+	{ value: grouped(sdkStats.labLevels), label: 'Lab levels' },
+	{ value: grouped(sdkStats.guardianLevels), label: 'Guardian levels' },
+	{ value: grouped(sdkStats.chartableSeries), label: 'Chartable series' },
+	{ value: grouped(sdkStats.uwLevels), label: 'UW levels' },
+	{ value: grouped(sdkStats.formulas), label: 'Formulas' },
+	{ value: grouped(sdkStats.botLevels), label: 'Bot levels' },
+	{ value: grouped(sdkStats.cardLevels), label: 'Card levels' },
+	{ value: grouped(sdkStats.milestoneRewards), label: 'Milestone rewards' },
+	{ value: grouped(sdkStats.glossaryNames), label: 'Glossary terms' },
+	{ value: grouped(sdkStats.relics), label: 'Relics' },
+	{ value: grouped(sdkStats.vaultNodes), label: 'Vault nodes' },
+	{ value: grouped(sdkStats.moduleSubstats), label: 'Module substats' },
+	{ value: grouped(sdkStats.perks), label: 'Perks' },
+	{ value: grouped(sdkStats.battleConditions), label: 'Battle conditions' }
 ] as const;

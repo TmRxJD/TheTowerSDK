@@ -53,7 +53,15 @@ function siteFiles(): string[] {
  * both. That is deliberate: a sample nobody can run is exactly as broken as an import that fails,
  * and only one of the two breaks a build.
  */
-const IMPORT = /import\s*\{([^}]+)\}\s*from\s*['"`]thetowersdk(?:\/([a-z-]+))?['"`]/g
+/**
+ * `import { … } from 'thetowersdk/…'`, capturing an optional leading `type`.
+ *
+ * The `type` group matters: a type-only import names things that are erased at runtime and cannot
+ * be found on the module object, so those are skipped. Everything else is checked, constants
+ * included.
+ */
+const IMPORT =
+  /import\s+(type\s+)?\{([^}]+)\}\s*from\s*['"`]thetowersdk(?:\/([a-z-]+))?['"`]/g
 
 describe.skipIf(!existsSync(SITE) || !existsSync(DIST))('the site imports things that exist', () => {
   const files = siteFiles()
@@ -69,19 +77,37 @@ describe.skipIf(!existsSync(SITE) || !existsSync(DIST))('the site imports things
     for (const file of files) {
       const text = readFileSync(file, 'utf8')
       for (const match of text.matchAll(IMPORT)) {
-        const subpath = match[2] ?? '.'
+        const typeOnlyImport = Boolean(match[1])
+        const subpath = match[3] ?? '.'
         const available = exportsOf(subpath)
         if (!available) {
           unknownEntry.push(`${path.relative(SITE, file)} imports from 'thetowersdk/${subpath}'`)
           continue
         }
-        const symbols = match[1]
+        if (typeOnlyImport) continue
+
+        const symbols = match[2]
+          /*
+           * Comments are stripped before the names are read. A documentation example may annotate
+           * each import to say what the catalog holds, and without this the comment is glued onto
+           * the symbol beside it — the checker then reports a name nobody wrote as missing, which
+           * looks like a broken example and is not one.
+           */
+          .replace(/\/\*[\s\S]*?\*\//g, '')
+          .replace(/\/\/[^\n]*/g, '')
           .split(',')
-          .map(part => part.replace(/\btype\b/, '').split(/\s+as\s+/)[0].trim())
+          // `type` is kept here so the loop below can recognise and skip inline type specifiers.
+          .map(part => part.split(/\s+as\s+/)[0].trim().replace(/^type\s+/, 'type '))
           .filter(Boolean)
         for (const symbol of symbols) {
-          // Types are erased at runtime and cannot be seen on the module object.
-          if (/^[A-Z]/.test(symbol) && !available.has(symbol)) continue
+          /*
+           * Inline `type` specifiers are erased at runtime, so they cannot be found on the module
+           * object. This used to skip every name beginning with a capital instead, on the same
+           * reasoning — which silently exempted every catalog constant in the package, the exact
+           * symbols the site names most often. A planted `TOTALLY_FAKE_EXPORT` passed under that
+           * rule. Only genuine type specifiers are skipped now.
+           */
+          if (symbol.startsWith('type ')) continue
           if (!available.has(symbol)) {
             missing.push(`${path.relative(SITE, file)}: '${symbol}' is not in thetowersdk/${subpath}`)
           }
@@ -122,7 +148,8 @@ describe.skipIf(!existsSync(SITE) || !existsSync(DIST))('the site imports things
     const documented = new Set<string>()
     for (const file of files) {
       for (const match of readFileSync(file, 'utf8').matchAll(IMPORT)) {
-        documented.add(match[2] ? `./${match[2]}` : '.')
+        // Group 3 is the subpath — group 1 is the optional `type`, group 2 the specifier list.
+        documented.add(match[3] ? `./${match[3]}` : '.')
       }
     }
 

@@ -123,9 +123,8 @@ describe('every compartment constant is wired into the graph', () => {
       .toEqual([])
   })
 
-  it('the four found on 2026-08-18 are wired inside their own compartment', () => {
+  it('the three found on 2026-08-18 are wired inside their own compartment', () => {
     const wired: Array<[string, string]> = [
-      ['modules.ts', 'SUB_MODULE_SLOT_LEVELS_RODATA_OFFSET'],
       ['perks.ts', 'PERK_POOL_WEIGHTS_FROM_GAME_CONSTANTS'],
       ['perks.ts', 'PERK_WAVE_REQUIREMENT_ORDER'],
       ['progression.ts', 'RELIC_COUNTS_WHEN_STATE_IS'],

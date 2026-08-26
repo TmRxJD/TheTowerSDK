@@ -42,6 +42,10 @@
 		"vite": "^8.0.16"
 	},
 	"dependencies": {
-		"thetowersdk": "0.5.4"
+		"dompurify": "^3.4.14",
+		"katex": "^0.18.4",
+		"marked": "^18.0.11",
+		"shiki": "^4.4.3",
+		"thetowersdk": "0.6.0"
 	}
 }

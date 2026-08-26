@@ -50,7 +50,7 @@ const MILESTONE_TABLE: Provenance = {
 const GAME_GUILD: Provenance = {
   origin: 'game',
   ref: 'GuildManager, GuildInfo, GuildMember, ContributionChestData, enum GuildMemberRole',
-  sourceVersion: 'v28.3.0-arm64',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-18',
 }
 

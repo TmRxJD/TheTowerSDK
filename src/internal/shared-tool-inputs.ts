@@ -514,7 +514,7 @@ function overlayNestedNumberRecords(
   return out
 }
 
-/** Deep-merge shared inputs where `overlay` wins on conflicts (used when localStorage bootstrap is fresher than RxDB). */
+/** Deep-merge shared inputs where `overlay` wins on conflicts. */
 export function overlaySharedToolInputs(
   base: SharedToolInputs,
   overlay: SharedToolInputs,

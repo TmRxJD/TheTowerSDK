@@ -78,9 +78,8 @@ describe('the heat index map is one condition per slot', () => {
      * It DID, until 2026-08-18: 22, 23 and 27 were each claimed by two
      * conditions, because the map had been read off a per-getter list of every
      * index a function touches rather than the index it owns. Thirteen of
-     * twenty-one entries were wrong. The map is now derived from the getter
-     * the game binary,
-     * which refuses to write a map with a duplicate.
+     * twenty-one entries were wrong. The map is now derived from the getter that
+     * owns each index, and this test refuses a map with a duplicate.
      */
     const byIndex = new Map<number, string[]>()
     for (const [name, index] of Object.entries(V283_HEAT_BC_INDEX)) {

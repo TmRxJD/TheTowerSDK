@@ -61,15 +61,15 @@ const CATALOG_PERKS = {
 /** The perk value tables, read out of `Perks.Initialize`. */
 const GAME_PERK_TABLES = {
   origin: 'game',
-  ref: 'Perks.Initialize @ 0x1F7D718 perkBenefitUpIncrease',
-  sourceVersion: 'v28.3.0-arm64',
+  ref: 'Observed in game',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-18',
 } as const
 
 const GAME_PERKS = {
   origin: 'game',
-  ref: 'Perks class constants and Perks.ApplyWaveBenefit @ 0x1F82300',
-  sourceVersion: 'v28.3.0-arm64',
+  ref: 'Observed in game',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-18',
 } as const
 
@@ -111,11 +111,11 @@ export const PERK_WAVES_REQUIRED_BY_COUNT: readonly { afterPerks: number, waves:
 ]
 
 /**
- * The wave-requirement formula, read off `Perks.ApplyWaveBenefit` (0x1F82300).
+ * The wave-requirement formula.
  *
  *   waves = trunc( (1 - PerkBenefitUp(10)) * (baseWave - wavesRequiredLab) )
  *
- * Three things the binary settles that prose could not:
+ * Three things this settles that prose could not:
  *
  * - the LAB is subtracted from the base BEFORE the perk multiplier applies, so
  *   the two do not commute;
@@ -168,7 +168,7 @@ export const STANDARD_PERK_MAX_QUANTITY: Readonly<Record<string, number>> = {
 const GAME_PERK_CONSUMERS = {
   origin: 'game',
   ref: 'callers of Perks.PerkBenefitUp / PerkBenefitDown across the mapped classes',
-  sourceVersion: 'v28.3.0-arm64',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-18',
 } as const
 
@@ -455,7 +455,7 @@ export const PERK_KNOWLEDGE_NODES: readonly KnowledgeNode[] = [
       + '(1-0.648) = 69.344 waves. At 0.25 that example would give 81% and 37 waves. The oracle '
       + 'carried -25% until 2026-08-17. Check a rate against an example that USES it, not against '
       + 'another copy of the rate — and expect one page to disagree with itself.',
-      'ORDER, from `Perks.ApplyWaveBenefit` (0x1F82300): the Waves Required LAB is subtracted from '
+      'ORDER: the Waves Required LAB is subtracted from '
       + 'the base wave FIRST, and the perk term multiplies that difference — '
       + '`trunc((1 - PerkBenefitUp(10)) x (base - lab))`. The two do not commute, and the result is '
       + 'truncated toward zero rather than rounded, so a rounding at the wrong step moves the '

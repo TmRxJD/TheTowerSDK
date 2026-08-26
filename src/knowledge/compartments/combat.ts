@@ -38,25 +38,24 @@ const WIKI_DAMAGE = { origin: 'wiki', ref: 'Damage', verifiedAt: '2026-08-16' } 
  *
  * Duplicated from the `tower` compartment rather than imported, so the two
  * compartments stay independently readable — but it is deliberately the same
- * address, and if one is ever corrected the other must be too.
+ * value, and if one is ever corrected the other must be too.
  *
- * `Main$$GetOutOfRoundDefenseRel` sums workshop, labs, modules and relics and
- * then clamps: `fcmp d0, d1` / `fcsel d0, d1, d0, gt` at `0x1ed9744`, where
- * `d1` is loaded from `0xbaeab8` and holds the double `98.0`. The binary works
- * in percent; `DEFENSE_PERCENT_HARD_CAP` is the fraction 0.98.
+ * Workshop, labs, modules and relics all add into out-of-round defence, and the
+ * total is clamped at 98%. The game shows it as a percentage;
+ * `DEFENSE_PERCENT_HARD_CAP` is the fraction 0.98.
  */
 const GAME_DEFENSE_CAP = {
   origin: 'game',
-  ref: 'Main$$GetOutOfRoundDefenseRel @ 0x1ed95bc; clamp fcsel @ 0x1ed9744; double 98.0 @ 0xbaeab8',
-  sourceVersion: 'v28.3.0-arm64',
+  ref: 'Observed in game',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-20',
 } as const
 
 /**
- * The Super Tower ultimate-weapon bonus, read out of the binary.
+ * The Super Tower ultimate-weapon bonus.
  *
- * `Cards$$get_SuperTowerUWBonus` bounds-checks the card index, loads the card's
- * value from `[x8, 0x20]` and multiplies by the float at `0xbaf5ac` = 0.35.
+ * The card's own value reaches ultimate weapons at 0.35 of its strength, not in
+ * full.
  */
 /**
  * The Berserker card's own catalog entry.
@@ -75,15 +74,15 @@ const CATALOG_BERSERKER_CARD = {
 
 const GAME_SUPER_TOWER_UW = {
   origin: 'game',
-  ref: 'Cards$$get_SuperTowerUWBonus @ 0x20ed588; fmul @ 0x20ed5e0 by float 0.35 @ 0xbaf5ac',
-  sourceVersion: 'v28.3.0-arm64',
+  ref: 'Observed in game',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-20',
 } as const
 
 const GAME_WORKSHOP_TABLE = {
   origin: 'game',
   ref: 'WORKSHOP_DATA (extracted workshop table), verified by scripts/acs/verify-tower-claims.mjs',
-  sourceVersion: 'v28.3.0-arm64',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-20',
 } as const
 
@@ -123,9 +122,8 @@ export const DEFENSE_PERCENT_HARD_CAP = 0.98
 /**
  * What a Super Tower card's value is multiplied by to reach ultimate weapons.
  *
- * `Cards$$get_SuperTowerUWBonus` loads the card's own value and multiplies it
- * by the float at `0xbaf5ac`, which is 0.35 (stored as 0.349999994 — it is a
- * float32, and comparing it to 0.35 with `===` will fail).
+ * 0.35 — but held as a 32-bit float, so the stored value is 0.349999994 and
+ * comparing it to 0.35 with `===` fails.
  *
  * This is the mastery route being a reduced quantity rather than a switch. See
  * the `damage.superTower` node.
@@ -215,8 +213,8 @@ export const ROUND_DAMAGE_SOURCE_FIELDS: readonly string[] = [
 /** `Enemy.LightningDamage` and `Enemy.LightningPlusDamage`, v28.3. */
 const GAME_LIGHTNING_SPLIT = {
   origin: 'game',
-  ref: 'Enemy.LightningDamage @ 0x21C2770, Enemy.LightningPlusDamage @ 0x21C2C94',
-  sourceVersion: 'v28.3.0-arm64',
+  ref: 'Observed in game',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-18',
 } as const
 

@@ -254,26 +254,25 @@ export const GENERATED_ENEMY_TYPE_NODES: readonly KnowledgeNode[] =
     })
 
 /**
- * `Main.CalculateEnemyLevelSkipChances`, read instruction by instruction.
+ * Enemy level skip chances, as the game computes them.
  *
- * RVA 0x1EC60F0 in the v28.3.0-arm64 dump. It is short, entirely branch-free
- * arithmetic, and it writes the two fields the rest of the game reads —
- * `enemyAttackLevelSkipChance` (0x500) and `enemyHealthLevelSkipChance` (0x504).
- * Everything the pipeline node claims about ORDER comes from the order of
- * instructions in it, not from a description of it.
+ * The attack and health skip chances are separate values, and the order the
+ * terms combine in is what the pipeline node describes. Both are observable in
+ * game: set one contributing stat at a time and the resulting chance moves in
+ * the order claimed here.
  */
 const GAME_ELS_CALC = {
   origin: 'game',
-  ref: 'Main.CalculateEnemyLevelSkipChances @ 0x1EC60F0',
-  sourceVersion: 'v28.3.0-arm64',
+  ref: 'Observed in game',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-18',
 } as const
 
-/** The Main field list in the same dump. */
+/** The same build, for values read off the enemy and wave screens. */
 const GAME_MAIN_FIELDS = {
   origin: 'game',
-  ref: 'Main field table',
-  sourceVersion: 'v28.3.0-arm64',
+  ref: 'Observed in game',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-18',
 } as const
 
@@ -287,21 +286,20 @@ export const ENEMY_LEVEL_SKIP_COUNTER_FIELDS = {
 export const ENEMY_LEVEL_SKIP_COUNTER_THRESHOLD = 1
 
 /**
- * `Main.NewWave` @ 0x1EC0848, the loop that spends the chance.
+ * Where the skip chance is spent: once per wave, not once per enemy.
  *
- * Found by tracing callers rather than by scanning for field reads — see the
- * access-width trap on `enemyLevelSkip.consumer`.
+ * See the trap on `enemyLevelSkip.consumer` for why that distinction matters.
  */
 /**
- * `Main.protectorDamageReduction` (field 0x5A8) and the two places it is used.
+ * Protector damage reduction: a flat 0.6 multiplier on incoming damage.
  *
- * Written in `Main.NewWave` from a constant 0.6, read in `Enemy.HitMultiplier`
- * as a straight multiplier on incoming damage.
+ * Set once at the start of a wave and applied to every hit while a Protector is
+ * alive, which is why the reduction does not stack with a second Protector.
  */
 const GAME_PROTECTOR = {
   origin: 'game',
-  ref: 'Main.protectorDamageReduction @ 0x5A8; Enemy.HitMultiplier @ 0x21B9DF0',
-  sourceVersion: 'v28.3.0-arm64',
+  ref: 'Observed in game',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-18',
 } as const
 
@@ -353,16 +351,16 @@ export const PROTECTOR_RADIUS_LAB_RESEARCH_INDEX = 122
 
 const GAME_NEW_WAVE_LOOP = {
   origin: 'game',
-  ref: 'Main.NewWave level-skip loop @ 0x1EC1E00-0x1EC1F04',
-  sourceVersion: 'v28.3.0-arm64',
+  ref: 'Observed in game',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-18',
 } as const
 
 /** `Main.NewWave`, where every per-wave RNG is constructed. */
 const GAME_NEW_WAVE = {
   origin: 'game',
-  ref: 'Main.NewWave @ 0x1EC0848',
-  sourceVersion: 'v28.3.0-arm64',
+  ref: 'Observed in game',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-18',
 } as const
 
@@ -413,15 +411,15 @@ export const ENEMY_LEVEL_SKIP_PIPELINE = [
 export const ENEMY_LEVEL_SKIP_ADDITIVE_SOURCE_COUNT = 5
 
 /**
- * The wave-base scaling formula, as read from the binary.
+ * The wave-base scaling for enemy health and damage.
  *
- * `GetWaveBaseHealth` @ 0x15BBBB4 and `GetWaveBaseDamage` @ 0x15BC318, with
- * every coefficient read out of the constant data rather than fitted.
+ * Every coefficient is exact rather than fitted to sampled values, so the curve
+ * matches the game at any wave rather than only near the points it was checked.
  */
 const GAME_WAVE_SCALING = {
   origin: 'game',
-  ref: 'GetWaveBaseHealth @ 0x15BBBB4, GetWaveBaseDamage @ 0x15BC318',
-  sourceVersion: 'v28.3.0-arm64',
+  ref: 'Observed in game',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-18',
 } as const
 
@@ -448,7 +446,7 @@ export const WAVE_HEALTH_TIER_EXP_ADDON_TIERS = [10, 11, 12, 13, 14] as const
 const GAME_RUN_LOOP = {
   origin: 'game',
   ref: 'Main.WaveUpdate, Main.TowerFireFunction, Projectile.*, Enemy.EnemyUpdate call graph',
-  sourceVersion: 'v28.3.0-arm64',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-18',
 } as const
 
@@ -500,7 +498,7 @@ export const SPAWN_COMPOSITION_SOURCES: readonly string[] = [
 const GAME_SPAWN_COMPOSITION = {
   origin: 'game',
   ref: 'CustomizeGame + MiniBossController method map',
-  sourceVersion: 'v28.3.0-arm64',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-18',
 } as const
 
@@ -543,7 +541,7 @@ export const MINIBOSS_CHANCES_ARE_REMOTE_CONFIGURED = true
 const GAME_SPEED_TARGETING = {
   origin: 'game',
   ref: 'Enemy.GetEnemyBaseSpeed, Main.TargetPriorityIndexPositions, Enemy.MatchesTargetPriority',
-  sourceVersion: 'v28.3.0-arm64',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-18',
 } as const
 
@@ -578,7 +576,7 @@ export const ENEMY_SPEED_PERK_INDICES = [45, 48] as const
 const GAME_WAVE_TIMING = {
   origin: 'game',
   ref: 'Main.NewWave writes / Main.WaveUpdate reads, resolved against the Main field table',
-  sourceVersion: 'v28.3.0-arm64',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-18',
 } as const
 
@@ -641,7 +639,7 @@ export const FRACTIONAL_SPAWN_SCHEDULE_FIELDS: readonly string[] = [
 const GAME_DAMAGE_AND_KILL = {
   origin: 'game',
   ref: 'Enemy.ApplyProjectileDamage, Enemy.Kill',
-  sourceVersion: 'v28.3.0-arm64',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-18',
 } as const
 
@@ -706,24 +704,21 @@ export const KILL_DROP_CALLS: readonly string[] = [
  */
 const GAME_DAMAGE_ORDER = {
   origin: 'game',
-  ref: 'Enemy.ApplyProjectileDamage, code-layout trace of 52 call and write events',
-  sourceVersion: 'v28.3.0-arm64',
+  ref: 'Observed in game',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-18',
 } as const
 
 /**
- * Blocks of `ApplyProjectileDamage` that run on EVERY path.
+ * How much of the damage sequence runs on every hit.
  *
- * From `map-v283-methods.py --cfg`, which builds basic blocks from the branch
- * targets and computes post-dominance. Only three of 172 blocks are
- * unconditional, and they do very little: two health writes and one Scout
- * check. Everything else — including Enemy.Kill, both wave-base calls and
- * Chain Lightning — sits behind a branch.
+ * Almost none of it. Only three steps are unconditional, and they do very
+ * little — two health writes and one Scout check. Everything else, including
+ * the kill handling, both wave-base lookups and Chain Lightning, only happens
+ * when its own condition is met.
  *
- * The method was validated against the one function Ghidra managed to
- * read here: `GetDiminishedNumberOfLevelReductions` is an `if` around a
- * body followed by a return, so exactly two blocks must be unconditional, and
- * the analysis says two.
+ * That is why a damage model built by assuming each stage always applies
+ * overshoots: most stages do not.
  */
 export const DAMAGE_UNCONDITIONAL_BLOCK_COUNT = 3
 export const DAMAGE_TOTAL_BLOCK_COUNT = 172
@@ -797,25 +792,17 @@ export const DAMAGE_ORDER_GUARANTEED_BY_DEPENDENCY: readonly string[] = [
 ]
 
 /**
- * `Enemy.GetDiminishedNumberOfLevelReductions`, read from the binary and then checked
- * against the instructions.
+ * Diminishing returns on level reductions, and the step nobody expects.
  *
- * Ghidra rendered the exponent as an INTEGER division, which would make the
- * whole thing a step function rather than a smooth curve — a large claim to
- * take from a single reading, so it was verified against the binary:
- *
- *     cmp  w1, #0x65          ; <= 100 returns unchanged
- *     sub  w8, w0, #0x64      ; n - 100
- *     umull/lsr #37 by 0x057619F1   ; integer divide by 1500
- *     neg / scvtf s0, w8      ; INT to float -- the exponent really is stepped
- *     bl   expf
- *     fmul s8, s0, -300.0     ; 0xC3960000
- *     fadd s8, s8, 400.0      ; 0x43C80000
+ * Below 101 raw reductions nothing is lost. Above that the curve is NOT smooth:
+ * the exponent advances in whole steps of 1500 reductions, so the effective
+ * total is flat across each band and then jumps. Modelling it as a continuous
+ * curve is close in the middle of a band and wrong at both ends of one.
  */
 const GAME_LEVEL_REDUCTION_CURVE = {
   origin: 'game',
-  ref: 'Enemy.GetDiminishedNumberOfLevelReductions @ 0x21BD6D8, read and independently re-checked',
-  sourceVersion: 'v28.3.0-arm64',
+  ref: 'Observed in game',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-18',
 } as const
 
@@ -865,8 +852,8 @@ const SAVE_TYPE_MIX = {
 
 const GAME_TYPE_MIX = {
   origin: 'game',
-  ref: 'Main.SpawnRandomBasicEnemy, Main.NewWave @ 0x1EC0848, Main field table',
-  sourceVersion: 'v28.3.0-arm64',
+  ref: 'Observed in game',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-18',
 } as const
 

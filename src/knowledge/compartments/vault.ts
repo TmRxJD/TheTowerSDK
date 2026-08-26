@@ -35,7 +35,7 @@ const WIKI_VAULT = { origin: 'wiki', ref: 'The Vault', verifiedAt: '2026-08-16' 
 const GAME_VAULT_CONSTANTS = {
   origin: 'game',
   ref: 'POWER_TREE_NODE_COUNT, HARMONY_TREE_NODE_COUNT',
-  sourceVersion: 'v28.3.0-arm64',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-20',
 } as const
 

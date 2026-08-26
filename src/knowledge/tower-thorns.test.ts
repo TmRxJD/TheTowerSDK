@@ -111,8 +111,8 @@ describe('every breakpoint earns its place', () => {
 
 describe('the constants match the ones in the function', () => {
   it('converts percent to a fraction with 0.01, not 1/100 of something else', () => {
-    // `ldr s9, [0xBAF4D0]` is 0.01, and it is applied to
-    // `Main.thornDamage` before the multiply by `Enemy.enemyHealthMax`.
+    // The percent-to-fraction step is 0.01, applied to thorn damage before the
+    // multiply by the enemy's maximum health.
     expect(THORNS_PERCENT_TO_FRACTION).toBe(0.01)
     // The whole model in one line: 51% of a 1000-max-health enemy is 510.
     expect(51 * THORNS_PERCENT_TO_FRACTION * 1000).toBeCloseTo(510, 6)

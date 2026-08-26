@@ -5,8 +5,8 @@ import { applyTierBattleConditionsToSkipChance, buildLevelSkipChanceRaw } from '
 /**
  * Order of operations, checked against the function the game runs.
  *
- * `Main.CalculateEnemyLevelSkipChances` (RVA 0x1EC60F0, v28.3.0-arm64) is
- * branch-free arithmetic, so its instruction order IS the specification:
+ * The calculation is branch-free arithmetic (v28.3.0), so the order the terms
+ * combine in IS the specification:
  *
  *   sum sources -> x enhancement -> clamp 0..1
  *     -> subtract ELS Reduction -> clamp 0

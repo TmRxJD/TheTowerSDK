@@ -14,8 +14,8 @@
  *
  * The chain, verified 2026-08-18:
  *
- *   Game binary, `GetWaveBaseHealth` @ 0x15BBBB4 and
- *   `GetWaveBaseDamage` @ 0x15BC318, with the constants read out of the binary
+ *   The game's own wave-base health and damage values, with every constant
+ *   exact rather than fitted
  *     -> wave/_reference/wave-base-constants.ts  (all 12 health polynomial
  *        terms and every body coefficient compared: zero mismatches)
  *     -> wave/_reference/wave-base-scaling-legacy.ts

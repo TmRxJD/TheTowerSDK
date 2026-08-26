@@ -29,7 +29,7 @@
 
 	const LAYOUT = [
 		['Lab Costs', LabsDemo, 'Live'],
-		['Death Wave × Golden Bot', SyncUptimeDemo, 'Live'],
+		['Golden Tower vs Black Hole Uptime', SyncUptimeDemo, 'Live'],
 		['Enemy Stats', WaveDemo, 'Live'],
 		['Read A Save', SaveDemo, 'Sample'],
 		// Code-only. Claiming it had a demo is what pushed everything below it out of step.

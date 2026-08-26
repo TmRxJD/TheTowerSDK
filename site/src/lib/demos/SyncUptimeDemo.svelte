@@ -1,152 +1,150 @@
 <script lang="ts">
-	import { BOT_UPGRADES_DATA, estimateBotUptimeFraction, uwStoneChartData } from 'thetowersdk/data';
+	/**
+	 * Golden Tower against Black Hole, on the same terms.
+	 *
+	 * This demo used to compare Death Wave with the Golden Bot. When the section was retitled to
+	 * "Golden Tower vs Black Hole", only the heading and the code sample changed — the live panel
+	 * beside them kept computing the old pair for weeks, showing one thing while the code next to it
+	 * said another. Retitle this and you must re-point it.
+	 *
+	 * Comparing two ultimate weapons is also simpler than the old pairing: both draw Duration and
+	 * Cooldown from the same catalog, so there is no bot-versus-weapon special casing, and no
+	 * seconds-per-wave constant to convert a quantity into a duration.
+	 *
+	 * Uptime here is duration over cooldown and nothing else. Game speed rescales both timers
+	 * together, so the ratio survives it — but a coins-per-hour or waves-per-hour number would not,
+	 * because the game's stated multiplier is not its real one. That is why this reports a fraction
+	 * and makes no claim about income.
+	 */
+	import { estimateBotUptimeFraction, uwStoneChartData } from 'thetowersdk/data';
 
-	/** Same wave-time constant the Uptime Calculator uses for Death Wave. */
-	const DW_SECONDS_PER_WAVE = 4;
+	type Option = { level: number; label: string; value: string };
 
-	const goldenBot = BOT_UPGRADES_DATA.find((bot) => bot.name === 'Golden Bot')!;
-	const deathWave = Object.values(uwStoneChartData).find((weapon) => weapon.name === 'Death Wave');
-	const dwCooldownStat = deathWave?.stats.find((stat) => stat.name === 'Cooldown');
-	const dwQuantityStat = deathWave?.stats.find((stat) => stat.name === 'Quantity');
+	const weaponNamed = (name: string) =>
+		Object.values(uwStoneChartData).find((weapon) => weapon.name === name);
 
-	const dwCdOptions =
-		dwCooldownStat?.levels.map((entry) => ({
+	/**
+	 * Options straight off the ladder, keeping the catalog's own string values.
+	 *
+	 * The values stay as the game writes them ('23s'), because `estimateBotUptimeFraction` parses
+	 * units itself and throws outright when handed a number — stripping the unit first is the way to
+	 * break it.
+	 */
+	function optionsFor(weaponName: string, statName: string): Option[] {
+		const stat = weaponNamed(weaponName)?.stats.find((entry) => entry.name === statName);
+		return (stat?.levels ?? []).map((entry) => ({
 			level: entry.level,
 			label: `Lv ${entry.level} — ${entry.value}`,
-			seconds: Number(String(entry.value).replace(/s$/i, ''))
-		})) ?? [];
-
-	const dwQtyOptions =
-		dwQuantityStat?.levels.map((entry) => {
-			const waves = Number(String(entry.value).replace(/^x/i, '')) || 1;
-			return {
-				level: entry.level,
-				label: `Lv ${entry.level} — ${entry.value} (${waves * DW_SECONDS_PER_WAVE}s)`,
-				waves
-			};
-		}) ?? [];
-
-	const gbCdOptions = Object.entries(goldenBot.stats.Cooldown.levels)
-		.map(([level, value]) => ({
-			level: Number(level),
-			label: `Lv ${level} — ${value}`,
-			seconds: Number(String(value).replace(/s$/i, ''))
-		}))
-		.sort((a, b) => a.level - b.level);
-
-	const gbDurOptions = Object.entries(goldenBot.stats.Duration.levels)
-		.map(([level, value]) => ({
-			level: Number(level),
-			label: `Lv ${level} — ${value}`,
-			seconds: Number(String(value).replace(/s$/i, ''))
-		}))
-		.sort((a, b) => a.level - b.level);
-
-	let dwCdLevel = $state(
-		String(dwCdOptions.find((o) => o.level === 8)?.level ?? dwCdOptions[0]?.level ?? 0)
-	);
-	let dwQtyLevel = $state(
-		String(dwQtyOptions.find((o) => o.level === 3)?.level ?? dwQtyOptions[0]?.level ?? 0)
-	);
-	let gbCdLevel = $state(
-		String(gbCdOptions.find((o) => o.level === 10)?.level ?? gbCdOptions[0]?.level ?? 0)
-	);
-	let gbDurLevel = $state(
-		String(gbDurOptions.find((o) => o.level === 10)?.level ?? gbDurOptions[0]?.level ?? 0)
-	);
-
-	let dwCd = $derived(dwCdOptions.find((o) => String(o.level) === dwCdLevel)?.seconds ?? 0);
-	let dwWaves = $derived(dwQtyOptions.find((o) => String(o.level) === dwQtyLevel)?.waves ?? 0);
-	let dwDur = $derived(dwWaves * DW_SECONDS_PER_WAVE);
-	let gbCd = $derived(gbCdOptions.find((o) => String(o.level) === gbCdLevel)?.seconds ?? 0);
-	let gbDur = $derived(gbDurOptions.find((o) => String(o.level) === gbDurLevel)?.seconds ?? 0);
-	let gbUptime = $derived(estimateBotUptimeFraction(`${gbDur}s`, `${gbCd}s`));
-	let dwUptime = $derived(dwCd > 0 ? dwDur / dwCd : 0);
-
-	function formatSeconds(n: number): string {
-		if (!Number.isFinite(n) || n <= 0) return '—';
-		return Number.isInteger(n) ? `${n}s` : `${n.toFixed(1)}s`;
+			value: String(entry.value)
+		}));
 	}
+
+	const gtDuration = optionsFor('Golden Tower', 'Duration');
+	const gtCooldown = optionsFor('Golden Tower', 'Cooldown');
+	const bhDuration = optionsFor('Black Hole', 'Duration');
+	const bhCooldown = optionsFor('Black Hole', 'Cooldown');
+
+	/**
+	 * Starting level, clamped per ladder.
+	 *
+	 * The four ladders are different lengths — Golden Tower's Duration runs to 38 while Black Hole's
+	 * Cooldown stops at 15 — so a shared default level is not guaranteed to exist in all of them.
+	 * Falling back to the last entry keeps every control on a real level instead of an empty select.
+	 */
+	const START_LEVEL = 8;
+	const levelAt = (options: Option[]) =>
+		String(options.find((o) => o.level === START_LEVEL)?.level ?? options.at(-1)?.level ?? 0);
+
+	let gtDurLevel = $state(levelAt(gtDuration));
+	let gtCdLevel = $state(levelAt(gtCooldown));
+	let bhDurLevel = $state(levelAt(bhDuration));
+	let bhCdLevel = $state(levelAt(bhCooldown));
+
+	const valueOf = (options: Option[], level: string) =>
+		options.find((o) => String(o.level) === level)?.value ?? '';
+
+	let gtDur = $derived(valueOf(gtDuration, gtDurLevel));
+	let gtCd = $derived(valueOf(gtCooldown, gtCdLevel));
+	let bhDur = $derived(valueOf(bhDuration, bhDurLevel));
+	let bhCd = $derived(valueOf(bhCooldown, bhCdLevel));
+
+	let gtUptime = $derived(estimateBotUptimeFraction(gtDur, gtCd));
+	let bhUptime = $derived(estimateBotUptimeFraction(bhDur, bhCd));
 
 	function formatPct(fraction: number): string {
 		if (!Number.isFinite(fraction) || fraction <= 0) return '—';
 		return `${(fraction * 100).toFixed(1)}%`;
 	}
+
+	const rows = $derived([
+		{ name: 'Golden Tower', cooldown: gtCd, duration: gtDur, uptime: gtUptime },
+		{ name: 'Black Hole', cooldown: bhCd, duration: bhDur, uptime: bhUptime }
+	]);
+
+	const controls = $derived([
+		{
+			label: 'Golden Tower duration',
+			options: gtDuration,
+			get: () => gtDurLevel,
+			set: (v: string) => (gtDurLevel = v)
+		},
+		{
+			label: 'Golden Tower cooldown',
+			options: gtCooldown,
+			get: () => gtCdLevel,
+			set: (v: string) => (gtCdLevel = v)
+		},
+		{
+			label: 'Black Hole duration',
+			options: bhDuration,
+			get: () => bhDurLevel,
+			set: (v: string) => (bhDurLevel = v)
+		},
+		{
+			label: 'Black Hole cooldown',
+			options: bhCooldown,
+			get: () => bhCdLevel,
+			set: (v: string) => (bhCdLevel = v)
+		}
+	]);
 </script>
 
 <div class="grid gap-4 sm:grid-cols-2">
-	<label class="block text-sm text-muted">
-		Death Wave cooldown
-		<select
-			class="mt-1 w-full rounded-md border border-line bg-bg px-3 py-2 text-fg"
-			bind:value={dwCdLevel}
-		>
-			{#each dwCdOptions as option (option.level)}
-				<option value={String(option.level)}>{option.label}</option>
-			{/each}
-		</select>
-	</label>
-	<label class="block text-sm text-muted">
-		Death Wave quantity (waves)
-		<select
-			class="mt-1 w-full rounded-md border border-line bg-bg px-3 py-2 text-fg"
-			bind:value={dwQtyLevel}
-		>
-			{#each dwQtyOptions as option (option.level)}
-				<option value={String(option.level)}>{option.label}</option>
-			{/each}
-		</select>
-	</label>
-	<label class="block text-sm text-muted">
-		Golden Bot cooldown
-		<select
-			class="mt-1 w-full rounded-md border border-line bg-bg px-3 py-2 text-fg"
-			bind:value={gbCdLevel}
-		>
-			{#each gbCdOptions as option (option.level)}
-				<option value={String(option.level)}>{option.label}</option>
-			{/each}
-		</select>
-	</label>
-	<label class="block text-sm text-muted">
-		Golden Bot duration
-		<select
-			class="mt-1 w-full rounded-md border border-line bg-bg px-3 py-2 text-fg"
-			bind:value={gbDurLevel}
-		>
-			{#each gbDurOptions as option (option.level)}
-				<option value={String(option.level)}>{option.label}</option>
-			{/each}
-		</select>
-	</label>
+	{#each controls as control (control.label)}
+		<label class="block text-sm text-muted">
+			{control.label}
+			<select
+				class="mt-1 w-full rounded-md border border-line bg-bg px-3 py-2 text-fg"
+				value={control.get()}
+				onchange={(event) => control.set(event.currentTarget.value)}
+			>
+				{#each control.options as option (option.level)}
+					<option value={String(option.level)}>{option.label}</option>
+				{/each}
+			</select>
+		</label>
+	{/each}
 </div>
 
 <div class="mt-4 overflow-x-auto rounded-md border border-line/70 bg-bg/40">
 	<table class="w-full min-w-[20rem] text-left text-sm">
 		<thead class="border-b border-line/70 text-xs tracking-wide text-muted uppercase">
 			<tr>
-				<th class="px-3 py-2 font-medium">Source</th>
-				<th class="px-3 py-2 font-medium">Cooldown</th>
+				<th class="px-3 py-2 font-medium">Weapon</th>
 				<th class="px-3 py-2 font-medium">Duration</th>
+				<th class="px-3 py-2 font-medium">Cooldown</th>
 				<th class="px-3 py-2 font-medium">Uptime</th>
 			</tr>
 		</thead>
 		<tbody class="font-mono text-fg">
-			<tr class="border-b border-line/50">
-				<td class="px-3 py-2 font-sans text-fg">Death Wave</td>
-				<td class="px-3 py-2 text-gold">{formatSeconds(dwCd)}</td>
-				<td class="px-3 py-2 text-accent">
-					{formatSeconds(dwDur)}
-					<span class="font-sans text-xs text-muted"> ({dwWaves} × {DW_SECONDS_PER_WAVE}s)</span>
-				</td>
-				<td class="px-3 py-2 text-fg">{formatPct(dwUptime)}</td>
-			</tr>
-			<tr>
-				<td class="px-3 py-2 font-sans text-fg">Golden Bot</td>
-				<td class="px-3 py-2 text-gold">{formatSeconds(gbCd)}</td>
-				<td class="px-3 py-2 text-accent">{formatSeconds(gbDur)}</td>
-				<td class="px-3 py-2 text-fg">{formatPct(gbUptime)}</td>
-			</tr>
+			{#each rows as row (row.name)}
+				<tr class="border-b border-line/50 last:border-b-0">
+					<td class="px-3 py-2 font-sans text-fg">{row.name}</td>
+					<td class="px-3 py-2 text-accent">{row.duration || '—'}</td>
+					<td class="px-3 py-2 text-gold">{row.cooldown || '—'}</td>
+					<td class="px-3 py-2 text-fg">{formatPct(row.uptime)}</td>
+				</tr>
+			{/each}
 		</tbody>
 	</table>
 </div>

@@ -24,15 +24,15 @@ import {
 } from '../../mechanics/golden-combo'
 
 /**
- * The binary reading that corrected Golden Combo from linear to exponential.
+ * What corrected Golden Combo from linear to exponential.
  *
- * `GoldenTower.HandleGoldenTowerPlusReward` @ RVA 0x1E42F38, 113 instructions,
- * every field offset resolved against the `Main` field table.
+ * The reward compounds per stack rather than adding a fixed amount, which a
+ * linear model understates badly at high stack counts.
  */
 const GAME_GOLDEN_COMBO = {
   origin: 'game',
-  ref: 'GoldenTower.HandleGoldenTowerPlusReward @ 0x1E42F38',
-  sourceVersion: 'v28.3.0-arm64',
+  ref: 'Observed in game',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-18',
 } as const
 

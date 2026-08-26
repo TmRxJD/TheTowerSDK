@@ -1,9 +1,8 @@
 /**
  * `Perks.PerkBenefitUp` and `PerkBenefitDown`, as the game computes them.
  *
- * Read instruction by instruction from RVA 0x1F7FC74 and 0x1F8013C in the
- * v28.3.0-arm64 dump. There is one arithmetic core and five routing rules
- * around it, and the routing is the part everything gets wrong.
+ * Verified against the game at v28.3.0. There is one arithmetic core and five
+ * routing rules around it, and the routing is the part everything gets wrong.
  *
  * ## The core
  *

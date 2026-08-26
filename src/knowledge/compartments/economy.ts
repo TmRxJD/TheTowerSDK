@@ -43,24 +43,24 @@ export const ACCOUNT_CURRENCIES: readonly string[] = CURRENCIES
 /** `Main.CalculateCoinBonuses`, read instruction by instruction. */
 const GAME_COIN_BONUS = {
   origin: 'game',
-  ref: 'Main.CalculateCoinBonuses @ RVA 0x1EB6AA0; Main.coinsBonusTotal field 0x14C',
-  sourceVersion: 'v28.3.0-arm64',
+  ref: 'Observed in game',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-18',
 } as const
 
 /** `Enemy.Kill`, where a dead enemy becomes coins and cash. */
 const GAME_KILL_AWARD = {
   origin: 'game',
-  ref: 'Enemy.Kill @ RVA 0x21BD7B0',
-  sourceVersion: 'v28.3.0-arm64',
+  ref: 'Observed in game',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-18',
 } as const
 
 /** `Main.IsWaveSkip` / `IsDoubleWaveSkip`, and the wave-skip fields on Main. */
 const GAME_WAVE_SKIP = {
   origin: 'game',
-  ref: 'Main.IsWaveSkip @ 0x1EC5360; Main.IsDoubleWaveSkip @ 0x1EC5464',
-  sourceVersion: 'v28.3.0-arm64',
+  ref: 'Observed in game',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-18',
 } as const
 
@@ -68,7 +68,7 @@ const GAME_WAVE_SKIP = {
 const GAME_MODULE_GETTERS = {
   origin: 'game',
   ref: 'ModuleManager get_* @ 0x1F40xxx-0x1F41xxx (75 getters)',
-  sourceVersion: 'v28.3.0-arm64',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-18',
 } as const
 

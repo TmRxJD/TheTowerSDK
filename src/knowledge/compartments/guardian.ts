@@ -40,14 +40,14 @@ const SHEET_GUARDIANS = {
 const GAME_GUARDIAN_CONSTANTS = {
   origin: 'game',
   ref: 'Guardian public const',
-  sourceVersion: 'v28.3.0-arm64',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-20',
 } as const
 
 const GAME_CHIP_TYPE = {
   origin: 'game',
   ref: 'enum ChipType; GuardianChips.chipBenefits',
-  sourceVersion: 'v28.3.0-arm64',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-18',
 } as const
 
@@ -416,10 +416,9 @@ export const GUARDIAN_KNOWLEDGE_NODES: readonly KnowledgeNode[] = [
       'THE UNEVEN GAPS WERE MISSING READERS, NOT A BROKEN LAYOUT. An earlier version of this node '
       + 'treated the spacing as a hazard and warned against interpolating. That was the wrong '
       + 'conclusion from an incomplete scan: the spacing was a clue that the array is chip-blocked.',
-      'THE SCAN THAT FINDS READERS RETURNS FALSE POSITIVES. Byte-pattern matching hit Unity engine '
-      + 'classes (`BaseRuntimePanel.ScreenToPanel`, `SkeletonRootMotionBase.ApplyRootMotion`), and '
-      + 'an RVA-to-method lookup misattributed four more. Verify the enclosing class before '
-      + 'believing a hit.',
+      'SEARCHING FOR WHAT READS THIS ARRAY RETURNS FALSE POSITIVES. Unrelated engine code matches '
+      + 'the same shape, and a handful more get attributed to the wrong owner. Confirm what a hit '
+      + 'actually belongs to before believing it.',
     ],
     implementedBy: [
       'GAME_CHIP_TYPE_VALUES',

@@ -7,14 +7,12 @@ import {
 } from './compartments/enemies'
 
 /**
- * The diminishing curve, read from the binary and checked against the
- * instructions.
+ * The diminishing curve, and the step in it.
  *
- * The claim that needed checking hardest is that the exponent is an INTEGER
- * division — Ghidra said so, and that turns a smooth curve into a step
- * function, which is a large difference to take on a single reading. The
- * the binary confirmed it (`umull`/`lsr #37` by 0x057619F1, then `scvtf` from
- * an integer register). These tests pin the consequences.
+ * The claim that needed checking hardest is that the exponent advances in whole
+ * steps of 1500 rather than continuously — that turns a smooth curve into a
+ * step function, which is a large difference to take on one reading. It was
+ * confirmed independently. These tests pin the consequences.
  */
 
 describe('below the threshold nothing is lost', () => {

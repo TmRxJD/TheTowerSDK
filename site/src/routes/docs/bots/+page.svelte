@@ -1,71 +1,210 @@
 <script lang="ts">
+	import CodeBlock from '$lib/ui/CodeBlock.svelte';
 	import { href } from '$lib/paths';
 </script>
 
 <svelte:head>
-	<title>Building a bot · Docs · TheTowerSDK</title>
+	<title>Discord bots · Docs · TheTowerSDK</title>
 </svelte:head>
 
-<h1 class="text-3xl font-semibold">Building a Bot</h1>
+<h1 class="text-3xl font-semibold">Discord Bots</h1>
 <p class="mt-3 text-muted">
-	The package is framework-agnostic, so a chat bot imports the same catalogs and formulas a website
-	does and both answer a player identically. The Run Tracker ships three Discord bots built this
-	way.
+	Every <a href={href('/docs/builders/')}>builder</a> is already a command.
+	<code>thetowersdk/bot</code>
+	turns the fifteen calculators into fifteen commands with their options declared, runs them, and returns
+	a reply shaped like an embed — title, description, fields. Nothing here talks to Discord, so the same
+	commands serve a Discord bot, a Slack app, or an HTTP endpoint.
 </p>
 
-<h2 class="mt-8 text-xl font-medium">Share The Calculation Layer</h2>
-<p class="mt-2 text-sm text-muted">
-	Parsing, normalization, cost math and run shapes belong in a package both the bot and your UI
-	import. Platform code — embeds, components, modals, collectors — stays in the bot. That keeps one
-	answer per question regardless of where a player asks it.
+<h2 class="mt-10 text-xl font-semibold">The Commands</h2>
+<div class="mt-4">
+	<CodeBlock
+		code={`import { calculatorCommands } from 'thetowersdk/bot'
+
+const commands = calculatorCommands()
+console.log(commands.length)   // 15
+
+console.log(commands.map((command) => command.name))
+// ['assist-stones', 'bot-upgrade', 'economy-coins-per-kill', 'damage-reduction',
+//  'dissonance-boost', 'drops-enemy', 'enemy-wave', 'guardian-upgrade',
+//  'uw-inner-land-mines', 'lab-research', 'module-cost', 'thorns-damage',
+//  'uw-stones', 'uptime-ratio', 'workshop-upgrade']`}
+	/>
+</div>
+<p class="mt-3 text-muted">
+	Each command carries a <code>name</code>, a <code>description</code>, its
+	<code>options</code>, and a <code>run</code> function. The options are the builder's own fields, already
+	converted to the shape a command registration expects.
+</p>
+<div class="mt-4">
+	<CodeBlock
+		code={`const uptime = commands.find((command) => command.name === 'uptime-ratio')
+
+console.log(uptime.description)
+// 'What share of the time an ultimate weapon is active, from its duration and cooldown.'
+
+console.log(uptime.options)
+// [ { name: 'durationSeconds', description: 'Duration', type: 'number', min: 0 },
+//   { name: 'cooldownSeconds', description: 'Measured from activation, so duration ≥
+//     cooldown means permanent uptime.', type: 'number', min: 0 } ]`}
+	/>
+</div>
+
+<h2 class="mt-10 text-xl font-semibold">Run One</h2>
+<p class="mt-3 text-muted">
+	<code>run</code> takes a context object with an <code>args</code> record, and returns a reply ready
+	to send.
+</p>
+<div class="mt-4">
+	<CodeBlock
+		code={`const reply = await uptime.run({
+  args: { durationSeconds: 23, cooldownSeconds: 220 }
+})
+
+console.log(reply)
+// {
+//   title: 'Ability uptime',
+//   description: 'What share of the time an ultimate weapon is active, …',
+//   fields: [
+//     { name: 'Ratio', value: '0.1045', inline: true },
+//     { name: 'Percent', value: '10.4545', inline: true },
+//     { name: 'Permanent', value: 'no', inline: true },
+//     { name: 'Downtime Seconds', value: '197', inline: true }
+//   ],
+//   notes: []
+// }`}
+	/>
+</div>
+
+<h2 class="mt-10 text-xl font-semibold">Build The Bot</h2>
+<p class="mt-3 text-muted">
+	<code>createTowerBot</code> takes the commands and gives you one place to look them up and run
+	them. It adds a <code>help</code> command listing everything it knows, and caches replies — commands
+	are pure functions of their arguments, so the same question returns the same answer.
+</p>
+<div class="mt-4">
+	<CodeBlock
+		code={`import { createTowerBot, calculatorCommands } from 'thetowersdk/bot'
+
+const bot = createTowerBot({ commands: calculatorCommands() })
+
+console.log(bot.commands.length)   // 16 — the fifteen calculators plus help
+
+const reply = await bot.run('uptime-ratio', {
+  args: { durationSeconds: 23, cooldownSeconds: 220 }
+})
+
+const help = await bot.run('help', { args: {} })
+// { title: 'Commands', fields: [ { name: '/assist-stones', value: '…' }, … ] }`}
+	/>
+</div>
+<p class="mt-3 text-muted">
+	<code>bot.commands</code> is a property, not a method. <code>bot.get(name)</code> returns one
+	command or <code>undefined</code>, which is the check to make before running whatever a user
+	typed.
 </p>
 
-<h2 class="mt-8 text-xl font-medium">Interaction Conventions</h2>
-<p class="mt-2 text-sm text-muted">
-	These apply to any platform built on callbacks carrying opaque ids — Discord, Slack, Telegram,
-	Matrix.
+<h2 class="mt-10 text-xl font-semibold">Arguments Arrive As Strings</h2>
+<p class="mt-3 text-muted">
+	Chat platforms hand over text. The bot coerces each argument to the type its option declares, so
+	you can pass what the platform gave you without parsing it first.
 </p>
-<ul class="mt-3 list-disc space-y-2 pl-5 text-sm text-muted">
-	<li>
-		<strong>One router.</strong> Every interaction dispatches through a single entry point, with persistent
-		handlers registered against it.
-	</li>
-	<li>
-		<strong>Component ids get one owner.</strong> Build and parse them in a single module and let handlers
-		consume parsed values. An id is a wire format: it is serialized, handed to a remote client, and handed
-		back later — possibly after a redeploy. Registry lookup uses exact or longest-prefix matching.
-	</li>
-	<li>
-		<strong>Interactions are owned.</strong> Wait on a modal by filtering on the component id
-		<em>and</em> the initiating user, so one user's click resolves only their own pending wait.
-	</li>
-	<li>
-		<strong>Guard tokens before touching state.</strong> Callbacks arrive late, twice, and after restarts.
-		Check a session token is present and unexpired first.
-	</li>
-	<li>
-		<strong>Support every component kind up front.</strong> Buttons, all select-menu variants, and modals,
-		even when the current feature uses one.
-	</li>
-	<li>
-		<strong>Return quietly when the interaction is not yours.</strong> Submissions belonging to a command-local
-		ownership flow should exit silently so real failures stay visible in logs.
-	</li>
-	<li>
-		<strong>Keep diagnostic scripts.</strong> Check them into the repo — you will want them during an
-		incident.
-	</li>
-</ul>
+<div class="mt-4">
+	<CodeBlock
+		code={`// Both of these produce the same reply.
+await bot.run('uptime-ratio', { args: { durationSeconds: 23, cooldownSeconds: 220 } })
+await bot.run('uptime-ratio', { args: { durationSeconds: '23', cooldownSeconds: '220' } })`}
+	/>
+</div>
 
-<h2 class="mt-8 text-xl font-medium">Save-driven Features</h2>
-<p class="mt-2 text-sm text-muted">
-	Run import, progress tracking and account summaries all start from <code>playerInfo.dat</code>.
-	Decode once and share the parsed root across handlers rather than re-decoding per interaction.
-	<a href={href('/docs/save/')}>Save File Docs →</a>
+<h2 class="mt-10 text-xl font-semibold">Register With Discord</h2>
+<p class="mt-3 text-muted">
+	The command list is data, so registering is a map from the SDK's option shape to the library's.
+	This is the whole integration for discord.js.
+</p>
+<div class="mt-4">
+	<CodeBlock
+		code={`import { SlashCommandBuilder } from 'discord.js'
+import { createTowerBot, calculatorCommands } from 'thetowersdk/bot'
+
+const bot = createTowerBot({ commands: calculatorCommands() })
+
+const slashCommands = bot.commands.map((command) => {
+  const builder = new SlashCommandBuilder()
+    .setName(command.name)
+    .setDescription(command.description.slice(0, 100))
+
+  for (const option of command.options ?? []) {
+    const describe = (input) =>
+      input.setName(option.name.toLowerCase()).setDescription(option.description.slice(0, 100))
+
+    if (option.type === 'number') builder.addNumberOption(describe)
+    else builder.addStringOption(describe)
+  }
+
+  return builder.toJSON()
+})
+
+client.on('interactionCreate', async (interaction) => {
+  if (!interaction.isChatInputCommand()) return
+
+  const args = Object.fromEntries(
+    interaction.options.data.map((option) => [option.name, option.value])
+  )
+
+  const reply = await bot.run(interaction.commandName, {
+    args,
+    userId: interaction.user.id
+  })
+
+  await interaction.reply({ embeds: [reply] })
+})`}
+	/>
+</div>
+<p class="mt-3 text-muted">
+	The reply's <code>title</code>, <code>description</code> and <code>fields</code> already match
+	Discord's embed shape, so it can go straight into <code>embeds</code>.
+</p>
+
+<h2 class="mt-10 text-xl font-semibold">Add Your Own Command</h2>
+<p class="mt-3 text-muted">
+	A command is a plain object, so anything you can compute can join the same list — and appears in
+	<code>help</code> alongside the rest.
+</p>
+<div class="mt-4">
+	<CodeBlock
+		code={`import { createTowerBot, calculatorCommands, markUncacheable } from 'thetowersdk/bot'
+import { searchPatchNotes } from 'thetowersdk/knowledge'
+
+const whenChanged = {
+  name: 'when-changed',
+  description: 'The most recent patch notes mentioning a mechanic.',
+  options: [{ name: 'mechanic', description: 'What to search for', type: 'string' }],
+
+  run({ args }) {
+    const notes = searchPatchNotes(String(args.mechanic ?? ''), 5)
+    return {
+      title: \`Patch notes: \${args.mechanic}\`,
+      fields: notes.map((note) => ({
+        name: \`\${note.postedAt.slice(0, 10)} \${note.version ?? ''}\`.trim(),
+        value: note.title
+      }))
+    }
+  }
+}
+
+const bot = createTowerBot({ commands: [...calculatorCommands(), whenChanged] })`}
+	/>
+</div>
+<p class="mt-3 text-muted">
+	Replies are cached by command and arguments. If a command reads a save, a spreadsheet or a
+	database, call <code>markUncacheable('your-command')</code> so each invocation runs fresh.
 </p>
 
 <p class="mt-8 text-sm">
-	<a href={href('/docs/data/')}>Game Data →</a>
+	<a href={href('/docs/builders/')}>Builders →</a>
 	·
-	<a href={href('/docs/mechanics/')}>Formulas →</a>
+	<a href={href('/docs/patch-notes/')}>Patch Notes →</a>
+	·
+	<a href={href('/docs/charts/')}>Charts →</a>
 </p>

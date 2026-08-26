@@ -1,7 +1,7 @@
 {
   "name": "thetowersdk",
-  "version": "0.5.4",
-  "description": "Game data and save-file reading for The Tower \u2014 build your own calculators and tools.",
+  "version": "0.6.0",
+  "description": "Game data and save-file reading for The Tower — build your own calculators and tools.",
   "license": "MIT",
   "author": "TmRxJD (https://github.com/TmRxJD)",
   "homepage": "https://tmrxjd.github.io/TheTowerSDK/",
@@ -62,7 +62,8 @@
     "sheets:test": "vitest run src/sheets",
     "docs:snippets": "node scripts/build-doc-snippets.mjs",
     "docs:seed": "npm run docs:snippets && npm run wiki:build",
-    "docs:check": "node scripts/build-doc-snippets.mjs --check && npm run wiki:check && node scripts/check-readme-links.mjs && node scripts/build-asset-manifest.mjs --check && node scripts/build-game-asset-manifest.mjs --check && node scripts/build-patch-notes.mjs --check",
+    "docs:check": "node scripts/build-doc-snippets.mjs --check && npm run wiki:check && node scripts/check-readme-links.mjs && node scripts/build-patch-notes.mjs --check",
+    "//assets": "Local only. These read a directory of the game's artwork and emit a catalogue of its filenames — useful for working against a private copy, and NOT part of what this package ships. Their output is gitignored; see src/assets/index.ts.",
     "assets:manifest": "node scripts/build-asset-manifest.mjs",
     "assets:game": "node scripts/build-game-asset-manifest.mjs",
     "patch-notes:ingest": "node scripts/ingest-patch-notes.mjs",
@@ -93,11 +94,6 @@
       "types": "./dist/formatting/index.d.ts",
       "require": "./dist/formatting/index.js",
       "default": "./dist/formatting/index.js"
-    },
-    "./inputs": {
-      "types": "./dist/inputs/index.d.ts",
-      "require": "./dist/inputs/index.js",
-      "default": "./dist/inputs/index.js"
     },
     "./builders": {
       "types": "./dist/builders/index.d.ts",
@@ -154,9 +150,6 @@
   },
   "typesVersions": {
     "*": {
-      "inputs": [
-        "dist/inputs/index.d.ts"
-      ],
       "builders": [
         "dist/builders/index.d.ts"
       ],

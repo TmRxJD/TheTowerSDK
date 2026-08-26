@@ -37,7 +37,7 @@ import {
   type IdsModuleCategory,
 } from './ids-import-modules'
 import {
-  IdsDomainExtract,
+  type IdsDomainExtract,
   findBlock,
   findPresetLevelColumns,
   findStatBlock,

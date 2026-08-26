@@ -5,13 +5,13 @@ import { simulateEnemyLevelSkips } from './enemy-level-skip'
 /**
  * The accumulator, checked against the loop that runs it.
  *
- * `Main.NewWave` @ 0x1EC1E00-0x1EC1F04:
+ * Once per wave, for each of the two stats:
  *
- *   counter += chance                  // both stats, one NEON fadd
- *   if IsUtilityUpgradeEnabled(11|12) and counter > 1:
+ *   counter += chance
+ *   if the matching utility upgrade is enabled and counter > 1:
  *       counter -= 1; skips++
  *
- * `s8` is `fmov #1.0` and `s9` is `fmov #-1.0`, and the branch is `b.le`, so
+ * The threshold is EXCEEDED rather than reached, so
  * the test is strictly greater-than. That last detail is the whole reason this
  * file exists — `>` and `>=` agree everywhere except at exactly 1.0, which is
  * precisely where a maxed build sits.

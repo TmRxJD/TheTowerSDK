@@ -24,7 +24,6 @@
       "thetowersdk/wiki": ["./src/wiki/index.ts"],
       "thetowersdk/charts": ["./src/charts/index.ts"],
       "thetowersdk/knowledge": ["./src/knowledge/index.ts"],
-      "thetowersdk/inputs": ["./src/inputs/index.ts"],
       "thetowersdk/builders": ["./src/builders/index.ts"],
       "thetowersdk/sheets": ["./src/sheets/index.ts"],
       "thetowersdk/bot": ["./src/bot/index.ts"],

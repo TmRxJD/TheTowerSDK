@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.6.0
+
+**Removed: `thetowersdk/inputs`.** It held the account-state shapes the Run Tracker's own pages
+persist — hub merge helpers, storage compaction, per-page local-state schemas. That is one
+website's plumbing, not a description of The Tower, and it does not belong in a package about the
+game.
+
+Nothing is lost. Every calculator already describes the inputs it takes:
+
+```ts
+import { CALCULATOR_BUILDERS } from 'thetowersdk/builders'
+
+const calc = CALCULATOR_BUILDERS.find((entry) => entry.id === 'assist.stones')
+
+calc.fields     // [{ key: 'currentLevel', label: 'Current level', kind: 'number', min: 0, max: 69 }, …]
+calc.defaults   // { currentLevel: 0, targetLevel: 10 }
+calc.normalize  // whatever you have stored -> a complete, valid input record
+calc.compute    // the result
+```
+
+That is the same guarantee — pass what you have, get back a complete record with defaults filled
+in — for all fifteen calculators, described per calculator rather than as one shared blob.
+
+Twelve entry points now. Everything else is unchanged.
+
 ## 0.5.4
 
 Nine new entry points. Nothing was removed or renamed, so this is additive for anything already

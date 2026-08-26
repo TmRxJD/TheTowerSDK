@@ -16,12 +16,10 @@
  *
  * ## Where the numbers come from
  *
- * `GoldenTower.HandleGoldenTowerPlusReward` @ RVA 0x1E42F38, v28.3.0-arm64:
+ * The Golden Combo reward, v28.3.0. Two inputs decide it:
  *
- *     x8 = main.ultimateWeaponPlusBenefit   (0x1138, double[])
- *     if (x8.Length <= 5) return            (guard: index 5 must exist)
- *     s0 = (float)x8[5]                     (0x48 = 0x20 + 5*8)
- *     s1 = (float)main.goldenTowerPlusCombo (0x117c, int)
+ *     benefit = the Golden Combo UW+ benefit at its current level
+ *     combo   = the current Golden Combo count
  *     s0 = powf(s0, s1)
  *     s8 = s0 - 1.0
  *     d9  = main.goldenTowerPlusCashBonus  (0x1180) * s8

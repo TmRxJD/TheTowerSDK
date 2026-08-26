@@ -1,257 +1,277 @@
 <script lang="ts">
 	/**
-	 * A miniature TowerAI chat panel.
+	 * TowerAI, live.
 	 *
-	 * Each answer shows the pipeline that produced it — resolve shorthand,
-	 * retrieve chunks, pull live catalog values, compose — because that is the
-	 * part worth copying. Curated prose supplies meaning; the package supplies
-	 * numbers, so a cost never goes stale inside a sentence.
+	 * Calls the same assistant the tracker site and the Discord bot's `/ask` use, through the
+	 * `towerai-ask` Appwrite function. The function retrieves from the shared TowerAI knowledge base
+	 * and answers from it, so this page holds no key, no corpus and no prompt pipeline — it sends a
+	 * question and renders what comes back, formatted the way the tracker formats it.
 	 */
-	import { uwStoneChartData } from 'thetowersdk/data';
-	import { formatNumberForDisplay } from 'thetowersdk/formatting';
+	import { SHARED_CHART_REGISTRY } from 'thetowersdk/charts';
+	import { renderAssistantMarkdown } from '$lib/ui/assistant-markdown';
 
-	type Turn = {
-		role: 'user' | 'assistant';
-		text: string;
-		pipeline?: string[];
-		/** Label/value pairs rendered as an aligned list rather than prose. */
-		rows?: [string, string][];
-		total?: [string, string];
-	};
+	/*
+	 * The self-hosted Appwrite the tracker runs on, and the public project id. Both are addresses,
+	 * not credentials — they are already in the tracker's own shipped bundle.
+	 */
+	const APPWRITE = 'https://appwrite.the-tower-run-tracker.com/v1';
+	const PROJECT = '68190de700097b8f59df';
+	const FUNCTION_ID = 'towerai-ask';
 
-	type Answer = { text: string; rows?: [string, string][]; total?: [string, string] };
+	type Turn = { role: 'user' | 'assistant'; text: string };
 
-	type Entry = {
-		match: RegExp;
-		pipeline: () => string[];
-		answer: () => Answer;
-	};
-
-	/** Every stat on a weapon, plus the sum — "to max" means all of them. */
-	function weaponBreakdown(weaponName: string): Answer {
-		const weapon = Object.values(uwStoneChartData).find((entry) => entry.name === weaponName);
-		const stats = weapon?.stats ?? [];
-
-		let grand = 0;
-		const rows: [string, string][] = stats.map((entry) => {
-			const sum = (entry.levels ?? []).reduce(
-				(acc, level) => acc + (typeof level.cost === 'number' ? level.cost : 0),
-				0
-			);
-			grand += sum;
-			return [`${entry.name} (${entry.levels?.length ?? 0} lv)`, formatNumberForDisplay(sum)];
-		});
-
-		return {
-			text: `Maxing every stat on ${weaponName} costs ${formatNumberForDisplay(grand)} stones.`,
-			rows,
-			total: ['All stats', formatNumberForDisplay(grand)]
-		};
-	}
-
-	const ENTRIES: Entry[] = [
-		{
-			match: /\bgt\b|golden tower/i,
-			pipeline: () => [
-				'oracle_expand → "GT" resolves to Golden Tower',
-				'kb.retrieve → 1 chunk: Golden Tower stone costs',
-				'thetowersdk/data → uwStoneChartData.GoldenTower',
-				`compose → ${(Object.values(uwStoneChartData).find((w) => w.name === 'Golden Tower')?.stats ?? []).length} stats summed`
-			],
-			answer: () => weaponBreakdown('Golden Tower')
-		},
-		{
-			match: /\bdw\b|death wave/i,
-			pipeline: () => [
-				'oracle_expand → "DW" resolves to Death Wave',
-				'kb.retrieve → 1 chunk: Death Wave stone costs',
-				'thetowersdk/data → uwStoneChartData.DeathWave',
-				`compose → ${(Object.values(uwStoneChartData).find((w) => w.name === 'Death Wave')?.stats ?? []).length} stats summed`
-			],
-			answer: () => weaponBreakdown('Death Wave')
-		},
-		{
-			match: /currenc|shard|gem/i,
-			pipeline: () => [
-				'kb.retrieve → 1 chunk: Module currencies',
-				'claimType → objective',
-				'compose → no catalog lookup needed'
-			],
-			answer: () => ({
-				text: 'Modules draw on five currencies, and two of them are pooled differently than people expect.',
-				rows: [
-					['Coins', 'Level upgrades'],
-					['Module shards', 'Level upgrades — separate pool per type'],
-					['Reroll shards', 'Sub-effect rerolls — one shared pool'],
-					['Stones', 'Assist rarity and efficiency'],
-					['Gems', 'Buying modules']
-				]
-			})
-		},
-		{
-			match: /merg|fodder/i,
-			pipeline: () => [
-				'kb.retrieve → 1 chunk: Module merging',
-				'oracle_traps → "level is recalculated" flagged as a known misread',
-				'compose → curated prose only'
-			],
-			answer: () => ({
-				text: 'The first module selected in a merge chain keeps its level and sub-effects; the rest are fodder. Level transfers directly rather than being recalculated.'
-			})
-		},
-		{
-			match: /theme|skin/i,
-			pipeline: () => [
-				'kb.retrieve → 1 chunk: Theme coin bonus',
-				'thetowersdk/data → THEME_PASSIVE_FORMULA',
-				'compose → formula rendered from the catalog'
-			],
-			answer: () => ({
-				text: 'Owned themes pay out whether or not they are equipped. Coin Bonus = 1 + the sum of these, times how many you own in each category.',
-				rows: [
-					['Tower', '0.004 each'],
-					['Background', '0.008 each'],
-					['Menu', '0.006 each'],
-					['Guardian', '0.006 each']
-				]
-			})
-		}
+	/*
+	 * Questions confirmed to answer correctly from the knowledge base on every attempt, each one
+	 * paired with a chart that exists in the registry.
+	 */
+	const SUGGESTIONS = [
+		'How do I sync Golden Bot with Death Wave?',
+		'What does Golden Tower do?',
+		'What are modules in The Tower?'
 	];
 
-	const SUGGESTIONS = ['How many stones to max GT?', 'What currencies do modules use?'];
+	/**
+	 * Where the rendered charts are served from.
+	 *
+	 * The images are produced by the tracker's own renderer (`scripts/render-sdk-site-charts.ts`)
+	 * and uploaded to Appwrite storage (`scripts/upload-sdk-site-charts.mjs`), so the image shown
+	 * here is the same image the tracker shows rather than a second drawing of the same data. They
+	 * are hosted rather than committed because forty-odd lossless tables are close to a megabyte,
+	 * and the project already runs an Appwrite that serves public files.
+	 */
+	const CHART_BUCKET = `${APPWRITE}/storage/buckets/sdk-site-charts/files`;
 
-	let turns = $state<Turn[]>([
-		{
-			role: 'assistant',
-			text: 'Hey there! Ask me a question about The Tower.'
+	/** Matches the id scheme in `scripts/upload-sdk-site-charts.mjs`. */
+	const chartUrl = (fileName: string) =>
+		`${CHART_BUCKET}/${fileName.replace(/\.png$/i, '').replace(/[^a-zA-Z0-9._-]/g, '-')}/view?project=${PROJECT}`;
+
+	/**
+	 * The supporting chart for a question, from the package's shared chart registry.
+	 *
+	 * The registry is the same one the tracker's assistant draws on, so a question only ever pairs
+	 * with a chart that actually exists.
+	 */
+	function chartFor(question: string) {
+		const terms = question
+			.toLowerCase()
+			.split(/[^a-z0-9+]+/)
+			.filter((term) => term.length > 2);
+		if (terms.length === 0) return null;
+
+		let best: { entry: (typeof SHARED_CHART_REGISTRY)[number]; score: number } | null = null;
+		for (const entry of SHARED_CHART_REGISTRY) {
+			const haystack = `${entry.title} ${entry.description}`.toLowerCase();
+			const score = terms.reduce((sum, term) => sum + (haystack.includes(term) ? 1 : 0), 0);
+			if (score >= 2 && (!best || score > best.score)) best = { entry, score };
 		}
-	]);
-	let draft = $state('');
-	let thinking = $state(false);
-
-	function respond(question: string): Turn {
-		const entry = ENTRIES.find((candidate) => candidate.match.test(question));
-
-		if (!entry) {
-			return {
-				role: 'assistant',
-				text: 'That is not in this demo knowledge base. A real one answers whatever you curate into it.',
-				pipeline: ['kb.retrieve → 0 chunks above threshold', 'compose → declined']
-			};
-		}
-
-		const answer = entry.answer();
-		return {
-			role: 'assistant',
-			text: answer.text,
-			rows: answer.rows,
-			total: answer.total,
-			pipeline: entry.pipeline()
-		};
+		return best?.entry ?? null;
 	}
 
-	function send(question: string) {
-		const trimmed = question.trim();
-		if (!trimmed || thinking) return;
+	let question = $state('');
+	let turns = $state<Turn[]>([]);
+	let pending = $state(false);
+	let failure = $state<string | null>(null);
+	let chart = $state<ReturnType<typeof chartFor>>(null);
+
+	async function ask(text: string) {
+		const trimmed = text.trim();
+		if (!trimmed || pending) return;
 
 		turns = [...turns, { role: 'user', text: trimmed }];
-		draft = '';
-		thinking = true;
+		question = '';
+		pending = true;
+		failure = null;
+		chart = chartFor(trimmed);
 
-		setTimeout(() => {
-			turns = [...turns, respond(trimmed)];
-			thinking = false;
-		}, 350);
+		try {
+			/*
+			 * Appwrite's REST execution endpoint, called with plain fetch rather than the Appwrite
+			 * SDK — this page should not carry a client library to ask one question. The function's
+			 * own reply comes back as a JSON string in `responseBody`.
+			 */
+			const response = await fetch(`${APPWRITE}/functions/${FUNCTION_ID}/executions`, {
+				method: 'POST',
+				headers: { 'content-type': 'application/json', 'x-appwrite-project': PROJECT },
+				body: JSON.stringify({
+					body: JSON.stringify({ question: trimmed }),
+					async: false,
+					method: 'POST',
+					path: '/'
+				})
+			});
+
+			const execution = await response.json().catch(() => null);
+			let payload: {
+				ok?: boolean;
+				answer?: string;
+				message?: string;
+			} | null = null;
+			try {
+				payload = execution?.responseBody ? JSON.parse(execution.responseBody) : null;
+			} catch {
+				payload = null;
+			}
+
+			if (!response.ok || !payload?.ok || !payload.answer) {
+				/*
+				 * Say what happened rather than inventing an answer. A demo that fabricates when the
+				 * service is down is worse than one that admits it.
+				 */
+				failure = payload?.message ?? `The assistant returned ${response.status}.`;
+				return;
+			}
+
+			turns = [...turns, { role: 'assistant', text: String(payload.answer) }];
+		} catch {
+			failure = 'Could not reach the assistant.';
+		} finally {
+			pending = false;
+		}
 	}
 </script>
 
-<div class="flex h-[28rem] flex-col rounded-md border border-line/70 bg-bg/40">
-	<div class="flex-1 space-y-3 overflow-y-auto p-3">
-		{#each turns as turn, i (i)}
-			{#if turn.role === 'user'}
-				<div class="flex justify-end">
-					<p class="max-w-[85%] rounded-lg rounded-br-sm bg-accent/15 px-3 py-2 text-sm text-fg">
-						{turn.text}
-					</p>
-				</div>
-			{:else}
-				<div class="flex justify-start">
-					<div class="max-w-[90%]">
-						{#if turn.pipeline}
-							<ol
-								class="mb-2 space-y-0.5 border-l-2 border-line pl-2 font-mono text-[11px] text-muted"
-							>
-								{#each turn.pipeline as step (step)}
-									<li>{step}</li>
-								{/each}
-							</ol>
-						{/if}
-						<div class="rounded-lg rounded-bl-sm bg-panel/70 px-3 py-2 text-sm text-fg/90">
-							<p>{turn.text}</p>
+<!--
+	Laid out as a chat, not as a fixed-height box.
 
-							{#if turn.rows}
-								<dl class="mt-2 space-y-0.5 font-mono text-xs">
-									{#each turn.rows as [label, value] (label)}
-										<div class="flex items-baseline justify-between gap-3">
-											<dt class="text-muted">{label}</dt>
-											<dd class="shrink-0 text-fg/90">{value}</dd>
-										</div>
-									{/each}
-									{#if turn.total}
-										<div
-											class="mt-1 flex items-baseline justify-between gap-3 border-t border-line/50 pt-1"
-										>
-											<dt class="text-fg/80">{turn.total[0]}</dt>
-											<dd class="shrink-0 font-semibold text-gold">{turn.total[1]}</dd>
-										</div>
-									{/if}
-								</dl>
-							{/if}
+	The transcript grows with its content and the page scrolls, so there is no inner scrollbar and no
+	empty space under a short answer. The prompts stay visible after one is used, so a reader can try
+	the next without reloading.
+-->
+<div class="flex flex-col gap-4">
+	<p class="text-sm text-muted">
+		Ask about a mechanic. This calls the live assistant — the same one behind the tracker site and
+		the bot's <code>/ask</code> — which answers from the shared TowerAI knowledge base.
+	</p>
+
+	<div class="flex flex-wrap gap-2">
+		{#each SUGGESTIONS as suggestion (suggestion)}
+			<button
+				type="button"
+				class="rounded-md border border-line px-2 py-1 text-xs text-muted hover:border-accent hover:text-fg disabled:opacity-50"
+				disabled={pending}
+				onclick={() => ask(suggestion)}
+			>
+				{suggestion}
+			</button>
+		{/each}
+	</div>
+
+	<!-- Transcript first, composer under it — the way every chat window is read. -->
+	{#if turns.length || pending || failure}
+		<div class="space-y-4 border-t border-line/70 pt-4">
+			{#each turns as turn, index (index)}
+				{#if turn.role === 'user'}
+					<div>
+						<p class="text-xs tracking-wide text-accent uppercase">You</p>
+						<p class="mt-1 font-medium">{turn.text}</p>
+					</div>
+				{:else}
+					<div>
+						<p class="text-xs tracking-wide text-accent uppercase">TowerAI</p>
+						<div class="assistant-reply mt-1 text-sm">
+							<!--
+								The markup is produced by `renderAssistantMarkdown`, which runs the model's reply
+								through DOMPurify before it is returned. This is the one sink on the site, and it
+								is sanitized at the source rather than here.
+							-->
+							<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+							{@html renderAssistantMarkdown(turn.text)}
 						</div>
 					</div>
-				</div>
-			{/if}
-		{/each}
-
-		{#if thinking}
-			<p class="text-xs text-muted">Retrieving…</p>
-		{/if}
-	</div>
-
-	<div class="border-t border-line/70 p-2">
-		<div class="mb-2 flex flex-wrap gap-1.5">
-			{#each SUGGESTIONS as suggestion (suggestion)}
-				<button
-					type="button"
-					class="rounded-md border border-line/70 px-2 py-1 text-[11px] text-muted hover:text-fg"
-					onclick={() => send(suggestion)}
-				>
-					{suggestion}
-				</button>
+				{/if}
 			{/each}
+
+			{#if pending}
+				<p class="text-sm text-muted">Thinking…</p>
+			{/if}
+			{#if failure}
+				<p class="text-sm text-accent">{failure}</p>
+			{/if}
+
+			{#if chart && !pending}
+				<figure class="rounded-md border border-line/70 bg-bg/40 p-3">
+					<figcaption class="mb-2 text-xs font-semibold tracking-wide text-accent uppercase">
+						{chart.title}
+					</figcaption>
+					<img
+						src={chartUrl(chart.fileName)}
+						alt={chart.description}
+						loading="lazy"
+						class="max-h-[28rem] w-auto rounded"
+					/>
+				</figure>
+			{/if}
 		</div>
-		<form
-			class="flex gap-2"
-			onsubmit={(event) => {
-				event.preventDefault();
-				send(draft);
-			}}
+	{/if}
+
+	<form
+		class="flex gap-2"
+		onsubmit={(event) => {
+			event.preventDefault();
+			ask(question);
+		}}
+	>
+		<input
+			class="w-full rounded-md border border-line bg-bg px-3 py-2 text-fg"
+			bind:value={question}
+			placeholder="Ask about a mechanic…"
+			autocomplete="off"
+			disabled={pending}
+		/>
+		<button
+			type="submit"
+			class="rounded-md border border-line px-3 py-2 text-sm disabled:opacity-50"
+			disabled={pending || !question.trim()}
 		>
-			<input
-				type="text"
-				class="flex-1 rounded-md border border-line bg-bg px-3 py-2 text-sm text-fg"
-				bind:value={draft}
-				placeholder="Ask about a mechanic…"
-			/>
-			<button type="submit" class="btn-primary rounded-md px-3 py-2 text-sm font-medium"
-				>Send</button
-			>
-		</form>
-	</div>
+			Ask
+		</button>
+	</form>
 </div>
 
-<p class="mt-3 rounded-md border border-line/60 bg-panel/40 p-2 text-xs text-muted">
-	<strong class="text-fg/80">Example only.</strong> AI assistants are known to make mistakes, and this
-	demo runs on a handful of chunks written for illustration. Do not rely on it for real answers about
-	the game.
-</p>
+<style>
+	/*
+	 * Markdown from the assistant arrives as real HTML, so the elements it produces need spacing.
+	 * `:global` is required because the markup is injected rather than compiled from this template.
+	 */
+	.assistant-reply :global(p) {
+		margin: 0.5rem 0;
+	}
+	.assistant-reply :global(ul),
+	.assistant-reply :global(ol) {
+		margin: 0.5rem 0;
+		padding-left: 1.25rem;
+		list-style: revert;
+	}
+	.assistant-reply :global(li) {
+		margin: 0.25rem 0;
+	}
+	.assistant-reply :global(strong) {
+		color: var(--color-fg);
+		font-weight: 600;
+	}
+	.assistant-reply :global(code) {
+		border-radius: 0.25rem;
+		background: rgba(0, 0, 0, 0.35);
+		padding: 0.05rem 0.3rem;
+	}
+	.assistant-reply :global(table) {
+		width: 100%;
+		margin: 0.75rem 0;
+		border-collapse: collapse;
+		font-size: 0.85em;
+	}
+	.assistant-reply :global(th),
+	.assistant-reply :global(td) {
+		border: 1px solid color-mix(in srgb, var(--color-line) 70%, transparent);
+		padding: 0.25rem 0.5rem;
+		text-align: left;
+	}
+	.assistant-reply :global(h1),
+	.assistant-reply :global(h2),
+	.assistant-reply :global(h3) {
+		margin: 0.75rem 0 0.25rem;
+		font-size: 1em;
+		font-weight: 600;
+		color: var(--color-fg);
+	}
+</style>

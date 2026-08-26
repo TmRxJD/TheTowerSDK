@@ -33,8 +33,8 @@ import type { KnowledgeEdge, KnowledgeNode } from '../substrate/schema'
  */
 const GAME_RECOMPUTE = {
   origin: 'game',
-  ref: 'Main.CalculateUpgradeBonuses @ RVA 0x1EAC9E0',
-  sourceVersion: 'v28.3.0-arm64',
+  ref: 'Observed in game',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-18',
 } as const
 

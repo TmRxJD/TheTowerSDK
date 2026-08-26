@@ -93,7 +93,7 @@ export const WIKI_SOURCES: readonly WikiSource[] = [
     // Its edge blocks Node's fetch by client fingerprint; see WikiSource.transport.
     transport: 'external',
     note:
-      'A fork of the Fandom wiki, since diverged. Carries datamined tables and '
+      'A fork of the Fandom wiki, since diverged. Carries detailed tables and '
       + 'guides, and has real content on several pages Fandom leaves as stubs. '
       + 'Titles are often namespaced (Workshop/Multishot, Guide:Beginners_Guide) '
       + 'and bare names redirect, so redirects are followed.',

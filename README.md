@@ -95,7 +95,6 @@ can run as many as you like over the same root.
 | Import | Contains | Browser-safe |
 |---|---|---|
 | `thetowersdk/data` | Game tables — costs, levels, effects, catalogs | Yes |
-| `thetowersdk/inputs` | The account state a calculator takes |
 | `thetowersdk/save` | `extract*FromSaveRoot()` and save inspection | Yes |
 | `thetowersdk/node` | The save decoder | Node — [see below](#decoding-in-a-browser) |
 | `thetowersdk/formatting` | Number and duration formatting matching the game | Yes |
@@ -105,8 +104,8 @@ can run as many as you like over the same root.
 | `thetowersdk/builders` | Ready-made calculators — see [below](#builders) | Yes |
 | `thetowersdk/bot` | Command registry, and every calculator as a command — see [below](#building-a-bot-on-this) | Yes |
 | `thetowersdk/sheets` | Google Sheets reads and writes — see [below](#google-sheets) | Yes |
-| `thetowersdk/assets` | The game's artwork catalogue — 1,059 assets across 19 domains — see [below](#module-and-card-artwork) | Yes |
 | `thetowersdk/knowledge` | The mechanics oracle, and five years of patch notes — see [below](#patch-notes) | Yes |
+| `thetowersdk/assets` | Path helpers for artwork **you supply** — see [below](#using-your-own-artwork) | Yes |
 
 Game data lives here, not in the consuming application. Relic unlock methods and
 bonus totals, theme categories and their coin coefficients, vault tree
@@ -430,7 +429,7 @@ returns is a plain object that extractors read and never mutate, so run as many 
 one root.
 
 **Only `thetowersdk/node` needs Node.** `data`, `save`, `formatting`, `mechanics`, `wiki`,
-`charts`, `knowledge` and `inputs` are all browser-safe. A widget that never opens a save file
+`charts` and `knowledge` are all browser-safe. A widget that never opens a save file
 never imports the decoder — that is why `browser-widget.ts` exists as a separate file.
 
 **Say what you could not do.** Extractors return `null` for features a save predates and carry a
@@ -1004,39 +1003,52 @@ agent asking *when did this change* meets the dating rule before it reaches a da
 
 ---
 
-## Module and Card Artwork
+## Using Your Own Artwork
 
-Trackers show a module or a card as a picture, and working out which file that is turns out
-to be the hard part. `thetowersdk/assets` ships the mapping:
+This package ships **no images and no catalogue of them**. The art belongs to TechTree Games,
+there is no permission to redistribute it, and a list naming every sprite in the game is derived
+from the game whoever typed it — so that is not shipped either.
+
+What ships is the naming rule, so a tool can find a file in a directory of artwork **you supply**.
 
 ```ts
-import { moduleAssetPath, cardAssetPath, towerAssetUrl } from 'thetowersdk/assets'
+import { gameAssetPath, gameAssetPaths, towerAssetUrl, assetSlug } from 'thetowersdk/assets'
 
-moduleAssetPath('Om Chip')     // 'assets/site/modules_core/epic_oc.png'
-cardAssetPath('slow-aura')     // 'assets/site/cards/sa.jpg'
+gameAssetPath('Amplifying Strike', { domain: 'modules' })
+// 'modules/amplifying-strike-md.webp'
+
+gameAssetPaths('Om Chip', { domain: 'modules' })
+// { sm: 'modules/om-chip-sm.webp', md: '…-md.webp', lg: '…-lg.webp' }
+
+towerAssetUrl(gameAssetPath('Om Chip', { domain: 'modules' }), '/art')
+// '/art/modules/om-chip-md.webp'
 ```
 
-**The images are not in this package.** They are The Tower's artwork, owned by TechTree
-Games, and they live in [`tower-assets`](https://www.npmjs.com/package/tower-assets), which
-claims no licence over them and asserts no authorship. A list of filenames is not artwork,
-so the mapping ships here and the art stays where it is.
+### Where to put the files
 
-```bash
-npm install tower-assets
+```
+<your art root>/
+  modules/amplifying-strike-sm.webp
+  modules/amplifying-strike-md.webp
+  modules/amplifying-strike-lg.webp
+  cards/…   relics/…   enemies/…   guardians/…   perks/…
 ```
 
-A module's file is named after its **initials** and rarity prefix — `Om Chip` is
-`epic_oc.png`, not `om-chip.png`. Cards are named after their id, except where they are not:
-`slow-aura` is stored as `sa.jpg`. Both mistakes are silent, because a missing image does not
-throw; it renders as nothing, on one card, at one rarity. Every function returns `null` for
-something that has no art, so a caller can tell that apart from a wrong path.
+One directory per domain, one file per size, named `<slug>-<size>.<ext>`. The slug is the name
+lowercased with runs of non-alphanumerics collapsed to a single hyphen — `Om Chip` becomes
+`om-chip`, `Damage / Meter` becomes `damage-meter`. `assetSlug()` applies exactly that rule, so
+name your files with it rather than reimplementing it: two implementations of one convention is
+how a name stops matching its file.
 
-All 48 modules and 31 cards resolve, checked against the real files rather than against the
-manifest itself. Rarity frames come from `moduleFrameAssetPath`, which follows a different
-rule — the `+` tiers have their own frame where the module art does not.
+`ASSET_DOMAINS` lists the directory names, `ASSET_SIZES` the sizes. Use whichever subset you have
+— nothing requires all three sizes, and `extension` overrides `webp` if your files are `png`.
 
-Paths are transport-agnostic; `towerAssetUrl(path, base)` joins them to whatever your
-bundler, static mount or CDN expects.
+### It builds paths, it does not check them
+
+These functions never touch the disk, because the disk is yours. A path pointing at a file you do
+not have renders as a gap rather than throwing, so verify your own directory once at startup
+instead of trusting a returned string. `null` comes back only when a name slugifies to nothing,
+which stops `modules/-md.webp` from ever looking like a real path.
 
 ---
 
@@ -1078,23 +1090,6 @@ plan.steps      // what to buy, in order, with cost, gain and ROI
 plan.excluded   // what it did not offer, and why
 plan.issues     // why it could not plan at all — empty on every plan that ran
 ```
-
-### Holding a Player's State
-
-`thetowersdk/inputs` is the account state a calculator takes: labs settings,
-workshop levels, uptime inputs, card progress, module options, perk preferences.
-Every schema normalises — hand it whatever you have stored and it returns a
-complete record with the defaults filled in, dropping fields that do not parse
-rather than coercing them.
-
-```ts
-import { normalizeSharedToolInputs, defaultSharedToolInputs } from 'thetowersdk/inputs'
-
-const state = normalizeSharedToolInputs(whateverYouStored)
-```
-
-These are the same shapes the SDK's own calculators read, so a plan built from
-them needs no translation layer.
 
 ### Planning For a Real Player
 

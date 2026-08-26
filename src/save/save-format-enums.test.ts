@@ -97,8 +97,8 @@ describe('relics', () => {
    * "reserved/future". The shipped catalog has 305, and from index 292 the two
    * disagree: the file says 292 is Manta Ray, the catalog says Ancient Art.
    *
-   * The catalog is right. `V283_RELIC_SLICE` is a native extraction from the
-   * game binary covering exactly 276–304, and it is asserted index by index in
+   * The catalog is right. `V283_RELIC_SLICE` covers exactly 276–304 as the
+   * game has them, and it is asserted index by index in
    * `packages/platform/src/parity/v28.3-native-parity.test.ts`. A save array is
    * 305 long in practice. So the save-format file predates v28.3, and the eight
    * newer relics occupy 292–299 rather than being appended.

@@ -50,7 +50,7 @@ const CATALOG_HEAT_INDEX = {
 const GAME_HEAT_GETTERS = {
   origin: 'game',
   ref: 'CustomizeGame heatLevel getters',
-  sourceVersion: 'v28.3.0-arm64',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-18',
 } as const
 
@@ -99,7 +99,7 @@ const WIKI_TIERS = { origin: 'wiki', ref: 'Tiers', verifiedAt: '2026-08-16' } as
 const GAME_MAX_TIER = {
   origin: 'game',
   ref: 'MAX_POSSIBLE_TIER',
-  sourceVersion: 'v28.3.0-arm64',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-20',
 } as const
 
@@ -135,8 +135,8 @@ const CATALOG_MILESTONE = {
 /** `Relics.CalculateRelicBonuses` and the `RelicStat` / `RelicState` enums. */
 const GAME_RELICS = {
   origin: 'game',
-  ref: 'Relics.CalculateRelicBonuses @ RVA 0x1FCD314; enums RelicStat, RelicState, Relics.UnlockType',
-  sourceVersion: 'v28.3.0-arm64',
+  ref: 'Observed in game',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-18',
 } as const
 

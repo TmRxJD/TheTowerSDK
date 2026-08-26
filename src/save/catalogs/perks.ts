@@ -84,7 +84,7 @@ export const PERK_TRADE_OFF_TRANSPOSITION_FIXED = [40, 48, 41, 49] as const
 /**
  * What `perkBenefitUpBase` is: the constant term of the one real formula.
  *
- * `Perks.PerkBenefitUp` (0x1F7FC74) computes, for the normal path:
+ * The normal path computes:
  *
  *     (base[i] + increase[i] * perkLevel[i]) * (1 + StandardPerkBonus)
  *
@@ -155,11 +155,8 @@ export const PERK_WITHOUT_IDENTITY_TERM = [4, 6, 7, 8, 9, 10, 11, 12] as const
  * Perk 44 has no magnitude because it is a FLAG, and that is the data.
  *
  * `perkBenefitUpIncrease[44]` is 0, which reads like a missing value. It is not.
- * `Enemy.get_RangedInRange` (0x21B58F0) does:
- *
- *     w8 = perkLevel[44]
- *     cmp w8, #0
- *     mov w8, #0x138            ; Enemy.rangedEnemyInRangeBool
+ * The perk is read as a flag: if its level is non-zero the ranged-in-range
+ * behaviour switches on, and the magnitude is never consulted.
  *     cinc x8, x8, gt           ; -> 0x139 Enemy.nearRangedEnemyInRangeBool
  *     ldrb w0, [x19, x8]
  *

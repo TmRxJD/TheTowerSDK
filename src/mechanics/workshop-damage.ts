@@ -1,8 +1,7 @@
 /**
  * Tower damage from the workshop Damage upgrade, in closed form.
  *
- * Read instruction by instruction from `Main.CalculateDamageUpgradeBonuses`
- * (RVA 0x1ED59C4, v28.3.0-arm64) and checked against every row of the shipped
+ * Verified at v28.3.0 against every row of the shipped
  * `WORKSHOP_DATA.Damage` table — 6001 levels, worst relative error 4.15e-7,
  * which is the table's own rounding.
  *

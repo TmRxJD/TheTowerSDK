@@ -506,7 +506,7 @@ function evaluateByRegistryKey(
 
 /**
  * Pure function to map canonical game data into player-adjusted dropdown options.
- * Framework-agnostic — pass hub KV slices from RxDB/Pinia without importing them here.
+ * Framework-agnostic — pass the shared input slices in directly; no store or framework is involved.
  */
 export function evaluateDropdownOptions(
   key: GameDataKey | string,

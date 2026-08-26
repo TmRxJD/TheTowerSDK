@@ -36,7 +36,7 @@ const GAMEVAULT_LABS = {
 const GAME_LAB_REMOTE_CONFIG = {
   origin: 'game',
   ref: 'Lab.UpdateSpeedUpCostsFromRemoteConfig; LabSpeedUp.speedUpCostPerHour (int[])',
-  sourceVersion: 'v28.3.0-arm64',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-20',
 } as const
 
@@ -64,7 +64,7 @@ const OWNER_LABS = {
 const GAME_LAB_CONSTANTS = {
   origin: 'game',
   ref: 'Lab public const',
-  sourceVersion: 'v28.3.0-arm64',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-20',
 } as const
 

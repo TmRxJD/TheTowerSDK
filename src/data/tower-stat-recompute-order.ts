@@ -1,11 +1,9 @@
 /**
  * Every tower stat the game recomputes, in the order it recomputes them.
  *
- * Read from `Main.CalculateUpgradeBonuses(bool ignoreCurrentHealth)`
- * (RVA 0x1EAC9E0, v28.3.0-arm64) — 3991 instructions that walk every derived
- * stat getter in turn and finish by calling `CalculateEnemyLevelSkipChances`.
- * It is the game's own enumeration of what a "tower stat" is, which makes it a
- * naming and coverage authority rather than a convenience list.
+ * This is the game's own enumeration of what a "tower stat" is and the order
+ * it recalculates them in, ending with the enemy level-skip chances. That makes
+ * it a naming and coverage authority rather than a convenience list.
  *
  * ## What it is good for
  *
@@ -198,8 +196,8 @@ export const TOWER_STATS_THAT_RESOLVE: readonly TowerStatName[] = TOWER_STAT_REC
 /**
  * The stat `CalculateUpgradeBonuses` does NOT compute itself.
  *
- * Damage has its own function, `Main.CalculateDamageUpgradeBonuses`
- * (RVA 0x1ED59C4), called first. So the 46 above are 46 of 47, and the missing
+ * Damage is computed on its own, before the rest. So the 46 above are 46 of
+ * 47, and the missing
  * one is the stat every build is measured by — which is exactly the kind of
  * omission that reads as a complete list.
  */

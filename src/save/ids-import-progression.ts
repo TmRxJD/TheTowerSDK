@@ -44,7 +44,7 @@ import {
   type IdsModuleCategory,
 } from './ids-import-modules'
 import {
-  IdsDomainExtract,
+  type IdsDomainExtract,
   findAttributeColumn,
   findBlock,
   findFirstDisplayColumn,

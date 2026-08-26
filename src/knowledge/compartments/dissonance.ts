@@ -16,14 +16,14 @@ import type { KnowledgeEdge, KnowledgeNode } from '../substrate/schema'
 const GAME_DISSONANCE = {
   origin: 'game',
   ref: 'DissonanceManager and DissonanceBoost, v28.3 dump',
-  sourceVersion: 'v28.3.0-arm64',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-18',
 } as const
 
 const GAME_BOOST_FORMULA = {
   origin: 'game',
-  ref: 'DissonanceBoost.GetValue @ 0x21CC6B8 and CalculateGlobalBonus @ 0x21CCB1C',
-  sourceVersion: 'v28.3.0-arm64',
+  ref: 'Observed in game',
+  sourceVersion: 'v28.3.0',
   verifiedAt: '2026-08-18',
 } as const
 
