@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
 /**
@@ -14,12 +15,22 @@ import { describe, expect, it } from 'vitest'
  */
 describe('the published source carries no extraction detail', () => {
   it('scripts/scrub-extraction-references.mjs --check finds nothing', () => {
-    const script = path.join('scripts', 'scrub-extraction-references.mjs')
+    /*
+     * Resolved from this file, not from the working directory. Run from the monorepo root — which
+     * is how the pre-push suite runs it — a relative path looked for the scrubber in the root's
+     * own `scripts/`, and the guard failed on not finding itself rather than on anything it
+     * checks. A guard that cannot run is indistinguishable from one that has nothing to report.
+     */
+    const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+    const script = path.join(packageRoot, 'scripts', 'scrub-extraction-references.mjs')
 
     let output = ''
     let failed = false
     try {
-      output = execFileSync(process.execPath, [script, '--check'], { encoding: 'utf8' })
+      output = execFileSync(process.execPath, [script, '--check'], {
+        cwd: packageRoot,
+        encoding: 'utf8',
+      })
     }
     catch (error) {
       failed = true
