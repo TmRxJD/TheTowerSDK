@@ -102,3 +102,20 @@ spreadsheets for The Tower. That work saved an enormous amount of collation and
 is a large part of why these tables are as complete as they are.
 
 Shared with the community as a reference; included here with thanks.
+
+-------------------------------------------------------------------------------
+
+Author: Florent Castelli (Orphis)
+Source: private repositories, shared directly
+
+The lab CATEGORIES in `src/data/generated/labs-categories.generated.ts` are read
+out of the game's own UI hierarchy rather than maintained by hand, and both the
+method and the asset-reassembly step it depends on were adapted from Orphis's
+extraction work with his permission. A lab's category is which container its UI
+tile is parented under; recovering it that way closed a gap in which six labs --
+including all four module-stat labs -- shipped in the data and could not be
+rendered, because a hand-maintained list held 231 of the game's 253.
+
+His independently produced lab names and localization tables were also used to
+cross-check ours; they agreed exactly, which is a large part of why this data is
+trusted. Licence terms to be formalised at his convenience.

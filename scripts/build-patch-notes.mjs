@@ -34,7 +34,7 @@ import { fileURLToPath } from 'node:url'
 
 const PACKAGE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const SOURCE = path.join(PACKAGE_ROOT, 'data', 'patch-notes', 'raw-messages.json')
-const OUT_FILE = path.join(PACKAGE_ROOT, 'src', 'knowledge', 'patch-notes.generated.ts')
+const OUT_FILE = path.join(PACKAGE_ROOT, 'src', 'knowledge', 'generated', 'patch-notes.generated.ts')
 
 const check = process.argv.includes('--check')
 

@@ -13,12 +13,7 @@ pnpm mcp
 
 It speaks MCP over stdio, so register it as a stdio server.
 
-**Tracker monorepo:** use the slim pair — `tools/tower-mcp/mechanics-server.mjs` (`tower`) for
-mechanics. Do **not**
-register this package server and the monorepo servers together (duplicate tools / catalog overflow).
-The full CI harness is `tools/tower-mcp/server.mjs` (not for IDE CallMcpTool).
-
-Standalone package consumers:
+By config file:
 
 ```json
 {

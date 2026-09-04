@@ -17,7 +17,7 @@ The index maps that turn a save’s numbers into named things.
 | `ultimate-weapons.ts` | — | UltimateWeaponCatalogRow, findUltimateWeaponCatalogRow, findUltimateWeaponCatalogName, listUltimateWeaponCatalogRows (+1 more) |
 | `vault-overrides.ts` | — | HARMONY_VAULT_SLOT_OVERRIDES, POWER_VAULT_SLOT_OVERRIDES, POWER_VAULT_SINGLE_PURCHASE_NODE_IDS |
 | `vault-power.ts` | — | VaultPowerImportSlice, VaultPowerMappingScore, VaultPowerMappingStrategyId, scoreVaultPowerSaveMapping (+5 more) |
-| `vault.ts` | — | VaultTrackerNodeSaveBinding, buildVaultChartSlotIndexById, applyVaultSlotIndexOverrides, buildVaultTrackerNodeSlotBindings (+2 more) |
+| `vault.ts` | — | VaultNodeSaveBinding, buildVaultChartSlotIndexById, applyVaultSlotIndexOverrides, buildVaultNodeSlotBindings (+2 more) |
 | `workshop.ts` | — | WorkshopCatalogRow, WorkshopEnhancementCatalogRow, findWorkshopCatalogRow, findWorkshopEnhancementCatalogRow (+4 more) |
 
 [← src](../../MAP.md) · [← the package](../../../MAP.md)

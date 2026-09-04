@@ -6,25 +6,37 @@ The checks and generators. Each is a `package.json` script; none is called from 
 
 | File | Purpose | Exports |
 |---|---|---|
+| `apply-vault-v29-enemy-overlay.mjs` | Overlay binary Enemy keyCosts onto vault-v29.generated.ts (in place). | — |
 | `audit-package-contents.mjs` | Assert what the published tarball actually contains — not what `files` says it should. | — |
 | `audit-published-surface.mjs` | What does an installed copy of this package actually contain, and how much of it can a consumer reach? | — |
 | `build-asset-manifest.mjs` | Generate the Tower asset manifest from the files that actually exist. | — |
+| `build-daily-mission-goals.mjs` | Emit the goal a daily mission asks for at each of its tiers. | DailyMissionGoal, DAILY_MISSION_GOALS, DAILY_MISSION_GOALS_BY_INDEX |
 | `build-doc-snippets.mjs` | Extract named code snippets from the canonical sources, for every docs surface to share. | — |
 | `build-game-asset-manifest.mjs` | Generate the GAME asset catalogue from `tower-assets/assets/game/manifest.json`. | — |
+| `build-lab-categories.mjs` | Emit lab categories taken from the game's own UI hierarchy. | LAB_CATEGORY_BY_INDEX, LAB_CATEGORY_RESEARCH_COUNT |
+| `build-lab-v29-curves.mjs` | Build v29 lab level curves (242-252) from validated references. | — |
+| `build-main-spawn-chances.mjs` | Emit main-spawn-type-chances.generated.ts from v29 Unity asset extract. | MainSpawnTypeSceneChancesV29, MAIN_SPAWN_TYPE_SCENE_CHANCES_V29 |
 | `build-patch-notes.mjs` | Turn the raw patch-notes archive into the dataset that ships. | — |
+| `build-vault-v29-enemy-binary.mjs` | Emit vault-v29-binary-enemy-keycosts.generated.ts from the v29 SO extract. | VAULT_V29_BINARY_ENEMY_PROVENANCE, VAULT_V29_BINARY_ENEMY_LEVEL_COSTS, VAULT_V29_BINARY_ENEMY_BY_ENEMY_STAT |
+| `build-vault-v29.mjs` | Read the v29 vault workbook into a dataset the package can compare against later. | VaultV29Category, VaultV29Status, VaultV29Upgrade, VaultV29EnemyUpgrade (+6 more) |
 | `build-wiki.mjs` | Render the GitHub wiki from this package's own docs. | — |
 | `check-acronym-expansions.ts` | Invented expansions of real acronyms. | PACKAGE_ROOT, AcronymFinding, buildAcronymAuthority, buildNameAuthority (+4 more) |
 | `check-conventions.mjs` | Enforces the package's structural conventions. | — |
+| `check-organization.mjs` | Enforces `docs/ORGANIZATION_CONTRACT.md`. | — |
 | `check-readme-links.mjs` | Validate the README's own anchors and relative file links. | — |
+| `check-sdk-specifiers.mjs` | Does every `thetowersdk/...` specifier in this repo actually resolve to a file? | — |
 | `copy-assets.mjs` | — | — |
 | `emit-knowledge-graph.mjs` | Emit the knowledge graph as portable artifacts. | — |
-| `generate-glossary.mjs` | Regenerates `src/data/glossary-names.generated.ts` from the catalogs. | GLOSSARY_NAMES |
+| `generate-glossary.mjs` | Regenerates `src/data/generated/glossary-names.generated.ts` from the catalogs. | GLOSSARY_NAME_ROWS |
 | `ingest-patch-notes.mjs` | Ingest the official patch-notes channel into a local archive. | — |
 | `link-coverage-inventories.mjs` | Regenerate the file-based coverage inventories. | — |
 | `map-the-repo.mjs` | Give every source file a map of itself, and every directory a map of its files. | ROOTS, NO_HEADER, takesAHeader |
+| `move-modules.mjs` | Move source modules and repoint every import, by resolving paths rather than matching text. | — |
 | `publish-wiki.mjs` | Render the wiki and push it, using whatever git credentials you already have. | — |
 | `refresh-effective-paths-reference.mjs` | Refreshes the Effective Paths reference fixtures under `fixtures/data/`. | — |
 | `run-examples.mjs` | Run every example and template, so "runnable examples" stays a fact. | — |
+| `scan-wave-spawn-bl.mjs` | — | — |
+| `scan-wave-spawn-disasm.mjs` | — | — |
 | `scrub-extraction-references.mjs` | Remove extraction detail from the published source. | — |
 | `verify.mjs` | Run the package's checks with only the ordering they actually need. | — |
 

@@ -6,63 +6,6 @@ The game tables — costs, levels, effects, catalogs.
 
 | File | Purpose | Exports |
 |---|---|---|
-| `assets.ts` | — | TOWER_ASSET_CATALOG_META, TOWER_ASSET_TABLES, GameAssetModuleEffectRow, MODULE_EFFECTS_TABLE (+5 more) |
-| `battle-condition-names.ts` | One name per battle condition, whatever the source called it. | canonicalBattleConditionName, BATTLE_CONDITION_ALIAS_ENTRIES, ELS_REDUCTION_TIER_NAME, ELS_REDUCTION_DEFINED_NAME (+1 more) |
-| `bots.ts` | — | BotLabInfoRow, BotStatDefinition, BotValueRow, BotStatRow (+55 more) |
-| `campaign-tier.ts` | — | MAX_CAMPAIGN_TIER, MIN_CAMPAIGN_TIER, clampCampaignTier, campaignTierTableLength |
-| `cards.ts` | — | CardTemplate, CARD_MAX_COPIES, RARITY_CHANCES, CARD_LEVELS (+6 more) |
-| `chart-tables.ts` | — | WaveAcceleratorSpawnRatesRow, WAVE_ACCELERATOR_SPAWN_RATE_ROWS, EnemyBalanceMasteryRow, ENEMY_BALANCE_MASTERY_ROWS (+1 more) |
-| `currency.ts` | — | CurrencyName, CurrencyDefinition, CurrencyFlowRow, CashEnemyValueRule (+22 more) |
-| `daily-missions.ts` | — | DailyMissionTierReward, DailyMissionWeeklyReward, DailyMissionLabLevel, DAILY_MISSION_TIER_REWARDS (+3 more) |
-| `enemies.ts` | — | FleetRewardRow, FleetSpawnRow, EnemyTypeSummary, ENEMIES_OVERVIEW_FACTS (+12 more) |
-| `glossary-concepts.ts` | Terms a tool builder meets that are not themselves catalog names: | GLOSSARY_CONCEPTS |
-| `glossary-names.generated.ts` | — | GLOSSARY_NAMES |
-| `glossary-types.ts` | — | GlossaryKind, GlossaryDomain, GlossaryEntry |
-| `glossary.ts` | The SDK's dictionary of terms: | GLOSSARY, lookupGlossary, expandAcronym, listGlossaryByDomain (+3 more) |
-| `guardian-upgrades.ts` | — | AttackUpgrade, AllyUpgrade, BountyUpgrade, FetchUpgrade (+3 more) |
-| `guardians.ts` | — | GuardianDefinition, getGuardianStatNames, getGuardianStatValues, getGuardianCostValues (+5 more) |
-| `guild.ts` | Guilds — the system that gates the Guardian, bits and guild tokens. | GUILD_BOX_REWARD_TABLE_KEY, guildSeasonFromRelicEvent, guildSeasonLabel, GuildSeasonRelics (+9 more) |
-| `index.ts` | Game data — every table the game uses, as typed arrays and records. | expandAcronym, GLOSSARY, GLOSSARY_CONCEPTS, GLOSSARY_NAMES (+6 more) |
-| `labs-catalog.ts` | — | LabCatalogLevel, LabCatalogRecord, LAB_CATALOG |
-| `labs-categories.ts` | — | SITE_LAB_SLUG_ALIASES, LAB_LEVEL_TABLE_NAME_BY_SLUG, labLevelTableLookupNames, findSiteLabCategoryForSaveIndex (+3 more) |
-| `labs-display-overrides.ts` | — | LAB_RESEARCH_DISPLAY_NAME_OVERRIDES, LAB_RESEARCH_LEGACY_LEVEL_KEYS, LabResearchImportRow, findLabResearchImportRow (+4 more) |
-| `labs-research-data.ts` | — | LabResearchRecord, LAB_RESEARCH_COUNT, LAB_RESEARCH_BY_INDEX, LAB_RESEARCH_SLUG_TO_INDEX (+2 more) |
-| `labs-research.ts` | — | findLabResearchByIndex, findLabResearchBySlug, findLabResearchByDisplayName, findLabResearchRecord (+6 more) |
-| `labs-unlocks.ts` | — | UNLOCKED_BY_ULTIMATE, LabUnlockRequirement, LabUnlock, LAB_UNLOCKS (+4 more) |
-| `labs.ts` | — | ToolLabLevel, ToolLabRecord, ToolLabMenuOption, LabProgressModifiers (+23 more) |
-| `milestone-unlocks.ts` | Which milestone first makes each system available. | MilestoneSystemUnlock, MILESTONE_SYSTEM_UNLOCKS, findMilestoneUnlockFor, NON_MILESTONE_GATES |
-| `milestones.ts` | — | MilestoneTrackKey, MilestoneRewardKind, MilestoneWaveRewardData, MilestoneTrackTotals (+14 more) |
-| `module-bonus.ts` | — | ModuleCalcType, computeModuleStat, normalizeModuleTypeForCalc |
-| `module-costs.ts` | — | MODULE_COST_TABLE_LENGTH, MODULE_REROLL_COSTS_BY_LOCKED_SUBSTATS, ASSIST_MODULE_STONE_COSTS, getModuleCoinUpgradeCost (+14 more) |
-| `module-effect-resolver.ts` | — | ResolvedModuleEffect, getModuleEffectRow, findModuleEffect, findModuleEffectRarityName |
-| `module-enums.ts` | — | MODULE_SUBSTATS_CLUSTER, MODULE_EFFECT_RARITY_ROWS, MODULE_TYPE_ROWS, MODULE_EFFECT_RARITY_LABELS (+1 more) |
-| `module-info-catalog.ts` | — | ModuleInfoCatalogRow, ModuleInfoIdentity, findModuleInfoIdentity, findModuleInfoCatalogRow (+3 more) |
-| `module-levels.ts` | — | MODULE_RARITIES, ModuleRarity, moduleRarityItems, MODULE_RARITY_LEVEL_CAPS (+8 more) |
-| `module-merge.ts` | Module merging — what each step consumes, and what it produces. | ModuleMergeMatchMode, ModuleMergeRecipe, MODULE_MERGE_RECIPES, MODULE_MAX_ANCESTRAL_STARS (+6 more) |
-| `module-pull-simulator.ts` | Module pull simulation. | MODULE_PULL_EPIC_PITY_CAP, MODULE_PULL_RARE_TEN_PITY, MODULE_PULL_RARITY_RATES, MODULE_PULL_POOL_SIZES (+11 more) |
-| `module-substats.ts` | — | ModuleSubstatCanonicalCategory, ModuleSubstatCanonicalRarity, ModuleSubstatCanonicalDefinition, ModuleSubstatCanonicalCategoryData (+4 more) |
-| `modules.ts` | — | ModuleCategory, ModuleRarityLabel, ModuleRarityBonus, ModuleTemplate (+8 more) |
-| `perks.ts` | — | PerkPoolKey, PerkPoolRate, PerkEntry, PerkWaveRequirementBracket (+20 more) |
-| `player-stats.ts` | — | PLAYER_DATA_FIELD_CATALOG, TOWER_SUBSTATS_CLUSTER, TOWER_EFFECT_RARITY_ENUM, TOWER_MODULE_TYPE_ENUM (+13 more) |
-| `reference-tables.ts` | — | ReferenceTable, REFERENCE_TABLES, ReferenceTableKey |
-| `relics.ts` | — | RelicTemplate, computeLabSpeedRelicBonusPercent, RelicUnlockMethodKey, RelicUnlockMethodDefinition (+11 more) |
-| `research-lab-level.ts` | — | computeResearchLabLevel |
-| `schemas.ts` | Runtime schemas for the public data tables. | primitiveSchema, levelRowSchema, indexedEntrySchema, labCatalogRecordSchema (+7 more) |
-| `themes-bonus-catalog.ts` | — | ThemeItem, ThemeBonusGroup, THEME_CATEGORY_BONUS, TOWER (+9 more) |
-| `themes-catalog.ts` | — | ThemeCategoryKey, ThemeCategoryDefinition, ThemePassiveFormulaTerm, THEME_CATEGORY_DEFINITIONS (+4 more) |
-| `tiers.ts` | — | TierBattleConditionDefinition, TierBattleConditionValue, TierData, TierCoinBonusRow (+14 more) |
-| `tools-catalog.ts` | — | SharedToolCategory, SharedToolDefinition, sharedToolsCatalog, buildBotToolsHubDescription |
-| `tournaments.ts` | — | TournamentLeague, TournamentScheduleSlot, TournamentUnlockRequirement, TournamentTicketModel (+39 more) |
-| `tower-stat-recompute-order.ts` | Every tower stat the game recomputes, in the order it recomputes them. | TOWER_STAT_DISABLE_GATES, TOWER_STAT_RECOMPUTE_ORDER, TowerStatName, TOWER_STATS_THAT_MISRESOLVE (+8 more) |
-| `ultimate-weapon-stones.ts` | — | UwStoneChartLevel, UwStoneChartStat, UwStoneChartWeapon, UwStoneChartDataMap (+1 more) |
-| `ultimate-weapons.ts` | — | UwLevelValue, UwStatValue, UwWeaponValue, UwStatCostRow (+8 more) |
-| `vault-tree-traversal.ts` | — | VaultTreeChildSort, POWER_VAULT_TIER_UNLOCK_NODE_IDS, buildVaultTreeChildrenMap, buildVaultTreeBfsOrder (+2 more) |
-| `vault-tree.ts` | — | VaultTreeNode, harmonyTreeNodes, powerTreeNodes, DEFAULT_HARMONY_VAULT_NODES (+7 more) |
-| `workshop-costs.ts` | — | WorkshopCostLevels, WSP_ATTACK_COSTS, WSP_ATTACK_SPEED_COSTS, WSP_DEFENSE_COSTS (+13 more) |
-| `workshop-discount-normalize.ts` | — | WORKSHOP_SECTION_DISCOUNT_MAX_PCT, WORKSHOP_SECTION_DISCOUNT_STEP, ENHANCEMENT_SECTION_DISCOUNT_MAX_PCT, ENHANCEMENT_SECTION_DISCOUNT_STEP (+12 more) |
-| `workshop-enhancement-tracker-definitions.ts` | — | WorkshopEnhancementStatDefinition, getWorkshopEnhancementDefinitions |
-| `workshop-table.ts` | — | WorkshopDataRow, WorkshopData, WORKSHOP_DATA |
-| `workshop-tracker-definitions.ts` | — | WorkshopCategory, WorkshopLevelEntry, WorkshopStatDefinition, getWorkshopStatDefinitions (+2 more) |
-| `workshop.ts` | — | WorkshopLevelCostRow, computeWorkshopTotalDiscountPercent, computeDiscountedWorkshopCost, workshopCostMaxLevel (+2 more) |
+| `index.ts` | Game data — every table the game uses, as typed arrays and records. | DAILY_MISSION_GOALS, DAILY_MISSION_GOALS_BY_INDEX, DailyMissionGoal, VAULT_V29_ENEMY (+18 more) |
 
 [← src](../MAP.md) · [← the package](../../MAP.md)

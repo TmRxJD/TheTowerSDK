@@ -10,9 +10,8 @@ import { fileURLToPath } from 'node:url'
 
 const dir = path.dirname(fileURLToPath(import.meta.url))
 const assets = [
-  'data/workshop.json',
+  'data/workshop/table.json',
   'mechanics/ep-graph/data/ep-graph.v1.json',
-  'mechanics/sdk-graph/data/sdk-graph.v1.json',
 ]
 
 for (const rel of assets) {

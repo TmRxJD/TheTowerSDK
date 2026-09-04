@@ -38,7 +38,7 @@ export const CATALOG_CALCULATORS: readonly CalculatorSpec[] = [
     id: 'bot.statMinLevel',
     title: 'Lowest level a bot stat has data for',
     entry: 'data',
-    module: `${DATA}/bots.ts`,
+    module: `${DATA}/bots/data.ts`,
     symbol: 'getBotStatMinLevel',
     because: 'The floor of the bots calculator\'s level field, per stat.',
     params: [{ name: 'stat', kind: 'object', describes: 'the bot stat row' }],
@@ -56,7 +56,7 @@ export const CATALOG_CALCULATORS: readonly CalculatorSpec[] = [
     id: 'bot.statMaxLevel',
     title: 'Highest level a bot stat has data for',
     entry: 'data',
-    module: `${DATA}/bots.ts`,
+    module: `${DATA}/bots/data.ts`,
     symbol: 'getBotStatMaxLevel',
     because: 'The ceiling of the same field. Levels between the two are what the tool will accept.',
     params: [{ name: 'stat', kind: 'object', describes: 'the bot stat row' }],
@@ -73,7 +73,7 @@ export const CATALOG_CALCULATORS: readonly CalculatorSpec[] = [
     id: 'bot.statNames',
     title: 'A bot\'s stat names, in display order',
     entry: 'data',
-    module: `${DATA}/bots.ts`,
+    module: `${DATA}/bots/data.ts`,
     symbol: 'getBotStatNames',
     because:
       'The labels on the bot card and the order its fields appear in. Order is the load-bearing '
@@ -92,7 +92,7 @@ export const CATALOG_CALCULATORS: readonly CalculatorSpec[] = [
     id: 'bot.findByName',
     title: 'Resolve a bot however it was named',
     entry: 'data',
-    module: `${DATA}/bots.ts`,
+    module: `${DATA}/bots/data.ts`,
     symbol: 'findBotByName',
     because:
       'Bots arrive from saves, URLs and typing. It also carries a real alias — the community says '
@@ -114,7 +114,7 @@ export const CATALOG_CALCULATORS: readonly CalculatorSpec[] = [
     id: 'guardian.definitions',
     title: 'Every guardian, with its stats and bounds',
     entry: 'data',
-    module: `${DATA}/guardians.ts`,
+    module: `${DATA}/guardians/guardians.ts`,
     symbol: 'buildGuardianDefinitions',
     because:
       'What the guardian calculator is built from — 24 call sites. Every stat slot, its order and '
@@ -133,7 +133,7 @@ export const CATALOG_CALCULATORS: readonly CalculatorSpec[] = [
     id: 'guardian.statNames',
     title: 'A guardian\'s stat names, in slot order',
     entry: 'data',
-    module: `${DATA}/guardians.ts`,
+    module: `${DATA}/guardians/guardians.ts`,
     symbol: 'getGuardianStatNames',
     because: 'The labels beside each guardian field, and the order the slots are indexed in.',
     params: [{ name: 'guardian', kind: 'object', describes: 'the guardian definition' }],
@@ -149,7 +149,7 @@ export const CATALOG_CALCULATORS: readonly CalculatorSpec[] = [
     id: 'module.levelOptions',
     title: 'The levels a module dropdown offers',
     entry: 'data',
-    module: `${DATA}/module-levels.ts`,
+    module: `${DATA}/modules/levels.ts`,
     symbol: 'buildLevelOptions',
     because: 'Literally the list a player picks from, so an off-by-one here is visible on screen.',
     params: [
@@ -169,7 +169,7 @@ export const CATALOG_CALCULATORS: readonly CalculatorSpec[] = [
     id: 'module.normalizeTypeForCalc',
     title: 'The app\'s module type as the calculator names it',
     entry: 'data',
-    module: `${DATA}/module-bonus.ts`,
+    module: `${DATA}/modules/bonus.ts`,
     symbol: 'normalizeModuleTypeForCalc',
     because:
       'The app says `defense` and the multiplier tables say `armor`. One word, and passing the '
@@ -188,16 +188,16 @@ export const CATALOG_CALCULATORS: readonly CalculatorSpec[] = [
 
   // ----------------------------------------------------------------- labs ---
   {
-    id: 'lab.isTrackerResearchName',
-    title: 'Whether a name is a research lab the tracker knows',
+    id: 'lab.isResearchName',
+    title: 'Whether a name is a research lab the catalog knows',
     entry: 'data',
-    module: `${DATA}/labs.ts`,
-    symbol: 'isLabsTrackerResearchLabName',
+    module: `${DATA}/labs/labs.ts`,
+    symbol: 'isLabsResearchLabName',
     because:
       'Decides whether a row is a lab at all before anything tries to price it, which is what '
       + 'stops an unknown name reaching a lookup that would answer 0.',
     params: [{ name: 'name', kind: 'string', optional: true, describes: 'the lab name' }],
-    returns: { kind: 'boolean', describes: 'whether the tracker knows it' },
+    returns: { kind: 'boolean', describes: 'whether the catalog knows it' },
     invariants: [
       'returns false for an empty or missing name rather than throwing',
       'is insensitive to surrounding whitespace',
@@ -219,12 +219,12 @@ export const CATALOG_CALCULATORS: readonly CalculatorSpec[] = [
   // ------------------------------------------------------------- workshop ---
   {
     id: 'workshop.statDefinitions',
-    title: 'The workshop stats the tracker shows',
+    title: 'The workshop stats a progress view shows',
     entry: 'data',
-    module: `${DATA}/workshop-tracker-definitions.ts`,
+    module: `${DATA}/workshop/progress-definitions.ts`,
     symbol: 'getWorkshopStatDefinitions',
     because:
-      'The rows of the workshop tracker, in order, with the bounds each field accepts.',
+      'The rows of a workshop progress view, in order, with the bounds each field accepts.',
     params: [],
     returns: { kind: 'object', describes: 'the stat definitions' },
     invariants: [
@@ -237,9 +237,9 @@ export const CATALOG_CALCULATORS: readonly CalculatorSpec[] = [
   },
   {
     id: 'workshop.enhancementDefinitions',
-    title: 'The workshop enhancements the tracker shows',
+    title: 'The workshop enhancements a progress view shows',
     entry: 'data',
-    module: `${DATA}/workshop-enhancement-tracker-definitions.ts`,
+    module: `${DATA}/workshop/enhancement-progress-definitions.ts`,
     symbol: 'getWorkshopEnhancementDefinitions',
     because: 'The same for the enhancement half, which has its own bounds and its own discount.',
     params: [],

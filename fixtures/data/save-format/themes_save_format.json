@@ -104,8 +104,10 @@
     "74": "Rabbit In Hat",
     "75": "Cake",
     "76": "Meteorite",
-    "77": "Seahorse",
-    "81": "Baby Dino"
+    "77": "Baby Dino",
+    "81": "Seahorse",
+    "82": "Fairy",
+    "83": "Automaton"
   },
   "milestoneSkinOrder": {
     "9": "Shuriken",
@@ -188,8 +190,8 @@
     "52": "Magician",
     "53": "5th Anniversary",
     "54": "Meteor Shower",
-    "55": "Coral Reef",
-    "56": "Jurassic Forest"
+    "55": "Jurassic Forest",
+    "56": "Coral Reef"
   },
   "menuOrder": {
     "1": "Dark Being",

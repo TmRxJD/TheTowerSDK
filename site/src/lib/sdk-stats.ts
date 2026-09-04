@@ -2,7 +2,7 @@ import {
 	ALL_PERKS,
 	BOT_UPGRADES_DATA,
 	CARD_TEMPLATES,
-	GLOSSARY_NAMES,
+	GLOSSARY_NAME_ROWS,
 	LAB_CATALOG,
 	MILESTONE_REWARD_ROWS,
 	MODULE_SUBSTATS_CLUSTER,
@@ -207,7 +207,7 @@ export const sdkStats = {
 	perks: ALL_PERKS.length,
 	battleConditions: TIER_BATTLE_CONDITION_DEFINITIONS.length,
 	milestoneRewards: MILESTONE_REWARD_ROWS.length,
-	glossaryNames: GLOSSARY_NAMES.length,
+	glossaryNames: GLOSSARY_NAME_ROWS.length,
 	formulas: countMechanicsFormulas(),
 	chartableSeries: countChartableSeries(),
 

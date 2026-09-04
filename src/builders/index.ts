@@ -1,6 +1,11 @@
 /**
  * Calculator builders — the plumbing, so what is left is the UI.
  *
+ * This domain is flat: every module here is one builder, they are peers of one another at 90 to
+ * 242 lines each, and `types.ts` already holds the shapes they share. Grouping them further would
+ * mean inventing categories — combat, economy, progression — that no builder belongs to cleanly,
+ * and that would drift the first time one straddled two.
+ *
  * Each builder pairs the maths in `thetowersdk/mechanics` with the things a tool needs
  * around it and never gets for free: a complete set of defaults, a description of every
  * input, normalisation of whatever half-filled state a form is in, and a result that says

@@ -6,7 +6,6 @@ The MCP server, so an agent can query the package instead of guessing at it.
 
 | File | Purpose | Exports |
 |---|---|---|
-| `every-tool.ts` | — | Registry, IN_MONOREPO, loadedRegistries, expectedRegistries (+4 more) |
 | `nearest-names.mjs` | The closest known names to what someone typed. | editDistance, nearestNames |
 | `oracle-tools.mjs` | tower-oracle — the game-knowledge MCP surface. | TOWER_ORACLE_TOOLS, TOWER_ORACLE_INSTRUCTIONS |
 | `run-repo-tsx.mjs` | Spawn a repo `.mjs` script via local `tsx` without going through `pnpm.cmd` (Windows Node spawnSync EINVAL on .cmd without shell). | resolveTsxCli, runRepoTsx, parseCliJson |

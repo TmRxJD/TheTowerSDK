@@ -1,0 +1,227 @@
+{
+  "gameVersion": "v29.0.0",
+  "benefitFormula": {
+    "expression": "benefit[statIndices[j]] = baseBenefit[s] + benefitPerLevel[s] * levels[j], where s = statIndices[j]",
+    "levelIndexIsPerBot": true,
+    "levelIndexDrivesSlots": {
+      "0": [
+        0,
+        2,
+        4,
+        6,
+        16
+      ],
+      "1": [
+        1,
+        3,
+        5,
+        7,
+        17
+      ],
+      "2": [
+        8,
+        9,
+        10,
+        11,
+        18
+      ],
+      "3": [
+        12,
+        13,
+        14,
+        15,
+        19
+      ]
+    },
+    "note": "levels is indexed 0..3 within a bot, not by the global stat slot. Each level index moves exactly the five slots that share that position across the five bots."
+  },
+  "labs": {
+    "cooldown": {
+      "array": "Lab.researchBaseBenefit",
+      "operation": "subtract",
+      "entries": {
+        "102": {
+          "slot": 8,
+          "from": 75.0,
+          "to": 65.0
+        },
+        "103": {
+          "slot": 9,
+          "from": 120.0,
+          "to": 110.0
+        },
+        "104": {
+          "slot": 10,
+          "from": 120.0,
+          "to": 110.0
+        },
+        "105": {
+          "slot": 11,
+          "from": 120.0,
+          "to": 110.0
+        },
+        "228": {
+          "slot": 18,
+          "from": 120.0,
+          "to": 110.0
+        }
+      }
+    },
+    "duration": {
+      "array": "Lab.researchBenefit",
+      "operation": "add",
+      "entries": {
+        "108": {
+          "slot": 14,
+          "from": 20.0,
+          "to": 30.0
+        },
+        "109": {
+          "slot": 15,
+          "from": 20.0,
+          "to": 30.0
+        },
+        "229": {
+          "slot": 19,
+          "from": 20.0,
+          "to": 30.0
+        }
+      }
+    },
+    "note": "Cooldown and Duration read DIFFERENT lab arrays. Flame and Thunder have no duration lab entry, which matches their kit."
+  },
+  "uptime": {
+    "expression": "Bot.Duration / Bot.Cooldown",
+    "cooldownIsLookup": "benefit[cooldownSlot]",
+    "durationIsLookup": "benefit[durationSlot]",
+    "flameDurationIsConstant": 3.0,
+    "note": "Bot.Cooldown and Bot.Duration compute nothing; they index benefit[] at the bot's own slot. Flame has no Duration stat and its Duration is a hardcoded 3 seconds."
+  },
+  "amplification": {
+    "expression": "effect = benefit[statSlot] * (botBotRange ? benefit[16] : 1)",
+    "gate": "botBotRange, a per-enemy in-range boolean",
+    "amplified": [
+      "GetAmplifyBotBonus",
+      "GetGoldenBotBonus",
+      "GetThunderBotLinger"
+    ],
+    "notAmplified": [
+      "GetFlameBotDamageReduction"
+    ],
+    "aggregate": "expected = stat * (1 + (benefit[16] - 1) * P(enemy inside the Bot Bot radius while it is up))",
+    "note": "The game multiplies per enemy, per instant, gated on one boolean. There is no max-power factor and no overlap term in the expression itself; any overlap belongs in P, and P is a property of the Bot Bot, not of the bot being amplified."
+  },
+  "geometry": {
+    "sizeFactor": {
+      "expression": "lerp(0.699999988079071, 1.2999999523162842, clamp01((Main.maxDistance - 3) / 9))",
+      "base": 0.7,
+      "span": 0.6,
+      "atOrBelow": {
+        "maxDistance": 3,
+        "factor": 0.7
+      },
+      "atOrAbove": {
+        "maxDistance": 12,
+        "factor": 1.3
+      },
+      "note": "1.3 is Bot.RADIUS_PERCENTAGE. This is what the Flame Bot's description means by 'Range improved by Tower Range': tower reach scales every bot's radius between those two factors."
+    },
+    "worldRadius": {
+      "expression": "(rangeStat / 10) * sizeFactor * triggerColliderRadius",
+      "triggerColliderRadius": 0.5,
+      "note": "All five bot prefabs use a CircleCollider2D of radius 0.5, so the radius is carried entirely by localScale."
+    },
+    "roamDisc": {
+      "expression": "Random.insideUnitCircle * (1.2999999523162842 * sqrt(Main.maxDistance))",
+      "factor": 1.3,
+      "note": "SetRandomDestination picks a uniform point in a disc centred on the tower. The factor is the same constant as RADIUS_PERCENTAGE."
+    },
+    "coverage": {
+      "expression": "(worldRadius / roamRadius) ** 2",
+      "note": "The share of its own roam disc a bot covers at an instant. It is NOT P on its own: enemies are not uniform over that disc (they walk inward from the spawn ring), and the Bot Bot must also be UP. Treat this as the geometric term of P, with uptime and the enemy distribution as the other two."
+    }
+  },
+  "externalTerms": {
+    "note": "Everything outside the bot tables that reaches a bot stat. There are three terms and all three are plain inputs: one module rarity value, one vault upgrade level, and one on/off vault unlock.",
+    "module": {
+      "call": "ModuleManager.TryGetUniqueBenefit(infoIndex 30, out double)",
+      "module": "Singularity Harness (SH), the only module bot stats consult",
+      "appliesTo": "the five Range slots only: 1, 3, 5, 7, 17",
+      "combines": "additive: benefit += uniqueBenefit * 10",
+      "note": "The stat test is ror(index - 1, 1) < 4 or == 8, which selects exactly the Range slots. A scalar per rarity is the whole model."
+    },
+    "vaultBotRange": {
+      "call": "VaultManager.GetBenefit(VaultID.BotRange)",
+      "callSites": 1,
+      "appliesTo": "Range",
+      "combines": "additive"
+    },
+    "vaultBotCooldownSliders": {
+      "call": "VaultManager.GetBenefit(VaultID.BotCooldownSliders)",
+      "callSites": 6,
+      "combines": "NOT a magnitude \u2014 the benefit is compared with 0 (fcmp s0, #0.0; b.le) and only its sign is used, so it is a gate that switches the cooldown path to a different source.",
+      "note": "Only the sign of the benefit is used, so this is an unlock rather than a magnitude. UserBotData carries `selectedLevels` beside `levels`, which is what a bot running below its purchased cooldown level would read."
+    }
+  },
+  "statNames": {
+    "0": "Damage",
+    "1": "Range",
+    "2": "Duration",
+    "3": "Range",
+    "4": "Bonus",
+    "5": "Range",
+    "6": "Bonus",
+    "7": "Range",
+    "8": "Cooldown",
+    "9": "Cooldown",
+    "10": "Cooldown",
+    "11": "Cooldown",
+    "12": "Damage Reduction",
+    "13": "Linger",
+    "14": "Duration",
+    "15": "Duration",
+    "16": "Bonus",
+    "17": "Range",
+    "18": "Cooldown",
+    "19": "Duration"
+  },
+  "enemyFlags": [
+    "amplified",
+    "stunBotRange",
+    "coinBotRange",
+    "flameBotModuleDebuff",
+    "flameBotDamageReduction",
+    "boostedFlameBotDamageReduction",
+    "botBotRange"
+  ],
+  "effects": {
+    "note": "What each bot and each Bot+ does, in the game's own description text. A planner that weights bots toward a goal needs this: the stats do not all serve the same outcome, and two of them are commonly misread.",
+    "bots": {
+      "Flame": {
+        "base": "Apply Burn to enemies, dealing Damage over Time and reducing Enemy Damage. Range improved by Tower Range.",
+        "plus": "Enemies hit by Flame Bot become Enflamed in addition to Burned, receiving {1}x extra damage. Duration of the damage amplification depends on current Flame Bot damage.",
+        "reading": "Its Damage stat sets how long the Enflamed amplification lasts, so Damage is a support stat rather than a damage stat. The base effect players build for is the enemy-damage reduction."
+      },
+      "Thunder": {
+        "base": "Stun enemies. Applies Slow for {0} after the Stun ends. 50% effective vs Bosses and Elites.",
+        "plus": "Enemies struck by Thunder Bot have a permanent {0}% decreased attack speed. This value is multiplied by the number of digits in the enemy's mass.",
+        "reading": "Crowd control and survivability. It slows kills, so it works against a coin-farming goal and for a survive-longer one."
+      },
+      "Golden": {
+        "base": "Grants Coin Multiplier on Kill within Range.",
+        "plus": "Elites killed in Golden Bot range grant {0}x more Cells.",
+        "reading": "The BASE effect is coins; the BOT+ effect is CELLS. They are different currencies and the Bot+ does nothing for coin income."
+      },
+      "Amplify": {
+        "base": "Amplify Damage against enemies within Range.",
+        "plus": "Tower Bullets within Range count as {0} bullets. Ultimate Weapon projectiles are also boosted, but by 1/3."
+      },
+      "Bot": {
+        "base": "Boost other Bot effects within Range.",
+        "plus": "Boosts the Bot+ abilities of other Bots by {0}x.",
+        "reading": "Two separate amplifications. The base `Bonus` stat multiplies other bots' BASE effects, which is what Enemy.GetAmplifyBotBonus, GetGoldenBotBonus and GetThunderBotLinger read. `Maximum Power` is the Bot+ and multiplies other bots' BOT+ abilities, so it does not belong anywhere near the base amplification."
+      }
+    },
+    "source": "Bots.description and Bots.GetBotPlusDescription, resolved through the game's localisation terms"
+  }
+}

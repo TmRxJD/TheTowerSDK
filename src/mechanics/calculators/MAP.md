@@ -15,7 +15,7 @@ Calculator specs and the registry over them.
 | `specs-formatting.ts` | — | FORMATTING_CALCULATORS |
 | `specs-generated.ts` | — | GENERATED_CALCULATORS, GENERATED_IMPLEMENTATIONS |
 | `specs-irregular.ts` | — | IRREGULAR_CALCULATORS |
-| `specs-tracker.ts` | — | TRACKER_CALCULATORS |
+| `specs-progress.ts` | — | PROGRESS_CALCULATORS |
 | `types.ts` | The shape of a declared calculator. | CalculatorParam, CalculatorSpec |
 
 [← src](../../MAP.md) · [← the package](../../../MAP.md)

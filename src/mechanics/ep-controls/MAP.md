@@ -6,6 +6,11 @@ Which Effective Paths controls exist, and how much of the surface is wired.
 
 | File | Purpose | Exports |
 |---|---|---|
-| `index.ts` | — | EpControlRow, EP_CONTROL_SURFACE_SHEET_VERSION, EP_INPUT_RANGE_CONTROL_CELLS, EP_WIRED_CONTROL_CELLS (+11 more) |
+| `control-path-affects.ts` | Compact ControlRelation affectsPath slice (by webKey). | EpControlPathAffectEntry, EP_CONTROL_PATH_AFFECTS_SHEET_VERSION, epControlAffectsPathByWebKey, epControlPathVariantsByWebKey |
+| `control-relations.ts` | ControlRelation query helpers over the curated ep-graph. | epControlAffectsPathEdges, epControlPathVariants, epControlHasAffectsPath, epDependsOnEdges (+3 more) |
+| `index.ts` | — | EpControlRow, EP_CONTROL_SURFACE_SHEET_VERSION, EP_INPUT_RANGE_CONTROL_CELLS, EP_WIRED_CONTROL_CELLS (+42 more) |
+| `sheet-ast.ts` | Semantic sheet AST for Effective Paths planner panels. | EpSheetAstControlType, EpSheetAstControl, EpSheetAstLayoutBlock, EpSheetAstMerge (+8 more) |
+| `sheet-graph.ts` | Sheet dependency DAG for Effective Paths planner-panel controls. | EpSheetGraphNodeType, EpSheetGraphNode, EpSheetGraphEdge, EP_SHEET_GRAPH_SHEET_VERSION (+8 more) |
+| `web-control-map.ts` | Sheet → web binding map for Effective Paths controls. | EpWebControlStatus, EpWebControlPlacement, EpWebControlEntry, EP_WEB_CONTROL_MAP_SHEET_VERSION (+4 more) |
 
 [← src](../../MAP.md) · [← the package](../../../MAP.md)

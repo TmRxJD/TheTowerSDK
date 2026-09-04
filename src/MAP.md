@@ -2,49 +2,108 @@
 
 # src
 
-The package itself — everything that ships.
+The package itself — everything that ships, and nothing that does not.
 
 | Directory | Files | What lives here |
 |---|---|---|
 | [`src/assets`](assets/MAP.md) | 1 | Naming rules for artwork you supply yourself. |
 | [`src/bot`](bot/MAP.md) | 4 | Every calculator as a chat command, transport-agnostic. |
 | [`src/builders`](builders/MAP.md) | 17 | The calculators, each declaring its own inputs. |
-| [`src/charts`](charts/MAP.md) | 9 | Curated chart datasets and their resolution. |
+| [`src/charts`](charts/MAP.md) | 1 | Curated chart datasets and their resolution. |
+| [`src/charts/datasets`](charts/datasets/MAP.md) | 5 | The charts that compute their own rows rather than reading a catalog. |
+| [`src/charts/registry`](charts/registry/MAP.md) | 4 | Which charts exist, and what calculator or mechanic each belongs to. |
+| [`src/charts/tables`](charts/tables/MAP.md) | 3 | The column-and-row machinery every chart renders through. |
 | [`src/contributions`](contributions/MAP.md) | 1 | Whose work this package carries, as data. |
-| [`src/data`](data/MAP.md) | 58 | The game tables — costs, levels, effects, catalogs. |
-| [`src/data/generated`](data/generated/MAP.md) | 6 | Emitted catalogs. Do not hand-edit. |
-| [`src/formatting`](formatting/MAP.md) | 4 | Numbers, durations and rates in the game’s own notation. |
-| [`src/internal`](internal/MAP.md) | 30 | Not public API. Reachable as `thetowersdk/internal/*` and free to move. |
-| [`src/internal/game-input-data`](internal/game-input-data/MAP.md) | 42 | Input vocabulary shared by the tracker’s own pages. |
-| [`src/knowledge`](knowledge/MAP.md) | 4 | The mechanics graph: what a number MEANS, and how it is misread. |
+| [`src/data`](data/MAP.md) | 1 | The game tables — costs, levels, effects, catalogs. |
+| [`src/data/assets`](data/assets/MAP.md) | 2 | Which sprite belongs to which module, card, bot or theme. Names only. |
+| [`src/data/battle-conditions`](data/battle-conditions/MAP.md) | 2 | The names battle conditions carry, as the game writes them. |
+| [`src/data/bots`](data/bots/MAP.md) | 2 | The five bots: unlock costs, upgrade stats, and the levels each stat reaches. |
+| [`src/data/cards`](data/cards/MAP.md) | 2 | Cards, their level values and their mastery values. |
+| [`src/data/charts`](data/charts/MAP.md) | 2 | Tables the game publishes as tables rather than formulas. |
+| [`src/data/currency`](data/currency/MAP.md) | 2 | The game’s currencies, and what each is spent on. |
+| [`src/data/daily-missions`](data/daily-missions/MAP.md) | 2 | Daily missions and their rewards. |
+| [`src/data/enemies`](data/enemies/MAP.md) | 2 | Enemy types and the multipliers that separate them. |
+| [`src/data/generated`](data/generated/MAP.md) | 15 | Emitted catalogs. Do not hand-edit. |
+| [`src/data/glossary`](data/glossary/MAP.md) | 4 | Community shorthand and what each term expands to. |
+| [`src/data/guardians`](data/guardians/MAP.md) | 3 | Guardian definitions and their upgrade ladders. |
+| [`src/data/guild`](data/guild/MAP.md) | 2 | Guilds: levels, perks, and what each contributes. |
+| [`src/data/labs`](data/labs/MAP.md) | 10 | Lab catalogs: categories, unlocks, research and display names. |
+| [`src/data/milestones`](data/milestones/MAP.md) | 3 | Milestones and what reaching one unlocks. |
+| [`src/data/modules`](data/modules/MAP.md) | 10 | Module catalogs: levels, substats, effects, costs and pulls. |
+| [`src/data/perks`](data/perks/MAP.md) | 2 | Perks, their tiers, and the ones that can be banned. |
+| [`src/data/player-stats`](data/player-stats/MAP.md) | 3 | Every field a save carries, by domain, and the recompute order. |
+| [`src/data/reference`](data/reference/MAP.md) | 3 | Small reference tables, and the schemas validating the public surface. |
+| [`src/data/relics`](data/relics/MAP.md) | 2 | Relics, their tiers, and the bonuses each grants. |
+| [`src/data/themes`](data/themes/MAP.md) | 3 | Themes and the bonuses they carry. |
+| [`src/data/tiers`](data/tiers/MAP.md) | 3 | Tiers, and the campaign tiers that run alongside them. |
+| [`src/data/tournaments`](data/tournaments/MAP.md) | 2 | Tournament leagues, brackets, and the heat each tier carries. |
+| [`src/data/ultimate-weapons`](data/ultimate-weapons/MAP.md) | 3 | Ultimate weapons and their stones. |
+| [`src/data/vault`](data/vault/MAP.md) | 3 | The vault tree and how it is walked. |
+| [`src/data/workshop`](data/workshop/MAP.md) | 8 | Workshop tables: costs, discounts and upgrade definitions. |
+| [`src/formatting`](formatting/MAP.md) | 1 | Numbers, durations and rates in the game’s own notation. |
+| [`src/formatting/duration`](formatting/duration/MAP.md) | 2 | Durations, in the units a run is measured in. |
+| [`src/formatting/numbers`](formatting/numbers/MAP.md) | 3 | Reading and writing numbers in the game’s notation ladder. |
+| [`src/formatting/tools`](formatting/tools/MAP.md) | 2 | Grouped and abbreviated forms for numbers shown beside each other. |
+| [`src/internal`](internal/MAP.md) | 5 | Not public API. Reachable as `thetowersdk/internal/*` and free to move. |
+| [`src/internal/local-state`](internal/local-state/MAP.md) | 10 | Per-calculator local state and the schemas that validate it. |
+| [`src/internal/persistence`](internal/persistence/MAP.md) | 2 | Primitives for reading and writing stored settings. |
+| [`src/internal/shared-tool-inputs`](internal/shared-tool-inputs/MAP.md) | 6 | The input bundle tools share, and the ways it is built and merged. |
+| [`src/internal/uptime`](internal/uptime/MAP.md) | 4 | Uptime inputs, their stored form and the field maps over them. |
+| [`src/knowledge`](knowledge/MAP.md) | 3 | The mechanics graph: what a number MEANS, and how it is misread. |
 | [`src/knowledge/compartments`](knowledge/compartments/MAP.md) | 30 | One file per subject area; each owns its nodes and edges. |
+| [`src/knowledge/generated`](knowledge/generated/MAP.md) | 1 | Knowledge tables written by a generator — edit the generator, not these. |
 | [`src/knowledge/substrate`](knowledge/substrate/MAP.md) | 6 | The graph engine — schema, queries, contradictions, maturity. |
-| [`src/mechanics`](mechanics/MAP.md) | 152 | The formulas the game runs. |
-| [`src/mechanics/builders`](mechanics/builders/MAP.md) | 1 | Development tooling. Not shipped. |
+| [`src/mechanics`](mechanics/MAP.md) | 1 | The formulas the game runs. |
+| [`src/mechanics/battle-conditions`](mechanics/battle-conditions/MAP.md) | 5 | Battle conditions, their counters, and the tournament heat index. |
+| [`src/mechanics/bots`](mechanics/bots/MAP.md) | 18 | The three bots: their upgrades, movement, hit behaviour, and medal planning. |
 | [`src/mechanics/calculators`](mechanics/calculators/MAP.md) | 11 | Calculator specs and the registry over them. |
-| [`src/mechanics/coverage`](mechanics/coverage/MAP.md) | 5 | Which formulas are covered, and by what. |
-| [`src/mechanics/debug-graph`](mechanics/debug-graph/MAP.md) | 5 | Development tooling. Not shipped. |
-| [`src/mechanics/docs-gen`](mechanics/docs-gen/MAP.md) | 1 | Development tooling. Not shipped. |
-| [`src/mechanics/doctor`](mechanics/doctor/MAP.md) | 8 | Development tooling. Not shipped. |
-| [`src/mechanics/ep-controls`](mechanics/ep-controls/MAP.md) | 1 | Which Effective Paths controls exist, and how much of the surface is wired. |
+| [`src/mechanics/cards`](mechanics/cards/MAP.md) | 3 | Card costs and the lookup from a card to the effect it applies. |
+| [`src/mechanics/combat`](mechanics/combat/MAP.md) | 27 | What the tower does to enemies — damage, its multipliers, and every on-hit effect. |
+| [`src/mechanics/effective-paths`](mechanics/effective-paths/MAP.md) | 48 | Effective Paths: the cheapest route to a damage, economy or survivability target. |
+| [`src/mechanics/enemies`](mechanics/enemies/MAP.md) | 20 | Enemy stats, types, resistances, elite spawns and drops. |
+| [`src/mechanics/ep-controls`](mechanics/ep-controls/MAP.md) | 6 | Which Effective Paths controls exist, and how much of the surface is wired. |
 | [`src/mechanics/ep-graph`](mechanics/ep-graph/MAP.md) | 7 | The Effective Paths workbook as a graph of cells and their dependencies. |
-| [`src/mechanics/kernel`](mechanics/kernel/MAP.md) | 4 | Development tooling. Not shipped. |
-| [`src/mechanics/lsp`](mechanics/lsp/MAP.md) | 1 | Development tooling. Not shipped. |
-| [`src/mechanics/mcp-contract`](mechanics/mcp-contract/MAP.md) | 3 | The tool contract the MCP server publishes. |
-| [`src/mechanics/planner-engine`](mechanics/planner-engine/MAP.md) | 5 | Development tooling. Not shipped. |
-| [`src/mechanics/planner-engine/generated`](mechanics/planner-engine/generated/MAP.md) | 5 | Emitted formula citations. Do not hand-edit. |
-| [`src/mechanics/registry`](mechanics/registry/MAP.md) | 4 | Development tooling. Not shipped. |
-| [`src/mechanics/sandbox`](mechanics/sandbox/MAP.md) | 2 | Development tooling. Not shipped. |
-| [`src/mechanics/save-graph`](mechanics/save-graph/MAP.md) | 3 | Development tooling. Not shipped. |
-| [`src/mechanics/sdk-graph`](mechanics/sdk-graph/MAP.md) | 11 | Development tooling. Not shipped. |
-| [`src/mechanics/wave/_reference`](mechanics/wave/_reference/MAP.md) | 3 | Historical reference formulas. Not used for live output. |
+| [`src/mechanics/guardians`](mechanics/guardians/MAP.md) | 2 | Guardian damage and the chips that shape it. |
+| [`src/mechanics/labs`](mechanics/labs/MAP.md) | 5 | Lab research: what a level costs and what it unlocks. |
+| [`src/mechanics/modules`](mechanics/modules/MAP.md) | 8 | Module effects, cluster grouping and upgrade paths. |
+| [`src/mechanics/perks`](mechanics/perks/MAP.md) | 2 | What a perk is worth. |
+| [`src/mechanics/planning`](mechanics/planning/MAP.md) | 3 | Deciding what to buy next, rather than what something does. |
+| [`src/mechanics/primitives`](mechanics/primitives/MAP.md) | 5 | The arithmetic and fixed values every other mechanic is built on. |
+| [`src/mechanics/resource-drops`](mechanics/resource-drops/MAP.md) | 19 | Coin and cell income: where it comes from and how it is simulated. |
+| [`src/mechanics/uptime`](mechanics/uptime/MAP.md) | 2 | How long a thing is active, and how often it comes back. |
+| [`src/mechanics/waves`](mechanics/waves/MAP.md) | 19 | Wave scaling and pacing — enemy counts, spawn rates and skips. |
+| [`src/mechanics/waves/reference`](mechanics/waves/reference/MAP.md) | 4 | Earlier public wave formulas, kept as the reference the current ones are checked against. |
+| [`src/mechanics/workshop`](mechanics/workshop/MAP.md) | 9 | Workshop upgrades: their stats, costs and the tables that describe them. |
 | [`src/node`](node/MAP.md) | 2 | Decoding playerInfo.dat in Node. |
-| [`src/node/nrbf`](node/nrbf/MAP.md) | 2 | The .NET Binary Format reader, ported to TypeScript. |
-| [`src/save`](save/MAP.md) | 47 | Extractors over a decoded save. |
+| [`src/node/nrbf`](node/nrbf/MAP.md) | 3 | The .NET Binary Format reader, ported to TypeScript. |
+| [`src/save`](save/MAP.md) | 1 | Extractors over a decoded save. |
 | [`src/save-decoder`](save-decoder/MAP.md) | 1 | The same save reader with no Node imports, for the browser. |
+| [`src/save/access`](save/access/MAP.md) | 3 | How you get at a save — typed reads and where the file lives. |
+| [`src/save/battle`](save/battle/MAP.md) | 7 | Battle reports and history as the save stores them. |
+| [`src/save/bots`](save/bots/MAP.md) | 2 | What a save says about bots. |
+| [`src/save/cards`](save/cards/MAP.md) | 2 | What a save says about cards. |
 | [`src/save/catalogs`](save/catalogs/MAP.md) | 13 | The index maps that turn a save’s numbers into named things. |
+| [`src/save/dissonance`](save/dissonance/MAP.md) | 2 | What a save says about dissonance. |
+| [`src/save/effective-paths`](save/effective-paths/MAP.md) | 3 | Effective Paths inputs recovered from a save. |
+| [`src/save/guardians`](save/guardians/MAP.md) | 2 | What a save says about guardians. |
+| [`src/save/ids`](save/ids/MAP.md) | 8 | The IDS block: the grid and every domain read out of it. |
+| [`src/save/import`](save/import/MAP.md) | 5 | Planning, discovering and executing an import. |
+| [`src/save/killed-by`](save/killed-by/MAP.md) | 2 | What a save says about killed by. |
+| [`src/save/labs`](save/labs/MAP.md) | 4 | Lab progress and what remains. |
+| [`src/save/lifetime`](save/lifetime/MAP.md) | 2 | What a save says about lifetime. |
+| [`src/save/modules`](save/modules/MAP.md) | 6 | Module effects as stored, decoded and displayed. |
+| [`src/save/perks`](save/perks/MAP.md) | 2 | What a save says about perks. |
+| [`src/save/relics`](save/relics/MAP.md) | 2 | What a save says about relics. |
+| [`src/save/runs`](save/runs/MAP.md) | 5 | Stored runs and their fields, normalised. |
+| [`src/save/shared-tool-inputs`](save/shared-tool-inputs/MAP.md) | 3 | Tool inputs rebuilt from a save. |
+| [`src/save/themes`](save/themes/MAP.md) | 2 | What a save says about themes. |
+| [`src/save/ultimate-weapons`](save/ultimate-weapons/MAP.md) | 2 | What a save says about ultimate weapons. |
+| [`src/save/vault`](save/vault/MAP.md) | 3 | What a save says about vault. |
+| [`src/save/workshop`](save/workshop/MAP.md) | 2 | What a save says about workshop. |
 | [`src/sheets`](sheets/MAP.md) | 3 | Reading and writing Google Sheets, transport-agnostic. |
-| [`src/wiki`](wiki/MAP.md) | 8 | Community wiki pages as Markdown. |
+| [`src/support`](support/MAP.md) | 2 | Utilities with no domain: framework-free, no game knowledge, not exported. |
+| [`src/wiki`](wiki/MAP.md) | 4 | Community wiki pages as Markdown. |
+| [`src/wiki/fandom`](wiki/fandom/MAP.md) | 5 | Reading the community wiki’s markup: wikitext, tables and media. |
 
 ## Directly in `src`
 

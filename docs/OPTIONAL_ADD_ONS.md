@@ -193,11 +193,11 @@ socket.send(JSON.stringify({ type: 'LINK_ACCOUNT', … }))  // -> ACCOUNT_LINKED
 The bridge gives you the save file; the SDK reads it. That is the entire integration:
 
 ```ts
-import { loadPlayerInfoSaveRoot } from 'thetowersdk/node'
-import { extractBotsFromSaveRoot } from 'thetowersdk/save'
+import { decodePlayerInfoSaveBytes } from 'thetowersdk/node'
+import { readBotsFromSaveRoot } from 'thetowersdk/save'
 
-const root = loadPlayerInfoSaveRoot(bytes)
-const bots = extractBotsFromSaveRoot(root)
+const decoded = decodePlayerInfoSaveBytes(bytes)
+const bots = readBotsFromSaveRoot(decoded.parsedRoot)
 ```
 
 Extractors return `null` and report `warnings` rather than throwing, which is what you want

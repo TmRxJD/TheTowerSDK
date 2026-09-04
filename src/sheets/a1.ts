@@ -91,7 +91,9 @@ export function sheetNameFromRange(rangeExpression: string): string | null {
 export function parseA1RangeToCoordinates(rangeExpression: string): A1RangeCoordinates | null {
   const bang = rangeExpression.lastIndexOf('!')
   const scoped = bang >= 0 ? rangeExpression.slice(bang + 1) : rangeExpression
-  const match = /^([A-Za-z]+)(\d+):([A-Za-z]+)(\d+)$/.exec(scoped.trim())
+  // Whitespace around the colon is tolerated ("A1 : B2"), matching the more lenient
+  // platform parser this became the single source for. Outer whitespace is trimmed first.
+  const match = /^([A-Za-z]+)(\d+)\s*:\s*([A-Za-z]+)(\d+)$/.exec(scoped.trim())
   if (!match) return null
 
   const startCol = columnLabelToIndex(match[1]!)

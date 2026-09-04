@@ -37,7 +37,7 @@ machine, crashes on the build server" is usually this and nothing more interesti
 
 ## Electron
 
-The Run Tracker ships a desktop build — electron-forge, packaged for Windows, macOS, deb and
+The a caller ships a desktop build — electron-forge, packaged for Windows, macOS, deb and
 rpm, with the bridge running inside it. What follows is what that app actually does, not a
 generic template.
 
@@ -52,7 +52,7 @@ The SDK sits in both, but not the same parts:
 
 ```ts
 // main process — the decoder needs Node
-import { loadPlayerInfoSaveRoot } from 'thetowersdk/node'
+import { decodePlayerInfoSaveBytes } from 'thetowersdk/node'
 
 // renderer — everything else is browser-safe
 import { LAB_CATALOG } from 'thetowersdk/data'
@@ -88,8 +88,8 @@ sheets), which is exactly the path that makes it matter.
 contextBridge.exposeInMainWorld('electronAPI', {
   pickSaveFile: () => ipcRenderer.invoke('pick-save-file'),
   pullSaveFile: port => ipcRenderer.invoke('pull-save-file', String(port)),
-  startTrackerBridge: () => ipcRenderer.invoke('start-tracker-bridge'),
-  trackerBridgeStatus: () => ipcRenderer.invoke('tracker-bridge-status'),
+  startBridge: () => ipcRenderer.invoke('start-bridge'),
+  bridgeStatus: () => ipcRenderer.invoke('bridge-status'),
 })
 ```
 
@@ -101,9 +101,9 @@ structured-clone copies all of it, and the renderer needs none of it:
 
 ```js
 ipcMain.handle('pick-save-file', async () => {
-  const root = loadPlayerInfoSaveRoot(await readFile(picked))
-  if (!root) return { error: 'That file is not a save.' }
-  return { bots: extractBotsFromSaveRoot(root) }
+  const decoded = decodePlayerInfoSaveBytes(await readFile(picked))
+  if (!decoded.parsedRoot) return { error: 'That file is not a save.' }
+  return { bots: readBotsFromSaveRoot(decoded.parsedRoot) }
 })
 ```
 
@@ -119,7 +119,7 @@ let embeddedBridge = null
 async function startEmbeddedBridge() {
   if (embeddedBridge) return { running: true, port: 43781, alreadyRunning: true }
   try {
-    const { startLocalAdbBridge, BRIDGE_VERSION } = await import('tracker-bridge/server.mjs')
+    const { startLocalAdbBridge, BRIDGE_VERSION } = await import('adb-bridge/server.mjs')
     embeddedBridge = startLocalAdbBridge({ backgroundCapable: false })
     return { running: true, port: 43781, version: BRIDGE_VERSION }
   }
@@ -139,7 +139,7 @@ The same import gives you save discovery on desktop, where the file is local rat
 a phone:
 
 ```js
-const { discoverNativeHostPlayerInfoSave } = await import('tracker-bridge/native-save-discovery.mjs')
+const { discoverNativeHostPlayerInfoSave } = await import('adb-bridge/native-save-discovery.mjs')
 ```
 
 ### Packaging

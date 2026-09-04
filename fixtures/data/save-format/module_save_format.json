@@ -79,7 +79,24 @@
     "equippedModule": "ModuleItem | null — the assist module currently equipped in this slot",
     "substatEfficiencyLevel": "integer — upgrade level of the substat efficiency bonus for this slot",
     "uniqueEffectEfficiencyLevel": "integer — upgrade level of the unique effect efficiency bonus",
-    "mainEffectEfficiencyLevel": "integer — upgrade level of the main effect efficiency bonus"
+    "mainEffectEfficiencyLevel": "integer — upgrade level of the main effect efficiency bonus",
+    "level": "integer — slot upgrade level (v29+; levels live on the slot after module→slot migration)",
+    "coinsSpent": "double — coins invested into this assist slot's level",
+    "shardsSpent": "integer — shards invested into this assist slot's level"
+  },
+  "moduleSlotLevelFields": {
+    "description": "v29 Module Slot Adjustments — primary module levels moved from ModuleItem onto category slots (SaveLoad.PlayerData / ModuleManager)",
+    "slotLevels": "int[] — primary slot levels by category order (Cannon, Armor, Generator, Core)",
+    "slotCoinsSpent": "double[] — coins spent per primary slot",
+    "slotShardsSpent": "int[] — shards spent per primary slot",
+    "hasMigratedModuleLevelsToSlots": "bool — true after the one-time module→slot level migration",
+    "hasShownSlotLevelMigrationPopup": "bool",
+    "slotLevelMigrationRefundCoins": "double",
+    "slotLevelMigrationRefundCannonShards": "int",
+    "slotLevelMigrationRefundArmorShards": "int",
+    "slotLevelMigrationRefundGeneratorShards": "int",
+    "slotLevelMigrationRefundCoreShards": "int",
+    "note": "SDK readModulesFromSaveRoot still reads ModuleItem.level today; slotLevels / AssistModuleSlot.level are catalogued but not yet preferred by the extractor"
   },
   "effectIDSystem": {
     "description": "Each substat slot in a module holds an effectID — a flat 1-based sequential integer identifying both the substat type (clusterValue) and its rarity tier. effectIDs are assigned in clusterValue order, rarity order within each cluster.",

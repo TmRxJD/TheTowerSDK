@@ -14,7 +14,7 @@ import { readFile } from 'node:fs/promises'
 
 import { decodePlayerInfoSaveBytes } from 'thetowersdk/node'
 import {
-  discoverSaveImportTrackers,
+  discoverSaveImportTargets,
   readCardsFromSaveRoot,
   readLabsFromSaveRoot,
   readWorkshopFromSaveRoot,
@@ -38,11 +38,11 @@ async function main(): Promise<void> {
   console.log()
 
   // --- Step 2: see what is in there -----------------------------------------
-  // `discoverSaveImportTrackers` is the "what does this save actually contain?"
+  // `discoverSaveImportTargets` is the "what does this save actually contain?"
   // pass. Show it to a user before importing anything.
-  const discovery = discoverSaveImportTrackers(parsedRoot)
+  const discovery = discoverSaveImportTargets(parsedRoot)
   console.log('Available data:')
-  for (const tracker of discovery.trackers) {
+  for (const tracker of discovery.targets) {
     console.log(
       `  ${tracker.label.padEnd(20)} ${String(tracker.count).padStart(5)}  ${tracker.summary}`,
     )

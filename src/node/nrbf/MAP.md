@@ -6,7 +6,8 @@ The .NET Binary Format reader, ported to TypeScript.
 
 | File | Purpose | Exports |
 |---|---|---|
-| `nrbf-reader.ts` | — | RecordType, PrimitiveType, BinaryType, BinaryArrayType (+3 more) |
-| `nrbf-to-json.ts` | — | nrbfToJSON |
+| `index.ts` | — | — |
+| `reader.ts` | — | RecordType, PrimitiveType, BinaryType, BinaryArrayType (+3 more) |
+| `to-json.ts` | — | nrbfToJSON |
 
 [← src](../../MAP.md) · [← the package](../../../MAP.md)

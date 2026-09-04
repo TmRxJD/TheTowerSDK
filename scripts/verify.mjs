@@ -37,6 +37,8 @@ const AFTER_BUILD = ['lint:published', 'lint:package', 'test']
 const PARALLEL = [
   'lint',
   'lint:conventions',
+  'lint:specifiers',
+  'lint:organization',
   'lint:map',
   'lint:acronyms',
   'lint:docs',

@@ -1,6 +1,9 @@
 /**
  * Google Sheets, for tools that read a community workbook or write a player's own copy.
  *
+ * This domain is flat: two modules, A1 notation and the client that speaks it. Splitting a pair
+ * that only ever appear together would cost a level of nesting and explain nothing.
+ *
  * ```ts
  * import { TowerSheets } from 'thetowersdk/sheets'
  *

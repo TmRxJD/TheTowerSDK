@@ -20,16 +20,22 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.join(HERE, '..')
 const { buildCoverageEntries } = await import(
-  pathToFileURL(path.join(ROOT, 'dist/mechanics/coverage/build-inventories.js')).href,
+  /*
+   * From tooling/, not from dist. This read dist/mechanics/coverage/build-inventories.js, which
+   * stopped existing when the tooling moved out of src — so the script has been failing on a
+   * missing module rather than regenerating anything, and the inventories it maintains drifted
+   * quietly. tsx loads the TypeScript directly, so there is no build step to be stale.
+   */
+  pathToFileURL(path.join(ROOT, 'tooling/coverage/build-inventories.ts')).href,
 )
 
 const JOBS = [
   {
-    file: 'src/mechanics/coverage/data/sdk-modules.v1.json',
+    file: 'tooling/coverage/data/sdk-modules.v1.json',
     spec: { dir: 'src/mechanics', surface: 'sdk-module', idPrefix: 'sdk-module:' },
   },
   {
-    file: 'src/mechanics/coverage/data/save-schema.v1.json',
+    file: 'tooling/coverage/data/save-schema.v1.json',
     spec: { dir: 'src/save', surface: 'save', idPrefix: 'save:' },
   },
 ]

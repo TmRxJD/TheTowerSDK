@@ -39,8 +39,8 @@ export const CALCULATOR_ORACLE_LINKS: Readonly<Record<string, readonly string[]>
   'lab.coinDiscount': ['lab', 'workshop'],
   'lab.speedTotal': ['lab.speed', 'lab.boost', 'lab.rush'],
   'lab.valueAtLevel': ['lab'],
-  'lab.trackerMaxLevel': ['lab'],
-  'lab.isTrackerResearchName': ['lab', 'lab.indexLayout'],
+  'lab.uiMaxLevel': ['lab'],
+  'lab.isResearchName': ['lab', 'lab.indexLayout'],
 
   // --- modules -------------------------------------------------------------
   'module.stat': ['module.mainEffect', 'module.rarity', 'module.level'],

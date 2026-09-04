@@ -31,10 +31,13 @@ export function validateEpGraph(graph: EpGraph): EpGraphValidation {
     if (!nodeIds.has(edge.to)) errors.push(`edge ${edge.id} to missing ${edge.to}`)
   }
 
-  // Mild cycle report (not an error — sheet graphs can loop via display)
+  // Mild cycle report (not an error — sheet graphs can loop via display).
+  // Skip ControlRelation overlays that deliberately reverse or annotate the
+  // formula DAG (`feeds` / `dependsOn` / `affectsPath`) and cosmetic `displays`.
+  const CYCLE_SKIP = new Set(['displays', 'feeds', 'dependsOn', 'affectsPath'])
   const adj = new Map<string, string[]>()
   for (const e of graph.edges) {
-    if (e.kind === 'displays') continue
+    if (CYCLE_SKIP.has(e.kind)) continue
     const list = adj.get(e.from) ?? []
     list.push(e.to)
     adj.set(e.from, list)

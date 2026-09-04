@@ -124,19 +124,43 @@ if (!fresh && existsSync(OUT_FILE)) {
 }
 
 const seen = new Set(stored.map(message => message.id))
-/* Discord ids are snowflakes: numerically ascending, so the smallest is the oldest. */
+
+/*
+ * Discord ids are snowflakes: numerically ascending, so the smallest is the oldest.
+ *
+ * BOTH ends are needed. This used to resume only from the oldest and page `before` it, which
+ * backfills history and then stops finding anything forever — once the channel is fully archived
+ * every re-run fetched an empty page, reported the same 234 messages, and exited 0. A note posted
+ * after the last run could never be picked up, and nothing said so: a pipeline that cannot see
+ * new patch notes is worse than one that fails, because it looks current.
+ */
 let before = stored.length
   ? stored.reduce((min, m) => (BigInt(m.id) < BigInt(min) ? m.id : min), stored[0].id)
   : null
+let after = stored.length
+  ? stored.reduce((max, m) => (BigInt(m.id) > BigInt(max) ? m.id : max), stored[0].id)
+  : null
+
+/*
+ * Newest first, so an interrupted run has today's notes rather than another page of 2021.
+ * `after` returns messages NEWER than the id, oldest-first, so the cursor advances to the last
+ * of each page.
+ */
+let direction = after ? 'after' : 'before'
 
 let added = 0
 while (added < limit) {
   const url = new URL(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages`)
   url.searchParams.set('limit', '100')
-  if (before) url.searchParams.set('before', before)
+  if (direction === 'after') url.searchParams.set('after', after)
+  else if (before) url.searchParams.set('before', before)
 
   const page = await discord(url.toString())
-  if (!page.length) break
+  if (!page.length) {
+    /* Caught up with the newest; now backfill older history, if any is missing. */
+    if (direction === 'after') { direction = 'before'; continue }
+    break
+  }
 
   for (const message of page) {
     if (seen.has(message.id)) continue
@@ -180,7 +204,12 @@ while (added < limit) {
     added += 1
   }
 
-  before = page[page.length - 1].id
+  if (direction === 'after') {
+    after = page.reduce((max, m) => (BigInt(m.id) > BigInt(max) ? m.id : max), page[0].id)
+  }
+  else {
+    before = page[page.length - 1].id
+  }
   stored.sort((a, b) => (BigInt(a.id) < BigInt(b.id) ? -1 : 1))
   writeFileSync(OUT_FILE, JSON.stringify({
     channel: { id: CHANNEL_ID, name: channel.name, guildId: channel.guild_id },

@@ -8,7 +8,6 @@ The mechanics graph: what a number MEANS, and how it is misread.
 |---|---|---|
 | `community-guides.ts` | — | CommunityGuideSource, COMMUNITY_GUIDE_SOURCES, communityGuideRef, communityGuideSource |
 | `index.ts` | tower-oracle — game knowledge for building correct tools. | GAME_KNOWLEDGE, knowledgeFor, relationsOf, neighboursOf (+394 more) |
-| `patch-notes.generated.ts` | — | PatchNote, PATCH_NOTES, PATCH_NOTES_SOURCE |
 | `patch-notes.ts` | — | searchPatchNotes, whenIntroduced, patchNotesForVersion, patchNotesBetween (+2 more) |
 
 [← src](../MAP.md) · [← the package](../../MAP.md)

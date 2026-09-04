@@ -29,8 +29,8 @@ import type { CalculatorSpec } from './types'
  * parse-then-format returns what you started with, and nothing returns `NaN`.
  */
 
-const NUM = 'packages/sdk/src/formatting/numbers.ts'
-const DUR = 'packages/sdk/src/formatting/duration.ts'
+const NUM = 'packages/sdk/src/formatting/numbers/compute.ts'
+const DUR = 'packages/sdk/src/formatting/duration/compute.ts'
 
 export const FORMATTING_CALCULATORS: readonly CalculatorSpec[] = [
   {
@@ -122,7 +122,7 @@ export const FORMATTING_CALCULATORS: readonly CalculatorSpec[] = [
     entry: 'formatting',
     module: NUM,
     symbol: 'formatRateWithNotation',
-    because: 'Coins per hour and cells per hour — the headline number on the run tracker.',
+    because: 'Coins per hour and cells per hour — the headline number for a farming run.',
     params: [
       { name: 'amount', kind: 'number', describes: 'total earned' },
       { name: 'hours', kind: 'number', unit: 'hours', describes: 'run length' },
@@ -142,7 +142,7 @@ export const FORMATTING_CALCULATORS: readonly CalculatorSpec[] = [
     entry: 'formatting',
     module: NUM,
     symbol: 'computeHourlyRate',
-    because: 'What the run tracker calls with a raw row: a value and a duration as typed.',
+    because: 'What a caller passes a raw row: a value and a duration as typed.',
     params: [
       { name: 'value', kind: 'unknown', describes: 'the amount, possibly in game notation' },
       { name: 'duration', kind: 'string', optional: true, describes: 'duration as typed, e.g. "2:30:00"' },
@@ -198,7 +198,7 @@ export const FORMATTING_CALCULATORS: readonly CalculatorSpec[] = [
     entry: 'formatting',
     module: NUM,
     symbol: 'formatDateTimeForDisplay',
-    because: 'Run start and end times on every tracker row.',
+    because: 'Run start and end times, wherever a run is listed.',
     params: [
       { name: 'value', kind: 'unknown', describes: 'a timestamp in any of the forms saves use' },
       { name: 'options', kind: 'object', optional: true, describes: 'invalidFallback' },
@@ -266,8 +266,8 @@ export const FORMATTING_CALCULATORS: readonly CalculatorSpec[] = [
     module: NUM,
     symbol: 'parseValueWithUnit',
     because:
-      'Called 100 times across the app. Everything that stores a value and its notation '
-      + 'separately — tracker fields, import, the shard splitter — starts here.',
+      'Everything that stores a value and its notation separately — a typed input field, save '
+      + 'import, the shard splitter — starts here.',
     params: [{ name: 'value', kind: 'string', optional: true, describes: 'as typed' }],
     returns: { kind: 'object', describes: '{ value, unit }' },
     invariants: [
@@ -456,8 +456,8 @@ export const FORMATTING_CALCULATORS: readonly CalculatorSpec[] = [
     module: NUM,
     symbol: 'sortByUnit',
     because:
-      'Sorting the tracker tables. A string sort puts 9K above 1M, which is the kind of wrong that '
-      + 'looks like a UI preference rather than a bug.',
+      'Sorting a table of game values. A string sort puts 9K above 1M, which is the kind of wrong '
+      + 'that looks like a UI preference rather than a bug.',
     params: [
       { name: 'left', kind: 'string', describes: 'a value in game notation' },
       { name: 'right', kind: 'string', describes: 'the other' },

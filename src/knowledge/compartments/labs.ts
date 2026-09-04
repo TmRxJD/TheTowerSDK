@@ -242,7 +242,7 @@ export const LAB_KNOWLEDGE_NODES: readonly KnowledgeNode[] = [
       + '`golden_bot_cooldown`, `amp_bot_duration` for `amplify_bot_duration`, '
       + '`missile_radius` for `missiles_radius`. Counting its keys to count labs overcounts by 16.',
       'TWO ALIAS MAPS THAT ALMOST DUPLICATE EACH OTHER: LAB_RESEARCH_LEGACY_SLUG_ALIASES has 18 '
-      + 'entries and SITE_LAB_SLUG_ALIASES has 16, and 16 are in BOTH. Two of the legacy entries '
+      + 'entries and CANONICAL_LAB_SLUG_BY_ALIAS has 16, and 16 are in BOTH. Two of the legacy entries '
       + 'map a slug to itself — `labs_speed` to `labs_speed` — which does nothing at all. Resolve '
       + 'through the slug map rather than either alias table, and treat the abbreviations as the '
       + 'site\'s lazy spelling rather than a second naming system.',

@@ -34,6 +34,7 @@ const CHECK_ONLY = process.argv.includes('--check');
 const FORBIDDEN = [
 	/\bIL2CPP\b/i,
 	/\bGhidra\b/i,
+	/\bAssetsTools(\.NET)?\b/i,
 	/\bdisassembl/i,
 	/\bdecompil/i,
 	/\bdata[- ]?min(e|ed|ing)\b/i,
@@ -56,16 +57,37 @@ const ALGORITHM_CONSTANTS = [
 	/0x6D2B79F5\b/i,
 	/0x9E3779B9\b/i,
 	/0x7FFFFFFF\b/i,
-	// Unity's PRNG seeding multipliers, and the 22-bit mask on a shifted wave index.
-	/0x8f371e7d\b/i,
-	/0xdfc20fff\b/i,
-	/0x3fffff\b/i
+	// The 22-bit mask on a shifted wave index.
+	/0x3fffff\b/i,
+	// UnityEngine.Random's own constants: the 23-bit mantissa mask that `value()` draws
+	// from, and the single-precision scale it multiplies by.
+	/0x7fffff\b/i,
+	/0x34000001\b/i
+	// NOTE: 0x8f371e7d and 0xdfc20fff were allowlisted here as "Unity's PRNG seeding
+	// multipliers". They are not Unity's — they had no provenance and produced a stream
+	// unrelated to the engine's. They are deliberately NOT allowlisted, so reintroducing
+	// them trips this guard.
 ];
+
+/*
+ * The one place a toolchain name is data rather than a description.
+ *
+ * Some older saves and settings blobs literally contain the string
+ * `AssetsTools.NET.AssetTypeArrayInfo` where a lab name should be — whatever wrote them put a
+ * .NET type name in the field. The package has to recognise that key to read those saves, so the
+ * string appears in the compatibility mapping and in the guards that reject it elsewhere.
+ *
+ * It is allowed only on a line that is handling it as malformed input. A line that MENTIONS the
+ * toolchain in any other way is describing where data came from, which is the thing this file is
+ * for.
+ */
+const HANDLES_MALFORMED_SAVE_KEY = /AssetTypeArrayInfo|MALFORMED_LAB|isUsableLab|malformed/i;
 
 const mentionsExtraction = (text) =>
 	FORBIDDEN.some((pattern) => pattern.test(text)) &&
 	!(ALGORITHM_CONSTANTS.some((pattern) => pattern.test(text)) &&
-		!/\bIL2CPP\b|\bGhidra\b|\bRVA\b|\barm64\b|game binary|disassembl|decompil/i.test(text));
+		!/\bIL2CPP\b|\bGhidra\b|\bRVA\b|\barm64\b|game binary|disassembl|decompil/i.test(text)) &&
+	!(/\bAssetsTools(\.NET)?\b/i.test(text) && HANDLES_MALFORMED_SAVE_KEY.test(text));
 
 /**
  * A filename says the same thing a citation does.

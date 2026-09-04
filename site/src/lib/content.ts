@@ -38,6 +38,7 @@ const ALL_DOCS_NAV = [
 	{ href: '/docs/knowledge/', label: 'Knowledge' },
 	{ href: '/docs/patch-notes/', label: 'Patch Notes' },
 	{ href: '/docs/wiki/', label: 'Wiki' },
+	{ href: '/docs/desktop-and-mobile/', label: 'Desktop & Mobile' },
 	{ href: '/docs/wasm/', label: 'Any Language' },
 	{ href: '/docs/mcp/', label: 'MCP & AI' },
 	{ href: '/docs/towerai/', label: 'TowerAI' },
@@ -149,7 +150,7 @@ export const features = [
 	},
 	{
 		title: 'Assistant Tooling',
-		body: 'An MCP server with forty-two tools your editor can register: run the shipped calculators for real numbers, work in an instrumented sandbox, decode a save, and trace the result. Plus a game-knowledge oracle and a spreadsheet oracle.',
+		body: 'An MCP server with thirty-seven tools your editor can register: run the shipped calculators for real numbers, work in an instrumented sandbox, decode a save, and trace the result. Plus a game-knowledge oracle and a spreadsheet oracle.',
 		docs: '/docs/mcp/'
 	},
 	{

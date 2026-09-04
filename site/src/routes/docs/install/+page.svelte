@@ -29,6 +29,23 @@
 	<CodeBlock code={`npm install thetowersdk@${SDK_VERSION} --save-exact`} />
 </div>
 
+<h2 class="mt-10 text-xl font-semibold">What A Version Means</h2>
+<p class="mt-3 text-muted">
+	Below 1.0 the version is a build marker, not a compatibility promise. Any release may rename or
+	remove an export, and data values change when the game does. That is why the line above pins an
+	exact version rather than a range.
+</p>
+<p class="mt-3 text-muted">From 1.0 the numbers start meaning what you would expect:</p>
+<ul class="mt-4 list-disc space-y-2 pl-5 text-muted">
+	<li><strong>Patch</strong> — fixes, new extractors, additive data.</li>
+	<li><strong>Minor</strong> — data updated for a new game version; existing values may change.</li>
+	<li><strong>Major</strong> — breaking API changes.</li>
+</ul>
+<p class="mt-3 text-muted">
+	Anything under <code>thetowersdk/internal/*</code> is outside that promise at every version, and can
+	change in any release.
+</p>
+
 <h2 class="mt-10 text-xl font-semibold">Your First Lines</h2>
 <p class="mt-3 text-muted">Nothing to initialise — import a catalog and read it.</p>
 <div class="mt-4">

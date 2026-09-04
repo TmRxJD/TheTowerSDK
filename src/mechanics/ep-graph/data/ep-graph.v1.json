@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "contentVersion": 66,
+  "contentVersion": 69,
   "sheetVersion": "v5.09.03.07",
-  "updatedAt": "2026-08-20",
+  "updatedAt": "2026-08-29",
   "historicalAllowlist": [],
   "nodes": {
     "control.eEcon.showLabs": {
@@ -7712,6 +7712,2351 @@
           }
         ],
         "formulaExcerpt": "UWAdditionalDMG, eDamage!$CX$6*DO5*DN5, UWDmg, EP_UW_TOTAL_DAMAGE(DW, CL, SM, SLM, SL, PS, ILM, UWAdditionalDMG, DP5, CardUC)"
+      }
+    },
+    {
+      "id": "e.feeds.control.eEcon.hideNonUnlockedLabs.control.eEcon.showLabs",
+      "from": "control.eEcon.hideNonUnlockedLabs",
+      "to": "control.eEcon.showLabs",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eEcon",
+            "cell": "AZ11",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.perkDeathWaveQuantity.stat.eDamage.deathWaveQuantity",
+      "from": "control.eDamage.perkDeathWaveQuantity",
+      "to": "stat.eDamage.deathWaveQuantity",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY67",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.perkChainLightningDamage.stat.eDamage.chainLightningDamage",
+      "from": "control.eDamage.perkChainLightningDamage",
+      "to": "stat.eDamage.chainLightningDamage",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY70",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.perkMoreSmartMissiles.stat.eDamage.smartMissilesQuantity",
+      "from": "control.eDamage.perkMoreSmartMissiles",
+      "to": "stat.eDamage.smartMissilesQuantity",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY69",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.perkSpotlightDamageBonus.stat.eDamage.spotlightDamage",
+      "from": "control.eDamage.perkSpotlightDamageBonus",
+      "to": "stat.eDamage.spotlightDamage",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY68",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.perkExtraInnerMines.stat.eDamage.innerLandMinesQuantity",
+      "from": "control.eDamage.perkExtraInnerMines",
+      "to": "stat.eDamage.innerLandMinesQuantity",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY71",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.runType.display.eDamage.gameSpeed",
+      "from": "control.eDamage.runType",
+      "to": "display.eDamage.gameSpeed",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AX19",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=IF(AX19=\"Tourney\", 5, 6.25)"
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.runType.display.eDamage.bossWaveInterval",
+      "from": "control.eDamage.runType",
+      "to": "display.eDamage.bossWaveInterval",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AX19",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.runType.gate.eDamage.deathWaveOwned",
+      "from": "control.eDamage.runType",
+      "to": "gate.eDamage.deathWaveOwned",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AX19",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.runType.gate.eDamage.chainLightningOwned",
+      "from": "control.eDamage.runType",
+      "to": "gate.eDamage.chainLightningOwned",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AX19",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.runType.gate.eDamage.smartMissilesOwned",
+      "from": "control.eDamage.runType",
+      "to": "gate.eDamage.smartMissilesOwned",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AX19",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.runType.gate.eDamage.spotlightOwned",
+      "from": "control.eDamage.runType",
+      "to": "gate.eDamage.spotlightOwned",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AX19",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.runType.gate.eDamage.poisonSwampOwned",
+      "from": "control.eDamage.runType",
+      "to": "gate.eDamage.poisonSwampOwned",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AX19",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.runType.gate.eDamage.chronoFieldOwned",
+      "from": "control.eDamage.runType",
+      "to": "gate.eDamage.chronoFieldOwned",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AX19",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.runType.gate.eDamage.innerLandMinesOwned",
+      "from": "control.eDamage.runType",
+      "to": "gate.eDamage.innerLandMinesOwned",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AX19",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.psBetaTesting.gate.eDamage.poisonSwampOwned",
+      "from": "control.eDamage.psBetaTesting",
+      "to": "gate.eDamage.poisonSwampOwned",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AI17",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.runType.display.eDamage.presetsMaster",
+      "from": "control.eDamage.runType",
+      "to": "display.eDamage.presetsMaster",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AX19",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=LET(usage, SWITCH(AX19, \"Tourney\", \"Tournament\", ...), {\"\", IDS_PRESET_PRESET_USAGE(usage)})"
+      }
+    },
+    {
+      "id": "e.feeds.control.eEcon.cardsMaster.display.eEcon.cardActiveBlock",
+      "from": "control.eEcon.cardsMaster",
+      "to": "display.eEcon.cardActiveBlock",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eEcon",
+            "cell": "AZ28",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.feeds.control.eHP.simulatedTier.display.eHP.perksMaster",
+      "from": "control.eHP.simulatedTier",
+      "to": "display.eHP.perksMaster",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eHP",
+            "cell": "AY10",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.feeds.control.eHP.cardsMaster.display.eHP.cardActiveBlock",
+      "from": "control.eHP.cardsMaster",
+      "to": "display.eHP.cardActiveBlock",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eHP",
+            "cell": "AY16",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.cardsMaster.display.eDamage.cardActiveBlock",
+      "from": "control.eDamage.cardsMaster",
+      "to": "display.eDamage.cardActiveBlock",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY39",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.feeds.control.eHP.cardsMaster.stat.eHP.totalHealth",
+      "from": "control.eHP.cardsMaster",
+      "to": "stat.eHP.totalHealth",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eHP",
+            "cell": "AY16",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.feeds.control.eHP.cardsMaster.stat.eHP.totalHealthRegen",
+      "from": "control.eHP.cardsMaster",
+      "to": "stat.eHP.totalHealthRegen",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eHP",
+            "cell": "AY16",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.feeds.control.eHP.cardsMaster.stat.eHP.totalDefenseAbsolute",
+      "from": "control.eHP.cardsMaster",
+      "to": "stat.eHP.totalDefenseAbsolute",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eHP",
+            "cell": "AY16",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.feeds.control.eHP.cardsMaster.stat.eHP.totalDefensePercent",
+      "from": "control.eHP.cardsMaster",
+      "to": "stat.eHP.totalDefensePercent",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eHP",
+            "cell": "AY16",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.smHitsOnSameTarget.display.eDamage.smartMissilesHeatup",
+      "from": "control.eDamage.smHitsOnSameTarget",
+      "to": "display.eDamage.smartMissilesHeatup",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY29",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=EP_UW_HEATUP(1+(1.5*CK5), MAX(1,$AY$29))"
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.smEnemiesInArea.stat.eDamage.smartMissilesDps",
+      "from": "control.eDamage.smEnemiesInArea",
+      "to": "stat.eDamage.smartMissilesDps",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY30",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "EP_SM_DPS(SMB, SMQ, SMC, SMCF, EI5, $AY$30, $AY$59, RIGHT($AU$59, 1))"
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.smEnemiesInArea.stat.eDamage.spotlightMissilesDps",
+      "from": "control.eDamage.smEnemiesInArea",
+      "to": "stat.eDamage.spotlightMissilesDps",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY30",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "EP_SLM_DPS(SMB, SLB, 20-CH5, EI5, $AY$30, $AY$59, RIGHT($AU$59, 1))"
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.psEnemiesPoisoned.stat.eDamage.poisonSwampDps",
+      "from": "control.eDamage.psEnemiesPoisoned",
+      "to": "stat.eDamage.poisonSwampDps",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY31",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "EP_PS_DPS($BH$35, PSDmg, PSDur, PSCd, $EK$5 * $AY$31, PSRend, $AY$59, RIGHT($AU$59, 1))"
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.psDeathCreepTicks.display.eDamage.poisonSwampHeatup",
+      "from": "control.eDamage.psDeathCreepTicks",
+      "to": "display.eDamage.poisonSwampHeatup",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY32",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=EP_UW_HEATUP(1+IF($BL$35=\"Locked\",0.5,$BL$35), MAX(1, $AY$32))"
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.ilmEnemiesInArea.stat.eDamage.innerLandMinesDps",
+      "from": "control.eDamage.ilmEnemiesInArea",
+      "to": "stat.eDamage.innerLandMinesDps",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY36",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "EP_ILM_DPS($BH$37, ILMDmg, ILMPerSecond, ChronoJump*EM$5, N($BL$37), $AY$36, $AY$59, RIGHT($AU$59, 1))"
+      }
+    },
+    {
+      "id": "e.feeds.control.eEcon.blackHoleKillShare.stat.eEcon.blackHoleCoinBonus",
+      "from": "control.eEcon.blackHoleKillShare",
+      "to": "stat.eEcon.blackHoleCoinBonus",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eEcon",
+            "cell": "AZ19",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=IF(DU5, , EPC_BHCB(BW5, $AZ$19))"
+      }
+    },
+    {
+      "id": "e.feeds.control.eEcon.goldenBotKillShare.stat.eEcon.goldenBotMultiplier",
+      "from": "control.eEcon.goldenBotKillShare",
+      "to": "stat.eEcon.goldenBotMultiplier",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eEcon",
+            "cell": "AZ22",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=($BL$19-1)*$AZ$22+1"
+      }
+    },
+    {
+      "id": "e.feeds.control.eEcon.goldenBotSyncRatio.stat.eEcon.uwCooldownSync",
+      "from": "control.eEcon.goldenBotSyncRatio",
+      "to": "stat.eEcon.uwCooldownSync",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eEcon",
+            "cell": "AZ23",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "MIN(MAX(50, SUM(GTcd, BHcd, DWcd)/UWCount*$AX$23/$AZ$23), 120+$BH$29)"
+      }
+    },
+    {
+      "id": "e.feeds.control.eEcon.perksMaster.stat.eEcon.blackHoleDuration",
+      "from": "control.eEcon.perksMaster",
+      "to": "stat.eEcon.blackHoleDuration",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eEcon",
+            "cell": "AZ43",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=IF(DU5, , EPC_BHD($BM$16, AND($AZ$43, $AZ$49), $BO$24, CH5, $AO$19, $AP$19))"
+      }
+    },
+    {
+      "id": "e.feeds.control.eEcon.perksMaster.stat.eEcon.deathWaveQuantity",
+      "from": "control.eEcon.perksMaster",
+      "to": "stat.eEcon.deathWaveQuantity",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eEcon",
+            "cell": "AZ43",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.feeds.control.eHP.rowsCalculated.path.eHP.itemName",
+      "from": "control.eHP.rowsCalculated",
+      "to": "path.eHP.itemName",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eHP",
+            "cell": "AJ22",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=EPP_ITEM_NAME(EA4:ER150, MIN(145, AJ22))"
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.rowsCalculated.path.eDamage.itemName",
+      "from": "control.eDamage.rowsCalculated",
+      "to": "path.eDamage.itemName",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AI21",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=EPP_ITEM_NAME(HD4:IK149,  MIN(145, AI21))"
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.rowsCalculated.display.eDamage.pathDuration",
+      "from": "control.eDamage.rowsCalculated",
+      "to": "display.eDamage.pathDuration",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AI21",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=EPP_LAB_DUR_NON_FORMAT(F6:F, G6:G, AI21, D5)"
+      }
+    },
+    {
+      "id": "e.feeds.control.eHP.chronoField.stat.eHP.chronoFieldDefence",
+      "from": "control.eHP.chronoField",
+      "to": "stat.eHP.chronoFieldDefence",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eHP",
+            "cell": "AM26",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=1/(1-IF($AM$26, (10%+0.5%*BW5), 0))"
+      }
+    },
+    {
+      "id": "e.feeds.control.eHP.chainThunder.stat.eHP.chainThunderDefence",
+      "from": "control.eHP.chainThunder",
+      "to": "stat.eHP.chainThunderDefence",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eHP",
+            "cell": "AM24",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=1/(1-IF($AM$24, MIN($AY$12/6*10, 3%*BY5), 0))"
+      }
+    },
+    {
+      "id": "e.feeds.control.eHP.chainLightningDamagePct.stat.eHP.chainThunderDefence",
+      "from": "control.eHP.chainLightningDamagePct",
+      "to": "stat.eHP.chainThunderDefence",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eHP",
+            "cell": "AY12",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=1/(1-IF($AM$24, MIN($AY$12/6*10, 3%*BY5), 0))"
+      }
+    },
+    {
+      "id": "e.feeds.control.eHP.maxRecovery.stat.eHP.currentEffectiveHealth",
+      "from": "control.eHP.maxRecovery",
+      "to": "stat.eHP.currentEffectiveHealth",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eHP",
+            "cell": "AM23",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=(CJ5*CK5*IF(OR($AM$21, $AM$23), CN5+CO5, 1)*CQ5*CR5+CL5)*CM5*CP5"
+      }
+    },
+    {
+      "id": "e.feeds.control.eHP.wallHealth.stat.eHP.currentEffectiveHealth",
+      "from": "control.eHP.wallHealth",
+      "to": "stat.eHP.currentEffectiveHealth",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eHP",
+            "cell": "AM20",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.feeds.control.eEcon.ignoreLabTargetLevels.stat.eEcon.labTargetLevel",
+      "from": "control.eEcon.ignoreLabTargetLevels",
+      "to": "stat.eEcon.labTargetLevel",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eEcon",
+            "cell": "AZ15",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=IF($AZ$15, ,IDS_LAB_TARGET(BD15))"
+      }
+    },
+    {
+      "id": "e.feeds.control.eEcon.showLabs.candidate.eEcon.moduleGeneratorRoi",
+      "from": "control.eEcon.showLabs",
+      "to": "candidate.eEcon.moduleGeneratorRoi",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eEcon",
+            "cell": "AZ12",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "OR(EPG_LEVEL_CHECK(CI5+1, $BF$33, $BG$33), CI$5+EPG_MODULE_LEVEL_LIMIT($AZ$12)<=CI5)"
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.cfSlowEnabled.stat.eDamage.chronoSlowMultiplier",
+      "from": "control.eDamage.cfSlowEnabled",
+      "to": "stat.eDamage.chronoSlowMultiplier",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY33",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=LET(SubstatAssistCap, '_IDS'!$BV$5 + CS5/100, Substat, $AM$38 + SubstatAssistCap * $AO$38, IF(AND(AY33,BH36), 1/(1-MIN(90%, $BJ$36+Substat)), 1))"
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.cfSlowEnabled.stat.eDamage.chronoLoopMultiplier",
+      "from": "control.eDamage.cfSlowEnabled",
+      "to": "stat.eDamage.chronoLoopMultiplier",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY33",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=IF(AND(AY33,BH36,BL36<>\"Locked\"), 1/(1-$BL$36), 1)"
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.dpmRangePct.stat.eDamage.rangeDpmMultiplier",
+      "from": "control.eDamage.dpmRangePct",
+      "to": "stat.eDamage.rangeDpmMultiplier",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY22",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=IF($AX$19=\"Attack Disso\", 1, EPD_RANGEDPM($DU5, $DV5, $AY$22))"
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.elitesPerWave.stat.eDamage.ampStrikeMultiplier",
+      "from": "control.eDamage.elitesPerWave",
+      "to": "stat.eDamage.ampStrikeMultiplier",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY35",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=1+4*MIN(1, AY35*(AM8+AR8)/CX7)"
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.projectFundingCash.stat.eDamage.projectFundingMultiplier",
+      "from": "control.eDamage.projectFundingCash",
+      "to": "stat.eDamage.projectFundingMultiplier",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY34",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=LET(PFCash, IF($AX$19=\"Util Disso\", 80 + 5*BY5, UNFORMAT_NUMBER($AY$34)), PF, $AM$45+$AR$45, 1+IF(PF<>0, PF*log10(PFCash), 0))"
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.runType.stat.eDamage.projectFundingMultiplier",
+      "from": "control.eDamage.runType",
+      "to": "stat.eDamage.projectFundingMultiplier",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AX19",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=LET(PFCash, IF($AX$19=\"Util Disso\", 80 + 5*BY5, UNFORMAT_NUMBER($AY$34)), PF, $AM$45+$AR$45, 1+IF(PF<>0, PF*log10(PFCash), 0))"
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.hideNonUnlockedLabs.display.eDamage.hideColumnFlags",
+      "from": "control.eDamage.hideNonUnlockedLabs",
+      "to": "display.eDamage.hideColumnFlags",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY26",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=OR(NOT($AY$48), $AX$19=\"Attack Disso\", EPG_LEVEL_CHECK(BC40+1, BD40, BE40), AND($AY$26, NOT(IDS_LAB_HAS_UNLOCKED(EV4))))"
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.hideNonUwUpgrades.display.eDamage.hideColumnFlags",
+      "from": "control.eDamage.hideNonUwUpgrades",
+      "to": "display.eDamage.hideColumnFlags",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY25",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=OR(AND($AY$25, NOT($BH$31), $AX$19<>\"UW Disso\"), $AX$19=\"Attack Disso\", EPG_LEVEL_CHECK(BC9+1, BD9, BE9), AND($AY$26, NOT(IDS_LAB_HAS_UNLOCKED(FA4))))"
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.ignoreLabTargetLevels.display.eDamage.labTargetLevel",
+      "from": "control.eDamage.ignoreLabTargetLevels",
+      "to": "display.eDamage.labTargetLevel",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AU23",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=IF($AU$23, ,IDS_LAB_TARGET(BB5))"
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.runType.display.eDamage.simulatedTier",
+      "from": "control.eDamage.runType",
+      "to": "display.eDamage.simulatedTier",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AX19",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=IF(AX19=\"Tourney\", \"Tourney\", IDS_PS_FARMING_TIER())"
+      }
+    },
+    {
+      "id": "e.feeds.control.eHP.hideNonUnlockedLabs.display.eHP.hideColumnFlags",
+      "from": "control.eHP.hideNonUnlockedLabs",
+      "to": "display.eHP.hideColumnFlags",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eHP",
+            "cell": "AY14",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=OR(AND($AY$14, NOT(IDS_LAB_HAS_UNLOCKED(CW4))), EPG_LEVEL_CHECK(BQ5+1, BD9, BE9))"
+      }
+    },
+    {
+      "id": "e.feeds.control.eHP.enemiesAttackingTogether.stat.eHP.damageAbsorbed",
+      "from": "control.eHP.enemiesAttackingTogether",
+      "to": "stat.eHP.damageAbsorbed",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eHP",
+            "cell": "AY11",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=EPH_DABS($BH$8, BP5, AND($AY$16, $AY$25), $AV$25, $BK$23, CB5, $AN$9, $AO$9, $BI$8, AND($AY$28, $AY$33), BU5, $BL$8, $BM$8)*$AY$11"
+      }
+    },
+    {
+      "id": "e.feeds.control.eEcon.extraOrbTagShare.stat.eEcon.extraOrbCoins",
+      "from": "control.eEcon.extraOrbTagShare",
+      "to": "stat.eEcon.extraOrbCoins",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eEcon",
+            "cell": "AZ26",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=IF(DU5, , EPC_CARD_EOM($AZ$34, BZ5, $AZ$26))"
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.hideUwCooldown.hide.eDamageStone.dwCooldownColumn",
+      "from": "control.eDamage.hideUwCooldown",
+      "to": "hide.eDamageStone.dwCooldownColumn",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY24",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=OR(NOT($BH$30), $AY$24)"
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.ignoreUwTargetLevels.stat.eDamageStone.dwCooldownRoi",
+      "from": "control.eDamage.ignoreUwTargetLevels",
+      "to": "stat.eDamageStone.dwCooldownRoi",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY23",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=IFS(OR($EH5, EL$2), , EPG_UW_TARGET_LEVEL(BQ5+1, \"Death Wave\", \"Cooldown\", $AY$23), , DVT_UW_STAT(\"Death Wave\", \"Cooldown\", BQ5+1)=\"\", , TRUE, LET(..., DWB, STAT_UW_DW_FINAL_DMG(DVT_UW_STAT(\"Death Wave\", \"Damage\", BO5), Substat), DWQ, STAT_UW_DW_FINAL_QTY(DVT_UW_STAT(\"Death Wave\", \"Quantity\", BP5), Substat, AND($AY$61, $AY$67)), DWC, STAT_UW_DW_FINAL_CD(DVT_UW_STAT(\"Death Wave\", \"Cooldown\", BQ5+1), Substat, eDamage!$EC$5), EP_DW_DPS($BH$30, DWB, DWQ, DWC, $BC$30)...))"
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.showLabsOnCoinPath.hide.eDamageCoins.labColumn",
+      "from": "control.eDamage.showLabsOnCoinPath",
+      "to": "hide.eDamageCoins.labColumn",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY27",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=OR(NOT($AY$43), REGEXMATCH(TO_TEXT($AY$27), \"^None\"), $AX$19=\"Attack Disso\", EPG_LEVEL_CHECK(BC38+1, BD38, BE38), AND($AY$26, NOT(IDS_LAB_HAS_UNLOCKED(FA4))))"
+      }
+    },
+    {
+      "id": "e.feeds.control.eEcon.ignoreUwTargetLevels.hide.eEconStones.uwTargetColumn",
+      "from": "control.eEcon.ignoreUwTargetLevels",
+      "to": "hide.eEconStones.uwTargetColumn",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eEcon",
+            "cell": "AZ18",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=OR(NOT(BK15), EPG_UW_TARGET_LEVEL(BL15, \"Golden Tower\", \"Multiplier\", AZ18), ISBLANK(DVT_UW_COST(\"Golden Tower\", \"Multiplier\", BL15+1)))"
+      }
+    },
+    {
+      "id": "e.feeds.control.eHP.hideNonUnlockedLabs.hide.eHPStone.assistBonusColumn",
+      "from": "control.eHP.hideNonUnlockedLabs",
+      "to": "hide.eHPStone.assistBonusColumn",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eHP",
+            "cell": "AY14",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=OR(NOT($AO$5), AND($AY$14, NOT(IDS_LAB_HAS_UNLOCKED(CJ4))))"
+      }
+    },
+    {
+      "id": "e.feeds.control.eHP.hideNonUnlockedLabs.hide.eHPCoins.labColumn",
+      "from": "control.eHP.hideNonUnlockedLabs",
+      "to": "hide.eHPCoins.labColumn",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eHP",
+            "cell": "AY14",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=OR(NOT($AO$5), AND($AY$14, NOT(IDS_LAB_HAS_UNLOCKED(DI4))))"
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.runType.hide.eDamageKeys.attackDissoColumns",
+      "from": "control.eDamage.runType",
+      "to": "hide.eDamageKeys.attackDissoColumns",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AX19",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=$AX$19=\"Attack Disso\""
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.hideUwCooldown.hide.eDamageStone.smCooldownColumn",
+      "from": "control.eDamage.hideUwCooldown",
+      "to": "hide.eDamageStone.smCooldownColumn",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY24",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=OR(NOT($BH$32), $AY$24)"
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.cfSlowEnabled.hide.eDamageStone.cfSlowColumn",
+      "from": "control.eDamage.cfSlowEnabled",
+      "to": "hide.eDamageStone.cfSlowColumn",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY33",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=OR(NOT($AY$33), NOT($BH$36))"
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.ignoreUwTargetLevels.hide.eDamageStone.smCooldownColumn",
+      "from": "control.eDamage.ignoreUwTargetLevels",
+      "to": "hide.eDamageStone.smCooldownColumn",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY23",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=IFS(OR($EH5, FB$2), , EPG_UW_TARGET_LEVEL(CI5+1, \"Inner Land Mines\", \"Cooldown\", $AY$23), , DVT_UW_STAT(\"Inner Land Mines\", \"Cooldown\", CI5+1)=\"\", , TRUE, LET(...EP_ILM_DPS($BH$37, ILMDmg, ILMPerSecond, ChronoJump, ILMCM*DZ$5, $AY$36, $AY$59, RIGHT($AU$59, 1))...))"
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.ignoreUwTargetLevels.gate.eDamageStone.uwPlusRequiresNineUws",
+      "from": "control.eDamage.ignoreUwTargetLevels",
+      "to": "gate.eDamageStone.uwPlusRequiresNineUws",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY23",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=IFS(OR($EH5, ES$2), , EPG_UW_TARGET_LEVEL(BX5+1, \"Smart Missiles\", \"Cover Fire\", $AY$23), , OR(DVT_UW_STAT(\"Smart Missiles\", \"Cover Fire\", BX5+1)=\"\", IDS_UW_COUNT()<=8), , TRUE, LET(...))"
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.ignoreUwTargetLevels.gate.eDamageStone.spotlightAngleCap",
+      "from": "control.eDamage.ignoreUwTargetLevels",
+      "to": "gate.eDamageStone.spotlightAngleCap",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY23",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=IFS(OR($EH5, EU$2), , EPG_UW_TARGET_LEVEL(BZ5+1, \"Spotlight\", \"Angle\", $AY$23), , OR(DVT_UW_STAT(\"Spotlight\", \"Angle\", BZ5+1)=\"\", INDEX(AUW_SL_ANGLE_VAL, BZ5)+$AM$30>=90), , TRUE, LET(...))"
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.ignoreUwTargetLevels.hide.eDamageStone.ilmColumnsShareOneFlag",
+      "from": "control.eDamage.ignoreUwTargetLevels",
+      "to": "hide.eDamageStone.ilmColumnsShareOneFlag",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY23",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=IFS(OR($EH5, FB$2), , EPG_UW_TARGET_LEVEL(CH5+1, \"Inner Land Mines\", \"Quantity\", $AY$23), , DVT_UW_STAT(\"Inner Land Mines\", \"Quantity\", CH5+1)=\"\", , TRUE, LET(...))"
+      }
+    },
+    {
+      "id": "e.feeds.control.eEcon.keepUwCdSynced.stat.eEconStones.uwCooldownBundle",
+      "from": "control.eEcon.keepUwCdSynced",
+      "to": "stat.eEconStones.uwCooldownBundle",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eEcon",
+            "cell": "AZ17",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=OR(NOT(AZ17), CA5<110)"
+      }
+    },
+    {
+      "id": "e.feeds.control.eEcon.hideNonUnlockedLabs.hide.eEconStones.masteryColumns",
+      "from": "control.eEcon.hideNonUnlockedLabs",
+      "to": "hide.eEconStones.masteryColumns",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eEcon",
+            "cell": "AZ11",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=OR(IDS_CARD_MASTERY(LEFT(EA4, LEN(EA4)-8)), AND($AZ$11, NOT(IDS_LAB_HAS_UNLOCKED(EA4))))"
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.showLabsOnCoinPath.display.eDamage.coinPathHeader",
+      "from": "control.eDamage.showLabsOnCoinPath",
+      "to": "display.eDamage.coinPathHeader",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY27",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "=OR(NOT($AY$43), REGEXMATCH(TO_TEXT($AY$27), \"^None\"), $AX$19=\"Attack Disso\", EPG_LEVEL_CHECK(BC38+1, BD38, BE38), AND($AY$26, NOT(IDS_LAB_HAS_UNLOCKED(FA4))))"
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamageCoins.bandCriticalFactor.stat.eDamageCoins.criticalFactor",
+      "from": "control.eDamageCoins.bandCriticalFactor",
+      "to": "stat.eDamageCoins.criticalFactor",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage Coins",
+            "cell": "BS5",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "WSPlus, 1+1%*BS5"
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamageCoins.bandDamage.stat.eDamageCoins.damageEnhanced",
+      "from": "control.eDamageCoins.bandDamage",
+      "to": "stat.eDamageCoins.damageEnhanced",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage Coins",
+            "cell": "BO5",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "WSPlus, 1+(1%*BO5)"
+      }
+    },
+    {
+      "id": "e.feeds.control.eDamage.poisonSwampLabLevel.stat.eDamage.shockMultiplier",
+      "from": "control.eDamage.poisonSwampLabLevel",
+      "to": "stat.eDamage.shockMultiplier",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "BS5",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "(1+(0.1+(0.04*BS5))*IF(HasDC, 2*($AM$25+$AR$25), 1))"
+      }
+    },
+    {
+      "id": "e.dependsOn.display.eDamage.gameSpeed.control.eDamage.runType",
+      "from": "display.eDamage.gameSpeed",
+      "to": "control.eDamage.runType",
+      "kind": "dependsOn",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY21",
+            "kind": "formula"
+          }
+        ],
+        "formulaExcerpt": "=IF(AX19=\"Tourney\", 5, 6.25)"
+      }
+    },
+    {
+      "id": "e.dependsOn.display.eDamage.presetsMaster.control.eDamage.runType",
+      "from": "display.eDamage.presetsMaster",
+      "to": "control.eDamage.runType",
+      "kind": "dependsOn",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AW12",
+            "kind": "formula"
+          }
+        ],
+        "formulaExcerpt": "=LET(usage, SWITCH(AX19, \"Tourney\", \"Tournament\", ...), {\"\", IDS_PRESET_PRESET_USAGE(usage)})"
+      }
+    },
+    {
+      "id": "e.dependsOn.display.eDamage.simulatedTier.control.eDamage.runType",
+      "from": "display.eDamage.simulatedTier",
+      "to": "control.eDamage.runType",
+      "kind": "dependsOn",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AX20",
+            "kind": "formula"
+          }
+        ],
+        "formulaExcerpt": "=IF(AX19=\"Tourney\", \"Tourney\", IDS_PS_FARMING_TIER())"
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eEcon.showLabs.path.eEcon.timeVisible",
+      "from": "control.eEcon.showLabs",
+      "to": "path.eEcon.timeVisible",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eEcon",
+            "cell": "AZ12",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eEcon.showEnhancements.path.eEcon.timeVisible",
+      "from": "control.eEcon.showEnhancements",
+      "to": "path.eEcon.timeVisible",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eEcon",
+            "cell": "AZ13",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eEcon.hideNonUnlockedLabs.path.eHP.itemName",
+      "from": "control.eEcon.hideNonUnlockedLabs",
+      "to": "path.eHP.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eEcon",
+            "cell": "AZ11",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eEcon.hideNonUnlockedLabs.path.eDamage.itemName",
+      "from": "control.eEcon.hideNonUnlockedLabs",
+      "to": "path.eDamage.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eEcon",
+            "cell": "AZ11",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eEcon.hideNonUnlockedLabs.path.eEcon.timeVisible",
+      "from": "control.eEcon.hideNonUnlockedLabs",
+      "to": "path.eEcon.timeVisible",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eEcon",
+            "cell": "AZ11",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eEcon.hideRetroactiveDiscountLabs.path.eEcon.timeVisible",
+      "from": "control.eEcon.hideRetroactiveDiscountLabs",
+      "to": "path.eEcon.timeVisible",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eEcon",
+            "cell": "AZ14",
+            "kind": "control"
+          }
+        ]
+      },
+      "pathVariants": [
+        "discount"
+      ]
+    },
+    {
+      "id": "e.affectsPath.control.eEcon.keepUwCdSynced.path.eEcon.timeVisible",
+      "from": "control.eEcon.keepUwCdSynced",
+      "to": "path.eEcon.timeVisible",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eEcon",
+            "cell": "AZ17",
+            "kind": "control"
+          }
+        ]
+      },
+      "pathVariants": [
+        "lab",
+        "stone"
+      ]
+    },
+    {
+      "id": "e.affectsPath.control.eEcon.cardsMaster.path.eEcon.timeVisible",
+      "from": "control.eEcon.cardsMaster",
+      "to": "path.eEcon.timeVisible",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eEcon",
+            "cell": "AZ28",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eEcon.perksMaster.path.eEcon.timeVisible",
+      "from": "control.eEcon.perksMaster",
+      "to": "path.eEcon.timeVisible",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eEcon",
+            "cell": "AZ43",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eEcon.costMode.path.eEcon.timeVisible",
+      "from": "control.eEcon.costMode",
+      "to": "path.eEcon.timeVisible",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eEcon",
+            "cell": "O3",
+            "kind": "control"
+          }
+        ]
+      },
+      "pathVariants": [
+        "lab"
+      ]
+    },
+    {
+      "id": "e.affectsPath.control.eDamage.runType.path.eDamage.itemName",
+      "from": "control.eDamage.runType",
+      "to": "path.eDamage.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AX19",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eDamage.dpmRangePct.path.eDamage.itemName",
+      "from": "control.eDamage.dpmRangePct",
+      "to": "path.eDamage.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY22",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eDamage.ignoreLabTargetLevels.path.eHP.itemName",
+      "from": "control.eDamage.ignoreLabTargetLevels",
+      "to": "path.eHP.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AU23",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eDamage.ignoreLabTargetLevels.path.eDamage.itemName",
+      "from": "control.eDamage.ignoreLabTargetLevels",
+      "to": "path.eDamage.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AU23",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eDamage.ignoreLabTargetLevels.path.eEcon.timeVisible",
+      "from": "control.eDamage.ignoreLabTargetLevels",
+      "to": "path.eEcon.timeVisible",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AU23",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eDamage.hideUwCooldown.path.eDamage.itemName",
+      "from": "control.eDamage.hideUwCooldown",
+      "to": "path.eDamage.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY24",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eDamage.hideNonUwUpgrades.path.eDamage.itemName",
+      "from": "control.eDamage.hideNonUwUpgrades",
+      "to": "path.eDamage.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY25",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eDamage.hideNonUnlockedLabs.path.eHP.itemName",
+      "from": "control.eDamage.hideNonUnlockedLabs",
+      "to": "path.eHP.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY26",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eDamage.hideNonUnlockedLabs.path.eDamage.itemName",
+      "from": "control.eDamage.hideNonUnlockedLabs",
+      "to": "path.eDamage.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY26",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eDamage.hideNonUnlockedLabs.path.eEcon.timeVisible",
+      "from": "control.eDamage.hideNonUnlockedLabs",
+      "to": "path.eEcon.timeVisible",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY26",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eDamage.showLabsOnCoinPath.path.eDamage.itemName",
+      "from": "control.eDamage.showLabsOnCoinPath",
+      "to": "path.eDamage.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY27",
+            "kind": "control"
+          }
+        ]
+      },
+      "pathVariants": [
+        "coin"
+      ]
+    },
+    {
+      "id": "e.affectsPath.control.eDamage.smHitsOnSameTarget.path.eDamage.itemName",
+      "from": "control.eDamage.smHitsOnSameTarget",
+      "to": "path.eDamage.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY29",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eDamage.smEnemiesInArea.path.eDamage.itemName",
+      "from": "control.eDamage.smEnemiesInArea",
+      "to": "path.eDamage.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY30",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eDamage.psEnemiesPoisoned.path.eDamage.itemName",
+      "from": "control.eDamage.psEnemiesPoisoned",
+      "to": "path.eDamage.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY31",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eDamage.psDeathCreepTicks.path.eDamage.itemName",
+      "from": "control.eDamage.psDeathCreepTicks",
+      "to": "path.eDamage.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY32",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eDamage.cfSlowEnabled.path.eDamage.itemName",
+      "from": "control.eDamage.cfSlowEnabled",
+      "to": "path.eDamage.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY33",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eDamage.projectFundingCash.path.eDamage.itemName",
+      "from": "control.eDamage.projectFundingCash",
+      "to": "path.eDamage.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY34",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eDamage.elitesPerWave.path.eDamage.itemName",
+      "from": "control.eDamage.elitesPerWave",
+      "to": "path.eDamage.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY35",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eDamage.ilmEnemiesInArea.path.eDamage.itemName",
+      "from": "control.eDamage.ilmEnemiesInArea",
+      "to": "path.eDamage.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY36",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eDamage.cardsMaster.path.eHP.itemName",
+      "from": "control.eDamage.cardsMaster",
+      "to": "path.eHP.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY39",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eDamage.cardsMaster.path.eDamage.itemName",
+      "from": "control.eDamage.cardsMaster",
+      "to": "path.eDamage.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY39",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eHP.simulatedTier.path.eHP.itemName",
+      "from": "control.eHP.simulatedTier",
+      "to": "path.eHP.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eHP",
+            "cell": "AY10",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eHP.enemiesAttackingTogether.path.eHP.itemName",
+      "from": "control.eHP.enemiesAttackingTogether",
+      "to": "path.eHP.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eHP",
+            "cell": "AY11",
+            "kind": "control"
+          }
+        ]
+      },
+      "pathVariants": [
+        "lab",
+        "coin",
+        "stone"
+      ]
+    },
+    {
+      "id": "e.affectsPath.control.eHP.chainLightningDamagePct.path.eHP.itemName",
+      "from": "control.eHP.chainLightningDamagePct",
+      "to": "path.eHP.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eHP",
+            "cell": "AY12",
+            "kind": "control"
+          }
+        ]
+      },
+      "pathVariants": [
+        "lab",
+        "coin",
+        "stone"
+      ]
+    },
+    {
+      "id": "e.affectsPath.control.eHP.ignoreTargetLevels.path.eHP.itemName",
+      "from": "control.eHP.ignoreTargetLevels",
+      "to": "path.eHP.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eHP",
+            "cell": "AY13",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eHP.ignoreTargetLevels.path.eDamage.itemName",
+      "from": "control.eHP.ignoreTargetLevels",
+      "to": "path.eDamage.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eHP",
+            "cell": "AY13",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eHP.ignoreTargetLevels.path.eEcon.timeVisible",
+      "from": "control.eHP.ignoreTargetLevels",
+      "to": "path.eEcon.timeVisible",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eHP",
+            "cell": "AY13",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eHP.hideNonUnlockedLabs.path.eHP.itemName",
+      "from": "control.eHP.hideNonUnlockedLabs",
+      "to": "path.eHP.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eHP",
+            "cell": "AY14",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eHP.hideNonUnlockedLabs.path.eDamage.itemName",
+      "from": "control.eHP.hideNonUnlockedLabs",
+      "to": "path.eDamage.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eHP",
+            "cell": "AY14",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eHP.hideNonUnlockedLabs.path.eEcon.timeVisible",
+      "from": "control.eHP.hideNonUnlockedLabs",
+      "to": "path.eEcon.timeVisible",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eHP",
+            "cell": "AY14",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eHP.cardsMaster.path.eHP.itemName",
+      "from": "control.eHP.cardsMaster",
+      "to": "path.eHP.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eHP",
+            "cell": "AY16",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eHP.cardsMaster.path.eDamage.itemName",
+      "from": "control.eHP.cardsMaster",
+      "to": "path.eDamage.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eHP",
+            "cell": "AY16",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eDamage.perkDeathWaveQuantity.path.eDamage.itemName",
+      "from": "control.eDamage.perkDeathWaveQuantity",
+      "to": "path.eDamage.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY67",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eDamage.perkSpotlightDamageBonus.path.eDamage.itemName",
+      "from": "control.eDamage.perkSpotlightDamageBonus",
+      "to": "path.eDamage.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY68",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eDamage.perkMoreSmartMissiles.path.eDamage.itemName",
+      "from": "control.eDamage.perkMoreSmartMissiles",
+      "to": "path.eDamage.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY69",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eDamage.perkChainLightningDamage.path.eDamage.itemName",
+      "from": "control.eDamage.perkChainLightningDamage",
+      "to": "path.eDamage.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY70",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eDamage.perkExtraInnerMines.path.eDamage.itemName",
+      "from": "control.eDamage.perkExtraInnerMines",
+      "to": "path.eDamage.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY71",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eDamage.psBetaTesting.path.eDamage.itemName",
+      "from": "control.eDamage.psBetaTesting",
+      "to": "path.eDamage.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AI17",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eHP.wallHealth.path.eHP.itemName",
+      "from": "control.eHP.wallHealth",
+      "to": "path.eHP.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eHP",
+            "cell": "AM20",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eHP.maxRecovery.path.eHP.itemName",
+      "from": "control.eHP.maxRecovery",
+      "to": "path.eHP.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eHP",
+            "cell": "AM23",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eHP.chainThunder.path.eHP.itemName",
+      "from": "control.eHP.chainThunder",
+      "to": "path.eHP.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eHP",
+            "cell": "AM24",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eHP.chronoField.path.eHP.itemName",
+      "from": "control.eHP.chronoField",
+      "to": "path.eHP.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eHP",
+            "cell": "AM26",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eHP.rowsCalculated.path.eHP.itemName",
+      "from": "control.eHP.rowsCalculated",
+      "to": "path.eHP.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eHP",
+            "cell": "AJ22",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eDamage.rowsCalculated.path.eDamage.itemName",
+      "from": "control.eDamage.rowsCalculated",
+      "to": "path.eDamage.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AI21",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eEcon.ignoreLabTargetLevels.path.eHP.itemName",
+      "from": "control.eEcon.ignoreLabTargetLevels",
+      "to": "path.eHP.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eEcon",
+            "cell": "AZ15",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eEcon.ignoreLabTargetLevels.path.eDamage.itemName",
+      "from": "control.eEcon.ignoreLabTargetLevels",
+      "to": "path.eDamage.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eEcon",
+            "cell": "AZ15",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eEcon.ignoreLabTargetLevels.path.eEcon.timeVisible",
+      "from": "control.eEcon.ignoreLabTargetLevels",
+      "to": "path.eEcon.timeVisible",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eEcon",
+            "cell": "AZ15",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eEcon.ignoreUwTargetLevels.path.eDamage.itemName",
+      "from": "control.eEcon.ignoreUwTargetLevels",
+      "to": "path.eDamage.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eEcon",
+            "cell": "AZ18",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eEcon.ignoreUwTargetLevels.path.eEcon.timeVisible",
+      "from": "control.eEcon.ignoreUwTargetLevels",
+      "to": "path.eEcon.timeVisible",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eEcon",
+            "cell": "AZ18",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eEcon.blackHoleKillShare.path.eEcon.timeVisible",
+      "from": "control.eEcon.blackHoleKillShare",
+      "to": "path.eEcon.timeVisible",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eEcon",
+            "cell": "AZ19",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eEcon.goldenBotKillShare.path.eEcon.timeVisible",
+      "from": "control.eEcon.goldenBotKillShare",
+      "to": "path.eEcon.timeVisible",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eEcon",
+            "cell": "AZ22",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eEcon.goldenBotSyncRatio.path.eEcon.timeVisible",
+      "from": "control.eEcon.goldenBotSyncRatio",
+      "to": "path.eEcon.timeVisible",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eEcon",
+            "cell": "AZ23",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eEcon.extraOrbTagShare.path.eEcon.timeVisible",
+      "from": "control.eEcon.extraOrbTagShare",
+      "to": "path.eEcon.timeVisible",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eEcon",
+            "cell": "AZ26",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eDamage.ignoreUwTargetLevels.path.eDamage.itemName",
+      "from": "control.eDamage.ignoreUwTargetLevels",
+      "to": "path.eDamage.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY23",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eDamage.ignoreUwTargetLevels.path.eEcon.timeVisible",
+      "from": "control.eDamage.ignoreUwTargetLevels",
+      "to": "path.eEcon.timeVisible",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "AY23",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eDamageCoins.bandDamage.path.eDamage.itemName",
+      "from": "control.eDamageCoins.bandDamage",
+      "to": "path.eDamage.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage Coins",
+            "cell": "BO5",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eDamageCoins.bandCriticalFactor.path.eDamage.itemName",
+      "from": "control.eDamageCoins.bandCriticalFactor",
+      "to": "path.eDamage.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage Coins",
+            "cell": "BS5",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.affectsPath.control.eDamage.poisonSwampLabLevel.path.eDamage.itemName",
+      "from": "control.eDamage.poisonSwampLabLevel",
+      "to": "path.eDamage.itemName",
+      "kind": "affectsPath",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "BS5",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.feeds.control.eHP.ignoreTargetLevels.display.eHP.regenImport",
+      "from": "control.eHP.ignoreTargetLevels",
+      "to": "display.eHP.regenImport",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eHP",
+            "cell": "AY13",
+            "kind": "control"
+          }
+        ]
+      }
+    },
+    {
+      "id": "e.feeds.control.eEcon.hideRetroactiveDiscountLabs.hide.eEconDiscount.retroactiveLabColumn",
+      "from": "control.eEcon.hideRetroactiveDiscountLabs",
+      "to": "hide.eEconDiscount.retroactiveLabColumn",
+      "kind": "feeds",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eEcon",
+            "cell": "AZ14",
+            "kind": "control"
+          }
+        ],
+        "formulaExcerpt": "={eEcon!AM3:AZ50}"
       }
     }
   ]

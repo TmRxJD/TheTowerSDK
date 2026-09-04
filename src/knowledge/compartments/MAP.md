@@ -19,7 +19,7 @@ One file per subject area; each owns its nodes and edges.
 | `guardian.ts` | The Guardian, as the game defines it. | GUARDIAN_AMBIGUOUS_CHIP_LABELS, GUARDIAN_CHIP_LOOKUP_KEY, GUARDIAN_UNLOCK_BIT_COST, GUARDIAN_SLOT_BIT_COST (+22 more) |
 | `guild.ts` | Guilds — the missing link between "the Guardian costs 200 bits" and "this account can never buy one". | GUILD_MEMBER_ROLES, GUILD_ACTIVE_ROLES, GUILD_DEPARTED_ROLES, GUILD_MEMBER_FIELDS (+5 more) |
 | `index.ts` | The Tower's compartments — content, not substrate. | TOWER_COMPARTMENTS |
-| `jargon.ts` | Community and tracker jargon — terms players use that are not game mechanics. | JARGON_ACRONYMS, JARGON_NODE_ACRONYMS, AMBIGUOUS_TERMS_LISTED, AMBIGUOUS_TERMS_DISTINCT (+4 more) |
+| `jargon.ts` | Community jargon — terms players use that are not game mechanics. | JARGON_ACRONYMS, JARGON_NODE_ACRONYMS, AMBIGUOUS_TERMS_LISTED, AMBIGUOUS_TERMS_DISTINCT (+4 more) |
 | `labs.ts` | Lab research, as the game defines it. | LAB_RESEARCH_SLOT_COUNT, LAB_NAMED_RESEARCH_COUNT, LAB_UNNAMED_SLOT_RUNS, FLEET_LAB_INDICES (+8 more) |
 | `masteries.ts` | Card masteries, as the game defines them. | MASTERY_TERM_NAMES_THE_CARD, MASTERY_TERM_NAMES_THE_MASTERY, MASTERY_VOCABULARY_NOT_COVERED, MASTERY_TERMS_WITH_TRAILING_PUNCTUATION (+17 more) |
 | `meta-game.ts` | Tournaments and events — the sources of stones, medals and keys. | TOURNAMENT_LEAGUE_NAMES, TOURNAMENT_PROTECTED_LEAGUES, TOURNAMENT_PLAYER_COUNT, TOURNAMENT_RANDOM_BATTLE_CONDITIONS (+6 more) |

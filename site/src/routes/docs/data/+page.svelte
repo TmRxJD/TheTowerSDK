@@ -275,7 +275,7 @@ LAB_RESEARCH_IMPORT_CATALOG[0]
   TIER_BATTLE_CONDITION_DEFINITIONS,
   MILESTONE_REWARD_ROWS,      // milestone rewards by tier
   TIER_DATA,                  // per-tier scaling
-  GLOSSARY_NAMES              // canonical names, for parsing player text
+  GLOSSARY_NAME_ROWS          // canonical names, for parsing player text
 } from 'thetowersdk/data'`}
 	/>
 </div>

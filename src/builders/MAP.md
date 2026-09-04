@@ -6,22 +6,22 @@ The calculators, each declaring its own inputs.
 
 | File | Purpose | Exports |
 |---|---|---|
-| `assist-module-stones.ts` | Assist module efficiency: | AssistModuleStonesInput, AssistModuleStonesResult, assistModuleStonesCalculator |
-| `bot-upgrade.ts` | Bots: | BotUpgradeInput, BotUpgradeLevel, BotUpgradeResult, botUpgradeCalculator |
-| `coins-per-kill.ts` | Coins per kill: | CoinsPerKillInputs, CoinsPerKillResult, coinsPerKillCalculator |
-| `damage-reduction.ts` | Damage reduction: | DamageReductionInput, DamageReductionLayer, DamageReductionResult, damageReductionCalculator |
-| `dissonance.ts` | Dissonance: | DissonanceInputs, DissonanceResult, dissonanceCalculator |
-| `enemy-drops.ts` | Enemy drops: | EnemyDropsInputs, EnemyDropsResult, enemyDropsCalculator, BOSS_REROLL_SHARD_PROC_CHANCE |
-| `enemy-wave.ts` | Enemy scaling: | ENEMY_WAVE_TYPES, EnemyWaveType, EnemyWaveInput, EnemyWaveRow (+2 more) |
-| `guardian.ts` | Guardians: | GuardianInput, GuardianLevel, GuardianResult, guardianCalculator |
+| `assist-module-stones.ts` | Assist module efficiency: | assistModuleStonesCalculator |
+| `bot-upgrade.ts` | Bots: | botUpgradeCalculator |
+| `coins-per-kill.ts` | Coins per kill: | coinsPerKillCalculator |
+| `damage-reduction.ts` | Damage reduction: | damageReductionCalculator |
+| `dissonance.ts` | Dissonance: | dissonanceCalculator |
+| `enemy-drops.ts` | Enemy drops: | enemyDropsCalculator, BOSS_REROLL_SHARD_PROC_CHANCE |
+| `enemy-wave.ts` | Enemy scaling: | enemyWaveCalculator |
+| `guardian.ts` | Guardians: | guardianCalculator |
 | `index.ts` | Calculator builders — the plumbing, so what is left is the UI. | CALCULATOR_BUILDERS, findCalculatorBuilder |
-| `inner-land-mines.ts` | Inner Land Mines: | InnerLandMinesInputs, InnerLandMinesResult, innerLandMinesCalculator |
-| `lab-research.ts` | Lab research: | LabResearchInput, LabResearchLevel, LabResearchResult, labResearchCalculator |
-| `module-cost.ts` | Module upgrades: | ModuleCostInput, ModuleCostLevel, ModuleCostResult, moduleCostCalculator |
-| `thorns.ts` | Thorns: | ThornsInput, ThornsResult, thornsCalculator |
-| `types.ts` | The shape every calculator builder shares. | CalculatorField, CalculatorResultBase, CalculatorBuilder, MAX_INPUT_MAGNITUDE (+8 more) |
-| `ultimate-weapon.ts` | Ultimate weapons: | UltimateWeaponInput, UltimateWeaponResult, ultimateWeaponCalculator |
-| `uptime.ts` | Ultimate weapon uptime: | UptimeInput, UptimeResult, uptimeCalculator |
-| `workshop-upgrade.ts` | Workshop upgrades: | WorkshopUpgradeInput, WorkshopUpgradeLevel, WorkshopUpgradeResult, workshopUpgradeCalculator |
+| `inner-land-mines.ts` | Inner Land Mines: | innerLandMinesCalculator |
+| `lab-research.ts` | Lab research: | labResearchCalculator |
+| `module-cost.ts` | Module upgrades: | moduleCostCalculator |
+| `thorns.ts` | Thorns: | thornsCalculator |
+| `types.ts` | The shape every calculator builder shares. | CalculatorField, CalculatorResultBase, CalculatorBuilder, MAX_INPUT_MAGNITUDE (+47 more) |
+| `ultimate-weapon.ts` | Ultimate weapons: | ultimateWeaponCalculator |
+| `uptime.ts` | Ultimate weapon uptime: | uptimeCalculator |
+| `workshop-upgrade.ts` | Workshop upgrades: | workshopUpgradeCalculator |
 
 [← src](../MAP.md) · [← the package](../../MAP.md)

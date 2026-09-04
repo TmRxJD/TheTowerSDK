@@ -1,20 +1,8 @@
 # TheTowerSDK
 
-Game data and save-file reading for **The Tower**, so you can build your own calculators, trackers,
-spreadsheets, charts and planners.
-
-### 📖 [Documentation, live demos and runnable examples → thetowersdk website](https://tmrxjd.github.io/TheTowerSDK/)
-
-By **TmRxJD** — proprietor of [the-tower-run-tracker.com](https://the-tower-run-tracker.com/) and a
-moderator on the Official Tower Discord.
-
-If this SDK is useful to you, you can support its development at no cost by entering creator code
-**`JDEVO`** at checkout in [The Tower webstore](https://store.techtreegames.com/thetower/), or
-with a one-time donation on [Ko-fi](https://ko-fi.com/F1F41FUGWR) or
-[PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=thetowertracker%40gmail.com).
-
-The Effective Paths formulas here are **not** my work — see [Credits](#credits) for who wrote them
-and how to support them directly.
+Game data, save-file reading and the game's own formulas for **The Tower**, as typed TypeScript —
+so you can build calculators, planners, spreadsheets, charts and bots without transcribing a single
+number by hand.
 
 ```bash
 npm install thetowersdk
@@ -22,18 +10,20 @@ npm install thetowersdk
 
 - **Game data** — labs, workshop, modules, cards, perks, relics, guardians, bots, ultimate weapons
   and the vault, with their cost curves and effect values, as typed arrays.
-- **Save reading** — turn a player's `playerInfo.dat` into typed values: what they've researched,
-  what they own, what's equipped, their run history.
-- **Formulas** — enemy scaling, damage, ultimates, drops, workshop stats: the calculation layer
-  behind the Run Tracker's own calculators.
+- **Save reading** — turn a player's `playerInfo.dat` into typed values: what they have researched,
+  what they own, what is equipped, their run history.
+- **Formulas** — enemy scaling, damage, ultimate weapons, drops and workshop stats, as functions you
+  call with a tier, a wave or a level.
 - **Charts** — every level progression is already a plot-ready series, so the shipped catalogs cover
-  [786 chartable series](#charts) without you authoring a single one.
+  [800 chartable series](#charts) without you authoring one.
 
-TypeScript, one runtime dependency (`zod`), MIT licensed.
+TypeScript, MIT licensed, one runtime dependency (`zod`).
+
+### 📖 [Documentation, live demos and runnable examples → thetowersdk website](https://tmrxjd.github.io/TheTowerSDK/)
 
 > **Pre-1.0.** The package is published so it can be installed and exercised, not because the API is
-> settled. Exports may be renamed or removed between releases without deprecation, and there is no
-> changelog until 1.0. Pin an exact version if you depend on it.
+> settled. Exports may be renamed or removed between releases without deprecation. Pin an exact
+> version if you depend on it.
 
 ---
 
@@ -72,24 +62,6 @@ Decode once, then extract whatever you need.
 
 ---
 
-## How It Fits Together
-
-```
-playerInfo.dat ──decodePlayerInfoSaveBytes()──► save root (plain object)
-                                                     │
-                     ┌───────────────────────────────┼──────────────────────────────┐
-                     ▼                               ▼                              ▼
-           readLabsFromSaveRoot()   readModulesFromSaveRoot()   discoverSaveImportTrackers()
-                     │                               │                              │
-                     ▼                               ▼                              ▼
-               typed lab data                 typed module data          "what's in this save?"
-```
-
-The **save root** is a plain JavaScript object. Extractors read from it and never modify it, so you
-can run as many as you like over the same root.
-
----
-
 ## Entry Points
 
 | Import | Contains | Browser-safe |
@@ -123,6 +95,82 @@ subpaths in real projects so your bundler can drop what you don't use.
 import { computeWaveBaseHealth, abilityDamage } from 'thetowersdk/mechanics'
 import { formatDuration } from 'thetowersdk/formatting'
 ```
+
+---
+
+## How It Fits Together
+
+```
+playerInfo.dat ──decodePlayerInfoSaveBytes()──► save root (plain object)
+                                                     │
+                     ┌───────────────────────────────┼──────────────────────────────┐
+                     ▼                               ▼                              ▼
+           readLabsFromSaveRoot()   readModulesFromSaveRoot()   discoverSaveImportTargets()
+                     │                               │                              │
+                     ▼                               ▼                              ▼
+               typed lab data                 typed module data          "what's in this save?"
+```
+
+The **save root** is a plain JavaScript object. Extractors read from it and never modify it, so you
+can run as many as you like over the same root.
+
+---
+
+## Getting a Save File
+
+`playerInfo.dat` is The Tower's save file.
+
+- **Android** — `Android/data/com.TechTreeGames.TheTower/files/playerInfo.dat`
+- **Android emulator** (BlueStacks, LDPlayer, WSA…) — the same path inside the emulated device
+- **macOS** — the native App Store build stores it in its app container under
+  `~/Library/Containers/<bundle-id>/Data/Library/Application Support/…`, with non-sandboxed installs
+  under `~/Library/Application Support/…`
+- **iOS** — inside an encrypted device backup; not practical to read directly
+
+On Windows the save always comes from an emulator. On a Mac the native build is right there on disk.
+
+Copying that file by hand is the tedious part of building anything save-driven, so
+[**adb-bridge**](https://github.com/TmRxJD/adb-bridge) removes the step. It talks to a connected
+phone or a running emulator over ADB, or reads the macOS container directly, and hands the bytes
+straight to whatever needs them:
+
+```bash
+npx adb-bridge
+```
+
+- Installs Google's official platform-tools for you if `adb` isn't already on the machine (Android
+  only — the macOS path needs no tooling).
+- Serves the save to a local page over a WebSocket bound to `127.0.0.1`, so a browser app can read a
+  real account with no upload step and no file picker.
+- Can watch the save and re-send it whenever the game writes, which keeps a view live while you
+  play instead of forcing a manual re-import.
+- Pulls only. It never modifies anything on the device, needs no root, and touches only the games you
+  enable.
+- One install covers multiple games — adding another registers it with the bridge you already have.
+
+Feed the bytes it gives you to `decodePlayerInfoSaveBytes` and everything above applies unchanged.
+
+> Save files are personal data. If your tool uploads them anywhere, tell your users plainly.
+
+### Decoding In a Browser
+
+The decoder is in `thetowersdk/node` only because it uses `node:zlib`. In a browser, gunzip with
+`DecompressionStream` and call the NRBF reader directly — both are exported and pure:
+
+```ts
+import { NRBFReader, nrbfToJSON } from 'thetowersdk/node'
+
+async function decodeInBrowser (file: File): Promise<Record<string, unknown>> {
+  let bytes = new Uint8Array(await file.arrayBuffer())
+  if (bytes[0] === 0x1f && bytes[1] === 0x8b) {
+    const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))
+    bytes = new Uint8Array(await new Response(stream).arrayBuffer())
+  }
+  return nrbfToJSON(NRBFReader.readStream(bytes)) as Record<string, unknown>
+}
+```
+
+Everything in `thetowersdk/save` and `thetowersdk/data` then works on the result unchanged.
 
 ---
 
@@ -164,9 +212,9 @@ if (labs.warnings.length) {
 ### What's In This Save?
 
 ```ts
-import { discoverSaveImportTrackers } from 'thetowersdk/save'
+import { discoverSaveImportTargets } from 'thetowersdk/save'
 
-for (const found of discoverSaveImportTrackers(parsedRoot).trackers) {
+for (const found of discoverSaveImportTargets(parsedRoot).targets) {
   console.log(`${found.label}: ${found.count} — ${found.summary}`)
 }
 // Labs: 166 — 166 labs found in save
@@ -244,61 +292,25 @@ A page that does not exist returns `200 OK` with a `missing` marker rather than 
 is MIT, so fetch what you need and honor the wiki's license in whatever you ship. It is a
 volunteer-run wiki — cache what you fetch, and space out requests when pulling many pages.
 
-## Getting a Save File
+## Formulas
 
-`playerInfo.dat` is The Tower's save file.
+`thetowersdk/mechanics` is the calculation layer:
 
-- **Android** — `Android/data/com.TechTreeGames.TheTower/files/playerInfo.dat`
-- **Android emulator** (BlueStacks, LDPlayer, WSA…) — the same path inside the emulated device
-- **macOS** — the native App Store build stores it in its app container under
-  `~/Library/Containers/<bundle-id>/Data/Library/Application Support/…`, with non-sandboxed installs
-  under `~/Library/Application Support/…`
-- **iOS** — inside an encrypted device backup; not practical to read directly
-
-On Windows the save always comes from an emulator. On a Mac the native build is right there on disk.
-
-Copying that file by hand is the tedious part of building anything save-driven, so
-[**adb-bridge**](https://github.com/TmRxJD/adb-bridge) removes the step. It talks to a connected
-phone or a running emulator over ADB, or reads the macOS container directly, and hands the bytes
-straight to whatever needs them:
-
-```bash
-npx adb-bridge
-```
-
-- Installs Google's official platform-tools for you if `adb` isn't already on the machine (Android
-  only — the macOS path needs no tooling).
-- Serves the save to a local page over a WebSocket bound to `127.0.0.1`, so a browser app can read a
-  real account with no upload step and no file picker.
-- Can watch the save and re-send it whenever the game writes, which keeps a tracker live while you
-  play instead of forcing a manual re-import.
-- Pulls only. It never modifies anything on the device, needs no root, and touches only the games you
-  enable.
-- One install covers multiple games — adding another registers it with the bridge you already have.
-
-Feed the bytes it gives you to `decodePlayerInfoSaveBytes` and everything above applies unchanged.
-
-> Save files are personal data. If your tool uploads them anywhere, tell your users plainly.
-
-### Decoding In a Browser
-
-The decoder is in `thetowersdk/node` only because it uses `node:zlib`. In a browser, gunzip with
-`DecompressionStream` and call the NRBF reader directly — both are exported and pure:
+- **Enemy scaling** — wave/tier base health and damage, enemy type multipliers, level skip,
+  elite spawn chance, wave-info panel values
+- **Damage** — thorns, knockback, multishot and bounce shot, rend armor, projectile damage, crowd
+  control, damage reduction, shockwave, land mines, tower fire and range
+- **Ultimate weapons** — the shared hit and absorb pipeline, plus Chrono Field slow, Poison Swamp
+  ticks and stun, and Inner Land Mines including Charge Mines
+- **Economy** — coin and enemy drop simulation, interest, ROI scaling, workshop cost tables
+- **Workshop stats** — attack, defense and utility stat tables and their build-up
+- **Bots and guardians** — bot hit multipliers, effective range and coverage, Wildfire duration,
+  medal planning and simulation, Bot Bot overlap, cooldowns
+- **Battle conditions** — resistance levels, tournament heat, counter labs
 
 ```ts
-import { NRBFReader, nrbfToJSON } from 'thetowersdk/node'
-
-async function decodeInBrowser (file: File): Promise<Record<string, unknown>> {
-  let bytes = new Uint8Array(await file.arrayBuffer())
-  if (bytes[0] === 0x1f && bytes[1] === 0x8b) {
-    const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))
-    bytes = new Uint8Array(await new Response(stream).arrayBuffer())
-  }
-  return nrbfToJSON(NRBFReader.readStream(bytes)) as Record<string, unknown>
-}
+import { computeWaveBaseHealth, abilityDamage, goldenComboBonus } from 'thetowersdk/mechanics'
 ```
-
-Everything in `thetowersdk/save` and `thetowersdk/data` then works on the result unchanged.
 
 ---
 
@@ -382,285 +394,6 @@ The fallback simply never fires, and a function travels on from a signature that
 
 Cost ladders are bounded the same way, by the table rather than by the caller: a level past the end
 of a curve is excluded rather than priced at zero.
-
----
-
-## Examples
-
-Runnable, in [`examples/`](examples):
-
-```bash
-npx tsx examples/01-browse-game-data.ts                        # the tables, no save needed
-npx tsx examples/02-read-a-save-file.ts ~/playerInfo.dat       # what one player has
-npx tsx examples/03-plan-upgrades-from-a-save.ts ~/playerInfo.dat  # a tool: what to buy next
-npx tsx examples/04-generate-a-chart.ts                        # catalogs -> plot-ready series
-npx tsx examples/05-generate-a-cost-table.ts "Golden Tower"    # the same data as a cost table
-npx tsx examples/06-read-the-community-wiki.ts "Golden Tower"  # wiki page -> Markdown
-npx tsx examples/07-format-like-the-game.ts                    # numbers in and out, both ways
-npx tsx examples/08-build-a-calculator.ts uw.stones            # a whole calculator, rendered generically
-npx tsx examples/09-build-a-bot.ts                             # every calculator as a bot command
-npx tsx examples/10-read-a-sheet.ts                            # a sheet read, and the two ways it lies
-npx tsx examples/11-build-a-knowledge-base.ts                  # chunks derived from the catalogs
-npx tsx examples/12-show-module-and-card-art.ts                # which image belongs to which module
-```
-
-The third is the one to read if you are building something: it goes save → extractors → planner,
-maps a player onto the model, and reports what it could not map rather than passing a silent zero
-into the plan. They are type-checked against the package on every `npm run verify`.
-
----
-
-## Templates
-
-Starting points to copy into your own project, rather than scripts to read. Each is complete,
-type-checked against the package source, and commented where the shape of the SDK is easy to
-get wrong.
-
-| File | For | Runtime |
-|---|---|---|
-| [`save-cli.ts`](templates/save-cli.ts) | A command-line tool that reads a player's save | Node |
-| [`browser-widget.ts`](templates/browser-widget.ts) | A UI module with no Node built-ins anywhere | Browser |
-| [`calculator.ts`](templates/calculator.ts) | A calculator: typed input, pure compute, separate formatting | Either |
-| [`bot-starter.ts`](templates/bot-starter.ts) | A complete bot: every calculator, a hand-written command, a CLI | Node |
-| [`sheets-client.ts`](templates/sheets-client.ts) | The googleapis adapter for `thetowersdk/sheets` | Node |
-
-### The three things they encode
-
-**Decode once.** `decodePlayerInfoSaveBytes` is the only step that needs Node. The save root it
-returns is a plain object that extractors read and never mutate, so run as many as you like over
-one root.
-
-**Only `thetowersdk/node` needs Node.** `data`, `save`, `formatting`, `mechanics`, `wiki`,
-`charts` and `knowledge` are all browser-safe. A widget that never opens a save file
-never imports the decoder — that is why `browser-widget.ts` exists as a separate file.
-
-**Say what you could not do.** Extractors return `null` for features a save predates and carry a
-`warnings` array; `calculator.ts` returns a `notes` array for the same reason. A planner that
-silently returns `0` for an unknown lab is worse than one that says it does not know the lab.
-
-### Two traps these avoid
-
-- **Durations are text, and not all one shape.** Most catalog rows are `"HH:MM:SS"` with hours
-  running past 24 (`"500:00:00"`), but some are `"0s"`. Use `parseDurationToHours`; splitting on
-  `":"` yourself returns `NaN` on the `"0s"` rows and poisons the whole sum.
-- **Format with the game's ladder.** If your tool prints `1.4e21` where the game prints `1.4s`,
-  a player cannot check your answer against their screen — and that is the only way they can
-  trust it. `formatLargeNumber` and `parseResource` round-trip.
-
----
-
-## Names And Acronyms
-
-The game and the community use a lot of shorthand, and plenty of it collides. `CF` is Chrono Field
-to one player and critical factor to another; `GC` is Galaxy Compressor or glass cannon. The SDK
-ships a glossary of 233 terms so you do not have to guess:
-
-```ts
-import { lookupGlossary, expandAcronym, listAmbiguousGlossaryTerms } from 'thetowersdk/data'
-
-expandAcronym('CF')      // 'Chrono Field'
-expandAcronym('GC')      // 'Galaxy Compressor'
-
-lookupGlossary('CF')[0]  // { term, kind, domain: 'ultimate-weapon', expansion, definition }
-listAmbiguousGlossaryTerms()   // 13 terms that resolve to more than one thing
-```
-
-Each entry carries a `domain`, which is usually enough to pick the one you meant. Usually, not
-always: `SR` returns both Shrink Ray and Solar Reflector and *both* are modules, so for the terms in
-`listAmbiguousGlossaryTerms()` you need the `expansion` rather than the domain.
-
-The glossary only covers what the game calls things. Community shorthand that never became a game
-name — critical factor for `CF`, glass cannon for `GC` — is not in it, so `expandAcronym` gives you
-the game's meaning and nothing else.
-
-Names in it are generated from the same catalogs the SDK ships, and every acronym is checked against
-those names, so a term cannot appear unless it is real.
-
-## Using It With An AI Agent
-
-There's an MCP server in [`mcp/`](mcp/README.md). Point your agent at it and it can read the real
-API and the real game data instead of guessing at both.
-
-```bash
-claude mcp add thetowersdk -- node ./node_modules/thetowersdk/mcp/server.mjs
-```
-
-Any MCP client works — it speaks stdio.
-
-**Tracker monorepo:** register the **slim pair** (not the full CI harness):
-
-| Server | Entry | Role |
-|---|---|---|
-| `tower` | `tools/tower-mcp/mechanics-server.mjs` | Mechanics (wiki, SDK graph, epaths) |
-| `tower-gov` | `tools/tower-mcp/gov-server.mjs` | CAP, Staging, Enforcement, Schema, Pointer, Confidence |
-
-Do **not** also register the standalone package MCP or `tools/tower-mcp/server.mjs` in the IDE — that overflows CallMcpTool and duplicates tools. After changing MCP config or `TOWER_SLIM_CATALOG_REV`, reload both servers. Standalone package consumers can still use this sdk-only entry:
-
-```json
-{
-  "mcpServers": {
-    "thetowersdk": {
-      "command": "node",
-      "args": ["./node_modules/thetowersdk/mcp/server.mjs"]
-    }
-  }
-}
-```
-
-| Tool | Ask it for |
-|---|---|
-| `list_exports` · `get_export` | What exists, and one table previewed rather than dumped |
-| `describe_schema` | A table's declared shape, not one guessed from a sample row |
-| `decode_save` · `run_extractor` | What is in a `playerInfo.dat`, and one extractor's output |
-| `define_term` | What an acronym means, and whether it is ambiguous |
-| `plan_effective_path` | An Effective Path, with the candidates it left out and why |
-| `wiki_search` · `wiki_page` | How a mechanic actually behaves, from the community wiki |
-| `begin_mechanic_task` · `record_*` | Mechanics compliance session + map/ledger |
-| `sdk_graph_*` · `trust_coverage_report` · `trust_drift_check` | Mechanics graph SoT + TrustReport + drift aggregate |
-| `sdk_graph_render` · `ep_graph_render` | The graph as a **Mermaid** diagram — paste straight into Markdown |
-| `sdk_kernel_load` · `sdk_registry_get` · `mcp_contract` | Unified MechanicsContext + Registry TOC + MCP taxonomy |
-| `ep_graph_*` · sheet oracle tools | Effective Paths sheet-backed work (`sheet_info`, `eval_formula`, …) |
-
-Governance commits (`commit_*`, `enforcement_*`, `schema_*`, `pointer_*`) live on a separate `tower-gov` server, not on this mechanics server. The governance engine is not part of this package and is not published with it.
-
-Doctor / debug / sandbox tools are on the **full** CI harness (`tools/tower-mcp/server.mjs`) or CLIs (`pnpm sdk-doctor`, `pnpm debug-graph:*`, …), not the slim IDE `tower` catalog.
-
-### The Tower Oracle
-
-A knowledge graph of game mechanics, shipped with the package as its own MCP module. Nodes are
-mechanics, edges are the relationships between them, and every claim carries its source and whether
-anything here has verified it. It answers how a mechanic behaves, what it interacts with, and the
-specific ways it has been misread before.
-
-| Tool | Ask it for |
-|---|---|
-| `oracle_traps` | **Call this first.** Every known way this mechanic has been got wrong |
-| `oracle_expand` | What an acronym means, from a closed set — `GT+`, `CF`, `DW`, `BH` |
-| `oracle_brief` | A short orientation on a mechanic before you model it |
-| `oracle_get` · `oracle_search` | One node in full, or find the node by phrasing |
-| `oracle_map` | How a mechanic connects to the rest of the game |
-| `oracle_footguns` | Cross-cutting mistakes not tied to one mechanic |
-| `oracle_coverage` | How well a compartment is actually covered |
-| `oracle_contradictions` | Claims that disagree, ranked by source authority |
-
-Three properties shape how you read its answers:
-
-- **`claimType`** marks every claim `objective` or `sentiment`, keeping measured values and community
-  opinion distinguishable.
-- **`oracle_coverage`** reports how well a compartment is covered, so an empty `oracle_traps` result
-  can be read as *unexercised* or as *clean* rather than guessed at.
-- **`oracle_contradictions`** surfaces claims that disagree, ranked by source authority
-  (`game` › `save` › `code` › `user` › `sheet` › `wiki` › `external-repo`), and returns both values.
-
-`oracle_expand` resolves acronyms from a closed set, so an unknown shorthand returns as unknown.
-
-### The Sheet Oracle
-
-Reads a live Google Sheet, so an agent can work from a spreadsheet's own calculations:
-
-| Tool | What it does |
-|---|---|
-| `sheet_info` | **Call first.** Sheet id, version, whether it is writable, and its known traps |
-| `read_range` | Values or formulas, in A1 notation |
-| `eval_formula` | **The oracle proper.** Evaluate a formula *in the sheet* and return what it computes |
-| `list_lambdas` | The sheet's named functions and their parameter order |
-| `inspect_tab_ui` | The live label+value control panel for a tab |
-| `write_cells` | Drive inputs to a known state before reading a result |
-
-The tools take a sheet id, so they work against any spreadsheet your service account can see:
-
-```bash
-EPATHS_SHEET_ID=<your sheet id> EPATHS_CREDENTIALS=<path to key.json>
-```
-
-Read-only tools need the sheet **shared** with the service account. `eval_formula` and `write_cells`
-need edit rights, since evaluating a formula writes to a scratch cell.
-
-#### Registering a service account
-
-The sheet tools authenticate as a Google Cloud **service account** — a robot identity with its own
-email address, which reaches the sheets you share with it.
-
-1. In the [Google Cloud console](https://console.cloud.google.com/), create or pick a project.
-2. Enable the **Google Sheets API** for it.
-3. **IAM & Admin → Service Accounts → Create service account.** Access is granted per-sheet by
-   sharing, so no project roles are required.
-4. On the new account, **Keys → Add key → Create new key → JSON**. It downloads once. Treat it as a
-   password and keep it out of version control.
-5. Copy the account's email — `something@project-id.iam.gserviceaccount.com`.
-6. **Share your spreadsheet with that email.** Viewer is enough for reads; Editor is required for
-   `eval_formula` and `write_cells`.
-7. Point the tools at the key with `EPATHS_CREDENTIALS=/path/to/key.json`.
-
-If a read returns nothing, check the sharing first — an unshared sheet reads as an empty range
-rather than a permissions error. To revoke a key, delete it in the console; sharing stays intact for
-its replacement.
-
-### Mechanics Trust & Debug Graph (monorepo)
-
-Agents must not claim accuracy — CI and load paths do:
-
-| Command | Role |
-|---|---|
-| `pnpm tower-mcp:mastery` | Fresh stdio MCP: every sdk tool happy + adversarial |
-| `pnpm mechanics-kernel` | Unified MechanicsContext / validate / registry / MCP contract / save / planner / lsp |
-| `pnpm save-graph:seed` | Rebuild Save Schema Graph from save modules + SAVE_*_KEY constants |
-| `pnpm mechanics-docs` | Generate `docs/mechanics-map/generated/*` from kernel/registry |
-| `pnpm mechanics-sandbox` | Instrumented non-destructive substrate checks |
-| `pnpm sdk-doctor` | SDK Doctor diagnose (trust + debug + drift snapshots) — see `docs/AGENT_SDK_DOCTOR_PROTOCOL.md` |
-| `pnpm mechanics-trust:check` | Strict TrustReport (invariants + coverage silent gaps + debug cross-check) |
-| `pnpm mechanics-trust:drift` | Sheets + wiki + save drift → `docs/mechanics-map/drift/latest.json` |
-| `pnpm debug-graph:compile` | Rebuild Debug Graph from recursive mechanics scan |
-| `pnpm mechanics-trust:seed-inventories` | Refresh sdk-modules / wiki / save coverage inventories |
-
-Contracts: `docs/AGENT_MECHANICS_CONSTITUTION.md`, `docs/AGENT_MECHANICS_TRUST_CONTRACT.md`, `docs/AGENT_MECHANICS_KERNEL_PROTOCOL.md`, `docs/AGENT_MCP_CONTRACT.md`, `docs/AGENT_DEBUG_GRAPH_PROTOCOL.md`.
-Wiki shorthand titles are remapped via `scripts/mechanics-trust/wiki-title-canonical.mjs`
-(e.g. `Coin Bonus` → `Workshop Enhancement/Utility/Coin Bonus`).
-
-Two of those change how an agent works on this domain:
-
-**`plan_effective_path`** runs any family and variant without a scratch script — `{ family:
-"economy", variant: "time", steps: 5 }`. It plans from a zero config, so read it for *structure*:
-which candidates a variant offers, and why the rest are excluded. Pass a wrong variant and it names
-the ones that exist rather than returning an empty result.
-
-**`sdk_graph_render`** emits **Mermaid**, not an image. That matters for the same reason the charts
-below do: a diagram of how mechanics depend on each other goes stale the moment the graph changes,
-and a PNG has no way to notice. Mermaid is text generated from the graph, so it re-renders correct
-in any Markdown surface that speaks it — GitHub, your docs site, an agent's reply — and reviews as a
-readable diff instead of a binary blob. `ep_graph_render` does the same for the Effective Paths
-dependency graph.
-
-**`wiki_page`** is the one to reach for before describing game behavior. This package supplies
-values, not semantics — a table says a number changes, not what it means or what it interacts with.
-`wiki_search { query }` finds the title, `wiki_page { title, section? }` reads it. Pages are cached
-after first read; set `TOWER_WIKI_DIR` to a directory of `slug.md` files to serve them offline, and
-every response says whether it came from `local`, `cache` or `fandom`.
-
-Agent instructions live in [AGENTS.md](AGENTS.md), which ships with the package; `CLAUDE.md` and
-`.github/copilot-instructions.md` point at the same file.
-
----
-
-## Formulas
-
-`thetowersdk/mechanics` is the calculation layer — the same one the Run Tracker's calculators use:
-
-- **Enemy scaling** — wave/tier base health and damage, enemy type multipliers, level skip,
-  elite spawn chance, wave-info panel values
-- **Damage** — thorns, knockback, multishot and bounce shot, rend armor, projectile damage, crowd
-  control, damage reduction, shockwave, land mines, tower fire and range
-- **Ultimate weapons** — the shared hit and absorb pipeline, plus Chrono Field slow, Poison Swamp
-  ticks and stun, and Inner Land Mines including Charge Mines
-- **Economy** — coin and enemy drop simulation, interest, ROI scaling, workshop cost tables
-- **Workshop stats** — attack, defense and utility stat tables and their build-up
-- **Bots and guardians** — bot hit multipliers, effective range and coverage, Wildfire duration,
-  medal planning and simulation, Bot Bot overlap, cooldowns
-- **Battle conditions** — resistance levels, tournament heat, counter labs
-
-```ts
-import { computeWaveBaseHealth, abilityDamage, goldenComboBonus } from 'thetowersdk/mechanics'
-```
 
 ---
 
@@ -751,7 +484,7 @@ every chart over the same array update together — which is the point of
 Markdown, so documentation tables regenerate instead of rotting.
 See [`examples/05-generate-a-cost-table.ts`](examples/05-generate-a-cost-table.ts).
 
-**How much is chartable.** The shipped catalogs support **786 distinct series** — one per measurable
+**How much is chartable.** The shipped catalogs support **800 distinct series** — one per measurable
 field that varies across a level range:
 
 | Source | Series | What varies |
@@ -770,7 +503,7 @@ additional.
 
 ### The Curated Catalog
 
-`thetowersdk/charts` adds a registry of chart definitions the Run Tracker ships, for when you want
+`thetowersdk/charts` adds a registry of ready-made chart definitions, for when you want
 the same views rather than your own:
 
 ```ts
@@ -782,6 +515,248 @@ localisation stay with your application. `CHART_MECHANIC_LINKS` maps each chart 
 `thetowersdk/knowledge` it documents, so a mechanic can find its chart and vice versa.
 
 See [`examples/04-generate-a-chart.ts`](examples/04-generate-a-chart.ts).
+
+---
+
+## Effective Paths
+
+[Effective Paths][ep] is the community spreadsheet that works out the cheapest order to buy things
+in — which lab, workshop stat or module to put your next coins into for the most effect. Its authors
+take the numbers from the developers, which is why the SDK already checks its own tables against it:
+see [`fixtures/data/README.md`](fixtures/data/README.md).
+
+The solver is ported. Four models, each with the sheet's own paths:
+
+| Model | Planner | Paths |
+|---|---|---|
+| eHP | `planEffectiveHealthPath` | `lab-time` · `lab-coins` · `stone` · `coin` |
+| eRegen | `planEffectiveRegenPath` | `lab-time` · `lab-coins` |
+| eDamage | `planEffectiveDamagePath` | `lab-time` · `lab-coins` · `stone` · `coin` · `keys` |
+| eEcon | `planEffectiveEconomyPath` | `time` · `coin` · `stone` |
+| eEcon Discount | `planEffectiveEconomyDiscountPath` | its own, ranking coins **saved** |
+
+The lab path appears twice everywhere because the sheet prices the same candidates two ways — in
+research days or in coins — and which one binds depends on the player.
+
+```ts
+import {
+  planEffectiveDamagePath,
+  ZERO_EFFECTIVE_DAMAGE_LEVELS,
+  zeroEffectiveDamageConfig,
+} from 'thetowersdk/mechanics'
+
+const plan = planEffectiveDamagePath({
+  config: zeroEffectiveDamageConfig(),   // the account: what is unlocked, owned, equipped
+  levels: ZERO_EFFECTIVE_DAMAGE_LEVELS,  // what is bought, per candidate
+  variant: 'lab-time',
+  steps: 25,
+})
+
+plan.steps      // what to buy, in order, with cost, gain and ROI
+plan.excluded   // what it did not offer, and why
+plan.issues     // why it could not plan at all — empty on every plan that ran
+```
+
+### Planning For a Real Player
+
+A plan takes two things, and they are different:
+
+- a **config** — the account around the numbers: which weapons are unlocked, which cards are owned,
+  what the modules are, which perks are taken;
+- **levels** — how far each candidate is already bought.
+
+**The SDK does not build either from a save.** It supplies the model and the zero records; mapping a
+player onto them is yours to write, because where a player's data comes from — a save file, your own
+database, a form — is your decision, not this package's.
+
+The candidate lists are what make that mapping short. Each entry carries the `id` a plan reports
+back, the `band` and `key` its level lives under, and the `sheetName` the community sheet uses:
+
+```ts
+import {
+  EFFECTIVE_ECONOMY_UPGRADES,
+  ZERO_EFFECTIVE_ECONOMY_LEVELS,
+  planEffectiveEconomyPath,
+  zeroEffectiveEconomyConfig,
+} from 'thetowersdk/mechanics'
+
+// However you got it — a save, a database, a form.
+const myLabLevels = { 'Coins / Kill Bonus': 40, 'Golden Tower Bonus': 12 }
+
+// Start from a complete zero record and fill it in. Do not build one by hand:
+// a missing key reads as `undefined`, which becomes a NaN the planner refuses.
+const levels = structuredClone(ZERO_EFFECTIVE_ECONOMY_LEVELS)
+for (const candidate of EFFECTIVE_ECONOMY_UPGRADES) {
+  const known = myLabLevels[candidate.sheetName]
+  if (known !== undefined) levels[candidate.band][candidate.key] = known
+}
+
+const plan = planEffectiveEconomyPath({
+  config: zeroEffectiveEconomyConfig(),
+  levels,
+  variant: 'time',
+  steps: 5,
+})
+
+plan.steps    // → Coins / Kill Bonus L41, L42, L43 … — it continues from 40
+plan.excluded // → Golden Tower Bonus — "the weapon is not unlocked"
+```
+
+That exclusion is the config talking, not the levels: a zero config owns no weapons, so the whole
+Golden Tower band is out. Fill the config in the same way — start from `zeroEffectiveEconomyConfig()`
+and set what you know — and those candidates appear.
+
+Reading a save is a separate step, and the extractors are in
+[`thetowersdk/save`](#reading-a-save): `readLabsFromSaveRoot`, `readWorkshopFromSaveRoot`,
+`readModulesFromSaveRoot` and the rest give you the numbers to map from.
+
+### An Empty Plan Always Says Why
+
+The four families — damage, eHP, economy and regen — check their levels before planning and refuse
+rather than compute against a record they cannot use. When that happens `steps` is empty and
+`issues` names the offending key and what was wrong with it: a `NaN`, a missing entry, a level
+stored as text.
+
+```ts
+if (plan.issues.length > 0) {
+  // Not "this player has nothing worth buying" — "these levels are unusable".
+  console.error(plan.issues) // [{ path: 'time.coinsKillBonus', message: '…' }]
+}
+```
+
+A `NaN` level makes every gain `NaN`; every candidate then compares false against every other and
+the greedy loop returns an empty path, which is indistinguishable from a fully-upgraded account.
+Levels are validated once per plan rather than inside the evaluation loop, which runs many times
+over inputs that do not change.
+
+Levels are held to **completeness and finiteness, not magnitude**. Negative and fractional levels
+are accepted, because the source model contains them.
+
+### `excluded` is half the answer
+
+Every planner reports the candidates it passed over, each with a reason: `already at its cap of 99`,
+`the weapon is not unlocked`, `priced at 0 for level 12, which is not a cost`. **A candidate is
+planned, or it is explained — never neither.**
+
+A path that stops after one step usually means every other candidate is at its cap. Read`excluded` before treating a short path as an error.
+
+Passing a variant a planner does not publish throws, naming the ones it does. Note that `lab` is a
+damage *band* while `lab-time` is a *variant*.
+
+### Discount Is a Different Quantity
+
+`planEffectiveEconomyDiscountPath` ranks coins **saved**, not coins earned, so it is not comparable
+to the others and has its own entry point. `planEffectiveEconomyPath` refuses `discount` and says so
+rather than returning a table of zeroes.
+
+### Checking It Against The Sheet
+
+The port cites the cell behind every rule it implements — `eEcon!E6`, `eDamage Coins!EZ2` — and those
+citations are enumerated by a test that checks the tab exists. If you are changing a formula, read
+the cell first — and know that the spreadsheet API will mislead you about what is in one: a spilled
+range reads as *empty* while `COUNTA` sees a hundred rows of it.
+
+The MCP server's `plan_effective_path` tool runs any of this without a scratch script — see
+[`mcp/README.md`](mcp/README.md).
+
+[`docs/EFFECTIVE_PATHS.md`](docs/EFFECTIVE_PATHS.md) is the longer version: how a config differs from
+levels, why the damage and economy levels are banded, and what a step guarantees.
+
+[ep]: https://docs.google.com/spreadsheets/d/1YwZtKP6B4WYhRba5T6APJ1YxKNdfnIGQnprgnxmO7zc/edit
+
+---
+
+### Reading a Player's IDS Master
+
+Most Effective Paths users keep an **IDS Master** behind their workbook — one `_IDS` tab that is
+nothing but inputs: their labs, workshop, cards, bots, guardians, weapons, modules and vault. It is
+the same account data a save carries, in a form a player maintains by hand.
+
+The readers turn that block into typed rows:
+
+```ts
+import { readIdsLabs, readIdsWorkshop, readIdsCards } from 'thetowersdk/save'
+
+const labs = readIdsLabs(grid)          // grid: the `_IDS` range as rows of cells
+labs.rows                               // [{ name, level, target, max, saveIndex }, …]
+labs.unmatchedNames                     // names the catalog does not know
+labs.warnings                           // cells that would not read as levels
+```
+
+Every reader returns the same shape — `rows`, `unmatchedNames`, `warnings`. Blocks are located by
+their heading rather than by column, so a reader works across IDS versions that lay the `_IDS` tab
+out differently. A row's `saveIndex` is its position in the matching save array, so rows join to
+save data by index rather than by name.
+
+**These give you rows, not a player.** As with the planners above, mapping them onto your own
+stores, database or forms is yours to write.
+
+**A level is a plain number or a plain digit string.** Anything else — `"6,000"`, `"1e3"`, `"0x10"`,
+a negative, an empty cell — reads as `null`, meaning the cell says nothing about that level. Names
+are matched case- and spacing-insensitively, and a name the catalog does not know is reported in
+`unmatchedNames` rather than dropped.
+
+## Examples
+
+Runnable, in [`examples/`](examples):
+
+```bash
+npx tsx examples/01-browse-game-data.ts                        # the tables, no save needed
+npx tsx examples/02-read-a-save-file.ts ~/playerInfo.dat       # what one player has
+npx tsx examples/03-plan-upgrades-from-a-save.ts ~/playerInfo.dat  # a tool: what to buy next
+npx tsx examples/04-generate-a-chart.ts                        # catalogs -> plot-ready series
+npx tsx examples/05-generate-a-cost-table.ts "Golden Tower"    # the same data as a cost table
+npx tsx examples/06-read-the-community-wiki.ts "Golden Tower"  # wiki page -> Markdown
+npx tsx examples/07-format-like-the-game.ts                    # numbers in and out, both ways
+npx tsx examples/08-build-a-calculator.ts uw.stones            # a whole calculator, rendered generically
+npx tsx examples/09-build-a-bot.ts                             # every calculator as a bot command
+npx tsx examples/10-read-a-sheet.ts                            # a sheet read, and the two ways it lies
+npx tsx examples/11-build-a-knowledge-base.ts                  # chunks derived from the catalogs
+npx tsx examples/12-show-module-and-card-art.ts                # which image belongs to which module
+```
+
+The third is the one to read if you are building something: it goes save → extractors → planner,
+maps a player onto the model, and reports what it could not map rather than passing a silent zero
+into the plan. They are type-checked against the package on every `npm run verify`.
+
+---
+
+## Templates
+
+Starting points to copy into your own project, rather than scripts to read. Each is complete,
+type-checked against the package source, and commented where the shape of the SDK is easy to
+get wrong.
+
+| File | For | Runtime |
+|---|---|---|
+| [`save-cli.ts`](templates/save-cli.ts) | A command-line tool that reads a player's save | Node |
+| [`browser-widget.ts`](templates/browser-widget.ts) | A UI module with no Node built-ins anywhere | Browser |
+| [`calculator.ts`](templates/calculator.ts) | A calculator: typed input, pure compute, separate formatting | Either |
+| [`bot-starter.ts`](templates/bot-starter.ts) | A complete bot: every calculator, a hand-written command, a CLI | Node |
+| [`sheets-client.ts`](templates/sheets-client.ts) | The googleapis adapter for `thetowersdk/sheets` | Node |
+
+### The three things they encode
+
+**Decode once.** `decodePlayerInfoSaveBytes` is the only step that needs Node. The save root it
+returns is a plain object that extractors read and never mutate, so run as many as you like over
+one root.
+
+**Only `thetowersdk/node` needs Node.** `data`, `save`, `formatting`, `mechanics`, `wiki`,
+`charts` and `knowledge` are all browser-safe. A widget that never opens a save file
+never imports the decoder — that is why `browser-widget.ts` exists as a separate file.
+
+**Say what you could not do.** Extractors return `null` for features a save predates and carry a
+`warnings` array; `calculator.ts` returns a `notes` array for the same reason. A planner that
+silently returns `0` for an unknown lab is worse than one that says it does not know the lab.
+
+### Two traps these avoid
+
+- **Durations are text, and not all one shape.** Most catalog rows are `"HH:MM:SS"` with hours
+  running past 24 (`"500:00:00"`), but some are `"0s"`. Use `parseDurationToHours`; splitting on
+  `":"` yourself returns `NaN` on the `"0s"` rows and poisons the whole sum.
+- **Format with the game's ladder.** If your tool prints `1.4e21` where the game prints `1.4s`,
+  a player cannot check your answer against their screen — and that is the only way they can
+  trust it. `formatLargeNumber` and `parseResource` round-trip.
 
 ---
 
@@ -818,7 +793,7 @@ adapter.
 
 ### Rules that came out of running three of them
 
-The Run Tracker ships three Discord bots alongside the website, all computing from this package. The
+Three Discord bots are built on this package and run in production. The
 rules below came out of getting that wrong first, and almost none of them are Discord-specific —
 they apply to Slack, Telegram, Matrix, or anything else built around callbacks with opaque ids.
 
@@ -892,6 +867,25 @@ sharing a sheet with it.
 
 ---
 
+## Desktop and Mobile
+
+The SDK is plain TypeScript with one runtime dependency (zod, for schema validation) and no DOM
+assumptions, so it runs unchanged
+in an Electron renderer, an Electron main process, and a Capacitor WebView. `thetowersdk/node` is the
+**only** entry point that needs Node — which is the boundary you want, since the decoder belongs on
+the side that is allowed to read files.
+
+Pin the toolchain first, with the hash corepack verifies against:
+
+```json
+{ "packageManager": "pnpm@10.8.1+sha512.c50088ba…", "engines": { "node": ">=22 <23" } }
+```
+
+[`docs/DESKTOP_AND_MOBILE.md`](docs/DESKTOP_AND_MOBILE.md) covers the main/renderer split, the IPC
+boundary, running the bridge in-process, and what does and does not work on mobile.
+
+---
+
 ## Optional Add-ons
 
 Two packages sit alongside this one. Neither is a dependency and neither is bundled — install one
@@ -928,24 +922,237 @@ restarted at `0.x`, so a version comparison reports a working bridge as too old.
 
 ---
 
-## Desktop and Mobile
+## Using It With An AI Agent
 
-The SDK is plain TypeScript with one runtime dependency (zod, for schema validation) and no DOM
-assumptions, so it runs unchanged
-in an Electron renderer, an Electron main process, and a Capacitor WebView. `thetowersdk/node` is the
-**only** entry point that needs Node — which is the boundary you want, since the decoder belongs on
-the side that is allowed to read files.
+There's an MCP server in [`mcp/`](mcp/README.md). Point your agent at it and it can read the real
+API and the real game data instead of guessing at both.
 
-Pin the toolchain first, with the hash corepack verifies against:
-
-```json
-{ "packageManager": "pnpm@10.8.1+sha512.c50088ba…", "engines": { "node": ">=22 <23" } }
+```bash
+claude mcp add thetowersdk -- node ./node_modules/thetowersdk/mcp/server.mjs
 ```
 
-[`docs/DESKTOP_AND_MOBILE.md`](docs/DESKTOP_AND_MOBILE.md) covers the main/renderer split, the IPC
-boundary, running the bridge in-process, and what does and does not work on mobile.
+Any MCP client works — it speaks stdio.
+
+Or by config file:
+
+```json
+{
+  "mcpServers": {
+    "thetowersdk": {
+      "command": "node",
+      "args": ["./node_modules/thetowersdk/mcp/server.mjs"]
+    }
+  }
+}
+```
+
+| Tool | Ask it for |
+|---|---|
+| `list_exports` · `get_export` | What exists, and one table previewed rather than dumped |
+| `describe_schema` | A table's declared shape, not one guessed from a sample row |
+| `decode_save` · `run_extractor` | What is in a `playerInfo.dat`, and one extractor's output |
+| `define_term` | What an acronym means, and whether it is ambiguous |
+| `plan_effective_path` | An Effective Path, with the candidates it left out and why |
+| `wiki_search` · `wiki_page` | How a mechanic actually behaves, from the community wiki |
+| `begin_mechanic_task` · `record_*` | Mechanics compliance session + map/ledger |
+| `sdk_graph_*` · `trust_coverage_report` · `trust_drift_check` | Mechanics graph SoT + TrustReport + drift aggregate |
+| `sdk_graph_render` · `ep_graph_render` | The graph as a **Mermaid** diagram — paste straight into Markdown |
+| `sdk_kernel_load` · `sdk_registry_get` · `mcp_contract` | Unified MechanicsContext + Registry TOC + MCP taxonomy |
+| `ep_graph_*` · sheet oracle tools | Effective Paths sheet-backed work (`sheet_info`, `eval_formula`, …) |
+
+
+Debug and sandbox tools are on the **full** CI harness (`tools/tower-mcp/server.mjs`) or their CLIs, not the slim IDE `tower` catalog.
+
+### The Tower Oracle
+
+A knowledge graph of game mechanics, shipped with the package as its own MCP module. Nodes are
+mechanics, edges are the relationships between them, and every claim carries its source and whether
+anything here has verified it. It answers how a mechanic behaves, what it interacts with, and the
+specific ways it has been misread before.
+
+| Tool | Ask it for |
+|---|---|
+| `oracle_traps` | **Call this first.** Every known way this mechanic has been got wrong |
+| `oracle_expand` | What an acronym means, from a closed set — `GT+`, `CF`, `DW`, `BH` |
+| `oracle_brief` | A short orientation on a mechanic before you model it |
+| `oracle_get` · `oracle_search` | One node in full, or find the node by phrasing |
+| `oracle_map` | How a mechanic connects to the rest of the game |
+| `oracle_footguns` | Cross-cutting mistakes not tied to one mechanic |
+| `oracle_coverage` | How well a compartment is actually covered |
+| `oracle_contradictions` | Claims that disagree, ranked by source authority |
+
+Three properties shape how you read its answers:
+
+- **`claimType`** marks every claim `objective` or `sentiment`, keeping measured values and community
+  opinion distinguishable.
+- **`oracle_coverage`** reports how well a compartment is covered, so an empty `oracle_traps` result
+  can be read as *unexercised* or as *clean* rather than guessed at.
+- **`oracle_contradictions`** surfaces claims that disagree, ranked by source authority
+  (`game` › `save` › `code` › `user` › `sheet` › `wiki` › `external-repo`), and returns both values.
+
+`oracle_expand` resolves acronyms from a closed set, so an unknown shorthand returns as unknown.
+
+### The Sheet Oracle
+
+Reads a live Google Sheet, so an agent can work from a spreadsheet's own calculations:
+
+| Tool | What it does |
+|---|---|
+| `sheet_info` | **Call first.** Sheet id, version, whether it is writable, and its known traps |
+| `read_range` | Values or formulas, in A1 notation |
+| `eval_formula` | **The oracle proper.** Evaluate a formula *in the sheet* and return what it computes |
+| `list_lambdas` | The sheet's named functions and their parameter order |
+| `inspect_tab_ui` | The live label+value control panel for a tab |
+| `write_cells` | Drive inputs to a known state before reading a result |
+
+The tools take a sheet id, so they work against any spreadsheet your service account can see:
+
+```bash
+EPATHS_SHEET_ID=<your sheet id> EPATHS_CREDENTIALS=<path to key.json>
+```
+
+Read-only tools need the sheet **shared** with the service account. `eval_formula` and `write_cells`
+need edit rights, since evaluating a formula writes to a scratch cell.
+
+#### Registering a service account
+
+The sheet tools authenticate as a Google Cloud **service account** — a robot identity with its own
+email address, which reaches the sheets you share with it.
+
+1. In the [Google Cloud console](https://console.cloud.google.com/), create or pick a project.
+2. Enable the **Google Sheets API** for it.
+3. **IAM & Admin → Service Accounts → Create service account.** Access is granted per-sheet by
+   sharing, so no project roles are required.
+4. On the new account, **Keys → Add key → Create new key → JSON**. It downloads once. Treat it as a
+   password and keep it out of version control.
+5. Copy the account's email — `something@project-id.iam.gserviceaccount.com`.
+6. **Share your spreadsheet with that email.** Viewer is enough for reads; Editor is required for
+   `eval_formula` and `write_cells`.
+7. Point the tools at the key with `EPATHS_CREDENTIALS=/path/to/key.json`.
+
+If a read returns nothing, check the sharing first — an unshared sheet reads as an empty range
+rather than a permissions error. To revoke a key, delete it in the console; sharing stays intact for
+its replacement.
+
+### Mechanics Trust & Debug Graph (monorepo)
+
+Agents must not claim accuracy — CI and load paths do:
+
+| Command | Role |
+|---|---|
+| `pnpm tower-mcp:mastery` | Fresh stdio MCP: every sdk tool happy + adversarial |
+| `pnpm mechanics-kernel` | Unified MechanicsContext / validate / registry / MCP contract / save / planner / lsp |
+| `pnpm save-graph:seed` | Rebuild Save Schema Graph from save modules + SAVE_*_KEY constants |
+| `pnpm mechanics-docs` | Generate `docs/mechanics-map/generated/*` from kernel/registry |
+| `pnpm mechanics-sandbox` | Instrumented non-destructive substrate checks |
+| `pnpm mechanics-trust:check` | Strict TrustReport (invariants + coverage silent gaps + debug cross-check) |
+| `pnpm mechanics-trust:drift` | Sheets + wiki + save drift → `docs/mechanics-map/drift/latest.json` |
+| `pnpm debug-graph:compile` | Rebuild Debug Graph from recursive mechanics scan |
+| `pnpm mechanics-trust:seed-inventories` | Refresh sdk-modules / wiki / save coverage inventories |
+
+Contracts: `docs/AGENT_MECHANICS_CONSTITUTION.md`, `docs/AGENT_MECHANICS_TRUST_CONTRACT.md`, `docs/AGENT_MECHANICS_KERNEL_PROTOCOL.md`, `docs/AGENT_MCP_CONTRACT.md`, `docs/AGENT_DEBUG_GRAPH_PROTOCOL.md`.
+Wiki shorthand titles are remapped via `scripts/mechanics-trust/wiki-title-canonical.mjs`
+(e.g. `Coin Bonus` → `Workshop Enhancement/Utility/Coin Bonus`).
+
+Two of those change how an agent works on this domain:
+
+**`plan_effective_path`** runs any family and variant without a scratch script — `{ family:
+"economy", variant: "time", steps: 5 }`. It plans from a zero config, so read it for *structure*:
+which candidates a variant offers, and why the rest are excluded. Pass a wrong variant and it names
+the ones that exist rather than returning an empty result.
+
+**`sdk_graph_render`** emits **Mermaid**, not an image. That matters for the same reason the charts
+below do: a diagram of how mechanics depend on each other goes stale the moment the graph changes,
+and a PNG has no way to notice. Mermaid is text generated from the graph, so it re-renders correct
+in any Markdown surface that speaks it — GitHub, your docs site, an agent's reply — and reviews as a
+readable diff instead of a binary blob. `ep_graph_render` does the same for the Effective Paths
+dependency graph.
+
+**`wiki_page`** is the one to reach for before describing game behavior. This package supplies
+values, not semantics — a table says a number changes, not what it means or what it interacts with.
+`wiki_search { query }` finds the title, `wiki_page { title, section? }` reads it. Pages are cached
+after first read; set `TOWER_WIKI_DIR` to a directory of `slug.md` files to serve them offline, and
+every response says whether it came from `local`, `cache` or `fandom`.
+
+Agent instructions live in [AGENTS.md](AGENTS.md), which ships with the package; `CLAUDE.md` and
+`.github/copilot-instructions.md` point at the same file.
 
 ---
+
+## Using Your Own Artwork
+
+This package ships **no artwork and no index of it**. The art is TechTree Games’, and it is not
+this package’s to redistribute.
+
+What ships is the naming rule, so a tool can find a file in a directory of artwork **you supply**.
+
+```ts
+import { gameAssetPath, gameAssetPaths, towerAssetUrl, assetSlug } from 'thetowersdk/assets'
+
+gameAssetPath('Amplifying Strike', { domain: 'modules' })
+// 'modules/amplifying-strike-md.webp'
+
+gameAssetPaths('Om Chip', { domain: 'modules' })
+// { sm: 'modules/om-chip-sm.webp', md: '…-md.webp', lg: '…-lg.webp' }
+
+towerAssetUrl(gameAssetPath('Om Chip', { domain: 'modules' }), '/art')
+// '/art/modules/om-chip-md.webp'
+```
+
+### Where to put the files
+
+```
+<your art root>/
+  modules/amplifying-strike-sm.webp
+  modules/amplifying-strike-md.webp
+  modules/amplifying-strike-lg.webp
+  cards/…   relics/…   enemies/…   guardians/…   perks/…
+```
+
+One directory per domain, one file per size, named `<slug>-<size>.<ext>`. The slug is the name
+lowercased with runs of non-alphanumerics collapsed to a single hyphen — `Om Chip` becomes
+`om-chip`, `Damage / Meter` becomes `damage-meter`. `assetSlug()` applies exactly that rule, so
+name your files with it rather than reimplementing it: two implementations of one convention is
+how a name stops matching its file.
+
+`ASSET_DOMAINS` lists the directory names, `ASSET_SIZES` the sizes. Use whichever subset you have
+— nothing requires all three sizes, and `extension` overrides `webp` if your files are `png`.
+
+### It builds paths, it does not check them
+
+These functions never touch the disk, because the disk is yours. A path pointing at a file you do
+not have renders as a gap rather than throwing, so verify your own directory once at startup
+instead of trusting a returned string. `null` comes back only when a name slugifies to nothing,
+which stops `modules/-md.webp` from ever looking like a real path.
+
+---
+
+## Names And Acronyms
+
+The game and the community use a lot of shorthand, and plenty of it collides. `CF` is Chrono Field
+to one player and critical factor to another; `GC` is Galaxy Compressor or glass cannon. The SDK
+ships a glossary of 233 terms so you do not have to guess:
+
+```ts
+import { lookupGlossary, expandAcronym, listAmbiguousGlossaryTerms } from 'thetowersdk/data'
+
+expandAcronym('CF')      // 'Chrono Field'
+expandAcronym('GC')      // 'Galaxy Compressor'
+
+lookupGlossary('CF')[0]  // { term, kind, domain: 'ultimate-weapon', expansion, definition }
+listAmbiguousGlossaryTerms()   // 13 terms that resolve to more than one thing
+```
+
+Each entry carries a `domain`, which is usually enough to pick the one you meant. Usually, not
+always: `SR` returns both Shrink Ray and Solar Reflector and *both* are modules, so for the terms in
+`listAmbiguousGlossaryTerms()` you need the `expansion` rather than the domain.
+
+The glossary only covers what the game calls things. Community shorthand that never became a game
+name — critical factor for `CF`, glass cannon for `GC` — is not in it, so `expandAcronym` gives you
+the game's meaning and nothing else.
+
+Names in it are generated from the same catalogs the SDK ships, and every acronym is checked against
+those names, so a term cannot appear unless it is real.
 
 ## Patch Notes
 
@@ -1005,234 +1212,6 @@ the game has ever used.
 agent asking *when did this change* meets the dating rule before it reaches a date.
 
 ---
-
-## Using Your Own Artwork
-
-This package ships **no images and no catalogue of them**. The art belongs to TechTree Games,
-there is no permission to redistribute it, and a list naming every sprite in the game is derived
-from the game whoever typed it — so that is not shipped either.
-
-What ships is the naming rule, so a tool can find a file in a directory of artwork **you supply**.
-
-```ts
-import { gameAssetPath, gameAssetPaths, towerAssetUrl, assetSlug } from 'thetowersdk/assets'
-
-gameAssetPath('Amplifying Strike', { domain: 'modules' })
-// 'modules/amplifying-strike-md.webp'
-
-gameAssetPaths('Om Chip', { domain: 'modules' })
-// { sm: 'modules/om-chip-sm.webp', md: '…-md.webp', lg: '…-lg.webp' }
-
-towerAssetUrl(gameAssetPath('Om Chip', { domain: 'modules' }), '/art')
-// '/art/modules/om-chip-md.webp'
-```
-
-### Where to put the files
-
-```
-<your art root>/
-  modules/amplifying-strike-sm.webp
-  modules/amplifying-strike-md.webp
-  modules/amplifying-strike-lg.webp
-  cards/…   relics/…   enemies/…   guardians/…   perks/…
-```
-
-One directory per domain, one file per size, named `<slug>-<size>.<ext>`. The slug is the name
-lowercased with runs of non-alphanumerics collapsed to a single hyphen — `Om Chip` becomes
-`om-chip`, `Damage / Meter` becomes `damage-meter`. `assetSlug()` applies exactly that rule, so
-name your files with it rather than reimplementing it: two implementations of one convention is
-how a name stops matching its file.
-
-`ASSET_DOMAINS` lists the directory names, `ASSET_SIZES` the sizes. Use whichever subset you have
-— nothing requires all three sizes, and `extension` overrides `webp` if your files are `png`.
-
-### It builds paths, it does not check them
-
-These functions never touch the disk, because the disk is yours. A path pointing at a file you do
-not have renders as a gap rather than throwing, so verify your own directory once at startup
-instead of trusting a returned string. `null` comes back only when a name slugifies to nothing,
-which stops `modules/-md.webp` from ever looking like a real path.
-
----
-
-## Effective Paths
-
-[Effective Paths][ep] is the community spreadsheet that works out the cheapest order to buy things
-in — which lab, workshop stat or module to put your next coins into for the most effect. Its authors
-take the numbers from the developers, which is why the SDK already checks its own tables against it:
-see [`fixtures/data/README.md`](fixtures/data/README.md).
-
-The solver is ported. Four models, each with the sheet's own paths:
-
-| Model | Planner | Paths |
-|---|---|---|
-| eHP | `planEffectiveHealthPath` | `lab-time` · `lab-coins` · `stone` · `coin` |
-| eRegen | `planEffectiveRegenPath` | `lab-time` · `lab-coins` |
-| eDamage | `planEffectiveDamagePath` | `lab-time` · `lab-coins` · `stone` · `coin` · `keys` |
-| eEcon | `planEffectiveEconomyPath` | `time` · `coin` · `stone` |
-| eEcon Discount | `planEffectiveEconomyDiscountPath` | its own, ranking coins **saved** |
-
-The lab path appears twice everywhere because the sheet prices the same candidates two ways — in
-research days or in coins — and which one binds depends on the player.
-
-```ts
-import {
-  planEffectiveDamagePath,
-  ZERO_EFFECTIVE_DAMAGE_LEVELS,
-  zeroEffectiveDamageConfig,
-} from 'thetowersdk/mechanics'
-
-const plan = planEffectiveDamagePath({
-  config: zeroEffectiveDamageConfig(),   // the account: what is unlocked, owned, equipped
-  levels: ZERO_EFFECTIVE_DAMAGE_LEVELS,  // what is bought, per candidate
-  variant: 'lab-time',
-  steps: 25,
-})
-
-plan.steps      // what to buy, in order, with cost, gain and ROI
-plan.excluded   // what it did not offer, and why
-plan.issues     // why it could not plan at all — empty on every plan that ran
-```
-
-### Planning For a Real Player
-
-A plan takes two things, and they are different:
-
-- a **config** — the account around the numbers: which weapons are unlocked, which cards are owned,
-  what the modules are, which perks are taken;
-- **levels** — how far each candidate is already bought.
-
-**The SDK does not build either from a save.** It supplies the model and the zero records; mapping a
-player onto them is yours to write, because where a player's data comes from — a save file, your own
-database, a form — is your decision, not this package's.
-
-The candidate lists are what make that mapping short. Each entry carries the `id` a plan reports
-back, the `band` and `key` its level lives under, and the `sheetName` the community sheet uses:
-
-```ts
-import {
-  EFFECTIVE_ECONOMY_UPGRADES,
-  ZERO_EFFECTIVE_ECONOMY_LEVELS,
-  planEffectiveEconomyPath,
-  zeroEffectiveEconomyConfig,
-} from 'thetowersdk/mechanics'
-
-// However you got it — a save, a tracker, a form.
-const myLabLevels = { 'Coins / Kill Bonus': 40, 'Golden Tower Bonus': 12 }
-
-// Start from a complete zero record and fill it in. Do not build one by hand:
-// a missing key reads as `undefined`, which becomes a NaN the planner refuses.
-const levels = structuredClone(ZERO_EFFECTIVE_ECONOMY_LEVELS)
-for (const candidate of EFFECTIVE_ECONOMY_UPGRADES) {
-  const known = myLabLevels[candidate.sheetName]
-  if (known !== undefined) levels[candidate.band][candidate.key] = known
-}
-
-const plan = planEffectiveEconomyPath({
-  config: zeroEffectiveEconomyConfig(),
-  levels,
-  variant: 'time',
-  steps: 5,
-})
-
-plan.steps    // → Coins / Kill Bonus L41, L42, L43 … — it continues from 40
-plan.excluded // → Golden Tower Bonus — "the weapon is not unlocked"
-```
-
-That exclusion is the config talking, not the levels: a zero config owns no weapons, so the whole
-Golden Tower band is out. Fill the config in the same way — start from `zeroEffectiveEconomyConfig()`
-and set what you know — and those candidates appear.
-
-Reading a save is a separate step, and the extractors are in
-[`thetowersdk/save`](#reading-a-save): `readLabsFromSaveRoot`, `readWorkshopFromSaveRoot`,
-`readModulesFromSaveRoot` and the rest give you the numbers to map from.
-
-### An Empty Plan Always Says Why
-
-The four families — damage, eHP, economy and regen — check their levels before planning and refuse
-rather than compute against a record they cannot use. When that happens `steps` is empty and
-`issues` names the offending key and what was wrong with it: a `NaN`, a missing entry, a level
-stored as text.
-
-```ts
-if (plan.issues.length > 0) {
-  // Not "this player has nothing worth buying" — "these levels are unusable".
-  console.error(plan.issues) // [{ path: 'time.coinsKillBonus', message: '…' }]
-}
-```
-
-A `NaN` level makes every gain `NaN`; every candidate then compares false against every other and
-the greedy loop returns an empty path, which is indistinguishable from a fully-upgraded account.
-Levels are validated once per plan rather than inside the evaluation loop, which runs many times
-over inputs that do not change.
-
-Levels are held to **completeness and finiteness, not magnitude**. Negative and fractional levels
-are accepted, because the source model contains them.
-
-### `excluded` is half the answer
-
-Every planner reports the candidates it passed over, each with a reason: `already at its cap of 99`,
-`the weapon is not unlocked`, `priced at 0 for level 12, which is not a cost`. **A candidate is
-planned, or it is explained — never neither.**
-
-A path that stops after one step usually means every other candidate is at its cap. Read`excluded` before treating a short path as an error.
-
-Passing a variant a planner does not publish throws, naming the ones it does. Note that `lab` is a
-damage *band* while `lab-time` is a *variant*.
-
-### Discount Is a Different Quantity
-
-`planEffectiveEconomyDiscountPath` ranks coins **saved**, not coins earned, so it is not comparable
-to the others and has its own entry point. `planEffectiveEconomyPath` refuses `discount` and says so
-rather than returning a table of zeroes.
-
-### Checking It Against The Sheet
-
-The port cites the cell behind every rule it implements — `eEcon!E6`, `eDamage Coins!EZ2` — and those
-citations are enumerated by a test that checks the tab exists. If you are changing a formula, read
-the cell first. `docs/EFFECTIVE_PATHS_ORACLE.md` in the tracker repo describes how, and which of the
-spreadsheet API's answers are misleading: a spilled range reads as *empty* while `COUNTA` sees a
-hundred rows of it.
-
-The MCP server's `plan_effective_path` tool runs any of this without a scratch script — see
-[`mcp/README.md`](mcp/README.md).
-
-[`docs/EFFECTIVE_PATHS.md`](docs/EFFECTIVE_PATHS.md) is the longer version: how a config differs from
-levels, why the damage and economy levels are banded, and what a step guarantees.
-
-[ep]: https://docs.google.com/spreadsheets/d/1YwZtKP6B4WYhRba5T6APJ1YxKNdfnIGQnprgnxmO7zc/edit
-
----
-
-### Reading a Player's IDS Master
-
-Most Effective Paths users keep an **IDS Master** behind their workbook — one `_IDS` tab that is
-nothing but inputs: their labs, workshop, cards, bots, guardians, weapons, modules and vault. It is
-the same account data a save carries, in a form a player maintains by hand.
-
-The readers turn that block into typed rows:
-
-```ts
-import { readIdsLabs, readIdsWorkshop, readIdsCards } from 'thetowersdk/save'
-
-const labs = readIdsLabs(grid)          // grid: the `_IDS` range as rows of cells
-labs.rows                               // [{ name, level, target, max, saveIndex }, …]
-labs.unmatchedNames                     // names the catalog does not know
-labs.warnings                           // cells that would not read as levels
-```
-
-Every reader returns the same shape — `rows`, `unmatchedNames`, `warnings`. Blocks are located by
-their heading rather than by column, so a reader works across IDS versions that lay the `_IDS` tab
-out differently. A row's `saveIndex` is its position in the matching save array, so rows join to
-save data by index rather than by name.
-
-**These give you rows, not a player.** As with the planners above, mapping them onto your own
-stores, database or forms is yours to write.
-
-**A level is a plain number or a plain digit string.** Anything else — `"6,000"`, `"1e3"`, `"0x10"`,
-a negative, an empty cell — reads as `null`, meaning the cell says nothing about that level. Names
-are matched case- and spacing-insensitively, and a name the catalog does not know is reported in
-`unmatchedNames` rather than dropped.
 
 ## Accuracy
 
@@ -1358,11 +1337,27 @@ used under ISC. That project worked out the structure this scaler still uses, an
 constants come from there directly. It's no longer maintained, which is part of why this exists —
 but the groundwork is theirs. See [NOTICE](NOTICE).
 
+### Author, and supporting the work
+
+Built and maintained by **TmRxJD**, a moderator on the Official Tower Discord, alongside
+[the-tower-run-tracker.com](https://the-tower-run-tracker.com/) — which runs on this package and is
+where most of it was first proven.
+
+Supporting it costs nothing: enter creator code **`JDEVO`** at checkout in
+[The Tower webstore](https://store.techtreegames.com/thetower/). One-off donations are welcome on
+[Ko-fi](https://ko-fi.com/F1F41FUGWR) or
+[PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=thetowertracker%40gmail.com).
+
+If you only support one thing here, make it the Effective Paths team above — their maths is the
+part of this package that took the most work, and none of it is mine.
+
 ## License
 
 MIT — see [LICENSE](LICENSE). Build open or closed source, commercial or not.
 
-Includes work under other licenses; see [NOTICE](NOTICE).
+The one runtime dependency, [zod](https://github.com/colinhacks/zod), is MIT licensed and is
+bundled into the WebAssembly build. Its licence text and every other attribution are in
+[NOTICE](NOTICE).
 
 Not affiliated with or endorsed by Tech Tree Games. "The Tower" is their trademark; this is a
 community project.

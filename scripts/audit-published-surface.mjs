@@ -52,8 +52,20 @@ function packedFiles() {
 
 function resolveRelative(fromFile, specifier) {
   const base = path.resolve(path.dirname(fromFile), specifier)
-  if (existsSync(`${base}.js`)) return `${base}.js`
-  if (existsSync(path.join(base, 'index.js'))) return path.join(base, 'index.js')
+  /*
+   * TypeScript first, because the tarball carries `.ts` as well as `.js`.
+   *
+   * `mcp/` ships source, not build output, and this resolver only knew about `.js` — so a shipped
+   * `.ts` importing something outside the tarball resolved to nothing and was skipped by the check
+   * below rather than reported by it. That is how `mcp/every-tool.ts` shipped importing
+   * `../tooling/repo-root`, which is not published at all.
+   */
+  for (const candidate of [`${base}.ts`, `${base}.js`, `${base}.mjs`, `${base}.cjs`]) {
+    if (existsSync(candidate)) return candidate
+  }
+  for (const index of ['index.ts', 'index.js']) {
+    if (existsSync(path.join(base, index))) return path.join(base, index)
+  }
   return existsSync(base) ? base : null
 }
 
@@ -167,8 +179,17 @@ function main() {
    * tarball?
    */
   const dangling = []
-  for (const file of shipped) {
-    if (!/\.(js|mjs|cjs)$/.test(file)) continue
+  /*
+   * Everything in the tarball, not just the JavaScript.
+   *
+   * `shipped` is filtered to `.js` because the REACHABILITY walk above follows build output. Using
+   * the same list here meant the shipped TypeScript was never examined — and `mcp/` ships source.
+   * That is how `mcp/every-tool.ts` went out importing `../tooling/repo-root`, a directory that is
+   * not published at all: the file was in the tarball, its import pointed nowhere, and the check
+   * that exists to say so skipped the file for being the wrong extension.
+   */
+  for (const file of allShipped) {
+    if (!/\.(ts|js|mjs|cjs)$/.test(file)) continue
     /*
      * Comments stripped first, for the reason the specifier regex already carries a note about:
      * this package's prose quotes module paths. `dist/mechanics/index.js` explains at length why
@@ -239,7 +260,7 @@ function main() {
 
   /*
    * Nothing that SHIPS may reference a package that is not on the registry. Six modules
-   * once did — a top-level `require("@tmrxjd/governance-engine")` that throws
+   * once did — a top-level `require()` of an unpublished workspace package that throws
    * "Cannot find module" in any real install. They were invisible because the `exports`
    * map does not reach them, so every entry point imported fine and the tarball was
    * broken anyway. `files` now excludes them; this is what keeps them excluded.

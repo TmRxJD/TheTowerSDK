@@ -23,7 +23,7 @@ export type WorkshopEnhancementCatalogRow = (typeof WORKSHOP_ENHANCEMENT_IMPORT_
  * nothing looked wrong.
  *
  * The save decode path in shared-tool-inputs-from-save-extended.ts always
- * iterated rows and matched on `index`/`trackerKey`, so imports were never
+ * iterated rows and matched on `index`/`targetKey`, so imports were never
  * affected. This function is public API of `thetowersdk/save` with no in-repo
  * caller, so the damage was confined to external consumers — which is worse to
  * leave, not better.
@@ -47,13 +47,13 @@ export function listWorkshopEnhancementCatalogRows(): readonly WorkshopEnhanceme
 export function workshopStatKeysByCategory(category: 'attack' | 'defense' | 'utility'): string[] {
   return WORKSHOP_IMPORT_CATALOG
     .filter(row => row.category === category)
-    .map(row => row.trackerKey)
+    .map(row => row.targetKey)
     .filter(value => value != null) as string[]
 }
 
 export function workshopEnhancementStatKeysByCategory(category: 'attack' | 'defense' | 'utility'): string[] {
   return WORKSHOP_ENHANCEMENT_IMPORT_CATALOG
     .filter(row => row.category === category)
-    .map(row => row.trackerKey)
+    .map(row => row.targetKey)
     .filter(value => value != null) as string[]
 }

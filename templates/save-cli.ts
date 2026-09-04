@@ -12,7 +12,7 @@
 import { readFile } from 'node:fs/promises'
 import { decodePlayerInfoSaveBytes } from 'thetowersdk/node'
 import {
-  discoverSaveImportTrackers,
+  discoverSaveImportTargets,
   readLabsFromSaveRoot,
   readWorkshopFromSaveRoot,
 } from 'thetowersdk/save'
@@ -45,7 +45,7 @@ function report(parsedRoot: Record<string, unknown>): void {
 
   // Not sure what a save contains? Ask it.
   console.log('\nWhat this save contains:')
-  for (const found of discoverSaveImportTrackers(parsedRoot).trackers) {
+  for (const found of discoverSaveImportTargets(parsedRoot).targets) {
     console.log(`  ${found.label.padEnd(14)} ${String(found.count).padStart(5)}  ${found.summary}`)
   }
 

@@ -126,7 +126,7 @@ function loadSdk() {
 const sdk = loadSdk()
 
 /**
- * Living mechanics map + ledger under the tracker monorepo (or an override).
+ * Living mechanics map + ledger, resolved from the host repository (or an override).
  *
  * Agents must append verified relationships here instead of re-deriving them
  * from memory next session. Override with TOWER_MECHANICS_MAP_DIR when the
@@ -189,10 +189,9 @@ export const COMPLIANCE_INSTRUCTIONS = [
   '9. Trust the report: sdk_graph_validate / pnpm mechanics-trust:check. Mutate refuses to persist when TrustReport.ok is false.',
   '10. Introspection: sdk_debug_snapshot / sdk_debug_validate (Debug Graph) — not print/playground guessing.',
   '11. Drift: trust_drift_check / pnpm mechanics-trust:drift (sheets+wiki+save). Optional apply:true marks sheet formula mismatches disputed.',
-  '12. Doctor: sdk_doctor_check → prescribe → repair(safe) → validate. Auto-repair never invents formulas. See docs/AGENT_SDK_DOCTOR_PROTOCOL.md.',
-  '13. Kernel: sdk_kernel_load for unified MechanicsContext; sdk_registry_get for TOC; mcp_contract for tool taxonomy. Law: docs/AGENT_MECHANICS_CONSTITUTION.md.',
+  '13. Kernel: sdk_kernel_load for the unified MechanicsContext; sdk_registry_get for TOC; mcp_contract for tool taxonomy. Law: docs/AGENT_MECHANICS_CONSTITUTION.md.',
   '15. Save graph / sandbox / planner scaffold / docs gen / LSP diagnostics: sdk_save_graph_get, sdk_sandbox_run, sdk_planner_compile (codegen deferred), sdk_docs_generate, sdk_lsp_diagnostics.',
-  'Protocols: docs/AGENT_MECHANICS_CONSTITUTION.md · docs/AGENT_MECHANICS_KERNEL_PROTOCOL.md · docs/AGENT_MCP_CONTRACT.md · docs/AGENT_SAVE_GRAPH_PROTOCOL.md · docs/AGENT_SANDBOX_PROTOCOL.md · docs/AGENT_SDK_GRAPH_PROTOCOL.md · docs/AGENT_EP_GRAPH_PROTOCOL.md · docs/AGENT_MECHANICS_TRUST_CONTRACT.md · docs/AGENT_DEBUG_GRAPH_PROTOCOL.md · docs/AGENT_SDK_DOCTOR_PROTOCOL.md · docs/AGENT_GAME_MECHANICS_CONTRACT.md',
+  'Protocols: docs/AGENT_MECHANICS_CONSTITUTION.md · docs/AGENT_MECHANICS_KERNEL_PROTOCOL.md · docs/AGENT_MCP_CONTRACT.md · docs/AGENT_SAVE_GRAPH_PROTOCOL.md · docs/AGENT_SANDBOX_PROTOCOL.md · docs/AGENT_SDK_GRAPH_PROTOCOL.md · docs/AGENT_EP_GRAPH_PROTOCOL.md · docs/AGENT_MECHANICS_TRUST_CONTRACT.md · docs/AGENT_DEBUG_GRAPH_PROTOCOL.md · docs/AGENT_GAME_MECHANICS_CONTRACT.md',
 ].join('\n')
 
 const MONOREPO_ROOT = resolveMonorepoRoot()
@@ -673,12 +672,12 @@ export const TOOLS = {
       const loaded = readSaveOrExplain(savePath)
       if (loaded.error) return loaded
       const { parsedRoot, wasGzip, battleRunCount } = loaded
-      const discovered = sdk.save.discoverSaveImportTrackers(parsedRoot)
+      const discovered = sdk.save.discoverSaveImportTargets(parsedRoot)
       return {
         gzip: wasGzip,
         rootKeys: Object.keys(parsedRoot).length,
         battleRuns: battleRunCount,
-        trackers: discovered.trackers.map(t => ({ label: t.label, count: t.count, summary: t.summary })),
+        targets: discovered.targets.map(t => ({ label: t.label, count: t.count, summary: t.summary })),
       }
     },
   },
@@ -1447,91 +1446,10 @@ export const TOOLS = {
     },
   },
 
-  sdk_doctor_check: {
-    description:
-      'SDK Doctor diagnosis: trust + debug + FS + symbols + coverage + drift snapshots + test adjacency. '
-      + 'Returns DoctorReport. See docs/AGENT_SDK_DOCTOR_PROTOCOL.md. Does not invent fixes.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        strictTests: { type: 'boolean', description: 'Elevate missing adjacent tests to warnings' },
-      },
-    },
-    run: ({ strictTests } = {}) => {
-      const args = ['check']
-      if (strictTests) args.push('--strict-tests')
-      return parseCliJson(
-        runRepoTsx(MONOREPO_ROOT, 'scripts/mechanics-trust/doctor-cli.mjs', args),
-        'sdk-doctor',
-      )
-    },
-  },
 
-  sdk_doctor_prescribe: {
-    description:
-      'Map DoctorReport issues to a PatchPlan (auto vs human). Does not apply patches.',
-    inputSchema: { type: 'object', properties: {} },
-    run: () =>
-      parseCliJson(
-        runRepoTsx(MONOREPO_ROOT, 'scripts/mechanics-trust/doctor-cli.mjs', ['prescribe']),
-        'sdk-doctor',
-      ),
-  },
 
-  sdk_doctor_repair: {
-    description:
-      'Apply Phase-1 safe doctor patches only (debug/coverage/docs/drift-status). '
-      + 'Pass apply:true to execute; stubs:true for researching stub graph patches. '
-      + 'Never invents planner formulas. Dry-run by default.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        apply: { type: 'boolean', description: 'Write the repair. Omit to preview it without touching anything.' },
-        stubs: { type: 'boolean', description: 'Include stub scaffolding for what is missing, rather than only reporting it.' },
-      },
-    },
-    run: ({ apply, stubs } = {}) => {
-      const args = ['repair']
-      if (apply) args.push('--apply')
-      if (stubs) args.push('--stubs')
-      return parseCliJson(
-        runRepoTsx(MONOREPO_ROOT, 'scripts/mechanics-trust/doctor-cli.mjs', args),
-        'sdk-doctor',
-      )
-    },
-  },
 
-  sdk_doctor_validate: {
-    description: 'Post-repair validation: TrustReport (strict label) + debug structural + re-diagnose.',
-    inputSchema: { type: 'object', properties: {} },
-    run: () =>
-      parseCliJson(
-        runRepoTsx(MONOREPO_ROOT, 'scripts/mechanics-trust/doctor-cli.mjs', ['validate']),
-        'sdk-doctor',
-      ),
-  },
 
-  sdk_doctor_autofix: {
-    description:
-      'check → prescribe → repair(safe) → validate. Pass apply:true to execute safe patches. '
-      + 'Human/research patches remain in remainingHuman.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        apply: { type: 'boolean', description: 'Write the repair. Omit to preview it without touching anything.' },
-        stubs: { type: 'boolean', description: 'Include stub scaffolding for what is missing, rather than only reporting it.' },
-      },
-    },
-    run: ({ apply, stubs } = {}) => {
-      const args = ['autofix']
-      if (apply) args.push('--apply')
-      if (stubs) args.push('--stubs')
-      return parseCliJson(
-        runRepoTsx(MONOREPO_ROOT, 'scripts/mechanics-trust/doctor-cli.mjs', args),
-        'sdk-doctor',
-      )
-    },
-  },
 
   sdk_debug_snapshot: {
     description:
@@ -2075,11 +1993,6 @@ const MONOREPO_ONLY_TOOLS = new Set([
   'sdk_graph_render',
   'trust_coverage_report',
   'trust_drift_check',
-  'sdk_doctor_check',
-  'sdk_doctor_prescribe',
-  'sdk_doctor_repair',
-  'sdk_doctor_validate',
-  'sdk_doctor_autofix',
   'sdk_debug_snapshot',
   'sdk_debug_validate',
   'sdk_debug_trace',

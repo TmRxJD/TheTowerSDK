@@ -1,6 +1,9 @@
 /**
  * Building a Tower bot: a command registry, and every calculator as a command for free.
  *
+ * This domain is flat: three modules — the command surface, the factory that builds a bot from
+ * it, and the types they share. They are peers, and a folder for each would be one file deep.
+ *
  * ```ts
  * import { calculatorCommands, createTowerBot } from 'thetowersdk/bot'
  *

@@ -44,7 +44,7 @@ Retired, and what replaced them:
 verb + subject + qualifier?
 ```
 
-- **Say the subject once.** `formatWorkshopTrackerCategoryFilterOptionLabel` says four kinds of thing
+- **Say the subject once.** `formatWorkshopCategoryFilterOptionLabel` says four kinds of thing
   and returns one string; `buildWorkshopFilterLabel` is the same function.
 - **Drop the preposition tail.** `FromSaveRoot`, `FromSettings`, `FromAccumulated` describe the
   parameter, and the parameter is right there in the signature. Keep it only where two functions
@@ -66,7 +66,7 @@ LAB_CATALOG                      not  CATALOG_OF_LABS
 ## Per-domain consistency
 
 The same concept keeps the same word everywhere. A lab's ceiling is `levelMax` in every file that
-has one — not `maxLevel` in the tracker and `levelCap` in the calculator. Where the game has a word,
+has one — not `maxLevel` in one module and `levelCap` in the next. Where the game has a word,
 the game wins.
 
 | Concept | Name |

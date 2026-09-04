@@ -11,9 +11,9 @@
 <h1 class="text-3xl font-semibold">MCP &amp; AI</h1>
 <p class="mt-3 text-muted">
 	The package ships an MCP server, so there is nothing extra to install. Register it and your
-	editor's assistant gains forty-two tools: it can run the shipped calculators and get real numbers
-	back, work in an instrumented sandbox, decode a save, pull wiki pages, and trace and validate what
-	it produced — rather than writing game maths from memory and hoping.
+	editor's assistant gains thirty-seven tools: it can run the shipped calculators and get real
+	numbers back, work in an instrumented sandbox, decode a save, pull wiki pages, and trace and
+	validate what it produced — rather than writing game maths from memory and hoping.
 </p>
 
 <h2 class="mt-10 text-xl font-semibold">Register It</h2>
@@ -42,7 +42,7 @@
 	them, the server is registered.
 </p>
 
-<h2 class="mt-10 text-xl font-semibold">Forty-Two Tools</h2>
+<h2 class="mt-10 text-xl font-semibold">Thirty-Seven Tools</h2>
 <p class="mt-3 text-muted">
 	Enough that an assistant can compute, run and check its work rather than only look things up. The
 	groups below are what it gets.
@@ -107,15 +107,10 @@
 
 <h3 class="mt-8 text-lg font-medium">Check Its Own Work</h3>
 <p class="mt-2 text-muted">
-	The part that makes the rest trustworthy: the assistant can diagnose, trace and validate rather
-	than declare itself finished.
+	The part that makes the rest trustworthy: the assistant can trace and validate its own output
+	rather than declare itself finished.
 </p>
 <ul class="mt-3 list-disc space-y-1 pl-5 text-sm text-muted">
-	<li>
-		<code>sdk_doctor_check</code>, <code>_prescribe</code>, <code>_repair</code>,
-		<code>_validate</code>, <code>_autofix</code> — a diagnosis across trust, symbols, coverage and drift,
-		then a prescription, then a check that the fix held. Diagnosis never invents a fix
-	</li>
 	<li>
 		<code>sdk_debug_trace</code>, <code>_snapshot</code>, <code>_watch</code>,
 		<code>_validate</code> — run a mechanics export with instrumentation and get a structured trace back,

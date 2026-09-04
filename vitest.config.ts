@@ -14,7 +14,7 @@ export default defineConfig({
      * drives it over stdio, but anything written beside the server was invisible to the suite,
      * because the glob stopped at `src` and `scripts`.
      */
-    include: ['src/**/*.test.ts', 'scripts/**/*.test.ts', 'mcp/**/*.test.ts', 'wasm/**/*.test.ts'],
+    include: ['tests/**/*.test.ts'],
     exclude: [
       // Monorepo AGS surfaces — need @tmrxjd/governance-engine.
       //
@@ -24,13 +24,12 @@ export default defineConfig({
       // the coverage inventories, which is how 269 seeded `unmodeled` rows sat
       // untouched for four days without a single failing test. Re-enabled
       // 2026-08-18 with the oracle merged into the graph.
-      'src/mechanics/doctor/**',
-      'src/mechanics/kernel/**',
-      'src/mechanics/sandbox/**',
-      'src/mechanics/registry/**',
-      'src/mechanics/lsp/**',
-      'src/mechanics/docs-gen/**',
-      'src/mechanics/builders/builders.test.ts',
+      'tests/tooling/kernel/**',
+      'tests/tooling/sandbox/**',
+      'tests/tooling/registry/**',
+      'tests/tooling/lsp/**',
+      'tests/tooling/docs-gen/**',
+      'tests/tooling/builders/builders.test.ts',
       '**/node_modules/**',
       '**/dist/**',
     ],

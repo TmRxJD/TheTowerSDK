@@ -1,0 +1,16 @@
+{
+  "no-internal": 27,
+  "imports-knowledge": 10,
+  "upward-import": 75,
+  "missing-index": 6,
+  "loose-at-domain-root": 11,
+  "subdomain-too-large": 7,
+  "types-outside-types-module": 268,
+  "missing-docblock": 149,
+  "file-too-long": 61,
+  "app-state": 58,
+  "name-repeats-folder": 12,
+  "consumer-vocabulary": 19,
+  "missing-file-map": 1,
+  "wildcard-export": 1
+}

@@ -1,6 +1,6 @@
 {
   "name": "thetowersdk",
-  "version": "0.9.1",
+  "version": "0.10.1",
   "description": "Game data and save-file reading for The Tower — build your own calculators and tools.",
   "license": "MIT",
   "author": "TmRxJD (https://github.com/TmRxJD)",
@@ -38,6 +38,8 @@
   "scripts": {
     "build": "npm run clean && tsc -p tsconfig.build.json && node scripts/copy-assets.mjs && npm run knowledge:emit",
     "knowledge:emit": "node scripts/emit-knowledge-graph.mjs",
+    "daily-missions:goals": "node scripts/build-daily-mission-goals.mjs",
+    "labs:categories": "node scripts/build-lab-categories.mjs",
     "clean": "node -e \"const fs=require('fs');fs.rmSync('dist',{recursive:true,force:true})\"",
     "test": "vitest run",
     "type-check": "tsc -p tsconfig.build.json --noEmit",
@@ -50,8 +52,10 @@
     "wiki:publish": "node scripts/publish-wiki.mjs",
     "wiki:check": "node scripts/build-wiki.mjs --check",
     "lint:published": "node scripts/audit-published-surface.mjs",
+    "lint:specifiers": "node scripts/check-sdk-specifiers.mjs",
     "examples:run": "node scripts/run-examples.mjs",
     "lint:conventions": "node scripts/check-conventions.mjs",
+    "lint:organization": "node scripts/check-organization.mjs",
     "map": "node scripts/map-the-repo.mjs",
     "lint:map": "node scripts/map-the-repo.mjs --check",
     "lint:acronyms": "tsx scripts/check-acronym-expansions.ts",
@@ -75,7 +79,10 @@
     "wasm:check": "node wasm/build.mjs --check",
     "wasm:call": "node wasm/run.mjs",
     "lint:package": "node scripts/audit-package-contents.mjs",
-    "epaths:refresh-reference": "node scripts/refresh-effective-paths-reference.mjs"
+    "epaths:refresh-reference": "node scripts/refresh-effective-paths-reference.mjs",
+    "vault:v29": "node scripts/build-vault-v29.mjs --write",
+    "vault:v29:enemy-overlay": "node scripts/apply-vault-v29-enemy-overlay.mjs",
+    "vault:v29:enemy-binary": "node scripts/build-vault-v29-enemy-binary.mjs"
   },
   "exports": {
     ".": {
@@ -222,18 +229,6 @@
     "AGENTS.md",
     "LICENSE",
     "NOTICE",
-    "!dist/mechanics/doctor/**",
-    "!dist/mechanics/kernel/**",
-    "!dist/mechanics/registry/**",
-    "!dist/mechanics/sandbox/**",
-    "!dist/mechanics/coverage/**",
-    "!dist/mechanics/debug-graph/**",
-    "!dist/mechanics/mcp-contract/**",
-    "!dist/mechanics/planner-engine/**",
-    "!dist/mechanics/save-graph/**",
-    "!dist/mechanics/sdk-graph/**",
-    "!dist/mechanics/builders/**",
-    "!dist/mechanics/repo-root.*",
     "!mcp/**/*.test.ts",
     "!mcp/**/*.test.mjs"
   ],
@@ -247,6 +242,7 @@
     "tsx": "^4.21.0",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.20.0",
-    "vitest": "^3.0.0"
+    "vitest": "^3.0.0",
+    "xlsx": "^0.18.5"
   }
 }

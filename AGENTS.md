@@ -11,13 +11,30 @@ TypeScript: no framework, no I/O outside the save decoder, no global state.
 
 Everything here is about that one game. Nothing in this package is generic infrastructure.
 
-## Two rules, before anything else
+## Rule zero — what belongs in this package
+
+> **Does this describe The Tower, or does it describe a program that uses The Tower?**
+
+The Tower belongs here. A program that uses it does not — that is what a platform layer is for, and
+the `@tmrxjd/platform` package in this monorepo is one, exactly like the one the README tells every
+consumer to write. No settings, no persisted state, no cross-page hub, no dropdown options, no sort
+or filter keys, no routes, no icons, no colours, and never the word `tracker`.
+
+**[`docs/ORGANIZATION_CONTRACT.md`](docs/ORGANIZATION_CONTRACT.md) is binding**: it fixes the
+domains, which may import which, the shape of every folder, how files are named, how long they may
+be, and what the public surface may contain. `npm run lint:organization` enforces every rule and
+runs inside `npm run verify`. Existing violations sit in `.organization-baseline.json`, which may
+only shrink.
+
+Read it before adding a file, moving one, or naming anything.
+
+## Two more rules, before anything else
 
 1. **Look up the mechanic before you describe it.** This package gives values, not meaning. See
    [Consult the wiki](#consult-the-wiki-before-describing-a-mechanic) and the monorepo contract
    `docs/AGENT_GAME_MECHANICS_CONTRACT.md` —
    `begin_mechanic_task` is mandatory when MCP is available. It is not optional.
-2. **Find the export; do not invent one.** There are <!--count:sdk.exports-->2919<!--/count--> exports across <!--count:sdk.entryPoints-->14<!--/count--> entry points. Use the
+2. **Find the export; do not invent one.** There are <!--count:sdk.exports-->3143<!--/count--> exports across <!--count:sdk.entryPoints-->14<!--/count--> entry points. Use the
    map below, then `list_exports` with a filter, then `get_export`. A plausible-looking name you
    guessed will not exist.
 
@@ -47,9 +64,9 @@ Sizes are exports, not files — they say how much you are searching through.
 
 | Entry point | Exports | Holds | Reach for it when |
 |---|---:|---|---|
-| `thetowersdk/data` | <!--count:sdk.exports.data-->464<!--/count--> | Game tables and catalogs | You need a cost, a level curve, an effect value, a name |
-| `thetowersdk/save` | <!--count:sdk.exports.save-->524<!--/count--> | `playerInfo.dat` readers | You need what a specific player has |
-| `thetowersdk/mechanics` | <!--count:sdk.exports.mechanics-->1267<!--/count--> | Formulas | You need to compute something the game computes |
+| `thetowersdk/data` | <!--count:sdk.exports.data-->482<!--/count--> | Game tables and catalogs | You need a cost, a level curve, an effect value, a name |
+| `thetowersdk/save` | <!--count:sdk.exports.save-->531<!--/count--> | `playerInfo.dat` readers | You need what a specific player has |
+| `thetowersdk/mechanics` | <!--count:sdk.exports.mechanics-->1466<!--/count--> | Formulas | You need to compute something the game computes |
 | `thetowersdk/knowledge` | <!--count:sdk.exports.knowledge-->426<!--/count--> | What a number MEANS, and how it is misread | You are modelling a mechanic, not just reading a value |
 | `thetowersdk/charts` | <!--count:sdk.exports.charts-->82<!--/count--> | Curated chart datasets | You are rendering a table the game shows |
 | `thetowersdk/formatting` | <!--count:sdk.exports.formatting-->46<!--/count--> | Number and duration display | You need it to read the way the game shows it |
@@ -82,7 +99,6 @@ Catalogs are the entry into game data. Each is an array of typed rows.
 | `PLAYER_DATA_FIELD_CATALOG` | Named save fields |
 | `CURRENCY_DEFINITIONS` · `TOWER_MODULE_TYPE_ENUM` · `RESEARCH_CATEGORY_ENUM` | Enumerations |
 | `getWorkshopStatDefinitions()` | Workshop stats — a function, because it builds from tables |
-| `sharedToolsCatalog` | The Run Tracker's own tool list (links, categories) |
 | `GLOSSARY` · `lookupGlossary` · `expandAcronym` | What a term or acronym means |
 
 **A cost is a plain number of coins.** `1.1e15` is 1.1 quadrillion. There is no scaling factor to
@@ -120,7 +136,7 @@ Rules that hold for all of them:
 
 ### `mechanics` — the formulas
 
-<!--count:sdk.mechanicsExports-->1267<!--/count--> exports. By area, so you know which filter to pass `list_exports`:
+<!--count:sdk.mechanicsExports-->1466<!--/count--> exports. By area, so you know which filter to pass `list_exports`:
 
 | Area | ~Exports | Covers |
 |---|---:|---|
@@ -266,11 +282,9 @@ comments, not the wiki, not the game dump — the spreadsheet. Every rule cites 
 citations and pins how many there are. When it fails because you added one, **read the cell before
 updating the count**; that failure is the prompt, not paperwork.
 
-Before deriving a number in this area, read
-`EFFECTIVE_PATHS_ORACLE.md` in the tracker repo. It lists the
-ways the spreadsheet API misleads — chiefly that a spilled range reads as *empty* through both
-`read_range` and `FORMULA` render while `COUNTA` sees a hundred rows of it. That has twice been
-mistaken for a missing feature.
+Before deriving a number in this area, know how the spreadsheet API misleads — chiefly that a
+spilled range reads as *empty* through both `read_range` and `FORMULA` render while `COUNTA` sees a
+hundred rows of it. That has twice been mistaken for a missing feature.
 
 **A planner explains everything it leaves out.** `plan.excluded` carries a reason per candidate, and
 `planPath`'s `onSkip` reports the three ways the loop passes one over. Keep it that way: a path that

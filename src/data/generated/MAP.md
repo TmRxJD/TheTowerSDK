@@ -7,10 +7,19 @@ Emitted catalogs. Do not hand-edit.
 | File | Purpose | Exports |
 |---|---|---|
 | `campaign-tier-native.generated.ts` | — | V283_MAX_CAMPAIGN_TIER, V283_COIN_BONUS_BY_TIER, V283_NATIVE_HEAT_LEVELS_BY_TIER |
+| `daily-mission-goals.generated.ts` | — | DailyMissionGoal, DAILY_MISSION_GOALS, DAILY_MISSION_GOALS_BY_INDEX |
+| `glossary-names.generated.ts` | — | GLOSSARY_NAME_ROWS |
 | `heat-bc-index.generated.ts` | — | V283_HEAT_BC_INDEX, V283HeatBcIndexKey |
-| `index.ts` | — | V283_GAME_DATA_META, V283_HEAT_BC_INDEX, V283HeatBcIndexKey, V283_MAX_CAMPAIGN_TIER (+10 more) |
+| `index.ts` | — | V283_GAME_DATA_META, V283_HEAT_BC_INDEX, V283HeatBcIndexKey, V283_MAX_CAMPAIGN_TIER (+23 more) |
+| `labs-categories.generated.ts` | — | LAB_CATEGORY_BY_INDEX, LAB_CATEGORY_RESEARCH_COUNT |
+| `labs-research.generated.ts` | — | LabResearchRecord, LAB_RESEARCH_COUNT, LAB_RESEARCH_BY_INDEX, LAB_RESEARCH_SLUG_TO_INDEX (+2 more) |
+| `main-spawn-type-chances.generated.ts` | — | MainSpawnTypeSceneChancesV29, MAIN_SPAWN_TYPE_SCENE_CHANCES_V29 |
 | `meta.generated.ts` | — | V283_GAME_DATA_META, V283GameDataMeta |
 | `perk-tables.generated.ts` | — | V283_PERK_MAX_LEVEL, V283_PERK_BENEFIT_UP_BASE, V283_PERK_BENEFIT_UP_INCREASE, V283_PERK_BENEFIT_DOWN |
 | `relic-slice.generated.ts` | — | V283RelicSliceRow, V283_RELIC_SLICE, V283_RELIC_SLICE_INDEX_MIN, V283_RELIC_SLICE_INDEX_MAX |
+| `tournament-prizes-v29.generated.ts` | — | TOURNAMENT_PRIZES_V29_PROVENANCE, TournamentPrizeEntryV29, COPPER_TOURNAMENT_PRIZES_V29, SILVER_TOURNAMENT_PRIZES_V29 (+8 more) |
+| `vault-v29-binary-enemy-keycosts.generated.ts` | — | VAULT_V29_BINARY_ENEMY_PROVENANCE, VAULT_V29_BINARY_ENEMY_LEVEL_COSTS, VAULT_V29_BINARY_ENEMY_BY_ENEMY_STAT |
+| `vault-v29-binary-keycosts.generated.ts` | — | VAULT_V29_BINARY_PROVENANCE, VAULT_V29_BINARY_HARMONY_LEVEL_COSTS, VAULT_V29_BINARY_POWER_LEVEL_COSTS |
+| `vault-v29.generated.ts` | — | VaultV29Category, VaultV29Status, VaultV29Upgrade, VaultV29EnemyUpgrade (+6 more) |
 
 [← src](../../MAP.md) · [← the package](../../../MAP.md)

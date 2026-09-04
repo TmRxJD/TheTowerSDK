@@ -227,7 +227,7 @@ Everything sensitive lives in the environment; see
 
 ## Architecture, from three bots in production
 
-The Run Tracker runs three Discord bots on this package, and the rules that came out of
+The a caller runs three Discord bots on this package, and the rules that came out of
 getting that wrong first — one router, component ids with a single owner, interactions that
 check both the component id *and* the initiating user, guarding session tokens before
 touching state — are in the README under

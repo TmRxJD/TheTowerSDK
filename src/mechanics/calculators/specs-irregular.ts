@@ -35,7 +35,7 @@ export const IRREGULAR_CALCULATORS: readonly CalculatorSpec[] = [
     id: 'damage.ability',
     title: 'Damage an ability deals',
     entry: 'mechanics',
-    module: 'packages/sdk/src/mechanics/damage.ts',
+    module: 'packages/sdk/src/mechanics/combat/damage.ts',
     symbol: 'abilityDamage',
     because:
       'What an ability hits for, shown wherever an ability is costed against its damage. Takes a '
@@ -58,7 +58,7 @@ export const IRREGULAR_CALCULATORS: readonly CalculatorSpec[] = [
     id: 'workshop.maxSectionDiscountPct',
     title: 'The largest workshop section discount among several',
     entry: 'data',
-    module: `${DATA}/workshop-discount-normalize.ts`,
+    module: `${DATA}/workshop/discount-normalize.ts`,
     symbol: 'maxDefinedWorkshopSectionDiscountPercent',
     because:
       'Picks the binding discount when more than one source supplies one, skipping the ones that '
@@ -81,7 +81,7 @@ export const IRREGULAR_CALCULATORS: readonly CalculatorSpec[] = [
     id: 'workshop.maxEnhancementDiscountPct',
     title: 'The largest enhancement discount among several',
     entry: 'data',
-    module: `${DATA}/workshop-discount-normalize.ts`,
+    module: `${DATA}/workshop/discount-normalize.ts`,
     symbol: 'maxDefinedEnhancementSectionDiscountPercent',
     because: 'The same for the enhancement half of the workshop.',
     params: [{
@@ -102,7 +102,7 @@ export const IRREGULAR_CALCULATORS: readonly CalculatorSpec[] = [
     id: 'workshop.maxVaultDiscountPct',
     title: 'The largest enhancement vault discount among several',
     entry: 'data',
-    module: `${DATA}/workshop-discount-normalize.ts`,
+    module: `${DATA}/workshop/discount-normalize.ts`,
     symbol: 'maxDefinedEnhancementVaultDiscountPercent',
     because: 'The same again for the vault discount, which has its own maximum.',
     params: [{
@@ -133,7 +133,7 @@ export const IRREGULAR_CALCULATORS: readonly CalculatorSpec[] = [
     id: 'els.workshopAttackLevelOptions',
     title: 'Workshop attack levels the ELS calculator offers',
     entry: 'mechanics',
-    module: `${MECH}/els-calculator-options.ts`,
+    module: `${MECH}/modules/els-calculator-options.ts`,
     symbol: 'ELS_WORKSHOP_ATTACK_LEVEL_OPTIONS',
     because: 'The list a player picks from on the enemy level skip calculator.',
     params: [],
@@ -147,7 +147,7 @@ export const IRREGULAR_CALCULATORS: readonly CalculatorSpec[] = [
     id: 'els.workshopHealthLevelOptions',
     title: 'Workshop health levels the ELS calculator offers',
     entry: 'mechanics',
-    module: `${MECH}/els-calculator-options.ts`,
+    module: `${MECH}/modules/els-calculator-options.ts`,
     symbol: 'ELS_WORKSHOP_HEALTH_LEVEL_OPTIONS',
     because: 'The same for the health half of that calculator.',
     params: [],
@@ -161,7 +161,7 @@ export const IRREGULAR_CALCULATORS: readonly CalculatorSpec[] = [
     id: 'enemy.healthWave100Multiplier',
     title: 'Enemy health multiplier from century milestones',
     entry: 'mechanics',
-    module: `${MECH}/wave-base-empirical-scaling.ts`,
+    module: `${MECH}/waves/base-empirical-scaling.ts`,
     symbol: 'healthWave100Multiplier',
     because:
       'Enemy health does not scale smoothly — it steps at every hundredth wave, and this is the '
@@ -184,7 +184,7 @@ export const IRREGULAR_CALCULATORS: readonly CalculatorSpec[] = [
     id: 'enemy.damageWave100Multiplier',
     title: 'Enemy damage multiplier from century milestones',
     entry: 'mechanics',
-    module: `${MECH}/wave-base-empirical-scaling.ts`,
+    module: `${MECH}/waves/base-empirical-scaling.ts`,
     symbol: 'damageWave100Multiplier',
     because: 'The same stepping for enemy damage, which is what decides when a run ends.',
     params: [
@@ -210,70 +210,11 @@ export const IRREGULAR_CALCULATORS: readonly CalculatorSpec[] = [
    * gets wrong from the name alone.
    */
   {
-    id: 'inputs.mergeNumberRecords',
-    title: 'Merge number records, later sources winning',
-    entry: 'mechanics',
-    module: `${INT}/shared-tool-inputs.ts`,
-    symbol: 'mergeNumberRecords',
-    because:
-      'How a tool page combines its own inputs with the shared hub ones. Precedence is the whole '
-      + 'behaviour: get the order backwards and a page silently ignores what the player just typed.',
-    params: [{
-      name: 'sources',
-      kind: 'object',
-      describes: 'an array of number records, any of which may be undefined',
-    }],
-    returns: { kind: 'object', describes: 'one merged record' },
-    invariants: [
-      'later sources override earlier ones',
-      'skips undefined sources rather than throwing',
-    ],
-    reads: ['inputs.shared'],
-    produces: ['inputs.merged'],
-    dependsOn: [],
-  },
-  {
-    id: 'inputs.mergeNumberArrayRecords',
-    title: 'Merge records of number arrays',
-    entry: 'mechanics',
-    module: `${INT}/shared-tool-inputs.ts`,
-    symbol: 'mergeNumberArrayRecords',
-    because: 'The same precedence rule for inputs that hold a list per key.',
-    params: [{
-      name: 'sources',
-      kind: 'object',
-      describes: 'an array of records of number arrays, any of which may be undefined',
-    }],
-    returns: { kind: 'object', describes: 'one merged record' },
-    invariants: ['later sources override earlier ones', 'skips undefined sources'],
-    reads: ['inputs.shared'],
-    produces: ['inputs.merged'],
-    dependsOn: [],
-  },
-  {
-    id: 'inputs.mergeNestedNumberRecords',
-    title: 'Merge two-level number records',
-    entry: 'mechanics',
-    module: `${INT}/shared-tool-inputs.ts`,
-    symbol: 'mergeNestedNumberRecords',
-    because: 'The same again where inputs are keyed twice — by group and then by field.',
-    params: [{
-      name: 'sources',
-      kind: 'object',
-      describes: 'an array of nested number records, any of which may be undefined',
-    }],
-    returns: { kind: 'object', describes: 'one merged record' },
-    invariants: ['later sources override earlier ones', 'skips undefined sources'],
-    reads: ['inputs.shared'],
-    produces: ['inputs.merged'],
-    dependsOn: [],
-  },
-  {
     id: 'run.collectScalarFields',
-    title: 'Collect the scalar fields of a tracker run',
+    title: 'Collect the scalar fields of a stored run',
     entry: 'mechanics',
-    module: 'packages/sdk/src/save/tracker-run-fields.ts',
-    symbol: 'collectTrackerRunScalarFields',
+    module: 'packages/sdk/src/save/runs/fields.ts',
+    symbol: 'collectRunScalarFields',
     because: 'The scalar fields of a run, gathered from several partial sources.',
     params: [{
       name: 'sources',
@@ -290,7 +231,7 @@ export const IRREGULAR_CALCULATORS: readonly CalculatorSpec[] = [
     id: 'run.firstMeaningfulValue',
     title: 'The first value that actually says something',
     entry: 'mechanics',
-    module: 'packages/sdk/src/save/tracker-run-normalization.ts',
+    module: 'packages/sdk/src/save/runs/normalization.ts',
     symbol: 'getFirstMeaningfulRunDataValue',
     because:
       'A run field can arrive from several places, most of them blank. This picks the first that '
@@ -308,29 +249,6 @@ export const IRREGULAR_CALCULATORS: readonly CalculatorSpec[] = [
     ],
     reads: ['run.record'],
     produces: ['run.fieldValue'],
-    dependsOn: [],
-  },
-  {
-    id: 'inputs.enrichFromResearch',
-    title: 'Fill a tool payload from the research lab levels',
-    entry: 'mechanics',
-    module: `${INT}/shared-tool-inputs-from-research.ts`,
-    symbol: 'enrichSharedToolInputs',
-    because:
-      'Turns the research levels a player has into every derived input the tool pages read -- '
-      + 'module discounts, workshop discounts, lab economy, uptime. A page that skipped it shows '
-      + 'defaults where the player has research, which reads as a fresh account rather than a bug.',
-    params: [
-      { name: 'payload', kind: 'object', describes: 'the shared tool inputs to enrich' },
-      { name: 'options', kind: 'object', optional: true, describes: 'enrichment options' },
-    ],
-    returns: { kind: 'object', describes: 'the payload with the derived fields filled in' },
-    invariants: [
-      'returns the same shape it was given, never a narrower one',
-      'derives from researchLabLevels only -- it does not read stored settings',
-    ],
-    reads: ['lab.level'],
-    produces: ['inputs.enriched'],
     dependsOn: [],
   },
 ]
