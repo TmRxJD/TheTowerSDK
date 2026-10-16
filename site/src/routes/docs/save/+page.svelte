@@ -68,7 +68,7 @@ console.log(decoded.battleRunCount, decoded.wasGzip)`} />
 <h2 class="mt-10 text-xl font-semibold">Call The Decryption API Directly</h2>
 <p class="mt-3 text-muted">
 	Other clients can make a synchronous Appwrite execution request to
-	<code>https://appwrite.the-tower-run-tracker.com/v1/functions/save-decode/executions</code>.
+	<code>https://appwrite.athyen.pl/v1/functions/save-decode/executions</code>.
 	Set <code>x-appwrite-project</code> to <code>68190de700097b8f59df</code>. The execution's
 	<code>body</code> is a JSON string containing <code>saveBase64</code>; its nested headers carry
 	<code>x-save-api-key: thetowersdk-public-v1</code>. No Appwrite login, JWT or private API key is needed.
@@ -79,7 +79,7 @@ import { readFile } from 'node:fs/promises'
 
 const encrypted = await readFile('playerInfo.dat')
 const response = await fetch(
-  'https://appwrite.the-tower-run-tracker.com/v1/functions/save-decode/executions',
+  'https://appwrite.athyen.pl/v1/functions/save-decode/executions',
   {
     method: 'POST',
     headers: {

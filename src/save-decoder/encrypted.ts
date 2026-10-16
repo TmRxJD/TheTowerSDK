@@ -9,7 +9,7 @@ import { z } from 'zod'
 import type { SaveDecodeApiOptions } from './types'
 
 export const SAVE_DECODE_PUBLIC_KEY = 'thetowersdk-public-v1'
-export const SAVE_DECODE_API_ENDPOINT = 'https://appwrite.the-tower-run-tracker.com/v1/functions/save-decode/executions'
+export const SAVE_DECODE_API_ENDPOINT = 'https://appwrite.athyen.pl/v1/functions/save-decode/executions'
 export const SAVE_DECODE_PROJECT_ID = '68190de700097b8f59df'
 const MAX_SAVE_BYTES = 8 * 1024 * 1024
 const MAX_BASE64 = Math.ceil(MAX_SAVE_BYTES / 3) * 4

@@ -1,4 +1,5 @@
 /**
+ * This domain is flat: one save reader, its API transport and public options form a single adapter.
  * Read JSON exports and gzip/NRBF saves locally. TDS1 decryption uses an Appwrite endpoint;
  * the service returns decrypted bytes, while decompression and parsing stay on the device.
  */
