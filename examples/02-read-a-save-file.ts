@@ -2,9 +2,9 @@
  * Example 2 — Read a real save file.
  *
  * Two steps: decode `playerInfo.dat` into a save root, then pull typed data
- * out of that root. This example uses the synchronous Node decoder; browser tools use
+ * out of that root. This example uses the asynchronous Node decoder; browser tools use
  * `decodeSaveFile` from `thetowersdk/save-decoder`. Both detect legacy gzip and
- * game 29.1.0 TDS1 encrypted saves before returning the same save root.
+ * TDS1 encrypted saves; encrypted bytes are sent to the decryption API, then parsed locally.
  *
  * Run it:
  *   npx tsx examples/02-read-a-save-file.ts /path/to/playerInfo.dat
@@ -13,7 +13,7 @@
  */
 import { readFile } from 'node:fs/promises'
 
-import { decodePlayerInfoSaveBytes } from 'thetowersdk/node'
+import { decodePlayerInfoSaveBytesAsync } from 'thetowersdk/node'
 import {
   readCardsFromSaveRoot,
   readLabsFromSaveRoot,
@@ -29,7 +29,7 @@ async function main(): Promise<void> {
 
   // --- Step 1: decode -------------------------------------------------------
   const bytes = await readFile(savePath)
-  const { parsedRoot, wasGzip, battleRunCount } = decodePlayerInfoSaveBytes(bytes)
+  const { parsedRoot, wasGzip, battleRunCount } = await decodePlayerInfoSaveBytesAsync(bytes)
 
   console.log(`Decoded ${savePath}`)
   console.log(`  gzip-compressed: ${wasGzip}`)

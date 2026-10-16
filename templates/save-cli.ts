@@ -10,7 +10,7 @@
  *   npx tsx save-cli.ts <path-to-playerInfo.dat>
  */
 import { readFile } from 'node:fs/promises'
-import { decodePlayerInfoSaveBytes } from 'thetowersdk/node'
+import { decodePlayerInfoSaveBytesAsync } from 'thetowersdk/node'
 import {
   readLabsFromSaveRoot,
   readWorkshopFromSaveRoot,
@@ -56,7 +56,7 @@ async function main(): Promise<void> {
 
   // Decode once. The save root is a plain object and extractors never mutate it,
   // so run as many as you like over the same root.
-  const { parsedRoot } = decodePlayerInfoSaveBytes(await readFile(savePath))
+  const { parsedRoot } = await decodePlayerInfoSaveBytesAsync(await readFile(savePath))
   report(parsedRoot)
 }
 

@@ -1547,10 +1547,8 @@ import {
 } from '../mechanics/workshop/utility-stats'
 import {
   decodePlayerInfoSaveBytes,
+  decodePlayerInfoSaveBytesAsync,
 } from '../node/decode-save'
-import {
-  decryptSaveSync,
-} from '../node/decrypt-save'
 import {
   nrbfToJSON,
 } from '../node/nrbf/to-json'
@@ -25953,20 +25951,22 @@ export const GENERATED_CALCULATORS: readonly CalculatorSpec[] = [
     dependsOn: [],
   },
   {
-    id: 'node.decryptSaveSync',
-    title: 'decryptSaveSync',
+    id: 'node.decodePlayerInfoSaveBytesAsync',
+    title: 'decodePlayerInfoSaveBytesAsync',
     entry: 'mechanics',
-    module: 'packages/sdk/src/node/decrypt-save.ts',
-    symbol: 'decryptSaveSync',
+    module: 'packages/sdk/src/node/decode-save.ts',
+    symbol: 'decodePlayerInfoSaveBytesAsync',
     tier: 'generated',
+    isAsync: true,
     because: 'Exported from node and reachable by agents. Declared for coverage: the signature is derived from the source, the reason it matters is not yet written.',
     params: [
-      { name: 'bytes', kind: 'object', describes: 'Uint8Array' },
+      { name: 'input', kind: 'object', describes: 'Uint8Array | Buffer | ArrayBuffer' },
+      { name: 'options', kind: 'object', optional: true, describes: 'SaveDecodeApiOptions' },
     ],
-    returns: { kind: 'object', describes: 'Uint8Array' },
+    returns: { kind: 'object', describes: 'Promise<PlayerInfoSaveDecodeResult>' },
     invariants: ['not yet checked — this entry is generated, not curated'],
     reads: [],
-    produces: ['node.decryptSaveSync'],
+    produces: ['node.decodePlayerInfoSaveBytesAsync'],
     dependsOn: [],
   },
   {
@@ -27353,6 +27353,6 @@ export const GENERATED_IMPLEMENTATIONS: Record<string, (args: Record<string, unk
   'wiki.convertFandomWikitextToMarkdown': a => convertFandomWikitextToMarkdown(a.wikitext as never, a.context as never),
   'wiki.scoreFandomMarkdownQuality': a => scoreFandomMarkdownQuality(a.content as never),
   'node.decodePlayerInfoSaveBytes': a => decodePlayerInfoSaveBytes(a.input as never),
-  'node.decryptSaveSync': a => decryptSaveSync(a.bytes as never),
+  'node.decodePlayerInfoSaveBytesAsync': a => decodePlayerInfoSaveBytesAsync(a.input as never, a.options as never),
   'node.nrbfToJSON': a => nrbfToJSON(a.obj as never),
 }

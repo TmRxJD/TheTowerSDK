@@ -11,7 +11,7 @@
  *   npx tsx examples/03-plan-upgrades-from-a-save.ts <path-to-playerInfo.dat>
  */
 import { readFile } from 'node:fs/promises'
-import { decodePlayerInfoSaveBytes } from 'thetowersdk/node'
+import { decodePlayerInfoSaveBytesAsync } from 'thetowersdk/node'
 import { buildEffectiveEconomyInputsFromSave, computeCoinsPerHourFromSaveRoot } from 'thetowersdk/save'
 import { EFFECTIVE_ECONOMY_UPGRADES, planEffectiveEconomyPath } from 'thetowersdk/mechanics'
 
@@ -22,7 +22,7 @@ async function main(): Promise<void> {
     process.exit(1)
   }
 
-  const { parsedRoot } = decodePlayerInfoSaveBytes(await readFile(savePath))
+  const { parsedRoot } = await decodePlayerInfoSaveBytesAsync(await readFile(savePath))
 
   /*
    * Step 1 — turn the save into planner inputs.

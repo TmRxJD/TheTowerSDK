@@ -56,7 +56,7 @@ function preview(value, limit = PREVIEW_LIMIT) {
 
 import { nearestNames } from './nearest-names.mjs'
 
-export function createScratchpad({ loadSdk }) {
+function createScratchpadRun({ loadSdk }) {
   /*
    * Per call, not per process.
    *
@@ -150,7 +150,7 @@ export function createScratchpad({ loadSdk }) {
       throw new Error('format mode needs a `value`: a number to write, or a string to read.')
     },
 
-    decode({ savePath }) {
+    async decode({ savePath }) {
       if (!savePath) throw new Error('decode mode needs a `savePath`.')
       const { readFileSync } = loadSdk('fs')
       const node = loadSdk('node')
@@ -163,7 +163,7 @@ export function createScratchpad({ loadSdk }) {
        * reports zero runs, which looks exactly like an empty account. The first version of this
        * mode called a `loadPlayerInfoSaveRoot` that does not exist, which at least said so.
        */
-      const { parsedRoot, wasGzip, battleRunCount } = node.decodePlayerInfoSaveBytes(
+      const { parsedRoot, wasGzip, battleRunCount } = await node.decodePlayerInfoSaveBytesAsync(
         readFileSync(savePath),
       )
 
@@ -184,7 +184,7 @@ export function createScratchpad({ loadSdk }) {
 
   return {
     modes: Object.keys(modes),
-    run(input = {}) {
+    async run(input = {}) {
       steps = []
       const mode = input.mode ?? 'list'
       const handler = Object.prototype.hasOwnProperty.call(modes, mode) ? modes[mode] : null
@@ -192,11 +192,19 @@ export function createScratchpad({ loadSdk }) {
         return { ok: false, mode, error: `unknown mode`, modes: Object.keys(modes) }
       }
       try {
-        const output = handler(input)
+        const output = await handler(input)
         return { ok: true, mode, ...output, steps }
       } catch (error) {
         return { ok: false, mode, error: error instanceof Error ? error.message : String(error), steps }
       }
     },
+  }
+}
+
+/** Keep notes isolated while an encrypted-save decode awaits the remote API. */
+export function createScratchpad({ loadSdk }) {
+  return {
+    modes: createScratchpadRun({ loadSdk }).modes,
+    run(input = {}) { return createScratchpadRun({ loadSdk }).run(input) },
   }
 }

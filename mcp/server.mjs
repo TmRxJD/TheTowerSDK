@@ -480,7 +480,7 @@ const sampleSize = (limit, fallback = 40, ceiling = MAX_PREVIEW) => {
  * A path is the one argument here that comes from a person typing, so wrong paths are the ordinary
  * case rather than the exotic one, and "not a file" deserves a sentence rather than an errno.
  */
-function readSaveOrExplain(savePath) {
+async function readSaveOrExplain(savePath) {
   if (typeof savePath !== 'string' || savePath.length === 0) {
     return { error: 'decode needs an absolute path to a playerInfo.dat.' }
   }
@@ -506,7 +506,7 @@ function readSaveOrExplain(savePath) {
   }
 
   try {
-    return sdk.node.decodePlayerInfoSaveBytes(bytes)
+    return await sdk.node.decodePlayerInfoSaveBytesAsync(bytes)
   }
   catch (error) {
     return {
@@ -640,14 +640,14 @@ export const TOOLS = {
   decode_save: {
     description:
       'Decode a playerInfo.dat and summarise it: how many keys, how many runs, and what each '
-      + 'extractor finds. Read-only.',
+      + 'extractor finds. Encrypted saves are uploaded to the free decryption API; parsing is local. Read-only.',
     inputSchema: {
       type: 'object',
       properties: { path: { type: 'string', description: 'Absolute path to playerInfo.dat' } },
       required: ['path'],
     },
-    run: ({ path: savePath }) => {
-      const loaded = readSaveOrExplain(savePath)
+    run: async ({ path: savePath }) => {
+      const loaded = await readSaveOrExplain(savePath)
       if (loaded.error) return loaded
       const { parsedRoot, wasGzip, battleRunCount } = loaded
       const discovered = sdk.save.discoverSaveImportTargets(parsedRoot)
@@ -663,7 +663,7 @@ export const TOOLS = {
   run_extractor: {
     description:
       'Run one read*FromSaveRoot against a save and return its result previewed, including any '
-      + 'warnings. Returns null when the save has no data for that feature — that is expected, not an error.',
+      + 'warnings. Encrypted saves use the free decryption API. Returns null for absent features.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -672,7 +672,7 @@ export const TOOLS = {
       },
       required: ['extractor', 'path'],
     },
-    run: ({ extractor, path: savePath }) => {
+    run: async ({ extractor, path: savePath }) => {
       /*
        * Own keys only, and this one mattered more than the others.
        *
@@ -686,7 +686,7 @@ export const TOOLS = {
       if (typeof fn !== 'function') {
         return { error: `no extractor named "${extractor}"; try list_exports on "save" with filter "extract"` }
       }
-      const loaded = readSaveOrExplain(savePath)
+      const loaded = await readSaveOrExplain(savePath)
       if (loaded.error) return loaded
       const { parsedRoot } = loaded
       const result = fn(parsedRoot)

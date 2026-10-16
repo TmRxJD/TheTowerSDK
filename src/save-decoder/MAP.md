@@ -6,7 +6,8 @@ The same save reader with no Node imports, for the browser.
 
 | File | Purpose | Exports |
 |---|---|---|
-| `encrypted.ts` | — | isEncryptedSave, saveEncryptionKeys, encryptedSaveParts, unmaskSave (+1 more) |
-| `index.ts` | Decoding a save in the browser, with nothing behind it. | isGzipped, gunzipBytes, decodeSaveFile, decodeInflatedSave (+8 more) |
+| `encrypted.ts` | TDS1 detection and API transport. | SAVE_DECODE_PUBLIC_KEY, SAVE_DECODE_API_ENDPOINT, SAVE_DECODE_PROJECT_ID, isEncryptedSave (+1 more) |
+| `index.ts` | Read JSON exports and gzip/NRBF saves locally. | isGzipped, gunzipBytes, decodeSaveFile, decodeInflatedSave (+11 more) |
+| `types.ts` | — | SaveDecodeApiOptions |
 
 [← src](../MAP.md) · [← the package](../../MAP.md)

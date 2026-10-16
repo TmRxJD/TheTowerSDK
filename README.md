@@ -49,10 +49,10 @@ without checking where either came from.
 
 ```ts
 import { readFile } from 'node:fs/promises'
-import { decodePlayerInfoSaveBytes } from 'thetowersdk/node'
+import { decodePlayerInfoSaveBytesAsync } from 'thetowersdk/node'
 import { readLabsFromSaveRoot } from 'thetowersdk/save'
 
-const { parsedRoot } = decodePlayerInfoSaveBytes(await readFile('playerInfo.dat'))
+const { parsedRoot } = await decodePlayerInfoSaveBytesAsync(await readFile('playerInfo.dat'))
 
 const labs = readLabsFromSaveRoot(parsedRoot)
 if (!labs) throw new Error('This save has no lab research data.')
@@ -150,42 +150,43 @@ Feed the bytes it gives you to `decodePlayerInfoSaveBytes` and everything above 
 
 ### Decoding In a Browser
 
-Use the browser-safe entry point. It handles container detection, authentication, decryption,
-the byte mask, gzip decompression and NRBF parsing locally:
+Use the browser-safe entry point. Encrypted TDS1 saves are sent to the free Appwrite
+save-decode API. It returns decrypted bytes; gzip decompression, NRBF parsing and save readers
+remain local. Legacy gzip, raw NRBF and JSON exports do not use the API.
 
 ```ts
-import { decodeSaveFile } from 'thetowersdk/save-decoder'
+import { decodeSaveFile, SAVE_DECODE_PUBLIC_KEY } from 'thetowersdk/save-decoder'
 
-async function decodeInBrowser (file: File): Promise<Record<string, unknown>> {
-  return decodeSaveFile(await file.arrayBuffer())
-}
+const root = await decodeSaveFile(await file.arrayBuffer())
+// A shared public API identifier is included automatically. It is not a decryption key.
+console.log(SAVE_DECODE_PUBLIC_KEY)
 ```
 
-Everything in `thetowersdk/save` and `thetowersdk/data` then works on the result unchanged.
-
-Encrypted saves require Web Crypto (`crypto.subtle`) in a secure context, such as HTTPS or
-localhost. Compressed saves use `DecompressionStream`. In Node 20 or later, use the synchronous
-`decodePlayerInfoSaveBytes` entry point instead. For large files, call `decodeSaveFile` inside a
-Web Worker so NRBF parsing runs off the main thread.
+For Node 20+, use `await decodePlayerInfoSaveBytesAsync(bytes)`. The synchronous
+`decodePlayerInfoSaveBytes(bytes)` supports unencrypted files and explicitly rejects TDS1.
+For custom deployments, pass `{ endpoint, projectId, apiKey }` to either asynchronous decoder.
 
 ### Game 29.1.0 Save Compatibility
 
-The new file starts with `TDS1`, followed by version byte `1`, a 16-byte IV, a 32-byte HMAC tag,
-and AES-256-CBC ciphertext. The decoder verifies HMAC-SHA-256 before decrypting, reverses the
-payload's byte mask, then reads the existing gzip/NRBF stream. Two supplied 29.1.0 saves have
-been verified through both the browser and Node entry points. Legacy gzip and raw NRBF input
-remain supported.
+The Appwrite function authenticates and decrypts the TDS1 container using private function
+secrets. It returns the original decrypted payload as base64 bytes in the execution response;
+the SDK unwraps it before local decompression and parsing. The API does not return parsed save
+JSON or write a file. Tell users that importing an encrypted save sends it to this service.
+
+The shared public API key is `thetowersdk-public-v1`. No signup or individual key is required.
+Uploads are capped at 8 MiB; a per-instance request limit bounds repeated calls. The handler
+has no Appwrite data scopes and does not log save contents or key material.
 
 The WASM `save.decode` operation still accepts already-inflated NRBF bytes only. It has no
-Web Crypto or gzip runtime; unwrap encrypted files with the Node/browser decoder before
+Web Crypto or gzip runtime; decrypt encrypted files through the API-backed Node/browser decoder before
 passing their NRBF payload to WASM.
 
 Tools that previously checked only for gzip magic (`1f 8b`) and sent all other input straight to
-`NRBFReader` must switch to `decodeSaveFile` or `decodePlayerInfoSaveBytes`. Pass the original
+`NRBFReader` must switch to `decodeSaveFile` or `decodePlayerInfoSaveBytesAsync`. Pass the original
 file bytes to those functions; do not remove the header or decompress the encrypted container.
 The extractors that consume the decoded root need no format-specific changes.
 
-For integrations that already separate decompression from parsing, `gunzipBytes` now accepts
+For integrations that already separate decompression from parsing, `gunzipBytes` uses the API for
 the original encrypted file and returns inflated NRBF bytes. `decodeInflatedSave` and
 `NRBFReader` still take already-inflated NRBF only. `isGzipped` tests gzip magic at the current
 byte offset; use `isEncryptedSave` with a `Uint8Array` when you need to identify a `TDS1` container.

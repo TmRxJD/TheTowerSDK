@@ -6,8 +6,7 @@ Decoding playerInfo.dat in Node.
 
 | File | Purpose | Exports |
 |---|---|---|
-| `decode-save.ts` | — | decodePlayerInfoSaveBytes |
-| `decrypt-save.ts` | Synchronous crypto adapter for the same TDS1 container the browser reads. | decryptSaveSync |
+| `decode-save.ts` | — | decodePlayerInfoSaveBytes, decodePlayerInfoSaveBytesAsync |
 | `index.ts` | Decoding `playerInfo.dat`. | — |
 | `types.ts` | The types `node/` exports, in one place — so a neighbouring module finds the shape it needs here instead of declaring its own under a second name. | PlayerInfoSaveDecodeResult |
 
