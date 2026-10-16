@@ -231,7 +231,7 @@ console.log(formatNumberForDisplay(dmg))`
 		title: 'Read A Save',
 		blurb: 'Read typed account data from a decoded save, then build your own summary.',
 		code: `import { readFile } from 'node:fs/promises'
-import { decodePlayerInfoSaveBytes } from 'thetowersdk/node'
+import { decodePlayerInfoSaveBytesAsync } from 'thetowersdk/node'
 import {
   readLabsFromSaveRoot,
   readModulesFromSaveRoot,
@@ -241,7 +241,7 @@ import {
   readVaultFromSaveRoot,
 } from 'thetowersdk/save'
 
-const { parsedRoot } = decodePlayerInfoSaveBytes(
+const { parsedRoot } = await decodePlayerInfoSaveBytesAsync(
   await readFile('playerInfo.dat')
 )
 
@@ -306,14 +306,17 @@ const datasets = Object.values(uwStoneChartData).map((weapon) => {
 chart.data = { datasets }`;
 
 /** Connect to the bridge and receive a save as the player plays. */
-export const adbBridgeSnippet = `// Terminal: npx adb-bridge
+export const adbBridgeSnippet = `import { decodeSaveFile } from 'thetowersdk/save-decoder'
+import { readLabsFromSaveRoot } from 'thetowersdk/save'
+
+// Terminal: npx adb-bridge
 // Browser: connect and receive the save, then again on every write.
 const socket = new WebSocket('ws://127.0.0.1:8787')
 
 socket.onmessage = async (event) => {
   const bytes = new Uint8Array(await event.data.arrayBuffer())
 
-  const { parsedRoot } = decodePlayerInfoSaveBytes(bytes)
+  const parsedRoot = await decodeSaveFile(bytes)
   const labs = readLabsFromSaveRoot(parsedRoot)
 
   render(\`\${labs.researchedCount} researched, \${labs.maxedCount} maxed\`)
@@ -654,10 +657,10 @@ const priciest = LAB_CATALOG
   .sort((a, b) => b.total - a.total)[0]`;
 
 export const saveSnippet = `import { readFile } from 'node:fs/promises'
-import { decodePlayerInfoSaveBytes } from 'thetowersdk/node'
+import { decodePlayerInfoSaveBytesAsync } from 'thetowersdk/node'
 import { readLabsFromSaveRoot } from 'thetowersdk/save'
 
-const { parsedRoot } = decodePlayerInfoSaveBytes(
+const { parsedRoot } = await decodePlayerInfoSaveBytesAsync(
   await readFile('playerInfo.dat')
 )
 

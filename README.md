@@ -59,8 +59,9 @@ if (!labs) throw new Error('This save has no lab research data.')
 console.log(`${labs.researchedCount} researched, ${labs.maxedCount} maxed`)
 ```
 
-Decode once, then extract whatever you need. The decoder detects legacy gzip saves and the
-encrypted `TDS1` v1 container used by game 29.1.0; both produce the same save-root API.
+Decode once, then extract whatever you need. Current encrypted `TDS1` saves use the free hosted
+decryption API; decompression and parsing stay local. Tell users their encrypted file is uploaded.
+Older unencrypted gzip saves and JSON exports are decoded locally without the API.
 
 ---
 
@@ -97,7 +98,7 @@ import { formatDuration } from 'thetowersdk/formatting'
 ## How It Fits Together
 
 ```
-playerInfo.dat ──decodePlayerInfoSaveBytes()──► save root (plain object)
+playerInfo.dat ──decodePlayerInfoSaveBytesAsync()──► save root (plain object)
                                                      │
                      ┌───────────────────────────────┼──────────────────────────────┐
                      ▼                               ▼                              ▼
@@ -144,7 +145,7 @@ npx adb-bridge
   enable.
 - One install covers multiple games — adding another registers it with the bridge you already have.
 
-Feed the bytes it gives you to `decodePlayerInfoSaveBytes` and everything above applies unchanged.
+Feed the bytes it gives you to `await decodePlayerInfoSaveBytesAsync` and everything above applies unchanged.
 
 > Save files are personal data. If your tool uploads them anywhere, tell your users plainly.
 
@@ -165,6 +166,10 @@ console.log(SAVE_DECODE_PUBLIC_KEY)
 For Node 20+, use `await decodePlayerInfoSaveBytesAsync(bytes)`. The synchronous
 `decodePlayerInfoSaveBytes(bytes)` supports unencrypted files and explicitly rejects TDS1.
 For custom deployments, pass `{ endpoint, projectId, apiKey }` to either asynchronous decoder.
+
+The [Save Files guide](https://tmrxjd.github.io/TheTowerSDK/docs/save/) includes the live endpoint,
+shared public API key, a direct REST request and the decrypted-byte response format. This decoder
+is available from the merged source; existing npm releases are unchanged.
 
 ### Game 29.1.0 Save Compatibility
 
@@ -817,7 +822,7 @@ get wrong.
 
 ### The three things they encode
 
-**Decode once.** `decodePlayerInfoSaveBytes` is the only step that needs Node. The save root it
+**Decode once.** `decodePlayerInfoSaveBytesAsync` is the Node entry point. The save root it
 returns is a plain object that extractors read and never mutate, so run as many as you like over
 one root.
 

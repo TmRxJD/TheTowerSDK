@@ -10,8 +10,8 @@
 <h1 class="text-3xl font-semibold">Dependencies</h1>
 <p class="mt-3 text-muted">
 	One runtime dependency, and nothing else reaches your install. The game data, the formulas and the
-	save reader are all in the package — there is no service to call, no key to hold, and no optional
-	extra that quietly becomes required.
+	save parser are in the package. Encrypted saves additionally use the free hosted decryption API;
+	its public client key is included, while private game keys stay on the server.
 </p>
 
 <h2 class="mt-10 text-xl font-semibold">The One Runtime Dependency</h2>
@@ -64,9 +64,9 @@
 	The save reader is the part most likely to be embedded somewhere awkward, so it is worth being
 	precise about. Its NRBF parser reads the typed record stream inside <code>playerInfo.dat</code>
 	without third-party dependencies. Game 29.1.0 wraps that gzip-compressed stream in an encrypted
-	<code>TDS1</code> container. Browser decoding uses platform Web Crypto and
-	<code>DecompressionStream</code>; Node decoding uses built-in <code>node:crypto</code> and
-	<code>node:zlib</code>. Both decode locally without adding a runtime package dependency.
+	<code>TDS1</code> container. The SDK sends encrypted files to the decryption API, then decompresses and parses the returned
+	bytes locally. Browsers use <code>DecompressionStream</code>; Node uses <code>node:zlib</code>.
+	Older unencrypted saves are decoded entirely locally. The API transport validates its envelopes with Zod.
 </p>
 
 <h2 class="mt-10 text-xl font-semibold">Checking For Yourself</h2>
