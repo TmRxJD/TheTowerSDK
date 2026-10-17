@@ -10,13 +10,14 @@
 <h1 class="mt-2 text-3xl font-semibold">Get Started</h1>
 <p class="mt-2 max-w-2xl text-muted">
 	Install the package, point your assistant at the MCP server, and start from a working example.
-	Each step below stands on its own — the first is all you need to write code, and the SDK itself
-	needs no key, no account and no network.
+	Catalogs and formulas work without keys or an account. Encrypted save decoding runs locally
+	with caller-supplied game keys; optional integrations may use network access.
 </p>
 
 <div class="mt-8 max-w-3xl space-y-10">
 	<section>
 		<h2 class="text-xl font-medium">1. Install TheTowerSDK</h2>
+		<p class="mt-2 text-sm text-muted">For the caller-key save decoder, use the <a href={href('/docs/install/')}>source-build instructions</a>.</p>
 		<p class="mt-2 text-sm text-muted">
 			Add the package to your app or tool repo. Pin a version when you want frozen game numbers.
 		</p>
@@ -107,7 +108,8 @@
 	<section>
 		<h2 class="text-xl font-medium">5. What You Can Add Alongside It</h2>
 		<p class="mt-2 text-sm text-muted">
-			None of these are dependencies. The SDK works on its own, offline, with no keys — each of
+			None of these are dependencies. Catalogs and formulas work offline without keys; encrypted saves
+			require caller-supplied keys. Each of
 			these adds one capability it deliberately does not carry itself.
 		</p>
 

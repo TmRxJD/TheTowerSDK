@@ -154,6 +154,9 @@ Feed the bytes it gives you to `await decodePlayerInfoSaveBytesAsync` and everyt
 
 ### Local Decryption With Caller Keys
 
+This interface targets repository source. Use a [source build](https://tmrxjd.github.io/TheTowerSDK/docs/install/)
+for caller-key decoding; published npm interfaces may differ.
+
 Encrypted TDS1 v1 saves require three 32-byte values: `encryption`, `authentication` and `mask`.
 Each accepts a `Uint8Array` or canonical base64 string. Keep them outside published source and
 client bundles. Browser applications can accept a user-selected key JSON file; Node applications

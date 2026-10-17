@@ -7,13 +7,29 @@
 
 <h1 class="text-3xl font-semibold">Install</h1>
 <p class="mt-3 text-muted">
-	One package, one dependency, no configuration. It runs in Node 20 or newer and in the browser,
-	needs no API key and makes no network calls — the game data is in the package. This site is built
-	against <code>thetowersdk@{SDK_VERSION}</code>.
+	The SDK runs in Node 20 or newer and in browsers. Catalogs and formulas need no setup;
+	encrypted save decoding requires caller-supplied game keys. Optional wiki and Sheets integrations
+	use network access. This site documents repository source; published npm interfaces may differ.
 </p>
 
 <div class="mt-6">
 	<CodeBlock code="npm install thetowersdk" />
+</div>
+
+<h2 class="mt-10 text-xl font-semibold">Build From Source</h2>
+<p class="mt-3 text-muted">
+	Use a repository build for the caller-key save decoder documented on this site. Build the SDK,
+	pack it, and install the generated tarball in your application. Record the source commit for reproducibility.
+</p>
+<div class="mt-4">
+	<CodeBlock code={`git clone https://github.com/TmRxJD/TheTowerSDK.git
+cd TheTowerSDK
+npm install
+npm run build
+npm pack
+
+# Run in your application directory:
+npm install /path/to/TheTowerSDK/thetowersdk-${SDK_VERSION}.tgz`} />
 </div>
 
 <h2 class="mt-10 text-xl font-semibold">Pinning A Version</h2>

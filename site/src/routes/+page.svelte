@@ -92,7 +92,7 @@
 			title: 'TheTowerSDK',
 			role: 'Required',
 			action: 'Add to your project',
-			body: 'Game catalogs, save reading, formulas, charts, and wiki ingestion. Works in Node and in the browser, needs no key and no network, and everything else here builds on it.',
+			body: 'Game catalogs, save reading, formulas, charts, and wiki ingestion for Node and browsers. Catalogs and formulas run locally; encrypted saves require your own keys. Wiki integrations use network access.',
 			command: 'npm install thetowersdk',
 			docsHref: href('/docs/install/'),
 			docsLabel: 'Install Docs'

@@ -11,6 +11,11 @@
 	The SDK includes the decoding logic, but no game keys or hosted decryption service.
 </p>
 
+<p class="mt-3 text-muted">
+	These examples target the repository source. Use the <a href={href('/docs/install/')}>source-build instructions</a>
+	for the caller-key decoder; published npm interfaces may differ.
+</p>
+
 <h2 class="mt-10 text-xl font-semibold">Encrypted Saves: Supply Your Own Keys</h2>
 <p class="mt-3 text-muted">
 	Pass <code>keys</code> as part of the decoder's second argument. TDS1 v1 uses three 32-byte
