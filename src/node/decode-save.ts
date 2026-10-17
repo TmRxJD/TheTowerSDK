@@ -6,7 +6,7 @@
  */
 import { gunzipSync } from 'node:zlib'
 import { decryptSave, isEncryptedSave } from '../save-decoder/encrypted'
-import type { SaveDecodeApiOptions } from '../save-decoder/types'
+import type { SaveDecodeOptions } from '../save-decoder/types'
 
 import { listImportableBattleRuns } from '../save/battle/history'
 import { readToolExportJson } from '../save/access/json'
@@ -34,12 +34,12 @@ function inflateIfGzip(bytes: Uint8Array): { inflated: Uint8Array; wasGzip: bool
 }
 
 /**
- * Decodes local JSON and gzip/raw NRBF. Encrypted saves use the asynchronous API-backed reader.
+ * Decodes local JSON and gzip/raw NRBF. Encrypted saves use the asynchronous reader with caller-supplied keys.
  */
 export function decodePlayerInfoSaveBytes(input: Uint8Array | Buffer | ArrayBuffer): PlayerInfoSaveDecodeResult {
   const bytes = toUint8Array(input)
   if (isEncryptedSave(bytes)) {
-    throw new Error('Encrypted saves require decodePlayerInfoSaveBytesAsync with a save-decode API endpoint.')
+    throw new Error('Encrypted saves require decodePlayerInfoSaveBytesAsync with caller-supplied decryption keys.')
   }
   const { inflated, wasGzip } = inflateIfGzip(bytes)
   const parsed = readToolExportJson(inflated) ?? nrbfToJSON(NRBFReader.readStream(inflated))
@@ -54,10 +54,10 @@ export function decodePlayerInfoSaveBytes(input: Uint8Array | Buffer | ArrayBuff
   }
 }
 
-/** Decrypt an encrypted save through the API, then parse the returned bytes locally. */
+/** Decrypt an encrypted save locally with caller-supplied keys, then decompress and parse. */
 export async function decodePlayerInfoSaveBytesAsync(
   input: Uint8Array | Buffer | ArrayBuffer,
-  options?: SaveDecodeApiOptions,
+  options?: SaveDecodeOptions,
 ): Promise<PlayerInfoSaveDecodeResult> {
   return decodePlayerInfoSaveBytes(await decryptSave(toUint8Array(input), options))
 }

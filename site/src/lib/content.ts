@@ -241,8 +241,11 @@ import {
   readVaultFromSaveRoot,
 } from 'thetowersdk/save'
 
+const keysPath = process.env.TOWER_SAVE_KEYS_FILE
+if (!keysPath) throw new Error('Set TOWER_SAVE_KEYS_FILE to a private key JSON file.')
+const keys = JSON.parse(await readFile(keysPath, 'utf8'))
 const { parsedRoot } = await decodePlayerInfoSaveBytesAsync(
-  await readFile('playerInfo.dat')
+  await readFile('playerInfo.dat'), { keys }
 )
 
 const labs = readLabsFromSaveRoot(parsedRoot)
@@ -310,13 +313,14 @@ export const adbBridgeSnippet = `import { decodeSaveFile } from 'thetowersdk/sav
 import { readLabsFromSaveRoot } from 'thetowersdk/save'
 
 // Terminal: npx adb-bridge
-// Browser: connect and receive the save, then again on every write.
+// Browser: keyFile comes from a local file input selected by the user.
+const keys = JSON.parse(await keyFile.text())
 const socket = new WebSocket('ws://127.0.0.1:8787')
 
 socket.onmessage = async (event) => {
   const bytes = new Uint8Array(await event.data.arrayBuffer())
 
-  const parsedRoot = await decodeSaveFile(bytes)
+  const parsedRoot = await decodeSaveFile(bytes, { keys })
   const labs = readLabsFromSaveRoot(parsedRoot)
 
   render(\`\${labs.researchedCount} researched, \${labs.maxedCount} maxed\`)
@@ -660,8 +664,11 @@ export const saveSnippet = `import { readFile } from 'node:fs/promises'
 import { decodePlayerInfoSaveBytesAsync } from 'thetowersdk/node'
 import { readLabsFromSaveRoot } from 'thetowersdk/save'
 
+const keysPath = process.env.TOWER_SAVE_KEYS_FILE
+if (!keysPath) throw new Error('Set TOWER_SAVE_KEYS_FILE to a private key JSON file.')
+const keys = JSON.parse(await readFile(keysPath, 'utf8'))
 const { parsedRoot } = await decodePlayerInfoSaveBytesAsync(
-  await readFile('playerInfo.dat')
+  await readFile('playerInfo.dat'), { keys }
 )
 
 const labs = readLabsFromSaveRoot(parsedRoot)

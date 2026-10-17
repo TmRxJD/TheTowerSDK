@@ -15,7 +15,7 @@
 	No port of the numbers, and no service to host. Every catalog, all {spelled(sdkFacts.builders)} builders,
 	{sdkFacts.formulas}
 	formulas, number formatting and NRBF parsing run inside your own process. Encrypted save
-	decryption uses the hosted API before local parsing.
+	decryption uses caller-supplied keys in the Node/browser SDK before local parsing.
 </p>
 
 <h2 class="mt-10 text-xl font-semibold">Get The Module</h2>
@@ -170,8 +170,8 @@ print(call(op="calc.run", id="thorns.damage",
 </p>
 <p class="mt-3 text-muted">
 	Game 29.1.0 encrypted <code>TDS1</code> saves also need authentication, decryption and unmasking
-	before gzip decompression. The WASM operation accepts NRBF bytes only. Use the free decryption
-	API directly, or the API-backed Node/browser SDK, to unwrap encrypted files first;
+	before gzip decompression. The WASM operation accepts NRBF bytes only. Use the Node/browser SDK
+	with caller-supplied keys to unwrap encrypted files first;
 	<code>gunzipBytes</code> returns the inflated
 	NRBF payload. See <a href={href('/docs/save/')}>Save Files</a> for that path.
 </p>

@@ -25961,7 +25961,7 @@ export const GENERATED_CALCULATORS: readonly CalculatorSpec[] = [
     because: 'Exported from node and reachable by agents. Declared for coverage: the signature is derived from the source, the reason it matters is not yet written.',
     params: [
       { name: 'input', kind: 'object', describes: 'Uint8Array | Buffer | ArrayBuffer' },
-      { name: 'options', kind: 'object', optional: true, describes: 'SaveDecodeApiOptions' },
+      { name: 'options', kind: 'object', optional: true, describes: 'SaveDecodeOptions' },
     ],
     returns: { kind: 'object', describes: 'Promise<PlayerInfoSaveDecodeResult>' },
     invariants: ['not yet checked — this entry is generated, not curated'],

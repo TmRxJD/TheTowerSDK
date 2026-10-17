@@ -131,3 +131,10 @@ it is good at:
 All four families are here — `damage`, `economy`, `health`, `regen` — since `zeroEffectiveHealthConfig`
 gave the last two a complete config to start from. An unknown family is answered with the list of
 real ones rather than a failure.
+
+## Encrypted save keys
+
+Encrypted TDS1 saves decode locally with caller-supplied keys. Set `TOWER_SAVE_KEYS_FILE` in the
+MCP server environment to a private JSON file containing base64 `encryption`, `authentication`
+and `mask` values (32 bytes each). No key values belong in tool arguments or server configuration
+committed to source control. Unencrypted saves require no key file.

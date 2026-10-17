@@ -6,132 +6,98 @@
 
 <h1 class="text-3xl font-semibold">Save Files</h1>
 <p class="mt-3 text-muted">
-	Decode <code>playerInfo.dat</code> once, then read research, workshop, modules, cards, ultimate
-	weapons and battle history through the SDK's typed save readers.
+	Decode <code>playerInfo.dat</code> locally, then read account progress and battle history through
+	the SDK's typed save readers. Encrypted TDS1 files require caller-supplied decryption keys.
+	The SDK includes the decoding logic, but no game keys or hosted decryption service.
 </p>
 
-<h2 class="mt-10 text-xl font-semibold">Encrypted Saves: Use The Free Decryption API</h2>
+<h2 class="mt-10 text-xl font-semibold">Encrypted Saves: Supply Your Own Keys</h2>
 <p class="mt-3 text-muted">
-	Current encrypted <code>TDS1</code> saves use the hosted Appwrite save-decode API. The SDK sends
-	the encrypted file over HTTPS and receives decrypted bytes. Decompression, NRBF parsing and
-	account extraction then run locally. Tell users that importing an encrypted save uploads it to
-	this service. An internet connection is required for decryption.
+	Pass <code>keys</code> as part of the decoder's second argument. TDS1 v1 uses three 32-byte
+	values: <code>encryption</code> for AES-256-CBC, <code>authentication</code> for HMAC-SHA-256,
+	and <code>mask</code> for the byte-mask stage. Each value accepts a <code>Uint8Array</code>
+	or a canonical base64 string. Supply all three values for the save's format.
 </p>
 <p class="mt-3 text-muted">
-	The SDK includes the live endpoint, project ID and shared public API key. There is no signup or
-	private decryption key to configure in your application. The public key identifies this free
-	service; it is not a personal credential. Private game keys stay in the function's secret variables.
-	The handler does not store saves or log their contents.
-</p>
-<p class="mt-3 text-muted">
-	This API-backed decoder is available in the merged source; existing npm releases are unchanged.
-	Until a new npm release is published, build and pack the source from
-	<a href={LINKS.github}>TheTowerSDK</a> and install that tarball in your project.
+	Keep key material outside source control, published packages and client bundles. Browser tools
+	can accept a key file selected by the user; Node tools can read a private local JSON file with
+	those three fields. Keys and saves remain on the device during decoding. There is no API key,
+	account registration or network request involved.
 </p>
 
 <h2 class="mt-10 text-xl font-semibold">Decode In The Browser</h2>
 <p class="mt-3 text-muted">
-	Pass the original file bytes to <code>decodeSaveFile</code>. It detects encrypted saves, calls
-	the API with its public defaults, and returns the parsed save root. Do not remove the header or
-	decompress an encrypted file yourself.
+	Provide the original save file and a user-selected JSON key file. Web Crypto handles decryption
+	in HTTPS or localhost contexts; <code>DecompressionStream</code> handles gzip. Missing or invalid
+	keys produce an error rather than a network fallback.
 </p>
 <div class="mt-4">
 	<CodeBlock code={`import { decodeSaveFile } from 'thetowersdk/save-decoder'
 import { listImportableBattleRuns } from 'thetowersdk/save'
 
-async function onFile(file) {
-  // Encrypted files are uploaded for decryption; parsing stays local.
-  const root = await decodeSaveFile(await file.arrayBuffer())
+async function onFiles(saveFile, keyFile) {
+  const keys = JSON.parse(await keyFile.text())
+  const root = await decodeSaveFile(await saveFile.arrayBuffer(), { keys })
   return listImportableBattleRuns(root)
 }`} />
 </div>
 <p class="mt-3 text-muted">
-	For large files, call the same asynchronous decoder in a Web Worker to keep parsing off the
-	main thread. Surface decoding and network errors to the person importing the file.
+	For large saves, call the same decoder in a Web Worker and pass the user-supplied key material
+	with the save bytes. Surface errors to the person importing the file without logging keys or save contents.
 </p>
 
 <h2 class="mt-10 text-xl font-semibold">Decode In Node</h2>
 <p class="mt-3 text-muted">
-	Use <code>decodePlayerInfoSaveBytesAsync</code> in Node 20 or later. It uses the same live API
-	for encrypted saves and returns <code>parsedRoot</code>, <code>battleRunCount</code> and
-	<code>wasGzip</code>. Every extractor below accepts <code>parsedRoot</code>.
+	Use <code>decodePlayerInfoSaveBytesAsync</code> in Node 20 or later. It decrypts locally and
+	returns <code>parsedRoot</code>, <code>battleRunCount</code> and <code>wasGzip</code>.
+	All extractors below accept <code>parsedRoot</code>.
 </p>
 <div class="mt-4">
 	<CodeBlock code={`import { readFile } from 'node:fs/promises'
 import { decodePlayerInfoSaveBytesAsync } from 'thetowersdk/node'
 
-const decoded = await decodePlayerInfoSaveBytesAsync(await readFile('playerInfo.dat'))
+// The key file contains the caller's base64 encryption, authentication and mask values.
+const keysPath = process.env.TOWER_SAVE_KEYS_FILE
+if (!keysPath) throw new Error('Set TOWER_SAVE_KEYS_FILE to a private key JSON file.')
+const keys = JSON.parse(await readFile(keysPath, 'utf8'))
+const decoded = await decodePlayerInfoSaveBytesAsync(await readFile('playerInfo.dat'), { keys })
 const root = decoded.parsedRoot
 console.log(decoded.battleRunCount, decoded.wasGzip)`} />
 </div>
 
-<h2 class="mt-10 text-xl font-semibold">Call The Decryption API Directly</h2>
+<h2 class="mt-10 text-xl font-semibold">Decrypt Bytes Without Parsing</h2>
 <p class="mt-3 text-muted">
-	Other clients can make a synchronous Appwrite execution request to
-	<code>https://appwrite.athyen.pl/v1/functions/save-decode/executions</code>.
-	Set <code>x-appwrite-project</code> to <code>68190de700097b8f59df</code>. The execution's
-	<code>body</code> is a JSON string containing <code>saveBase64</code>; its nested headers carry
-	<code>x-save-api-key: thetowersdk-public-v1</code>. No Appwrite login, JWT or private API key is needed.
+	<code>decryptSave</code> authenticates and decrypts the container, returning its original
+	compressed payload. It does not decompress or parse the account. Use this when integrating with
+	another NRBF reader or a WASM decoder. <code>gunzipBytes</code> performs decryption and gzip
+	decompression together; <code>decodeSaveFile</code> also parses the save root.
 </p>
 <div class="mt-4">
-	<CodeBlock code={`// Node 20+. The same HTTP request works from other languages.
-import { readFile } from 'node:fs/promises'
+	<CodeBlock code={`import { decryptSave, decodeSaveFile } from 'thetowersdk/save-decoder'
 
-const encrypted = await readFile('playerInfo.dat')
-const response = await fetch(
-  'https://appwrite.athyen.pl/v1/functions/save-decode/executions',
-  {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-appwrite-project': '68190de700097b8f59df'
-    },
-    body: JSON.stringify({
-      async: false,
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-save-api-key': 'thetowersdk-public-v1'
-      },
-      body: JSON.stringify({ saveBase64: encrypted.toString('base64') })
-    })
-  }
-)
-if (!response.ok) throw new Error('Save API request failed: ' + response.status)
-const execution = await response.json()
-if (execution.status !== 'completed' || execution.responseStatusCode !== 200) {
-  throw new Error('Save decryption failed: ' + execution.responseStatusCode)
-}
-const { decryptedBase64 } = JSON.parse(execution.responseBody)
-const decryptedBytes = Buffer.from(decryptedBase64, 'base64')
-// Decompress and parse decryptedBytes locally, or pass them to decodeSaveFile.`} />
+async function decryptAndRead(saveFile, keyFile) {
+  const keys = JSON.parse(await keyFile.text())
+  const compressedBytes = await decryptSave(new Uint8Array(await saveFile.arrayBuffer()), { keys })
+  return decodeSaveFile(compressedBytes)
+}`} />
 </div>
 <p class="mt-3 text-muted">
-	The response is decrypted bytes wrapped in base64, <strong>not parsed account JSON</strong>.
-	For normal saves these bytes are gzip-compressed NRBF. The SDK unwraps this response automatically.
-	The function accepts files up to 8 MiB and limits requests to 30 per IP per minute per instance.
-	Malformed or tampered saves return 400, a wrong public key 403, an oversized upload 413, and
-	excess requests 429. Check both the HTTP status and the execution's <code>responseStatusCode</code>.
-</p>
-<p class="mt-3 text-muted">
-	For a custom deployment, pass <code>endpoint</code>, <code>projectId</code> and <code>apiKey</code>
-	as the second argument to either asynchronous SDK decoder. These are public client settings;
-	never include private game keys or an Appwrite administrator key in your application.
+	Encrypted input is limited to 8 MiB. Unsupported versions, incomplete containers, invalid key
+	lengths and failed integrity checks throw errors. The authentication check verifies container
+	integrity; it does not validate gameplay values. The decoder does not modify the supplied save or key bytes.
 </p>
 
-<h2 class="mt-10 text-xl font-semibold">Older Saves And JSON Exports: Decode Locally</h2>
+<h2 class="mt-10 text-xl font-semibold">Older Saves And JSON Exports</h2>
 <p class="mt-3 text-muted">
-	Older gzip saves, raw NRBF files and JSON exports do not call the API. The same
-	<code>decodeSaveFile</code> and <code>decodePlayerInfoSaveBytesAsync</code> entry points detect
-	them automatically and return the same save-root structure. These unencrypted formats work offline.
+	Older gzip saves, raw NRBF and JSON exports require no keys. Call <code>decodeSaveFile(bytes)</code>
+	or <code>decodePlayerInfoSaveBytesAsync(bytes)</code> without options; the format is detected
+	automatically. These formats return the same save-root structure as encrypted saves.
 </p>
 <p class="mt-3 text-muted">
-	For synchronous Node code reading only unencrypted files, use
-	<code>decodePlayerInfoSaveBytes</code>. It explicitly rejects encrypted TDS1 input; use its
-	asynchronous counterpart for current saves. <code>gunzipBytes</code> also supports API-backed
-	decryption and returns inflated NRBF bytes. <code>decodeInflatedSave</code>,
-	<code>NRBFReader</code> and <code>nrbfToJSON</code> are for already-decrypted local payloads.
-	<code>isEncryptedSave</code> detects TDS1, while <code>isGzipped</code> tests gzip magic.
+	The synchronous Node function <code>decodePlayerInfoSaveBytes</code> accepts unencrypted files.
+	Encrypted saves use the asynchronous functions with caller keys. <code>decodeInflatedSave</code>,
+	<code>NRBFReader</code> and <code>nrbfToJSON</code> accept already-decrypted local payloads.
+	<code>isEncryptedSave</code> detects TDS1; <code>isGzipped</code> detects gzip.
 </p>
 
 <h2 class="mt-10 text-xl font-semibold">Read The Run History</h2>
@@ -297,12 +263,15 @@ import { listImportableBattleRuns } from 'thetowersdk/save'
 // The player runs this once:
 //   npx adb-bridge
 
-const socket = new WebSocket('ws://127.0.0.1:8765')
-
-socket.onmessage = async (event) => {
-  const bytes = new Uint8Array(await event.data.arrayBuffer())
-  const root = await decodeSaveFile(bytes)
-  render(listImportableBattleRuns(root))
+async function watchSave(keyFile) {
+  const keys = JSON.parse(await keyFile.text())
+  const socket = new WebSocket('ws://127.0.0.1:8765')
+  socket.onmessage = async (event) => {
+    const bytes = new Uint8Array(await event.data.arrayBuffer())
+    const root = await decodeSaveFile(bytes, { keys })
+    render(listImportableBattleRuns(root))
+  }
+  return socket
 }`}
 	/>
 </div>

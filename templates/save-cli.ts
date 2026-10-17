@@ -48,6 +48,8 @@ function report(parsedRoot: Record<string, unknown>): void {
 }
 
 async function main(): Promise<void> {
+  const keysPath = process.env.TOWER_SAVE_KEYS_FILE
+  const keys = keysPath ? JSON.parse(await readFile(keysPath, 'utf8')) : undefined
   const savePath = process.argv[2]
   if (!savePath) {
     console.error('Usage: tsx save-cli.ts <path-to-playerInfo.dat>')
@@ -56,7 +58,7 @@ async function main(): Promise<void> {
 
   // Decode once. The save root is a plain object and extractors never mutate it,
   // so run as many as you like over the same root.
-  const { parsedRoot } = await decodePlayerInfoSaveBytesAsync(await readFile(savePath))
+  const { parsedRoot } = await decodePlayerInfoSaveBytesAsync(await readFile(savePath), { keys })
   report(parsedRoot)
 }
 

@@ -203,3 +203,11 @@
 	·
 	<a href={href('/docs/towerai/')}>TowerAI →</a>
 </p>
+
+<h2 class="mt-10 text-xl font-semibold">Encrypted Save Keys</h2>
+<p class="mt-3 text-muted">
+	Set <code>TOWER_SAVE_KEYS_FILE</code> in the MCP server environment to a private local JSON file
+	with the caller's base64 <code>encryption</code>, <code>authentication</code> and <code>mask</code>
+	values (32 bytes each). Save tools decrypt locally; keys do not belong in tool arguments.
+	Unencrypted saves require no key file. See <a href={href('/docs/save/')}>Save Files</a> for the key contract.
+</p>

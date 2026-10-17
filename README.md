@@ -52,16 +52,19 @@ import { readFile } from 'node:fs/promises'
 import { decodePlayerInfoSaveBytesAsync } from 'thetowersdk/node'
 import { readLabsFromSaveRoot } from 'thetowersdk/save'
 
-const { parsedRoot } = await decodePlayerInfoSaveBytesAsync(await readFile('playerInfo.dat'))
+const keysPath = process.env.TOWER_SAVE_KEYS_FILE
+if (!keysPath) throw new Error('Set TOWER_SAVE_KEYS_FILE to a private key JSON file.')
+const keys = JSON.parse(await readFile(keysPath, 'utf8'))
+const { parsedRoot } = await decodePlayerInfoSaveBytesAsync(await readFile('playerInfo.dat'), { keys })
 
 const labs = readLabsFromSaveRoot(parsedRoot)
 if (!labs) throw new Error('This save has no lab research data.')
 console.log(`${labs.researchedCount} researched, ${labs.maxedCount} maxed`)
 ```
 
-Decode once, then extract whatever you need. Current encrypted `TDS1` saves use the free hosted
-decryption API; decompression and parsing stay local. Tell users their encrypted file is uploaded.
-Older unencrypted gzip saves and JSON exports are decoded locally without the API.
+Decode once, then extract whatever you need. Encrypted TDS1 saves are decrypted locally using
+caller-supplied keys. The SDK includes no game keys and makes no decryption API requests.
+Older unencrypted saves and JSON exports require no keys.
 
 ---
 
@@ -71,7 +74,7 @@ Older unencrypted gzip saves and JSON exports are decoded locally without the AP
 |---|---|---|
 | `thetowersdk/data` | Game tables — costs, levels, effects, catalogs | Yes |
 | `thetowersdk/save` | `read*FromSaveRoot()` readers and save inspection | Yes |
-| `thetowersdk/node` | The save decoder | Node — [see below](#decoding-in-a-browser) |
+| `thetowersdk/node` | The save decoder | Node — [see below](#local-decryption-with-caller-keys) |
 | `thetowersdk/save-decoder` | The same decoder with no Node imports, for the browser | Yes |
 | `thetowersdk/formatting` | Number and duration formatting matching the game | Yes |
 | `thetowersdk/mechanics` | Game formulas — see [below](#formulas) | Yes |
@@ -149,74 +152,38 @@ Feed the bytes it gives you to `await decodePlayerInfoSaveBytesAsync` and everyt
 
 > Save files are personal data. If your tool uploads them anywhere, tell your users plainly.
 
-### Decoding In a Browser
+### Local Decryption With Caller Keys
 
-Use the browser-safe entry point. Encrypted TDS1 saves are sent to the free Appwrite
-save-decode API. It returns decrypted bytes; gzip decompression, NRBF parsing and save readers
-remain local. Legacy gzip, raw NRBF and JSON exports do not use the API.
+Encrypted TDS1 v1 saves require three 32-byte values: `encryption`, `authentication` and `mask`.
+Each accepts a `Uint8Array` or canonical base64 string. Keep them outside published source and
+client bundles. Browser applications can accept a user-selected key JSON file; Node applications
+can read a private file from `TOWER_SAVE_KEYS_FILE`.
 
 ```ts
-import { decodeSaveFile, SAVE_DECODE_PUBLIC_KEY } from 'thetowersdk/save-decoder'
+import { decodeSaveFile } from 'thetowersdk/save-decoder'
 
-const root = await decodeSaveFile(await file.arrayBuffer())
-// A shared public API identifier is included automatically. It is not a decryption key.
-console.log(SAVE_DECODE_PUBLIC_KEY)
+async function readSave(saveFile, keyFile) {
+  const keys = JSON.parse(await keyFile.text())
+  return decodeSaveFile(await saveFile.arrayBuffer(), { keys })
+}
 ```
 
-For Node 20+, use `await decodePlayerInfoSaveBytesAsync(bytes)`. The synchronous
-`decodePlayerInfoSaveBytes(bytes)` supports unencrypted files and explicitly rejects TDS1.
-For custom deployments, pass `{ endpoint, projectId, apiKey }` to either asynchronous decoder.
+Decryption, gzip decompression and NRBF parsing run locally. Browser decryption requires Web Crypto
+on HTTPS or localhost; Node callers use `await decodePlayerInfoSaveBytesAsync(bytes, { keys })`
+on Node 20+. Missing keys cause an explicit error; there is no remote fallback or bundled key.
 
-The [Save Files guide](https://tmrxjd.github.io/TheTowerSDK/docs/save/) includes the live endpoint,
-shared public API key, a direct REST request and the decrypted-byte response format. This decoder
-is available from the merged source; existing npm releases are unchanged.
+`decryptSave(bytes, { keys })` returns decrypted compressed bytes without parsing.
+`gunzipBytes(bytes, { keys })` returns inflated bytes. WASM callers decrypt and decompress before
+passing NRBF bytes to `save.decode`.
 
-### Game 29.1.0 Save Compatibility
+### Older Saves And JSON Exports
 
-The Appwrite function authenticates and decrypts the TDS1 container using private function
-secrets. It returns the original decrypted payload as base64 bytes in the execution response;
-the SDK unwraps it before local decompression and parsing. The API does not return parsed save
-JSON or write a file. Tell users that importing an encrypted save sends it to this service.
+For unencrypted gzip, raw NRBF and JSON exports, call `decodeSaveFile(bytes)` or
+`decodePlayerInfoSaveBytesAsync(bytes)` without options. The synchronous Node reader
+`decodePlayerInfoSaveBytes(bytes)` accepts these unencrypted formats.
 
-The shared public API key is `thetowersdk-public-v1`. No signup or individual key is required.
-Uploads are capped at 8 MiB; a per-instance request limit bounds repeated calls. The handler
-has no Appwrite data scopes and does not log save contents or key material.
-
-The WASM `save.decode` operation still accepts already-inflated NRBF bytes only. It has no
-Web Crypto or gzip runtime; decrypt encrypted files through the API-backed Node/browser decoder before
-passing their NRBF payload to WASM.
-
-Tools that previously checked only for gzip magic (`1f 8b`) and sent all other input straight to
-`NRBFReader` must switch to `decodeSaveFile` or `decodePlayerInfoSaveBytesAsync`. Pass the original
-file bytes to those functions; do not remove the header or decompress the encrypted container.
-The extractors that consume the decoded root need no format-specific changes.
-
-For integrations that already separate decompression from parsing, `gunzipBytes` uses the API for
-the original encrypted file and returns inflated NRBF bytes. `decodeInflatedSave` and
-`NRBFReader` still take already-inflated NRBF only. `isGzipped` tests gzip magic at the current
-byte offset; use `isEncryptedSave` with a `Uint8Array` when you need to identify a `TDS1` container.
-Node's `wasGzip` describes the decoded payload, so it is `true` for these encrypted gzip saves.
-
-Truncated containers, unsupported versions and failed integrity checks throw explanatory errors.
-An integrity failure means the container could not be authenticated; it does not prove that the
-save's gameplay values are valid or that the game server would accept them. This package reads
-saves and does not write modified saves.
-
-To prepare a tool against the source revision before its next npm release:
-
-```bash
-git clone https://github.com/TmRxJD/TheTowerSDK.git
-cd TheTowerSDK
-npm install
-npm run build
-npm pack
-```
-
-Install the generated tarball in your tool with `npm install /path/to/thetowersdk-0.11.0.tgz`,
-then use the public entry points above. Record the Git commit you built and pin the package
-version when an npm release containing this support becomes available.
-
----
+The [Save Files guide](https://tmrxjd.github.io/TheTowerSDK/docs/save/) covers key formats, browser
+and Node examples, byte-level decryption and account readers.
 
 ## Reading a Save
 
