@@ -11,6 +11,19 @@ import {
 import { baseCoinInput } from './resource-drops-coin-simulation.test'
 
 describe('simulate-wave-econ', () => {
+  it.each([
+    ['coins', simulateWaveCoinRows],
+    ['economy', simulateWaveEconRows],
+  ] as const)('%s rows prioritize option yield over stored yield', (_name, simulate) => {
+    const none = { randomBasicGatePassRate: 0, enemyDoubleSpawnChance: 0 }
+    const positive = { randomBasicGatePassRate: 1, enemyDoubleSpawnChance: 0 }
+    const input = baseCoinInput({ tier: 1, targetWave: 3, useAccountSpawnYield: true, spawnYield: positive })
+    const options = { maxRows: 3, coinsPerWaveMult: 1 }
+    expect(simulate(input, { ...options, spawnYield: none })[0]?.expectedKills).toBe(0)
+    expect(simulate({ ...input, spawnYield: none }, options)[0]?.expectedKills).toBe(0)
+    expect(simulate({ ...input, spawnYield: none }, { ...options, spawnYield: positive })[0]?.expectedKills).toBeGreaterThan(0)
+  })
+
   it('includes positive cells at T20 W100', () => {
     const rows = simulateWaveEconRows(baseCoinInput({ tier: 20, targetWave: 100 }), { maxRows: 100 })
     const w100 = rows.find(r => r.wave === 100)
