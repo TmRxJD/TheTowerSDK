@@ -35,7 +35,7 @@ Read it before adding a file, moving one, or naming anything.
    [Consult the wiki](#consult-the-wiki-before-describing-a-mechanic) and the monorepo contract
    `docs/AGENT_GAME_MECHANICS_CONTRACT.md` —
    `begin_mechanic_task` is mandatory when MCP is available. It is not optional.
-2. **Find the export; do not invent one.** There are <!--count:sdk.exports-->2976<!--/count--> exports across <!--count:sdk.entryPoints-->15<!--/count--> entry points. Use the
+2. **Find the export; do not invent one.** There are <!--count:sdk.exports-->2999<!--/count--> exports across <!--count:sdk.entryPoints-->15<!--/count--> entry points. Use the
    map below, then `list_exports` with a filter, then `get_export`. A plausible-looking name you
    guessed will not exist.
 
@@ -66,15 +66,15 @@ Sizes are exports, not files — they say how much you are searching through.
 | Entry point | Exports | Holds | Reach for it when |
 |---|---:|---|---|
 | `thetowersdk/data` | <!--count:sdk.exports.data-->466<!--/count--> | Game tables and catalogs | You need a cost, a level curve, an effect value, a name |
-| `thetowersdk/save` | <!--count:sdk.exports.save-->436<!--/count--> | `playerInfo.dat` readers | You need what a specific player has |
-| `thetowersdk/mechanics` | <!--count:sdk.exports.mechanics-->1437<!--/count--> | Formulas | You need to compute something the game computes |
+| `thetowersdk/save` | <!--count:sdk.exports.save-->444<!--/count--> | `playerInfo.dat` readers | You need what a specific player has |
+| `thetowersdk/mechanics` | <!--count:sdk.exports.mechanics-->1465<!--/count--> | Formulas | You need to compute something the game computes |
 | `thetowersdk/knowledge` | <!--count:sdk.exports.knowledge-->377<!--/count--> | What a number MEANS, and how it is misread | You are modelling a mechanic, not just reading a value |
 | `thetowersdk/charts` | <!--count:sdk.exports.charts-->86<!--/count--> | Curated chart datasets | You are rendering a table the game shows |
 | `thetowersdk/formatting` | <!--count:sdk.exports.formatting-->44<!--/count--> | Number and duration display | You need it to read the way the game shows it |
 | `thetowersdk/wiki` | <!--count:sdk.exports.wiki-->38<!--/count--> | Wikitext → Markdown, page fetch | You need to know how a mechanic behaves |
 | `thetowersdk/builders` | <!--count:sdk.exports.builders-->28<!--/count--> | Calculators that declare their own inputs | You want a form, a command and a test from one place |
-| `thetowersdk/save-decoder` | <!--count:sdk.exports.save-decoder-->12<!--/count--> | The save reader with no Node imports | You are decoding a save in a browser |
-| `thetowersdk/node` | <!--count:sdk.exports.node-->8<!--/count--> | The save decoder | You have bytes and need a save root (Node only) |
+| `thetowersdk/save-decoder` | <!--count:sdk.exports.save-decoder-->5<!--/count--> | The save reader with no Node imports | You are decoding a save in a browser |
+| `thetowersdk/node` | <!--count:sdk.exports.node-->2<!--/count--> | The save decoder | You have bytes and need a save root (Node only) |
 | `thetowersdk/sheets` | <!--count:sdk.exports.sheets-->9<!--/count--> | Reading and writing Google Sheets | You are working against a community spreadsheet |
 | `thetowersdk/bot` | <!--count:sdk.exports.bot-->5<!--/count--> | Every builder as a chat command | You are building a Discord bot |
 | `thetowersdk/contributions` | <!--count:sdk.exports.contributions-->5<!--/count--> | Whose work this package carries | You are rendering credits |
@@ -137,7 +137,7 @@ Rules that hold for all of them:
 
 ### `mechanics` — the formulas
 
-<!--count:sdk.mechanicsExports-->1437<!--/count--> exports. By area, so you know which filter to pass `list_exports`:
+<!--count:sdk.mechanicsExports-->1465<!--/count--> exports. By area, so you know which filter to pass `list_exports`:
 
 | Area | ~Exports | Covers |
 |---|---:|---|
