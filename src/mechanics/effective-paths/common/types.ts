@@ -159,8 +159,6 @@ export interface DamageModuleSource {
    * make every one of them look worthless.
    */
   primaryRarity?: string
-  /** Researched primary-module bonus lab; never applied to the assist. */
-  primaryLabLevel?: number
   /** The assist module's rarity label, for the same reason. */
   assistRarity?: string
 }

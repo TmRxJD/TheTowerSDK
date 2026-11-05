@@ -175,6 +175,7 @@ const DIRECTORY_PURPOSE = {
   'src/mechanics/cards': 'Card costs and the lookup from a card to the effect it applies.',
   'src/mechanics/combat': 'What the tower does to enemies — damage, its multipliers, and every on-hit effect.',
   'src/mechanics/effective-paths': 'Effective Paths: the cheapest route to a damage, economy or survivability target.',
+  'src/mechanics/effective-paths/firing': 'Firing rates, rapid-fire uptime and frame caps used by the damage model.',
   'src/mechanics/effective-paths/common': 'The shapes every path shares — a step, an exclusion, the lab and workshop discounts it prices with.',
   'src/mechanics/effective-paths/edamage':'The types the damage paths export, re-exported by the folder above.',
   'src/mechanics/effective-paths/eecon': 'The types the economy paths export, re-exported by the folder above.',

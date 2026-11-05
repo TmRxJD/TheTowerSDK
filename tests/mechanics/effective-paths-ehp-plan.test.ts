@@ -212,7 +212,7 @@ describe('the candidate list against the sheet', () => {
     .filter(upgrade => upgrade.variants.includes(variant))
     .map(upgrade => upgrade.sheetName)
 
-  it('offers the lab paths all seventeen', () => {
+  it('offers the lab paths all eighteen', () => {
     expect(offered('lab-time')).toEqual([
       'Health',
       'Defense Absolute',
@@ -225,6 +225,7 @@ describe('the candidate list against the sheet', () => {
       'Chrono Field Reduction %',
       'Death Wave Health',
       'Chain Thunder',
+      'Primary Module Bonus - Armor',
       'Health Mastery',
       'Extra Defense Mastery',
       'Assist Module Substats - Armor',
@@ -243,8 +244,9 @@ describe('the candidate list against the sheet', () => {
     ])
   })
 
-  it('offers the coin path all twelve', () => {
+  it('offers the coin path all thirteen', () => {
     expect(offered('coin')).toEqual([
+      'Primary Module Bonus - Armor',
       'Health Mastery',
       'Extra Defense Mastery',
       'Assist Module Substats - Armor',

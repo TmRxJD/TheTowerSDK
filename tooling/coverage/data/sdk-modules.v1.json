@@ -758,6 +758,28 @@
       "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see tooling/coverage/oracle-links.ts."
     },
     {
+      "id": "sdk-module:effective-paths/edamage-eligibility",
+      "surface": "sdk-module",
+      "label": "effective-paths/edamage-eligibility",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/mechanics/effective-paths/edamage-eligibility.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see tooling/coverage/oracle-links.ts."
+    },
+    {
+      "id": "sdk-module:effective-paths/edamage-farm-time",
+      "surface": "sdk-module",
+      "label": "effective-paths/edamage-farm-time",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/mechanics/effective-paths/edamage-farm-time.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see tooling/coverage/oracle-links.ts."
+    },
+    {
       "id": "sdk-module:effective-paths/edamage-lab-levels",
       "surface": "sdk-module",
       "label": "effective-paths/edamage-lab-levels",
@@ -974,6 +996,28 @@
       "coverageStatus": "unmodeled",
       "sources": [
         "src/mechanics/effective-paths/enhancement-costs.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see tooling/coverage/oracle-links.ts."
+    },
+    {
+      "id": "sdk-module:effective-paths/firing/compute",
+      "surface": "sdk-module",
+      "label": "effective-paths/firing/compute",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/mechanics/effective-paths/firing/compute.ts"
+      ],
+      "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see tooling/coverage/oracle-links.ts."
+    },
+    {
+      "id": "sdk-module:effective-paths/firing/types",
+      "surface": "sdk-module",
+      "label": "effective-paths/firing/types",
+      "graphNodeIds": [],
+      "coverageStatus": "unmodeled",
+      "sources": [
+        "src/mechanics/effective-paths/firing/types.ts"
       ],
       "reason": "No knowledge-oracle node names an export of this module. The oracle is anchored to game constants and catalog data (194 of its 336 implementedBy symbols live in the knowledge compartments themselves), so an unlinked module here is not evidence that the mechanic is undocumented — see tooling/coverage/oracle-links.ts."
     },

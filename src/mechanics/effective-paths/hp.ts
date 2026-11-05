@@ -249,16 +249,15 @@ export function survivalMultiplier(reduction: number): number {
  * is in play the whole term drops to 1 rather than 0.
  */
 export function composeEffectiveHealth(input: EffectiveHealthCompositionInput): number {
-  const hasPool = input.wallHealth != null || input.maxRecovery != null
-  const pool = hasPool ? (input.wallHealth ?? 0) + (input.maxRecovery ?? 0) : 1
+  const pool = Math.max((input.wallHealth ?? 0) + (input.maxRecovery ?? 0), 1)
 
   const chrono = survivalMultiplier(input.chronoFieldReduction ?? 0)
   const chainThunder = survivalMultiplier(input.chainThunderReduction ?? 0)
   const tradeOff = survivalMultiplier(input.tradeOffReduction ?? 0)
   const defense = survivalMultiplier(input.defensePercent)
 
-  const pooled = input.health * input.armor * pool * chrono * chainThunder
-  return (pooled + input.defenseAbsolute) * defense * tradeOff
+  const pooled = input.health * input.armor * pool
+  return (pooled + input.defenseAbsolute) * defense * chrono * chainThunder * tradeOff
 }
 
 // ---------------------------------------------------------------------------

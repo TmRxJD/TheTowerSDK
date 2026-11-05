@@ -6,7 +6,7 @@ import {
 
 describe('effectiveDamageLabLevelsFromSheet', () => {
   it('maps live headers and drops Generator', () => {
-    expect(LAB_BAND_HEADERS).toHaveLength(32)
+    expect(LAB_BAND_HEADERS).toHaveLength(34)
     const source: Record<string, unknown> = {
       BO4: '',
       BP4: 'Damage',
@@ -77,6 +77,17 @@ describe('effectiveDamageLabLevelsFromSheet', () => {
     expect(result.levels.damage).toBe(10)
     expect(result.levels.superTowerBonus).toBe(17)
     expect(result.levels.superTowerMastery).toBe(4)
+  })
+
+  it('reads the current primary research headers without mistaking old computed columns for levels', () => {
+    const current = effectiveDamageLabLevelsFromSheet({ BP4: 'Damage', BP5: 60,
+      CZ4: 'Primary Module Bonus - Cannon', CZ5: 7, DA4: 'Primary Module Bonus - Core', DA5: 9 })
+    expect(current.levels.primaryModuleBonusCannon).toBe(7)
+    expect(current.levels.primaryModuleBonusCore).toBe(9)
+    const historical = effectiveDamageLabLevelsFromSheet({ BP5: 60, CZ5: 1, DA5: 999 })
+    expect(historical.levels.primaryModuleBonusCannon).toBe(0)
+    expect(historical.levels.primaryModuleBonusCore).toBe(0)
+    expect(historical.missing).toEqual(expect.arrayContaining(['primaryModuleBonusCannon', 'primaryModuleBonusCore']))
   })
 
   it('ignores Damage labels outside the BO:CV lab band', () => {

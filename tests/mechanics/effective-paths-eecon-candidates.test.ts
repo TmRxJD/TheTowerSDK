@@ -17,7 +17,7 @@ import {
  */
 
 const ALL = [
-  ['time', EFFECTIVE_ECONOMY_TIME_CANDIDATES, 23] as const,
+  ['time', EFFECTIVE_ECONOMY_TIME_CANDIDATES, 24] as const,
   ['stone', EFFECTIVE_ECONOMY_STONE_CANDIDATES, 19] as const,
   ['discount', EFFECTIVE_ECONOMY_DISCOUNT_CANDIDATES, 6] as const,
 ]

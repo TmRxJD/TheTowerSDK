@@ -12,17 +12,19 @@ Effective Paths: the cheapest route to a damage, economy or survivability target
 | `credits.ts` | Attribution for the Effective Paths formulas. | EFFECTIVE_PATHS_AUTHORS, EFFECTIVE_PATHS_MAINTAINERS, EFFECTIVE_PATHS_CONTRIBUTORS, EFFECTIVE_PATHS_SOURCE (+5 more) |
 | `currencies.ts` | Effective Paths — what every path spends, and on what. | EFFECTIVE_PATH_CURRENCIES, EFFECTIVE_PATHS, SHARED_ACROSS_CURRENCIES |
 | `damage-base.ts` | Effective Paths — the `Base` half of the eDamage composition. | DAMAGE_RUN_TYPES, DamageRunType, towerDamage, tradeOffDamagePerk (+8 more) |
-| `damage-stats.ts` | Effective Paths — the `EPD_*` damage stat layer. | criticalChance, criticalFactorStat, superCriticalChanceStat, superCriticalMultiplierStat (+28 more) |
-| `damage-substats.ts` | Effective Paths — how the damage tab reads a substat, and bullets per second. | assistCapacities, combinedSubstat, bulletsPerSecond |
+| `damage-stats.ts` | Effective Paths — the `EPD_*` damage stat layer. | criticalChance, criticalFactorStat, superCriticalChanceStat, superCriticalMultiplierStat (+27 more) |
+| `damage-substats.ts` | Effective Paths — how the damage tab reads a substat. | assistCapacities, combinedSubstat |
 | `edamage-candidates.ts` | — | EFFECTIVE_DAMAGE_LAB_CANDIDATES, EFFECTIVE_DAMAGE_STONE_CANDIDATES, EFFECTIVE_DAMAGE_COIN_CANDIDATES, EFFECTIVE_DAMAGE_KEYS_CANDIDATES (+1 more) |
 | `edamage-coin-levels.ts` | The coin band, `eDamage Coins!BO5:CM5`, read into {@link EffectiveDamageCoinLevels}. | COIN_BAND_HEADERS, COIN_BAND_NON_LEVELS, COIN_BAND_DELTA_FIELDS, effectiveDamageCoinLevelsFromSheet |
 | `edamage-compute.ts` | Effective Paths — effective damage, end to end. | CHRONO_SLOW_CAP, computeEffectiveDamage, ENHANCEMENT_MULTIPLIER_PER_LEVEL, STONE_STAT_FIELD_KEYS (+1 more) |
 | `edamage-config.ts` | Effective Paths — the player state the eDamage grid reads. | DAMAGE_WORKSHOP_STATS, DamageWorkshopStat, ZERO_DAMAGE_STAT_SOURCE, MODULE_SLOTS (+16 more) |
 | `edamage-costs.ts` | Effective Paths — what each eDamage candidate costs. | ULTIMATE_WEAPON_ABBREVIATIONS, ultimateWeaponStats, resolveUltimateWeaponStat, ultimateWeaponStoneCost (+9 more) |
+| `edamage-eligibility.ts` | Current eDamage research hide rows. | damageLabHiddenByRunType |
+| `edamage-farm-time.ts` | module edamage-farm-time purpose Current eDamage's mixed Farming Time Only candidate board. | FARM_TIME_EXTRA_CANDIDATES, farmTimeUpgrades, farmTimeLevels |
 | `edamage-lab-levels.ts` | The lab band, `eDamage!BP5:CV5` (blank `BO`), read into {@link EffectiveDamageLabLevels}. | LAB_BAND_HEADERS, LAB_BAND_NON_LEVELS, LAB_BAND_FIXED_CELLS, effectiveDamageLabLevelsFromSheet |
 | `edamage-lab-targets.ts` | eDamage lab Current/Target/Max table (`BB5:BE50`) → planner `targetLevels`. | EDAMAGE_LAB_LEVEL_TABLE_NAMES, edamageLabTargetLevelsFromSheet |
 | `edamage-levels.ts` | Effective Paths — the levels the eDamage paths buy. | ZERO_EFFECTIVE_DAMAGE_LEVELS, SHARED_ASSIST_LEVEL_KEYS, SharedAssistLevelKey, assistCapacityLevels |
-| `edamage-model.ts` | Effective Paths — the eDamage composition. | bulletDamageMultiplier, chronoFieldSlow, chronoFieldPlusSlow, slowMultiplier (+2 more) |
+| `edamage-model.ts` | Effective Paths — the eDamage composition. | amplifyBotDamageFactors, bulletDamageMultiplier, chronoFieldSlow, chronoFieldPlusSlow (+3 more) |
 | `edamage-plan.ts` | Effective Paths — planning an eDamage path. | DAMAGE_PLAN_VARIANTS, WORKSHOP_ENHANCEMENTS_LAB, EFFECTIVE_DAMAGE_UPGRADES, planEffectiveDamagePath |
 | `edamage-schema.ts` | Effective Paths — the damage model's input contract. | effectiveDamageConfigSchema, effectiveDamageLevelsSchema, checkEffectiveDamageInputs, assertEffectiveDamageInputs |
 | `eecon-candidates.ts` | — | EFFECTIVE_ECONOMY_TIME_CANDIDATES, EFFECTIVE_ECONOMY_STONE_CANDIDATES, EFFECTIVE_ECONOMY_DISCOUNT_CANDIDATES, EFFECTIVE_ECONOMY_CANDIDATES_BY_PATH (+1 more) |
@@ -52,7 +54,7 @@ Effective Paths: the cheapest route to a damage, economy or survivability target
 | `stone-costs.ts` | Effective Paths — what a stone upgrade costs. | ASSIST_SUBSTAT_MAX_LEVEL, ASSIST_BONUS_MAX_LEVEL, assistUpgradeStoneCost, cumulativeAssistStoneCost |
 | `types.ts` | The types `mechanics/effective-paths/` exports, in one place — so a neighbouring module finds the shape it needs here instead of declaring its own under a second name. | AssistEfficiencyKind, AssistModuleCategory, ModuleCoinDiscount, EffectivePathsCredit (+62 more) |
 | `ultimate-weapons.ts` | Effective Paths — the `STAT_UW_*` and `EP_UW_*` layer. | chainLightningChance, chainLightningDamage, chainLightningQuantity, deathWaveDamage (+16 more) |
-| `uw-dps.ts` | Effective Paths — what each ultimate weapon contributes per second. | realGameSpeed, deathWaveDps, chainLightningDps, smartMissilesDps (+4 more) |
+| `uw-dps.ts` | Effective Paths — what each ultimate weapon contributes per second. | deathWaveDps, chainLightningDps, amplifiedChainLightningDps, smartMissilesDps (+4 more) |
 | `workbook.ts` | Effective Paths — reading the sheet's functions out of a workbook export. | parseWorkbookDefinedNames, buildEffectivePathsDocument, normalizeSheetVersion |
 | `workshop-values.ts` | Workshop stat values as the Effective Paths sheet reads them: | WORKSHOP_STAT_MAPPINGS, WORKSHOP_STATS_DIVERGING_FROM_SHEET, WORKSHOP_STATS_ABSENT_FROM_SHEET, workshopStatValue (+4 more) |
 

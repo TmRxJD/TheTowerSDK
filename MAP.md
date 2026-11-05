@@ -9,7 +9,7 @@ inside the file — what depends on it.
 
 | Tree | Files | What lives here | Headers |
 |---|---:|---|---|
-| [`src`](src/MAP.md) | 591 | The package itself — everything that ships, and nothing that does not. | yes |
+| [`src`](src/MAP.md) | 596 | The package itself — everything that ships, and nothing that does not. | yes |
 | [`tooling`](tooling/MAP.md) | 52 | Development tooling for this repository. Never published, never imported by `src`. | yes |
 | [`scripts`](scripts/MAP.md) | 27 | The checks and generators. Each is a `package.json` script; none is called from `src`. | yes |
 | [`mcp`](mcp/MAP.md) | 6 | The MCP server, so an agent can query the package instead of guessing at it. | yes |
@@ -21,5 +21,5 @@ Regenerate with `npm run map`. `npm run lint:map` runs inside `verify` and fails
 it has drifted, so none of these files should ever be edited by hand.
 
 The prose above each generated block is written by hand, and is the one thing no generator can
-produce. 510 of 696 files have one; 186 do not, and
+produce. 514 of 701 files have one; 187 do not, and
 show as `—` in their directory's Purpose column.

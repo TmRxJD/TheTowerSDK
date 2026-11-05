@@ -140,8 +140,9 @@ function isCapped(upgrade: PathUpgrade, nextLevel: number): boolean {
  */
 export function planPath(options: PathPlanOptions): PathStep[] {
   const {
-    upgrades, steps, evaluate, cost, onSkip, relativeGain, onCandidateRoi, available,
+    upgrades, steps, evaluate, cost, rankingCost, onSkip, relativeGain, onCandidateRoi, available,
     roiSoftTieRelative = 0,
+    ranking = 'absolute-gain',
   } = options
 
   const levels = new Map<string, number>()
@@ -152,7 +153,7 @@ export function planPath(options: PathPlanOptions): PathStep[] {
   let cumulativeCost = 0
 
   for (let step = 1; step <= steps; step++) {
-    let best: { upgrade: PathUpgrade, roi: number, gain: number, price: number, value: number } | null = null
+    let best: { upgrade: PathUpgrade, roi: number, score: number, gain: number, price: number, value: number } | null = null
 
     for (const upgrade of upgrades) {
       const nextLevel = (levels.get(upgrade.id) ?? upgrade.level) + 1
@@ -173,6 +174,11 @@ export function planPath(options: PathPlanOptions): PathStep[] {
       const price = cost(upgrade.id, nextLevel, levels)
       if (!Number.isFinite(price) || price <= 0) {
         skip('unpriced', price)
+        continue
+      }
+      const denominator = rankingCost?.(upgrade.id, nextLevel, levels, price) ?? price
+      if (!Number.isFinite(denominator) || denominator <= 0) {
+        skip('unpriced', denominator)
         continue
       }
 
@@ -201,6 +207,8 @@ export function planPath(options: PathPlanOptions): PathStep[] {
 
       const gain = value - currentValue
       const roi = gain / price
+      const score = ranking === 'relative-gain'
+        ? (relative ?? (value / currentValue - 1)) / denominator : gain / denominator
       /*
        * The candidate's own value is checked above; this catches the
        * *baseline* being non-finite, which the check above cannot see. It
@@ -209,20 +217,20 @@ export function planPath(options: PathPlanOptions): PathStep[] {
        * candidate examined wins every step — a path in upgrade-declaration
        * order, presented as a recommendation, with nothing saying so.
        */
-      if (!Number.isFinite(roi)) {
-        skip('unevaluable', roi)
+      if (!Number.isFinite(roi) || !Number.isFinite(score)) {
+        skip('unevaluable', Number.isFinite(roi) ? score : roi)
         continue
       }
       onCandidateRoi?.({
-        step, id: upgrade.id, name: upgrade.name, nextLevel, roi, gain, price,
+        step, id: upgrade.id, name: upgrade.name, nextLevel, roi, gain, price, rankingScore: score,
       })
 
       // Strictly greater (plus optional soft margin), so the earliest upgrade
       // wins a tie — the sheet takes the leftmost column of the joint maximum.
       const beat = best === null
-        || roi > best.roi * (1 + roiSoftTieRelative)
+        || score > best.score * (1 + roiSoftTieRelative)
       if (beat) {
-        best = { upgrade, roi, gain, price, value }
+        best = { upgrade, roi, score, gain, price, value }
       }
     }
 

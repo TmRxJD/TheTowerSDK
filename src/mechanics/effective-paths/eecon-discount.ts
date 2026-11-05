@@ -150,9 +150,9 @@ export function labCoinsRemainingDetailed(
       else result.coins += entry.cost
     }
     if (reason) result.omittedLabs.push({ slug: record.slug, name: record.name, cost: omittedCost, reason })
-    if (primaryModule) result.coverageGaps.push({
+    if (primaryModule && basis === 'ep-port-baseline') result.coverageGaps.push({
       slug: record.slug, name: record.name, costIncluded: reason === null,
-      reason: 'primary-module research is not a planner candidate; current researched bonuses require primaryLabLevel on module configs',
+      reason: 'primary-module research is modeled by earning and health planner levels; it is excluded from this historical discount baseline',
     })
   }
   return result

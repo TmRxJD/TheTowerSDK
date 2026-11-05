@@ -1,14 +1,16 @@
 import { describe, expect, it } from 'vitest'
-import fixtures from '../../fixtures/mechanics/effective-paths-ehp-model.fixtures.json'
+import historical from '../../fixtures/mechanics/effective-paths-ehp-model.fixtures.json'
+import fixtures from '../../fixtures/mechanics/effective-paths-ehp-model-v5.11.08.10.fixtures.json'
 import { chainThunderReduction, chronoFieldReduction, computeEffectiveHealth, dissonantBoost, effectiveHealthPerks, tradeOffReduction, ZERO_EFFECTIVE_HEALTH_LEVELS } from '../../src/mechanics/effective-paths/ehp-model'
 import { type EffectiveHealthConfig, type EffectiveHealthLevels } from '../../src/mechanics/effective-paths/types'
 
 /**
  * The whole eHP model against the sheet's own composition.
  *
- * Each fixture case is a randomised player state whose expected value came from
- * asking the live spreadsheet to evaluate `eHP!CS5` with those inputs written
- * out as literals. So this compares against the sheet's arithmetic rather than
+ * The forty historical synthetic inputs are replayed through the current
+ * workbook's exact EPH/EPG expressions in Google Sheets. Expected values are
+ * captured independently of the SDK, with the full evaluated formulas retained.
+ * So this compares against the sheet's arithmetic rather than
  * against our reading of it, across states where walls, recovery, perks,
  * Chrono Field, Chain Thunder, Death Wave, tournament overrides and card
  * mastery are independently on or off.
@@ -104,6 +106,14 @@ function toLevels(testCase: { levels: unknown, cfg: Record<string, number> }): E
 }
 
 describe('the eHP model against the sheet', () => {
+  it('replays every historical input against the current workbook', () => {
+    expect(fixtures.source.version).toBe('v5.11.08.10')
+    expect(fixtures.source.driveVersion).toBe('82842')
+    expect(fixtures.evaluation.engine).toBe('Google Sheets')
+    expect(fixtures.cases.map(({ cfg, levels }) => ({ cfg, levels })))
+      .toEqual(historical.cases.map(({ cfg, levels }) => ({ cfg, levels })))
+    expect(fixtures.cases.every(testCase => testCase.formula.startsWith('=LAMBDA('))).toBe(true)
+  })
   it('has states worth checking, not forty of the same one', () => {
     expect(fixtures.cases.length).toBe(40)
     const varied = (pick: (c: FixtureCase['cfg']) => boolean) =>

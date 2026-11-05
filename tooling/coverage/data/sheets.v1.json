@@ -420,6 +420,19 @@
       "reviewedAt": "2026-08-30"
     },
     {
+      "id": "eDamage Stone!ER5",
+      "surface": "sheet",
+      "label": "eDamage Stone!ER5",
+      "graphNodeIds": [
+        "gate.eDamageStone.uwPlusRequiresNineUws"
+      ],
+      "coverageStatus": "modeled",
+      "sources": [
+        "graph byCell eDamage Stone!ER5"
+      ],
+      "reviewedAt": "2026-11-05"
+    },
+    {
       "id": "eDamage Stone!EU5",
       "surface": "sheet",
       "label": "eDamage Stone!EU5",
@@ -448,13 +461,14 @@
       "id": "eDamage Stone!FF5",
       "surface": "sheet",
       "label": "eDamage Stone!FF5",
-      "graphNodeIds": [],
-      "coverageStatus": "unmodeled",
-      "reason": "Cited in effective-paths-*.ts; not yet a graph node — explicit unknown (not a silent gap)",
-      "sources": [
-        "ep planner citation scan"
+      "graphNodeIds": [
+        "gate.eDamageStone.uwPlusRequiresNineUws"
       ],
-      "reviewedAt": "2026-08-30"
+      "coverageStatus": "modeled",
+      "sources": [
+        "graph byCell eDamage Stone!FF5"
+      ],
+      "reviewedAt": "2026-11-05"
     },
     {
       "id": "eDamage Stone!FG5",
@@ -1922,6 +1936,32 @@
         "ep planner citation scan"
       ],
       "reviewedAt": "2026-08-30"
+    },
+    {
+      "id": "eDamage!IG4",
+      "surface": "sheet",
+      "label": "eDamage!IG4",
+      "graphNodeIds": [
+        "candidate.eDamage.currentMatrix"
+      ],
+      "coverageStatus": "modeled",
+      "sources": [
+        "canonical v5.11.08.10 eDamage!IG4:JZ4 consumed by H6"
+      ],
+      "reviewedAt": "2026-11-05"
+    },
+    {
+      "id": "eEcon!EX4",
+      "surface": "sheet",
+      "label": "eEcon!EX4",
+      "graphNodeIds": [
+        "candidate.eEcon.currentMatrix"
+      ],
+      "coverageStatus": "modeled",
+      "sources": [
+        "canonical v5.11.08.10 eEcon!EX4:FU4 consumed by G6"
+      ],
+      "reviewedAt": "2026-11-05"
     }
   ]
 }

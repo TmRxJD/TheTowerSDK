@@ -208,6 +208,62 @@ describe('planning a path', () => {
     for (const reason of reasons) expect(reason).toMatch(/shards are cheaper/)
   })
 
+  it.each(['1 level', '0.5'])('buys one module level with farm-time horizon %s', (horizon) => {
+    const base = developedConfig()
+    const levels = developedLevels()
+    const plan = planEffectiveDamagePath({
+      config: {
+        ...base,
+        showLabsOnCoinPath: false,
+        cannonModuleLevelHorizon: horizon,
+        coreModuleLevelHorizon: 'None',
+        modules: { ...base.modules, cannon: { ...base.modules.cannon, primaryRarity: 'Ancestral' } },
+      },
+      levels: { ...levels, coin: { ...levels.coin, primaryModuleCannon: 170 } },
+      variant: 'farm-time',
+      coinsPerHour: 1e12,
+      workshopEnhancementsUnlocked: false,
+      steps: 3,
+    })
+    expect(plan.steps.map(step => `${step.id}@${step.level}`).sort())
+      .toEqual(['coin.assistModuleCannon@201', 'coin.primaryModuleCannon@171'])
+  })
+
+  it.each([NaN, Infinity, -1, 0.5])('reports invalid enhancement horizon %s', (horizon) => {
+    const plan = planEffectiveDamagePath({
+      config: developedConfig(),
+      levels: developedLevels(),
+      variant: 'farm-time',
+      coinsPerHour: 1e12,
+      enhancementLevelHorizon: horizon,
+    })
+    expect(plan.issues).toContainEqual({
+      path: 'enhancementLevelHorizon',
+      message: 'Expected a nonnegative integer',
+    })
+    expect(plan.steps).toEqual([])
+  })
+
+  it('offers the Spotlight UW+ unlock only once the full weapon roster is owned', () => {
+    const config = developedConfig()
+    const base = developedLevels()
+    const options = {
+      config,
+      levels: { ...base, stone: { ...base.stone, spotlightLightRange: -1 } },
+      variant: 'stone' as const,
+      steps: 1,
+    }
+    const locked = planEffectiveDamagePath({ ...options, allUltimateWeaponsOwned: false })
+    expect(locked.excluded).toContainEqual({
+      sheetName: 'SL Light Range',
+      reason: 'all nine ultimate weapons must be unlocked',
+    })
+    expect(locked.firstStepRoi.some(candidate => candidate.name === 'SL Light Range')).toBe(false)
+    const unlocked = planEffectiveDamagePath({ ...options, allUltimateWeaponsOwned: true })
+    expect(unlocked.firstStepRoi.find(candidate => candidate.name === 'SL Light Range')?.cost)
+      .toBeGreaterThan(0)
+  })
+
   it('says why it dropped an upgrade rather than dropping it quietly', () => {
     const plan = planEffectiveDamagePath({
       config: developedConfig(),
@@ -392,6 +448,7 @@ describe('every variant name plans something', () => {
         config: zeroEffectiveDamageConfig(),
         levels: ZERO_EFFECTIVE_DAMAGE_LEVELS,
         variant,
+        coinsPerHour: 5_000_000,
         steps: 3,
       })
       expect(plan.steps.length + plan.excluded.length, variant).toBeGreaterThan(0)

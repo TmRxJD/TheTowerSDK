@@ -9,8 +9,8 @@ import {
 } from '../../src/mechanics/effective-paths/edamage-config'
 import { ZERO_EFFECTIVE_DAMAGE_LEVELS } from '../../src/mechanics/effective-paths/edamage-levels'
 import { planEffectiveDamagePath } from '../../src/mechanics/effective-paths/edamage-plan'
-import { configFromSheet, levelsFromSheet } from './effective-paths-edamage-compute.test'
-import type { SheetCells } from './effective-paths-edamage-compute.test'
+import { configFromSheet, levelsFromSheet } from './helpers/effective-paths-damage-sheet'
+import type { SheetCells } from './helpers/effective-paths-damage-sheet'
 import states from '../../fixtures/mechanics/effective-paths-edamage-states.fixtures.json'
 
 /**
@@ -61,6 +61,16 @@ describe('what the boundary accepts', () => {
 })
 
 describe('what it catches', () => {
+  it.each(['framesPerSecond', 'lightSpeedShots', 'amplifyBot'])(
+    'rejects missing %s rather than validating a default that compute never receives', field => {
+      const broken = { ...config() } as Record<string, unknown>
+      delete broken[field]
+      const result = checkEffectiveDamageInputs(broken, levels())
+      expect(result.ok).toBe(false)
+      expect(result.issues.map(issue => issue.path)).toContain(`config.${field}`)
+    },
+  )
+
   it('catches a NaN level, which otherwise computes silently', () => {
     const broken = levels()
     broken.lab.damage = Number.NaN

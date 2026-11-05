@@ -70,6 +70,8 @@ export const EDAMAGE_LAB_LEVEL_TABLE_NAMES: readonly string[] = [
   'Assist Module Substats - Core',
   'Assist Module Bonus - Cannon',
   'Assist Module Bonus - Core',
+  'Primary Module Bonus - Cannon',
+  'Primary Module Bonus - Core',
 ] as const
 
 const LAB_TABLE_FIRST_ROW = 5

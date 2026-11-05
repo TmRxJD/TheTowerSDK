@@ -29,7 +29,7 @@ export const ZERO_EFFECTIVE_ECONOMY_LEVELS: EffectiveEconomyLevels = {
     'blackHoleCoinBonus', 'spotlightCoinBonus', 'coinsMastery', 'extraOrbMastery',
     'waveSkipMastery', 'introSprintMastery', 'waveAcceleratorMastery',
     'standardPerksBonus', 'improveTradeOffPerks', 'goldBotDuration',
-    'assistSubstatGenerator', 'assistSubstatCore', 'assistBonusGenerator',
+    'assistSubstatGenerator', 'assistSubstatCore', 'assistBonusGenerator', 'primaryModuleBonusGenerator',
     'enhancementCoinBonus', 'enhancementFreeUpgrades',
     'primaryModuleGenerator', 'assistModuleGenerator',
   ]),
@@ -46,14 +46,14 @@ export const ZERO_EFFECTIVE_ECONOMY_LEVELS: EffectiveEconomyLevels = {
   ]),
 }
 
-/** `eEcon!ET4:FP4`, in matrix order. */
+/** `eEcon!EX4:FU4`, in current matrix order. */
 export const ECONOMY_TIME_LEVEL_KEYS: readonly (keyof EffectiveEconomyTimeLevels)[] = [
   'coinsPerKillBonus', 'recoveryPackageChance', 'dissonantEchoUtility',
   'goldenTowerBonus', 'goldenTowerDuration', 'deathWaveCoinBonus',
   'blackHoleCoinBonus', 'spotlightCoinBonus', 'coinsMastery', 'extraOrbMastery',
   'waveSkipMastery', 'introSprintMastery', 'waveAcceleratorMastery',
   'standardPerksBonus', 'improveTradeOffPerks', 'goldBotDuration',
-  'assistSubstatGenerator', 'assistSubstatCore', 'assistBonusGenerator',
+  'assistSubstatGenerator', 'assistSubstatCore', 'assistBonusGenerator', 'primaryModuleBonusGenerator',
   'enhancementCoinBonus', 'enhancementFreeUpgrades',
   'primaryModuleGenerator', 'assistModuleGenerator',
 ]

@@ -55,10 +55,11 @@ The package itself — everything that ships, and nothing that does not.
 | [`src/mechanics/bots`](mechanics/bots/MAP.md) | 20 | The three bots: their upgrades, movement, hit behaviour, and medal planning. |
 | [`src/mechanics/cards`](mechanics/cards/MAP.md) | 3 | Card costs and the lookup from a card to the effect it applies. |
 | [`src/mechanics/combat`](mechanics/combat/MAP.md) | 29 | What the tower does to enemies — damage, its multipliers, and every on-hit effect. |
-| [`src/mechanics/effective-paths`](mechanics/effective-paths/MAP.md) | 49 | Effective Paths: the cheapest route to a damage, economy or survivability target. |
+| [`src/mechanics/effective-paths`](mechanics/effective-paths/MAP.md) | 51 | Effective Paths: the cheapest route to a damage, economy or survivability target. |
 | [`src/mechanics/effective-paths/common`](mechanics/effective-paths/common/MAP.md) | 2 | The shapes every path shares — a step, an exclusion, the lab and workshop discounts it prices with. |
 | [`src/mechanics/effective-paths/edamage`](mechanics/effective-paths/edamage/MAP.md) | 2 | The types the damage paths export, re-exported by the folder above. |
 | [`src/mechanics/effective-paths/eecon`](mechanics/effective-paths/eecon/MAP.md) | 2 | The types the economy paths export, re-exported by the folder above. |
+| [`src/mechanics/effective-paths/firing`](mechanics/effective-paths/firing/MAP.md) | 3 | Firing rates, rapid-fire uptime and frame caps used by the damage model. |
 | [`src/mechanics/enemies`](mechanics/enemies/MAP.md) | 22 | Enemy stats, types, resistances, elite spawns and drops. |
 | [`src/mechanics/ep-controls`](mechanics/ep-controls/MAP.md) | 7 | Which Effective Paths controls exist, and how much of the surface is wired. |
 | [`src/mechanics/ep-graph`](mechanics/ep-graph/MAP.md) | 8 | The Effective Paths workbook as a graph of cells and their dependencies. |

@@ -227,6 +227,8 @@ export function levelsFromSheet(cells: Cells): EffectiveEconomyLevels {
       assistSubstatGenerator: cell('CG5'),
       assistSubstatCore: cell('CH5'),
       assistBonusGenerator: cell('CI5'),
+      // This historical capture predates the primary research candidate.
+      primaryModuleBonusGenerator: 0,
       enhancementCoinBonus: cell('CJ5'),
       enhancementFreeUpgrades: cell('CK5'),
       primaryModuleGenerator: cell('CL5'),

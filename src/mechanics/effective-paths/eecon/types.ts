@@ -140,7 +140,6 @@ export interface EffectiveEconomyConfig {
      */
     coreHasAssist: boolean
     primaryRarity?: string
-    primaryLabLevel?: number
     assistRarity?: string
     assistBonus?: number
   }
@@ -428,7 +427,7 @@ export interface EffectiveEconomyDiscountPlan {
 
 // from eecon-levels.ts
 
-/** The 23 the time and coin paths buy — `eEcon!ET4:FP4`. */
+/** The 24 the time and coin paths buy — `eEcon!EX4:FU4`. */
 export interface EffectiveEconomyTimeLevels {
   coinsPerKillBonus: number
   recoveryPackageChance: number
@@ -449,6 +448,7 @@ export interface EffectiveEconomyTimeLevels {
   assistSubstatGenerator: number
   assistSubstatCore: number
   assistBonusGenerator: number
+  primaryModuleBonusGenerator: number
   /** A workshop enhancement, not a lab. */
   enhancementCoinBonus: number
   /** The same. */

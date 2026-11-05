@@ -45,6 +45,7 @@ const PLANS = [
       config: zeroEffectiveDamageConfig(),
       levels: ZERO_EFFECTIVE_DAMAGE_LEVELS,
       variant,
+      coinsPerHour: 5_000_000,
       steps,
     }),
   })),

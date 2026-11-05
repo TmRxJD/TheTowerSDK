@@ -57,6 +57,8 @@ export const LAB_BAND_HEADERS: ReadonlyArray<
   ['AssM Substat - Core', 'assistSubstatCore'],
   ['Dissonant Echo - Attack', 'dissonantEchoAttack'],
   ['Dissonant Echo - Ultimate Weapons', 'dissonantEchoUltimateWeapons'],
+  ['Primary Module Bonus - Cannon', 'primaryModuleBonusCannon'],
+  ['Primary Module Bonus - Core', 'primaryModuleBonusCore'],
 ]
 
 /**
@@ -151,7 +153,9 @@ export function effectiveDamageLabLevelsFromSheet(
     if (!match || typeof value !== 'string') continue
     const col = match[1]!
     const colIdx = columnIndex(col)
-    if (colIdx < LAB_BAND_COL_MIN || colIdx > LAB_BAND_COL_MAX) continue
+    const currentPrimaryLab = (col === 'CZ' && value === 'Primary Module Bonus - Cannon')
+      || (col === 'DA' && value === 'Primary Module Bonus - Core')
+    if (!currentPrimaryLab && (colIdx < LAB_BAND_COL_MIN || colIdx > LAB_BAND_COL_MAX)) continue
 
     const header = value.trim()
     if (header === '') continue
@@ -189,5 +193,8 @@ export function effectiveDamageLabLevelsFromSheet(
     }
     levels[field] = level
   }
+  // The historical fixed layout predates these labs. CZ/DA without their
+  // current headers are old computation columns, never research levels.
+  missing.push('primaryModuleBonusCannon', 'primaryModuleBonusCore')
   return { levels, binding: 'fixed', dropped, unknown, missing }
 }

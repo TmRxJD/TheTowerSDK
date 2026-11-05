@@ -96,6 +96,10 @@ export interface EffectiveDamageShadow {
   spotlightVaultPct?: number
   /** `CY5` held whole at the base row — see the use site. */
   frozenSpotlightBonus?: number
+  /** The eDamage Stone!EV Light Range candidate uses only the primary SM damage substat for Spotlight Missiles. */
+  spotlightMissilesPrimarySubstatOnly?: boolean
+  /** The path-start Ultimate Crit factor, where a candidate reads the absolute row 5. */
+  frozenUltimateCritCard?: number
   /** `eDamage Keys!CU5` drops the assist substat — see the use site. */
   maxRendPrimarySubstatOnly?: boolean
 
@@ -423,6 +427,8 @@ export interface EffectiveDamageLabLevels {
   assistSubstatCore: number
   dissonantEchoAttack: number
   dissonantEchoUltimateWeapons: number
+  primaryModuleBonusCannon: number
+  primaryModuleBonusCore: number
 }
 
 /**
@@ -578,7 +584,7 @@ export interface EffectiveDamageComposition {
  * variants rather than one.
  */
 export type EffectiveDamagePlanVariant
-  = 'lab-time' | 'lab-coins' | 'stone' | 'coin' | 'keys'
+  = 'lab-time' | 'lab-coins' | 'farm-time' | 'stone' | 'coin' | 'keys'
 
 /** Which half of {@link EffectiveDamageLevels} a candidate moves. */
 export type EffectiveDamageBand = 'lab' | 'stone' | 'coin' | 'keys'
@@ -617,6 +623,10 @@ export interface EffectiveDamagePlanOptions {
   /** Where the player is now. */
   levels: EffectiveDamageLevels
   variant: EffectiveDamagePlanVariant
+  /** Coin income for the current workbook's Farming Time Only ranking. */
+  coinsPerHour?: number
+  /** Maximum purchases per enhancement on the current farm-time path (eDamage AW30). */
+  enhancementLevelHorizon?: number
   /** How many steps to plan. The sheet's grid tops out at 145. */
   steps?: number
   /** Per-upgrade caps, by upgrade id, when the catalog has none to read. */
@@ -634,6 +644,8 @@ export interface EffectiveDamagePlanOptions {
    * levels only, which undercharges unlocks on accounts that own GT/BH pluses.
    */
   uwPlusOwnedCount?: number
+  /** Whether the full roster of nine base ultimate weapons is unlocked, when known. */
+  allUltimateWeaponsOwned?: boolean
   /**
    * Whether the Workshop Enhancements lab is bought. Absent means yes, so a
    * caller that knows nothing about it gets the behaviour it had before.
@@ -674,6 +686,8 @@ export interface EffectiveDamagePlanOptions {
     roi: number
     gain: number
     price: number
+    /** The score used for ordering, in the path's ranking units. */
+    rankingScore: number
   }) => void
   /** Lab coin discount and lab speed. */
   labModifiers?: LabCostModifiers

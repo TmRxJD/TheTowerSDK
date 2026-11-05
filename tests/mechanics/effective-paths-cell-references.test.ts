@@ -138,10 +138,11 @@ describe('the sheet cells the port cites', () => {
      * nothing for a cell whose formula lives in a different anchor.
      */
     // 2026-10-09: current v5.11.01.03 FG5 capped CF candidate verified in the audit receipt.
+    // 2026-11-05: current v5.11.08.10 ER5 UW+ gate verified in the workbook capture.
     expect(
       distinct.size,
       'a cell reference was added or removed — verify it against the sheet, then update this',
-    ).toBe(155)
+    ).toBe(156)
   })
 
   it('maps cited eEcon control/hide cells through the EP graph index when present', async () => {

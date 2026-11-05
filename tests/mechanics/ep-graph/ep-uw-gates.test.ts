@@ -169,17 +169,12 @@ describe('Hide UW Cooldown is not uniform', () => {
     expect(excerpts.some(x => x.includes('"Inner Land Mines", "Cooldown"'))).toBe(true)
   })
 
-  it('gates the four UW+ stats on the unlocked-weapon count, and only those', () => {
-    // IDS_UW_COUNT()<=8 is on exactly four of twenty columns, and they are
-    // exactly the four UW+ stats. Gating all twenty on the count, or none of
-    // them, is wrong in one direction or the other.
-    const note = graph.nodes['gate.eDamageStone.uwPlusRequiresNineUws']?.traps
-      .map(t => t.note).join(' ') ?? ''
-    for (const stat of ['Cover Fire', 'Light Range', 'Death Creep', 'Charged Mines']) {
-      expect(note, stat).toContain(stat)
-    }
-    expect(graph.nodes['gate.eDamageStone.uwPlusRequiresNineUws']?.formula)
-      .toContain('IDS_UW_COUNT()<=8')
+  it('maps the five current UW+ cells to the nine-weapon gate', () => {
+    const gate = graph.nodes['gate.eDamageStone.uwPlusRequiresNineUws']
+    expect(gate?.sourceCells.map(ref => [ref.sheet, ref.cell])).toEqual(
+      ['ER5', 'EV5', 'EZ5', 'FD5', 'FF5', 'ES5'].map(cell => ['eDamage Stone', cell]),
+    )
+    expect(gate?.formula).toContain('IDS_UW_COUNT()<=8')
   })
 
   it('stops the Spotlight angle column at a value ceiling, not a missing cost', () => {

@@ -13,7 +13,6 @@ import {
   multishotTargets,
   rapidFireChance,
   rapidFireDuration,
-  rapidFireMultiplier,
   ultimateWeaponCriticalMultiplier,
 } from '../../src/mechanics/effective-paths/damage-stats'
 import fixtures from '../../fixtures/mechanics/effective-paths-damage-stats.fixtures.json'
@@ -165,18 +164,17 @@ describe('EPD_BSC, EPD_BST and EPD_BOUNCESHOT', () => {
   })
 })
 
-describe('EPD_RFC, EPD_RFD and EPD_RAPIDFIRE', () => {
+// These dated captures still cover the unchanged chance/duration functions.
+// Current EPD_RAPIDFIRE requires FPS/LSS and is covered by current-workbook.test.
+describe('EPD_RFC and EPD_RFD', () => {
   for (const [index, r] of fixtures.rapidFire.entries()) {
     it(`matches the sheet on state ${index}`, () => {
       expect(rapidFireChance(r.wsC, r.subC, r.vault)).toBeCloseTo(r.sheetChance, 12)
       expect(rapidFireDuration(r.wsT, r.subT)).toBeCloseTo(r.sheetDuration, 12)
-      close(rapidFireMultiplier(r.sheetChance, r.sheetDuration, r.bps), r.sheetMultiplier)
     })
   }
 
-  it('approaches four times the fire rate, never past it', () => {
-    expect(rapidFireMultiplier(0, 1, 10)).toBe(1)
-    expect(rapidFireMultiplier(1, 1000, 1000)).toBeLessThan(4)
-    expect(rapidFireMultiplier(1, 1e9, 1e9)).toBeCloseTo(4, 6)
+  it('preserves the old multiplier capture as dated source evidence', () => {
+    expect(fixtures.rapidFire.every(r => Number.isFinite(r.sheetMultiplier))).toBe(true)
   })
 })

@@ -7,6 +7,7 @@ import {
 import { EFFECTIVE_DAMAGE_CANDIDATES_BY_PATH } from '../../src/mechanics/effective-paths/edamage-candidates'
 import { EFFECTIVE_HEALTH_UPGRADES } from '../../src/mechanics/effective-paths/ehp-plan'
 import { EFFECTIVE_REGEN_UPGRADES } from '../../src/mechanics/effective-paths/regen-plan'
+import { EFFECTIVE_ECONOMY_CANDIDATES_BY_PATH } from '../../src/mechanics/effective-paths/eecon-candidates'
 
 /**
  * The currency map, checked against the candidate lists it describes.
@@ -52,14 +53,20 @@ describe('the candidate counts match the ported lists', () => {
 
   it('matches eDamage on every path', () => {
     expect(countFor('edamage', 'research-time')).toBe(EFFECTIVE_DAMAGE_CANDIDATES_BY_PATH.lab.length)
+    expect(EFFECTIVE_PATHS.filter(path => path.domain === 'edamage' && path.currency === 'coins'))
+      .toEqual([{ domain: 'edamage', tab: 'eDamage', currency: 'coins', candidates: 45 }])
     expect(countFor('edamage', 'power-stones')).toBe(EFFECTIVE_DAMAGE_CANDIDATES_BY_PATH.stone.length)
     expect(countFor('edamage', 'keys')).toBe(EFFECTIVE_DAMAGE_CANDIDATES_BY_PATH.keys.length)
   })
 
-  it('leaves eEcon at zero until it is ported', () => {
-    for (const path of EFFECTIVE_PATHS.filter(entry => entry.domain === 'eecon')) {
-      expect(path.candidates, path.tab).toBe(0)
-    }
+  it('reports all ported economy paths and their pricing', () => {
+    const economy = EFFECTIVE_PATHS.filter(entry => entry.domain === 'eecon')
+    expect(economy.map(({ tab, currency, candidates }) => [tab, currency, candidates])).toEqual([
+      ['eEcon', 'research-time', EFFECTIVE_ECONOMY_CANDIDATES_BY_PATH.time.length],
+      ['eEcon', 'coins', EFFECTIVE_ECONOMY_CANDIDATES_BY_PATH.time.length],
+      ['eEcon Stones', 'power-stones', EFFECTIVE_ECONOMY_CANDIDATES_BY_PATH.stone.length],
+      ['eEcon Discount', 'coins', EFFECTIVE_ECONOMY_CANDIDATES_BY_PATH.discount.length],
+    ])
   })
 })
 

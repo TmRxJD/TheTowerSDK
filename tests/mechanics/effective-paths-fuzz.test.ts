@@ -88,12 +88,21 @@ const FAMILIES = [
   {
     name: 'damage',
     variants: DAMAGE_PLAN_VARIANTS,
-    plan: (variant: string, random: () => number, steps: number) => planEffectiveDamagePath({
-      config: zeroEffectiveDamageConfig(),
-      levels: randomise(ZERO_EFFECTIVE_DAMAGE_LEVELS, random),
-      variant: variant as never,
-      steps,
-    }),
+    plan: (variant: string, random: () => number, steps: number) => {
+      const config = zeroEffectiveDamageConfig()
+      if (variant === 'stone') {
+        // Exercise stone costs and levels with owned weapons.
+        for (const weapon of Object.values(config.ultimateWeapons)) weapon.unlocked = true
+        config.chronoFieldEnabled = true
+      }
+      return planEffectiveDamagePath({
+        config,
+        levels: randomise(ZERO_EFFECTIVE_DAMAGE_LEVELS, random),
+        variant: variant as never,
+        coinsPerHour: 5_000_000,
+        steps,
+      })
+    },
   },
   {
     name: 'economy',
@@ -183,7 +192,11 @@ describe.each(FAMILIES)('$name, against $RUNS generated accounts', ({ variants, 
           expect(step.cumulativeCost, where).toBeCloseTo(running, 4)
 
           // And a purchase never makes the player worse off.
-          expect(step.value, where).toBeGreaterThanOrEqual(previousValue)
+          // A frame-capped Rapid Fire upgrade can be mathematically neutral;
+          // different multiplication order leaves sub-ulp noise in the total.
+          const rounding = Number.isFinite(previousValue)
+            ? Math.max(Math.abs(previousValue), Math.abs(step.value)) * Number.EPSILON * 4 : 0
+          expect(step.value + rounding, where).toBeGreaterThanOrEqual(previousValue)
           previousValue = step.value
         }
 

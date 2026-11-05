@@ -2,7 +2,7 @@
  * Effective Paths — planning an eEcon path.
  *
  * Three paths across three currencies. The time and coin paths rank the same
- * 23 candidates priced two ways; the stone path ranks ultimate weapon upgrades;
+ * 24 candidates priced two ways; the stone path ranks ultimate weapon upgrades;
  * the discount path is not comparable to either, because it maximises coins
  * saved rather than coins earned.
  *

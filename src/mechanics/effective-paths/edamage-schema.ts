@@ -93,7 +93,6 @@ const moduleSourceSchema = z.object({
   bonusStoneLevel: level,
   substatStoneLevel: level,
   primaryRarity: z.string().optional(),
-  primaryLabLevel: level.max(30).optional(),
   assistRarity: z.string().optional(),
 })
 
@@ -122,6 +121,15 @@ export const effectiveDamageConfigSchema = z.object({
   simulatedTier: z.string(),
 
   gameSpeed: finite.positive(),
+  framesPerSecond: finite.positive(),
+  lightSpeedShots: z.boolean(),
+  amplifyBot: z.object({
+    unlocked: z.boolean(), bonus: finite.min(1), durationSeconds: finite.nonnegative(),
+    cooldownSeconds: finite.positive(), rangeMetres: finite.nonnegative(),
+    echoingShotLevel: finite.int().min(-1), allBotsOwned: z.boolean(),
+    syncedWithBotBot: z.boolean(), botBotBonus: finite.min(1),
+    maximumPowerLevel: finite.int().min(-1),
+  }),
   damageAtRangePct: finite,
   waveDurationSeconds: finite.positive(),
   enemySpawnsPerSecond: finite,

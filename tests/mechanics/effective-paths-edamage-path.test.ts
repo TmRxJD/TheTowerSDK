@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { DAMAGE_PLAN_VARIANTS, planEffectiveDamagePath } from '../../src/mechanics/effective-paths/edamage-plan'
-import { configFromSheet, levelsFromSheet } from './effective-paths-edamage-compute.test'
-import fixture from '../../fixtures/mechanics/effective-paths-edamage-path.fixtures.json'
+import { currentDamageConfig as configFromSheet, currentDamageLevels as levelsFromSheet } from './helpers/effective-paths-current-damage-sheet'
+import fixture from '../../fixtures/mechanics/effective-paths-edamage-v5.11.08.10.fixtures.json'
 
 /**
  * The eDamage path itself, against the one the sheet plans.
@@ -11,9 +11,8 @@ import fixture from '../../fixtures/mechanics/effective-paths-edamage-path.fixtu
  * planner picks the same upgrades in the same order — two models can agree on
  * every number and still rank them differently, and the ranking is the product.
  *
- * The fixture is the sheet's own hundred steps for the account the compute
- * fixture describes, captured with `AI21` forced to 100 so the grid plans more
- * than one row.
+ * The fixture captures forty steps from an owned current workbook copy, with
+ * AG21=100 and P3=DO (duration only), for the same account as the compute test.
  */
 
 interface SheetStep {
@@ -26,7 +25,7 @@ interface SheetStep {
   eDamage: number
 }
 
-const sheet = fixture as unknown as {
+const sheet = fixture.baseline as unknown as {
   runType: string
   startingEffectiveDamage: number
   steps: SheetStep[]
@@ -112,7 +111,7 @@ describe('a variant it does not have', () => {
 
   it('names the variants it does have', () => {
     // So the message is actionable rather than just a rejection.
-    expect(() => planWith('nonsense')).toThrow(/lab-time, lab-coins, stone, coin, keys/)
+    expect(() => planWith('nonsense')).toThrow(/lab-time, lab-coins, farm-time, stone, coin, keys/)
   })
 
   for (const variant of DAMAGE_PLAN_VARIANTS) {

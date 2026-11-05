@@ -8,6 +8,26 @@ plan, or change a formula without guessing.
 
 [ep]: https://docs.google.com/spreadsheets/d/1YwZtKP6B4WYhRba5T6APJ1YxKNdfnIGQnprgnxmO7zc/edit
 
+## Current formula inputs (0.14)
+
+The current ingestion is v5.11.08.10. Historical captures retain their original versions.
+The damage config now requires `framesPerSecond`, `lightSpeedShots`, and `amplifyBot`;
+start with `zeroEffectiveDamageConfig()` and replace them with the player's actual inputs.
+Light Speed Shots is the tracked lab unlock. FPS is a player estimate (the sheet starts at 120).
+Amplify Bot uses its tracked range/duration/cooldown/bonus, Bot+ progress and actual
+synchronicity assignments. Missing ownership never implies a bot effect.
+
+Primary-module research is buyable progress: Armor uses `levels.primaryModuleBonusArmor`,
+Generator uses `levels.time.primaryModuleBonusGenerator`, and Cannon/Core use
+`levels.lab.primaryModuleBonusCannon/Core`. Module config snapshots hold the raw bonus;
+the model applies the tracked research once. Do not pre-apply it to `primaryBonus`.
+
+`rapidFireMultiplier` now accepts one object with `chance`, `duration`, raw `attackSpeed`,
+`framesPerSecond`, `displayedGameSpeed`, and `lightSpeedShots`. The old third argument was
+bullets/second and cannot be reused as raw attack speed. `chainLightningDps` now requires
+`framesPerSecond` and `lightSpeedShots`; the old 120-frame calculation corresponds to
+`framesPerSecond: 120, lightSpeedShots: true`.
+
 ---
 
 ## The idea
@@ -179,7 +199,7 @@ If you ship anything built on the `effectivePaths*` exports, please carry that a
 ```ts
 import { EFFECTIVE_PATHS_ATTRIBUTION_WITH_SUPPORT } from 'thetowersdk/mechanics'
 // "Effective Paths formulas by Mattew, QuietFanta, Bisse and the Effective Paths maintainers.
-//  Ported from the community spreadsheet (v5.09.03.01). Support the Effective Paths team with
+//  Ported from the community spreadsheet (v5.11.08.10). Support the Effective Paths team with
 //  creator code SHEETLORD in The Tower webstore."
 ```
 

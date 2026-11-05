@@ -280,8 +280,7 @@ describe('explicit lab-cost populations and coverage', () => {
     const frozen = labCoinsRemainingDetailed(() => 0, { basis: 'ep-port-baseline' })
     expect((current.coins - frozen.coins) / PRIMARY_LAB_COST).toBeCloseTo(4, 10)
     expect(frozen.omittedLabs.filter(lab => PRIMARY_LABS.includes(lab.slug)).map(lab => lab.slug).sort()).toEqual([...PRIMARY_LABS].sort())
-    expect(current.coverageGaps.map(lab => lab.slug).sort()).toEqual([...PRIMARY_LABS].sort())
-    expect(current.coverageGaps.every(lab => lab.costIncluded)).toBe(true)
+    expect(current.coverageGaps).toEqual([])
     expect(frozen.coverageGaps.every(lab => !lab.costIncluded)).toBe(true)
   })
   it('moves the real remaining cost when primary research is completed', () => {

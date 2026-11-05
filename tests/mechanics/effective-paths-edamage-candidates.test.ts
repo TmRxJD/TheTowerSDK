@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { EFFECTIVE_DAMAGE_CANDIDATES_BY_PATH } from '../../src/mechanics/effective-paths/edamage-candidates'
 import { type EffectiveDamagePathVariant } from '../../src/mechanics/effective-paths/types'
 import fixtures from '../../fixtures/mechanics/effective-paths-edamage-candidates.fixtures.json'
+import currentLab from '../../fixtures/mechanics/effective-paths-edamage-lab-candidates-v5.11.08.10.json'
+import { damageLabHiddenByRunType } from '../../src/mechanics/effective-paths/edamage-eligibility'
 
 /**
  * The four eDamage candidate lists, against the sheet's own update matrices.
@@ -14,9 +16,17 @@ import fixtures from '../../fixtures/mechanics/effective-paths-edamage-candidate
 const variants: EffectiveDamagePathVariant[] = ['lab', 'stone', 'coin', 'keys']
 
 describe('the eDamage candidate lists', () => {
+  it('honors every current Attack Dissonance research hide row', () => {
+    expect(currentLab.attackDissonanceHidden).toHaveLength(18)
+    const hidden = new Set(currentLab.attackDissonanceHidden.map(row => row.sheetName))
+    for (const row of currentLab.candidates) {
+      expect(damageLabHiddenByRunType(row.sheetName, 'Attack Disso'), row.sheetName).toBe(hidden.has(row.sheetName))
+      expect(damageLabHiddenByRunType(row.sheetName, 'Regular'), row.sheetName).toBe(false)
+    }
+  })
   for (const variant of variants) {
     it(`matches the sheet's ${variant} matrix, name for name and in order`, () => {
-      const fromSheet = fixtures[variant].candidates
+      const fromSheet = (variant === 'lab' ? currentLab.candidates : fixtures[variant].candidates)
         .filter(entry => entry.sheetName !== null)
         .map(entry => ({ column: entry.column, sheetName: entry.sheetName as string }))
 
@@ -24,12 +34,12 @@ describe('the eDamage candidate lists', () => {
     })
   }
 
-  it('offers 33, 29, 25 and 11', () => {
-    expect(EFFECTIVE_DAMAGE_CANDIDATES_BY_PATH.lab).toHaveLength(32)
+  it('offers the current 34 lab candidates and unchanged 29, 25 and 11 other candidates', () => {
+    expect(EFFECTIVE_DAMAGE_CANDIDATES_BY_PATH.lab).toHaveLength(34)
     expect(EFFECTIVE_DAMAGE_CANDIDATES_BY_PATH.stone).toHaveLength(29)
     expect(EFFECTIVE_DAMAGE_CANDIDATES_BY_PATH.coin).toHaveLength(25)
     expect(EFFECTIVE_DAMAGE_CANDIDATES_BY_PATH.keys).toHaveLength(11)
-    // 33 columns on the lab path, one of them deliberately blank.
+    // Keep the historical capture intact: 33 columns, one deliberately blank.
     expect(fixtures.lab.candidates).toHaveLength(33)
     expect(fixtures.lab.candidates.filter(entry => entry.sheetName === null)).toHaveLength(1)
   })

@@ -5,8 +5,8 @@ import { describe, expect, it } from 'vitest'
 
 import { computeEffectiveDamage } from '../../src/mechanics/effective-paths/edamage-compute'
 import { DAMAGE_PLAN_VARIANTS, planEffectiveDamagePath } from '../../src/mechanics/effective-paths/edamage-plan'
-import { configFromSheet, levelsFromSheet } from './effective-paths-edamage-compute.test'
-import type { SheetCells } from './effective-paths-edamage-compute.test'
+import { configFromSheet, levelsFromSheet } from './helpers/effective-paths-damage-sheet'
+import type { SheetCells } from './helpers/effective-paths-damage-sheet'
 import states from '../../fixtures/mechanics/effective-paths-edamage-states.fixtures.json'
 import { loadEpGraph } from '../../src/mechanics/ep-graph'
 import { join } from 'node:path'
@@ -214,7 +214,7 @@ describe('every exposed control changes the answer', () => {
     // easier, and a shrinking sweep still reports all-green.
     expect(booleans.sort()).toEqual([
       'cardsEquipped', 'chronoFieldEnabled', 'hasRendArmour', 'hideNonUnlockedLabs',
-      'perksEquipped', 'shockMultiplierUnlocked', 'showLabsOnCoinPath',
+      'lightSpeedShots', 'perksEquipped', 'shockMultiplierUnlocked', 'showLabsOnCoinPath',
     ])
   })
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { computeEffectiveDamage } from '../../src/mechanics/effective-paths/edamage-compute'
-import { configFromSheet, levelsFromSheet } from './effective-paths-edamage-compute.test'
-import type { SheetCells } from './effective-paths-edamage-compute.test'
+import { configFromSheet, levelsFromSheet } from './helpers/effective-paths-damage-sheet'
+import type { SheetCells } from './helpers/effective-paths-damage-sheet'
 import states from '../../fixtures/mechanics/effective-paths-edamage-states.fixtures.json'
 
 /**

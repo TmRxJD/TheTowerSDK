@@ -103,6 +103,6 @@ describe('candidate order matches the sheet, because order is the tie-break', ()
    * not the behaviour.
    */
   it('records that the lab band is unverified rather than implying it passed', () => {
-    expect(ours('lab')).toHaveLength(32)
+    expect(ours('lab')).toHaveLength(34)
   })
 })

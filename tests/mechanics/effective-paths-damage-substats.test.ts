@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import {
   assistCapacities,
-  bulletsPerSecond,
   combinedSubstat,
 } from '../../src/mechanics/effective-paths/damage-substats'
 import { assistSubstatCap } from '../../src/mechanics/effective-paths/generics'
 import fixtures from '../../fixtures/mechanics/effective-paths-damage-substats.fixtures.json'
+import { bulletsPerSecond } from '../../src/mechanics/effective-paths/firing'
+import currentWorkbook from '../../fixtures/mechanics/effective-paths-v5.11.08.10.json'
 
 /**
  * How the damage tab reads a substat, and bullets per second.
@@ -19,18 +20,15 @@ const close = (ours: number, sheet: number, digits = 12) =>
   expect(Math.abs(ours / sheet - 1)).toBeLessThan(10 ** -digits)
 
 describe('BULLET_PER_SECOND', () => {
-  for (const c of fixtures.bulletsPerSecond) {
+  for (const c of currentWorkbook.bulletsPerSecond) {
     it(`matches the sheet at attack speed ${c.attackSpeed}`, () => {
-      close(bulletsPerSecond(c.attackSpeed), c.sheet)
+      expect(bulletsPerSecond(c.attackSpeed)).toBeCloseTo(c.sheet, 12)
     })
   }
 
-  it('keeps the fitted constants exactly', () => {
-    // Not derived from anything — rounding them moves every bullet stat.
-    expect(bulletsPerSecond(0)).toBeCloseTo(92.8885 * 1.3, 12)
-    expect(bulletsPerSecond(10)).toBeCloseTo(
-      ((0.01413 * 100) + (4.01278 * 10) + 92.8885) * 1.3, 12,
-    )
+  it('retains the historical polynomial capture separately from current runtime expectations', () => {
+    expect(fixtures.bulletsPerSecond[0]).toEqual({ attackSpeed: 35.0826, sheet: 326.37579220167845 })
+    expect(bulletsPerSecond(0)).toBe(0)
   })
 })
 

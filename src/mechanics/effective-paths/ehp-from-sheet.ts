@@ -61,7 +61,7 @@ const ZERO_LEVELS: EffectiveHealthLevels = {
   chainThunder: 0, healthMastery: 0, extraDefenseMastery: 0,
   assistSubstatArmor: 0, assistSubstatGenerator: 0, assistBonusArmor: 0,
   assistSubstatArmorLab: 0, assistSubstatGeneratorLab: 0, assistBonusArmorLab: 0,
-  dissonantEchoDefense: 0, primaryModuleArmor: 0, assistModuleArmor: 0,
+  dissonantEchoDefense: 0, primaryModuleArmor: 0, assistModuleArmor: 0, primaryModuleBonusArmor: 0,
   enhancementHealth: 0, enhancementDefenseAbsolute: 0,
   enhancementWallHealth: 0, enhancementRecoveryPackage: 0,
 }
@@ -255,6 +255,7 @@ export function effectiveHealthLevelsFromSheet(cells: SheetCells): EffectiveHeal
     assistSubstatArmorLab: cell('CB5'),
     assistSubstatGeneratorLab: cell('CC5'),
     assistBonusArmorLab: cell('CD5'),
+    primaryModuleBonusArmor: cells.CG4 === 'Primary Module Bonus - Armor' ? cell('CG5') : 0,
 
     /*
      * The STONE-bought assist capacities, which this reader used to leave at

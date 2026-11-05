@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import modelFixtures from '../../fixtures/mechanics/effective-paths-ehp-model.fixtures.json'
-import roiFixtures from '../../fixtures/mechanics/effective-paths-stone-roi.fixtures.json'
+import roiFixtures from '../../fixtures/mechanics/effective-paths-stone-roi-v5.11.08.10.fixtures.json'
 import {
   ASSIST_BONUS_MAX_LEVEL,
   ASSIST_SUBSTAT_MAX_LEVEL,

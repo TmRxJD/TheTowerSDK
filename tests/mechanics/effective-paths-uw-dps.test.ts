@@ -4,12 +4,12 @@ import {
   deathWaveDps,
   innerLandMinesDps,
   poisonSwampDps,
-  realGameSpeed,
   smartMissilesDps,
   spotlightFinalBonus,
   spotlightMissilesDps,
 } from '../../src/mechanics/effective-paths/uw-dps'
 import fixtures from '../../fixtures/mechanics/effective-paths-uw-dps.fixtures.json'
+import { realGameSpeed } from '../../src/mechanics/effective-paths/firing'
 
 /**
  * The weapon DPS functions against the sheet's own lambdas.
@@ -59,6 +59,8 @@ describe('EP_CL_DPS', () => {
         multishot: c.multi,
         bounce: c.bounce,
         displayedGameSpeed: c.speed,
+        framesPerSecond: 120,
+        lightSpeedShots: true,
       })).toBeCloseTo(c.sheet, 8)
     })
   }
@@ -69,6 +71,7 @@ describe('EP_CL_DPS', () => {
     const base = {
       damage: 100, quantity: 2, chance: 0.05, attackSpeed: 2,
       rapidFire: 1, multishot: 1, bounce: 1, displayedGameSpeed: 5,
+      framesPerSecond: 120, lightSpeedShots: true,
     }
     expect(chainLightningDps({ ...base, attackSpeed: 4 }))
       .toBeGreaterThan(chainLightningDps(base))

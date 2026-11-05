@@ -98,6 +98,7 @@ const PLANS = [
       config: everythingAvailableDamage(),
       levels: ZERO_EFFECTIVE_DAMAGE_LEVELS,
       variant,
+      coinsPerHour: 5_000_000,
       steps: 1,
     }),
   })),
@@ -145,10 +146,8 @@ describe.each(PLANS)('$family', ({ run }) => {
 
 describe('the sweep itself', () => {
   it('covers every variant of every model', () => {
-    // Thirteen: five damage, three economy minus the discount path, four eHP,
-    // two regen. A count, so a variant added to a model is not silently left
-    // out of this file.
-    expect(PLANS.length).toBe(14)
+    // Six damage, three economy, four eHP and two regen.
+    expect(PLANS.length).toBe(15)
   })
 
   it('would notice, if a name stopped resolving', () => {

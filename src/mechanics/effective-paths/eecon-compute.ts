@@ -196,15 +196,14 @@ export function computeEffectiveEconomy(
     )
 
   /** `CV5`. */
-  const atLevel = (rarity: string | undefined, level: number, fallback: number, primaryLabLevel = 0) =>
+  const atLevel = (rarity: string | undefined, level: number, fallback: number) =>
     (rarity && level > 0
-      ? computeModuleStat({ type: 'generator', rarityLabel: rarity, level, primaryLabLevel })
+      ? computeModuleStat({ type: 'generator', rarityLabel: rarity, level })
       : fallback)
 
   const generator = moduleBonus({
     primaryBonus: atLevel(
       config.generator.primaryRarity, time.primaryModuleGenerator, config.generator.bonus,
-      config.generator.primaryLabLevel,
     ),
     hasAssist: config.generator.hasAssist,
     assistBonus: atLevel(
@@ -213,6 +212,7 @@ export function computeEffectiveEconomy(
     ),
     stoneBonusCap: caps.generatorBonus,
     labBonusCap: time.assistBonusGenerator,
+    primaryLabLevel: time.primaryModuleBonusGenerator,
   })
 
   /** `CW5`. */

@@ -155,8 +155,8 @@ describe('planning a coin path', () => {
       config,
       levels: { ...ZERO_EFFECTIVE_HEALTH_LEVELS, enhancementHealth: 599 },
       variant: 'coin',
-      steps: 60,
-      maxLevels: { enhancementDefenseAbsolute: 0, enhancementWallHealth: 0, enhancementRecoveryPackage: 0 },
+      steps: 2,
+      excludeKeys: EFFECTIVE_HEALTH_UPGRADES.filter(upgrade => upgrade.key !== 'enhancementHealth').map(upgrade => upgrade.key),
     })
     const healthSteps = plan.steps.filter(step => step.name === 'Health +')
     expect(healthSteps).toHaveLength(1)

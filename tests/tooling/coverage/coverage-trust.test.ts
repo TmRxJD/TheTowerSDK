@@ -40,7 +40,9 @@ describe('mechanics coverage + trust', () => {
     // (net -3). sheets.v1.json was re-seeded from the current planner citations
     // (distinctEpPlannerCellKeys), the same scan cell-references pins at 154.
     // 154 -> 155: verified current v5.11.01.03 eDamage Stone!FG5 CF candidate.
-    expect(inv.entries.length).toBe(155)
+    // 155 -> 157: current eDamage!IG4 and eEcon!EX4 update-matrix anchors.
+    // 157 -> 158: current eDamage Stone!ER5 UW+ roster gate.
+    expect(inv.entries.length).toBe(158)
   })
 
   it('every planner citation is modeled or explicitly unmodeled', () => {

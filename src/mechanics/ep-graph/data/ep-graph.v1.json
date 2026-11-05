@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "contentVersion": 70,
+  "contentVersion": 76,
   "sheetVersion": "v5.09.03.07",
-  "updatedAt": "2026-10-10",
+  "updatedAt": "2026-11-05",
   "historicalAllowlist": [],
   "nodes": {
     "control.eEcon.showLabs": {
@@ -3680,16 +3680,41 @@
       "sourceCells": [
         {
           "sheet": "eDamage Stone",
+          "cell": "ER5",
+          "kind": "formula"
+        },
+        {
+          "sheet": "eDamage Stone",
+          "cell": "EV5",
+          "kind": "formula"
+        },
+        {
+          "sheet": "eDamage Stone",
+          "cell": "EZ5",
+          "kind": "formula"
+        },
+        {
+          "sheet": "eDamage Stone",
+          "cell": "FD5",
+          "kind": "formula"
+        },
+        {
+          "sheet": "eDamage Stone",
+          "cell": "FF5",
+          "kind": "formula"
+        },
+        {
+          "sheet": "eDamage Stone",
           "cell": "ES5",
           "kind": "formula"
         }
       ],
-      "formula": "=IFS(OR($EH5, ES$2), , EPG_UW_TARGET_LEVEL(BX5+1, \"Smart Missiles\", \"Cover Fire\", $AY$23), , OR(DVT_UW_STAT(\"Smart Missiles\", \"Cover Fire\", BX5+1)=\"\", IDS_UW_COUNT()<=8), , TRUE, LET(...))",
+      "formula": "=IFS(OR($EG5, ER$2), , EPG_UW_TARGET_LEVEL(BW5+1, \"Smart Missiles\", \"Cover Fire\", $AW$25), , OR(DVT_UW_STAT(\"Smart Missiles\", \"Cover Fire\", BW5+1)=\"\", IDS_UW_COUNT()<=8), , TRUE, LET(...))",
       "formulaSource": "formulatext",
       "traps": [
         {
           "kind": "other",
-          "note": "IDS_UW_COUNT()<=8 blanks the column. It appears on EXACTLY four of the twenty UW stone columns, and they are exactly the four UW+ stats: SM Cover Fire (ES), SL Light Range (EW), PS Death Creep (FA), ILM Charged Mines (FE). The other sixteen have no such guard. A port that gates all UW stats on the count, or none, is wrong in one direction or the other."
+          "note": "IDS_UW_COUNT()<=8 blanks the UW+ columns. In v5.11.08.10 these are SM Cover Fire (ER), SL Light Range (EV), PS Death Creep (EZ), ILM Charged Mines (FD), and CF Chrono Loop (FF). ES5 is the earlier Cover Fire anchor. Base weapon stats do not use this gate."
         }
       ],
       "status": "verified",
@@ -4633,6 +4658,340 @@
           "note": "Holds ILM at the base DY5 and CardST at DK5 rather than rebuilding them, so a bumped cannon cap does not reach either on the sheet."
         }
       ],
+      "status": "verified",
+      "wikiTitles": []
+    },
+    "lambda.BULLET_PER_SECOND": {
+      "id": "lambda.BULLET_PER_SECOND",
+      "family": "eDamage",
+      "type": "lambda",
+      "label": "BULLET_PER_SECOND",
+      "sourceCells": [],
+      "formula": "LAMBDA(attack_speed, LET(\n  r, IF(attack_speed>=42, 0.375,\n     IF(attack_speed>=16, 0.505-0.005*INT(attack_speed-16),\n        XLOOKUP(attack_speed,\n          {0,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8,8.5,9,9.5,10,11,12,13,14,15},\n          {1,0.96,0.93,0.9,0.87,0.84,0.81,0.79,0.77,0.75,0.73,0.71,0.69,0.67,0.65,0.63,0.61,0.58,0.56,0.54,0.53,0.52,0.51},\n          , -1))),\nattack_speed*r))",
+      "formulaSource": "lambda",
+      "traps": [
+        {
+          "kind": "stale-row",
+          "note": "Formula captured from canonical v5.11.08.10, Drive82842; older working-copy formulas and cell addresses are historical."
+        }
+      ],
+      "status": "verified",
+      "wikiTitles": [
+        "Attack Speed",
+        "Rapid Fire",
+        "Chain Lightning"
+      ],
+      "lambdaName": "BULLET_PER_SECOND"
+    },
+    "lambda.EPD_RAPIDFIRE": {
+      "id": "lambda.EPD_RAPIDFIRE",
+      "family": "eDamage",
+      "type": "lambda",
+      "label": "EPD_RAPIDFIRE",
+      "sourceCells": [],
+      "formula": "LAMBDA(chance, duration, attack_speed, fps, speed, lss, LET(\n  s, BULLET_PER_SECOND(attack_speed),\n  ts, TTG_GAME_SPEED(speed),\n  cap, IF(lss, 1E+300, fps/ts),\n  base, MIN(s, cap),\n  m, IF(attack_speed<2.3, 3.75, IF(attack_speed<4, 3.65, IF(attack_speed<8, 3.5, 3.35))),\nIF(OR(chance<=0, duration<=0, base<=0), 1, LET(\n  active, 0.9*duration,\n  uptime, active / (active + 0.75 + 1/(chance*base)),\n((1-uptime)*base + uptime*MIN(m*s, cap)) / base))))",
+      "formulaSource": "lambda",
+      "traps": [
+        {
+          "kind": "stale-row",
+          "note": "Formula captured from canonical v5.11.08.10, Drive82842; older working-copy formulas and cell addresses are historical."
+        }
+      ],
+      "status": "verified",
+      "wikiTitles": [
+        "Attack Speed",
+        "Rapid Fire",
+        "Chain Lightning"
+      ],
+      "lambdaName": "EPD_RAPIDFIRE"
+    },
+    "lambda.EP_CL_DPS": {
+      "id": "lambda.EP_CL_DPS",
+      "family": "eDamage",
+      "type": "lambda",
+      "label": "EP_CL_DPS",
+      "sourceCells": [],
+      "formula": "LAMBDA(cl_damage, cl_quant, cl_chance, aspd, rapid_fire, multishot, bounce, gamespeed, fps, lss, LET(\n  speed, TTG_GAME_SPEED(gamespeed),\n  fire_rate, aspd * rapid_fire,\n  frames, fps,\nIF(lss,\n  LET(N, fire_rate * speed / frames,\n    cl_damage * cl_quant * multishot * bounce * (1 - (1 - cl_chance)^N) * N * frames / speed),\n  cl_damage * cl_quant * multishot * bounce * cl_chance * fire_rate)))",
+      "formulaSource": "lambda",
+      "traps": [
+        {
+          "kind": "stale-row",
+          "note": "Formula captured from canonical v5.11.08.10, Drive82842; older working-copy formulas and cell addresses are historical."
+        }
+      ],
+      "status": "verified",
+      "wikiTitles": [
+        "Attack Speed",
+        "Rapid Fire",
+        "Chain Lightning"
+      ],
+      "lambdaName": "EP_CL_DPS"
+    },
+    "lambda.EP_CL_DPS_AMP": {
+      "id": "lambda.EP_CL_DPS_AMP",
+      "family": "eDamage",
+      "type": "lambda",
+      "label": "EP_CL_DPS_AMP",
+      "sourceCells": [],
+      "formula": "LAMBDA(damage, quantity, chance, attack_speed, rapid_fire, multishot, bounce, game_speed, fps, lss, coverage, amp_bonus, echo_hits, (1 - coverage) * EP_CL_DPS(damage, quantity, chance, attack_speed, rapid_fire, multishot, bounce, game_speed, fps, lss)\n  + coverage * amp_bonus * EP_CL_DPS(damage, quantity, chance, attack_speed * echo_hits, rapid_fire, multishot, bounce, game_speed, fps, lss))",
+      "formulaSource": "lambda",
+      "traps": [
+        {
+          "kind": "stale-row",
+          "note": "Formula captured from canonical v5.11.08.10, Drive82842; older working-copy formulas and cell addresses are historical."
+        }
+      ],
+      "status": "verified",
+      "wikiTitles": [
+        "Attack Speed",
+        "Rapid Fire",
+        "Chain Lightning"
+      ],
+      "lambdaName": "EP_CL_DPS_AMP"
+    },
+    "lambda.EPH_DMGRED": {
+      "id": "lambda.EPH_DMGRED",
+      "family": "eHP",
+      "type": "lambda",
+      "label": "EPH_DMGRED",
+      "sourceCells": [],
+      "formula": "LAMBDA(def_percent, chrono_field, chain_thunder, def_percent * chrono_field * chain_thunder)",
+      "formulaSource": "lambda",
+      "traps": [
+        {
+          "kind": "stale-row",
+          "note": "Formula captured from canonical v5.11.08.10, Drive82842; older working-copy formulas and cell addresses are historical."
+        }
+      ],
+      "status": "verified",
+      "wikiTitles": [
+        "Health"
+      ],
+      "lambdaName": "EPH_DMGRED"
+    },
+    "lambda.EPH_EHP": {
+      "id": "lambda.EPH_EHP",
+      "family": "eHP",
+      "type": "lambda",
+      "label": "EPH_EHP",
+      "sourceCells": [],
+      "formula": "LAMBDA(health, module, dabs, wall, package, trade_off, damage_reduction, LET(\n  SideHp, IF(wall+package>1, wall+package, 1),\n  (health * module * SideHp + dabs) * damage_reduction * trade_off))",
+      "formulaSource": "lambda",
+      "traps": [
+        {
+          "kind": "stale-row",
+          "note": "Formula captured from canonical v5.11.08.10, Drive82842; older working-copy formulas and cell addresses are historical."
+        }
+      ],
+      "status": "verified",
+      "wikiTitles": [
+        "Health"
+      ],
+      "lambdaName": "EPH_EHP"
+    },
+    "stat.eHP.currentDamageReduction": {
+      "id": "stat.eHP.currentDamageReduction",
+      "family": "eHP",
+      "type": "stat",
+      "label": "Current combined damage reduction",
+      "sourceCells": [
+        {
+          "sheet": "eHP",
+          "cell": "CV5",
+          "kind": "formula"
+        }
+      ],
+      "formula": "LET(\n  DefP, CP5,\n  CF, CT5,\n  CT, CU5,\n\n  EPH_DMGRED(DefP, CF, CT)\n)",
+      "formulaSource": "formulatext",
+      "traps": [
+        {
+          "kind": "stale-row",
+          "note": "Current canonical v5.11.08.10, Drive 82842; do not apply these addresses to historical captures."
+        }
+      ],
+      "status": "verified",
+      "wikiTitles": []
+    },
+    "candidate.eDamage.currentMatrix": {
+      "id": "candidate.eDamage.currentMatrix",
+      "family": "eDamage",
+      "type": "candidate",
+      "label": "Current update matrix header",
+      "sourceCells": [
+        {
+          "sheet": "eDamage",
+          "cell": "IG4",
+          "kind": "candidate"
+        },
+        {
+          "sheet": "eDamage",
+          "cell": "JZ4",
+          "kind": "candidate"
+        }
+      ],
+      "traps": [
+        {
+          "kind": "stale-row",
+          "note": "Current canonical v5.11.08.10, Drive 82842; do not apply these addresses to historical captures."
+        }
+      ],
+      "status": "verified",
+      "wikiTitles": []
+    },
+    "candidate.eEcon.currentMatrix": {
+      "id": "candidate.eEcon.currentMatrix",
+      "family": "eEcon",
+      "type": "candidate",
+      "label": "Current update matrix header",
+      "sourceCells": [
+        {
+          "sheet": "eEcon",
+          "cell": "EX4",
+          "kind": "candidate"
+        },
+        {
+          "sheet": "eEcon",
+          "cell": "FU4",
+          "kind": "candidate"
+        }
+      ],
+      "traps": [
+        {
+          "kind": "stale-row",
+          "note": "Current canonical v5.11.08.10, Drive 82842; do not apply these addresses to historical captures."
+        }
+      ],
+      "status": "verified",
+      "wikiTitles": []
+    },
+    "path.eEcon.currentItemName": {
+      "id": "path.eEcon.currentItemName",
+      "family": "eEcon",
+      "type": "path",
+      "label": "Current path item name",
+      "sourceCells": [
+        {
+          "sheet": "eEcon",
+          "cell": "G6",
+          "kind": "formula"
+        }
+      ],
+      "formula": "EPP_ITEM_NAME(EX4:FV99, AK4)",
+      "formulaSource": "formulatext",
+      "traps": [
+        {
+          "kind": "stale-row",
+          "note": "Current canonical v5.11.08.10, Drive 82842; do not apply these addresses to historical captures."
+        }
+      ],
+      "status": "verified",
+      "wikiTitles": []
+    },
+    "candidate.eDamage.farmTimeDamage": {
+      "id": "candidate.eDamage.farmTimeDamage",
+      "family": "eDamage",
+      "type": "candidate",
+      "label": "Research ROI in Farming Time Only mode",
+      "sourceCells": [
+        {
+          "sheet": "eDamage",
+          "cell": "GL5",
+          "kind": "formula"
+        }
+      ],
+      "formula": "=IF(BN$5+EPG_MODULE_LEVEL_LIMIT($AW$29)<=BN5, ,\nIFS(\n  OR($FG5, GL$2), ,\n  EPG_LEVEL_CHECK(BN5+1, BB$8, BC$8), ,\n  TRUE, LET(\n    Now, 1+(2%*BN5),\n    Next, 1+(2%*(BN5+1)),\n    Factor, Next/Now-1,\n    Cost, LET(\n    Dur, LABDURATION_SINGLE_ADJUSTED($GL$4, BN5+1)/$D$5,\n    CostD, IFERROR(LABCOST_SINGLE_ADJUSTED($GL$4, BN5)/(UNFORMAT_NUMBER(IDS_PS_PLAYERDATA(\"Coin / Hour\"))*23), 0),\n\n    IF(CostD<=0, Dur, SWITCH(UPPER($P$3),\n      \"FTO\", CostD,\n      \"DO\", Dur,\n      \"MAX(D,FT)\", MAX(Dur, CostD),\n      Dur+CostD))),\n  Factor/Cost)\n))",
+      "formulaSource": "formulatext",
+      "traps": [],
+      "status": "verified",
+      "wikiTitles": []
+    },
+    "candidate.eDamage.shockCurrent": {
+      "id": "candidate.eDamage.shockCurrent",
+      "family": "eDamage",
+      "type": "candidate",
+      "label": "Shock Multiplier research ROI",
+      "sourceCells": [
+        {
+          "sheet": "eDamage",
+          "cell": "GQ5",
+          "kind": "formula"
+        }
+      ],
+      "formula": "=IF(BS$5+EPG_MODULE_LEVEL_LIMIT($AW$29)<=BS5, ,\nIFS(\n  OR($FG5, GQ$2), ,\n  EPG_LEVEL_CHECK(BS5+1, BB$31, BC$31), ,\n  TRUE, LET(\n    HasDC, $AK$25>0,\n    Now, DO5,\n    Next, (1+(0.1+(0.04*(BS5+1)))*IF(HasDC, 2*$AK$25, 1)),\n    Factor, Next/Now-1,\n    Cost, LET(\n    Dur, LABDURATION_SINGLE_ADJUSTED($GQ$4, BS5+1)/$D$5,\n    CostD, IFERROR(LABCOST_SINGLE_ADJUSTED($GQ$4, BS5)/(UNFORMAT_NUMBER(IDS_PS_PLAYERDATA(\"Coin / Hour\"))*23), 0),\n\n    IF(CostD<=0, Dur, SWITCH(UPPER($P$3),\n      \"FTO\", CostD,\n      \"DO\", Dur,\n      \"MAX(D,FT)\", MAX(Dur, CostD),\n      Dur+CostD))),\n  Factor/Cost)\n))",
+      "formulaSource": "formulatext",
+      "traps": [],
+      "status": "verified",
+      "wikiTitles": []
+    },
+    "candidate.eDamage.lightRangeCurrent": {
+      "id": "candidate.eDamage.lightRangeCurrent",
+      "family": "eDamage",
+      "type": "candidate",
+      "label": "Spotlight Light Range candidate damage",
+      "sourceCells": [
+        {
+          "sheet": "eDamage Stone",
+          "cell": "EV5",
+          "kind": "formula"
+        }
+      ],
+      "formula": "=IFS(\n  OR($EG5, EV$2), ,\n  EPG_UW_TARGET_LEVEL(CA5+1, \"Spotlight\", \"Light Range\", $AW$25), ,\n  OR(DVT_UW_STAT(\"Spotlight\", \"Light Range\", CA5+1)=\"\", IDS_UW_COUNT()<=8), ,\n  TRUE, LET(\n    SubstatAssistCap, EPG_ASSIST_SUB_CAP($AM$24, CP5, $BA$48),\n    SLLR, STAT_UW_SL_FINAL_LR(DVT_UW_STAT(\"Spotlight\", \"Light Range\", CA5+1), $DI5),\n    SLB, LET(\n      Substat, $AK$30 + SubstatAssistCap * $AM$30,\n      STAT_UW_SL_FINAL_DMG(DVT_UW_STAT(\"Spotlight\", \"Multiplier\", BX5), SLLR, Substat, $BJ$39, $BK$39, $BK$33, AND($AW$64, $AW$71))*DL$5),\n    SL, LET(\n      SLQ, DVT_UW_STAT(\"Spotlight\", \"Quantity\", BZ5),\n      SLA, LET(\n        Substat, $AK$31 + SubstatAssistCap * $AM$31,\n        STAT_UW_SL_FINAL_ANGLE(DVT_UW_STAT(\"Spotlight\", \"Angle\", BY5), Substat)),\n      SLC, EP_UW_SL_COVERAGE(SLQ, SLA),\n      IF($BF$33, EP_SL_FINAL_BONUS(SLC, SLB), 1)),\n\n    SMB, STAT_UW_SM_FINAL_DMG(IF($BF$32, DVT_UW_STAT(\"Smart Missiles\", \"Damage\", BT5), 10), $AK$32, $BK$32),\n    SLM, IF(AND($BF$33, $BF$34), (EP_SLM_DPS(SMB, SLB, $BD$33, $DU$5, $AW$33, $AK$26+$AP$26, $AW$62, RIGHT($AS$62, 1)) * $BA$71), 0),\n\n    DW, DQ5,\n    CL, DR5,\n    SM, DS5,\n    PS, DV5,\n    ILM, DX5,\n      UWDMG, EP_UW_TOTAL_DAMAGE(DW, CL, SM, SLM, SL, PS, ILM, $DN$5*DM5*DL$5, $DO$5, 1),\n\n    $CT5 * ($CY5 * $DK5 * SL + UWDMG * $CZ5)*EC5)\n)",
+      "formulaSource": "formulatext",
+      "traps": [],
+      "status": "verified",
+      "wikiTitles": []
+    },
+    "stat.eDamage.shockCurrent": {
+      "id": "stat.eDamage.shockCurrent",
+      "family": "eDamage",
+      "type": "stat",
+      "label": "Current Shock Multiplier base",
+      "sourceCells": [
+        {
+          "sheet": "eDamage",
+          "cell": "DO5",
+          "kind": "formula"
+        }
+      ],
+      "formula": "=LET(\n  HasDC, ($AK$25+$AP$25)>0,\n\nIF(AND($BF$31, $AJ$77), (1+(0.1+(0.04*BS5))*IF(HasDC, 2*($AK$25+$AP$25), 1)), 1))",
+      "formulaSource": "formulatext",
+      "traps": [],
+      "status": "verified",
+      "wikiTitles": []
+    },
+    "stat.eDamage.stoneUwCritCurrent": {
+      "id": "stat.eDamage.stoneUwCritCurrent",
+      "family": "eDamage",
+      "type": "stat",
+      "label": "Stone ultimate weapon crit and fixed damage factor",
+      "sourceCells": [
+        {
+          "sheet": "eDamage Stone",
+          "cell": "DN5",
+          "kind": "formula"
+        }
+      ],
+      "formula": "=LET(\n  CardUC, IF(AND($AW$42,$AW$57), 1+($AT$57+IF($AW$58, $BD$43, 0))*(CV5-1), 1),\n  UWAdditionalDMG, eDamage!$DJ$6,\n\nCardUC * UWAdditionalDMG)",
+      "formulaSource": "formulatext",
+      "traps": [],
+      "status": "verified",
+      "wikiTitles": []
+    },
+    "stat.eDamage.farmTimeDamageLab": {
+      "id": "stat.eDamage.farmTimeDamageLab",
+      "family": "eDamage",
+      "type": "stat",
+      "label": "Current Damage research level",
+      "sourceCells": [
+        {
+          "sheet": "eDamage",
+          "cell": "BN5",
+          "kind": "formula"
+        }
+      ],
+      "formula": "=BA8",
+      "formulaSource": "formulatext",
+      "traps": [],
       "status": "verified",
       "wikiTitles": []
     }
@@ -10067,6 +10426,173 @@
           }
         ],
         "formulaExcerpt": "={eEcon!AM3:AZ50}"
+      }
+    },
+    {
+      "id": "e.current.lambda.BULLET_PER_SECOND.lambda.EPD_RAPIDFIRE",
+      "from": "lambda.EPD_RAPIDFIRE",
+      "to": "lambda.BULLET_PER_SECOND",
+      "kind": "reads",
+      "evidence": {
+        "lambdaName": "BULLET_PER_SECOND",
+        "formulaExcerpt": "LAMBDA(chance, duration, attack_speed, fps, speed, lss, LET(\n  s, BULLET_PER_SECOND(attack_speed),\n  ts, TTG_GAME_SPEED(speed),\n  cap, IF(lss, 1E+300, fps/ts),\n  base, MIN(s, cap),\n  m, IF(attack_speed<2.3, 3.75, IF(attack_speed<4, 3.65, IF(attack_speed<8, 3.5, 3.35))),\nIF(OR(chance<=0, duration<=0, base<=0), 1, LET(\n  active, 0.9*duration,\n  uptime, active / (active + 0.75 + 1/(chance*base)),\n((1-uptime)*base + uptime*MIN(m*s, cap)) / base))))"
+      }
+    },
+    {
+      "id": "e.current.lambda.EP_CL_DPS.lambda.EP_CL_DPS_AMP",
+      "from": "lambda.EP_CL_DPS_AMP",
+      "to": "lambda.EP_CL_DPS",
+      "kind": "reads",
+      "evidence": {
+        "lambdaName": "EP_CL_DPS",
+        "formulaExcerpt": "LAMBDA(damage, quantity, chance, attack_speed, rapid_fire, multishot, bounce, game_speed, fps, lss, coverage, amp_bonus, echo_hits, (1 - coverage) * EP_CL_DPS(damage, quantity, chance, attack_speed, rapid_fire, multishot, bounce, game_speed, fps, lss)\n  + coverage * amp_bonus * EP_CL_DPS(damage, quantity, chance, attack_speed * echo_hits, rapid_fire, multishot, bounce, game_speed, fps, lss))"
+      }
+    },
+    {
+      "id": "e.current.lambda.EP_CL_DPS_AMP.stat.eDamage.chainLightningDps",
+      "from": "stat.eDamage.chainLightningDps",
+      "to": "lambda.EP_CL_DPS_AMP",
+      "kind": "reads",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "ER5",
+            "kind": "formula"
+          }
+        ],
+        "lambdaName": "EP_CL_DPS_AMP",
+        "formulaExcerpt": "LET(\n  SubstatAssistCap, EPG_ASSIST_SUB_CAP($AM$24, $BJ$48, CY5),\n  HasDC, ($AK$25+$AP$25)>0,\n  CLB, LET(\n    Substat, $AK$35 + SubstatAssistCap * $AM$35,\n    STAT_UW_CL_FINAL_DMG($BG$31, Substat, AND($AW$64, $AW$73), $BK$31)),\n  CLQ, LET(\n    Substat, $AK$36 + SubstatAssistCap * $AM$36,\n    STAT_UW_CL_FINAL_QTY($BH$31, Substat, HasDC)),\n  CLC, LET(\n    Substat, $AK$37 + SubstatAssistCap * $AM$37,\n    STAT_UW_CL_FINAL_CH($BI$31, Substat)),\n\nIF($BF$31, EP_CL_DPS_AMP(CLB, CLQ, CLC, $EF5, $EE5, $EB5, $ED5, $AW$22, $AW$23, $DJ$11, $BA$65, $BA$64, $BA$62), 0))\n"
+      }
+    },
+    {
+      "id": "e.current.lambda.EPH_DMGRED.stat.eHP.currentEffectiveHealth",
+      "from": "stat.eHP.currentDamageReduction",
+      "to": "lambda.EPH_DMGRED",
+      "kind": "reads",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eHP",
+            "cell": "CV5",
+            "kind": "formula"
+          }
+        ],
+        "lambdaName": "EPH_DMGRED",
+        "formulaExcerpt": "LET(\n  DefP, CP5,\n  CF, CT5,\n  CT, CU5,\n\n  EPH_DMGRED(DefP, CF, CT)\n)"
+      }
+    },
+    {
+      "id": "e.current.lambda.EPH_EHP.stat.eHP.currentEffectiveHealth",
+      "from": "stat.eHP.currentEffectiveHealth",
+      "to": "lambda.EPH_EHP",
+      "kind": "reads",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eHP",
+            "cell": "CW5",
+            "kind": "formula"
+          }
+        ],
+        "lambdaName": "EPH_EHP",
+        "formulaExcerpt": "LET(\n  Health, CM5,\n  Mod, CN5,\n  Dabs, CO5,\n  Wall, IF($AM$21, CQ5, 0),\n  Pkg, IF($AM$24, CR5, 0),\n  TO, CS5,\n  DmgRed, CV5,\n\n  EPH_EHP(Health, Mod, Dabs, Wall, Pkg, TO, DmgRed))"
+      }
+    },
+    {
+      "id": "e.current.ehp.reads.combinedReduction",
+      "from": "stat.eHP.currentEffectiveHealth",
+      "to": "stat.eHP.currentDamageReduction",
+      "kind": "reads",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eHP",
+            "cell": "CW5",
+            "kind": "formula"
+          }
+        ],
+        "formulaExcerpt": "LET(\n  Health, CM5,\n  Mod, CN5,\n  Dabs, CO5,\n  Wall, IF($AM$21, CQ5, 0),\n  Pkg, IF($AM$24, CR5, 0),\n  TO, CS5,\n  DmgRed, CV5,\n\n  EPH_EHP(Health, Mod, Dabs, Wall, Pkg, TO, DmgRed))"
+      }
+    },
+    {
+      "id": "e.current.eDamage.itemName.reads.matrix",
+      "from": "path.eDamage.itemName",
+      "to": "candidate.eDamage.currentMatrix",
+      "kind": "reads",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "H6",
+            "kind": "formula"
+          }
+        ],
+        "formulaExcerpt": "EPP_ITEM_NAME(IG4:KA149,  MIN(145, AG21))"
+      }
+    },
+    {
+      "id": "e.current.eEcon.itemName.reads.matrix",
+      "from": "path.eEcon.currentItemName",
+      "to": "candidate.eEcon.currentMatrix",
+      "kind": "reads",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eEcon",
+            "cell": "G6",
+            "kind": "formula"
+          }
+        ],
+        "formulaExcerpt": "EPP_ITEM_NAME(EX4:FV99, AK4)"
+      }
+    },
+    {
+      "id": "e.current.candidate.eDamage.shockCurrent.reads.stat.eDamage.shockCurrent",
+      "from": "candidate.eDamage.shockCurrent",
+      "to": "stat.eDamage.shockCurrent",
+      "kind": "reads",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "GQ5",
+            "kind": "formula"
+          }
+        ],
+        "formulaExcerpt": "=IF(BS$5+EPG_MODULE_LEVEL_LIMIT($AW$29)<=BS5, ,\nIFS(\n  OR($FG5, GQ$2), ,\n  EPG_LEVEL_CHECK(BS5+1, BB$31, BC$31), ,\n  TRUE, LET(\n    HasDC, $AK$25>0,\n    Now, DO5,\n    Next, (1+(0.1+(0.04*(BS5+1)))*IF(HasDC, 2*$AK$25, 1)),\n    Factor, Next/Now-1,\n    Cost, LET(\n    Dur, LABDURATION_SINGLE_ADJUSTED($GQ$4, BS5+1)/$D$5,\n    CostD, IFERROR(LABCOST_SINGLE_ADJUSTED($GQ$4, BS5)/(UNFORMAT_NUMBER(IDS_PS_PLAYERDATA(\"Coin / Hour\"))*23), 0),\n\n    IF(CostD<=0, Dur, SWITCH(UPPER($P$3),\n      \"FTO\", CostD,\n      \"DO\", Dur,\n      \"MAX(D,FT)\", MAX(Dur, CostD),\n      Dur+CostD))),\n  Factor/Cost)\n))"
+      }
+    },
+    {
+      "id": "e.current.candidate.eDamage.lightRangeCurrent.reads.stat.eDamage.stoneUwCritCurrent",
+      "from": "candidate.eDamage.lightRangeCurrent",
+      "to": "stat.eDamage.stoneUwCritCurrent",
+      "kind": "reads",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage Stone",
+            "cell": "EV5",
+            "kind": "formula"
+          }
+        ],
+        "formulaExcerpt": "=IFS(\n  OR($EG5, EV$2), ,\n  EPG_UW_TARGET_LEVEL(CA5+1, \"Spotlight\", \"Light Range\", $AW$25), ,\n  OR(DVT_UW_STAT(\"Spotlight\", \"Light Range\", CA5+1)=\"\", IDS_UW_COUNT()<=8), ,\n  TRUE, LET(\n    SubstatAssistCap, EPG_ASSIST_SUB_CAP($AM$24, CP5, $BA$48),\n    SLLR, STAT_UW_SL_FINAL_LR(DVT_UW_STAT(\"Spotlight\", \"Light Range\", CA5+1), $DI5),\n    SLB, LET(\n      Substat, $AK$30 + SubstatAssistCap * $AM$30,\n      STAT_UW_SL_FINAL_DMG(DVT_UW_STAT(\"Spotlight\", \"Multiplier\", BX5), SLLR, Substat, $BJ$39, $BK$39, $BK$33, AND($AW$64, $AW$71))*DL$5),\n    SL, LET(\n      SLQ, DVT_UW_STAT(\"Spotlight\", \"Quantity\", BZ5),\n      SLA, LET(\n        Substat, $AK$31 + SubstatAssistCap * $AM$31,\n        STAT_UW_SL_FINAL_ANGLE(DVT_UW_STAT(\"Spotlight\", \"Angle\", BY5), Substat)),\n      SLC, EP_UW_SL_COVERAGE(SLQ, SLA),\n      IF($BF$33, EP_SL_FINAL_BONUS(SLC, SLB), 1)),\n\n    SMB, STAT_UW_SM_FINAL_DMG(IF($BF$32, DVT_UW_STAT(\"Smart Missiles\", \"Damage\", BT5), 10), $AK$32, $BK$32),\n    SLM, IF(AND($BF$33, $BF$34), (EP_SLM_DPS(SMB, SLB, $BD$33, $DU$5, $AW$33, $AK$26+$AP$26, $AW$62, RIGHT($AS$62, 1)) * $BA$71), 0),\n\n    DW, DQ5,\n    CL, DR5,\n    SM, DS5,\n    PS, DV5,\n    ILM, DX5,\n      UWDMG, EP_UW_TOTAL_DAMAGE(DW, CL, SM, SLM, SL, PS, ILM, $DN$5*DM5*DL$5, $DO$5, 1),\n\n    $CT5 * ($CY5 * $DK5 * SL + UWDMG * $CZ5)*EC5)\n)"
+      }
+    },
+    {
+      "id": "e.current.candidate.eDamage.farmTimeDamage.reads.stat.eDamage.farmTimeDamageLab",
+      "from": "candidate.eDamage.farmTimeDamage",
+      "to": "stat.eDamage.farmTimeDamageLab",
+      "kind": "reads",
+      "evidence": {
+        "sourceCells": [
+          {
+            "sheet": "eDamage",
+            "cell": "GL5",
+            "kind": "formula"
+          }
+        ],
+        "formulaExcerpt": "=IF(BN$5+EPG_MODULE_LEVEL_LIMIT($AW$29)<=BN5, ,\nIFS(\n  OR($FG5, GL$2), ,\n  EPG_LEVEL_CHECK(BN5+1, BB$8, BC$8), ,\n  TRUE, LET(\n    Now, 1+(2%*BN5),\n    Next, 1+(2%*(BN5+1)),\n    Factor, Next/Now-1,\n    Cost, LET(\n    Dur, LABDURATION_SINGLE_ADJUSTED($GL$4, BN5+1)/$D$5,\n    CostD, IFERROR(LABCOST_SINGLE_ADJUSTED($GL$4, BN5)/(UNFORMAT_NUMBER(IDS_PS_PLAYERDATA(\"Coin / Hour\"))*23), 0),\n\n    IF(CostD<=0, Dur, SWITCH(UPPER($P$3),\n      \"FTO\", CostD,\n      \"DO\", Dur,\n      \"MAX(D,FT)\", MAX(Dur, CostD),\n      Dur+CostD))),\n  Factor/Cost)\n))"
       }
     }
   ]
