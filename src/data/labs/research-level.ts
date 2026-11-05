@@ -89,6 +89,14 @@ export function findCanonicalLabResearchSlug(key: string | null | undefined): st
   const byDisplay = findLabResearchByDisplayName(trimmed)
   if (byDisplay?.slug) return byDisplay.slug
 
+  // Historical planner labels can still be valid lab names while no longer
+  // being keys in persisted research levels. Resolve declared aliases before
+  // the legacy-name fallback, including Gold Bot - Duration and Swamp Rend.
+  const aliasKey = trimmed.toLowerCase().replace(/[\s-]+/g, '_')
+  const aliasSlug = ownLookup(CANONICAL_LAB_SLUG_BY_ALIAS, aliasKey)
+  const byAlias = aliasSlug ? findLabResearchBySlug(aliasSlug) : null
+  if (byAlias?.slug) return byAlias.slug
+
   return isLabsResearchLabName(trimmed) ? trimmed : null
 }
 

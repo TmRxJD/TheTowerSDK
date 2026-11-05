@@ -14,6 +14,19 @@ import {
   LAB_RESEARCH_SLUG_TO_INDEX,
 } from '../../src/data/labs/research'
 import { SRC } from '../helpers/paths'
+import { findCanonicalLabResearchSlug, normalizeLabsLabLevelMap } from '../../src/data/labs/research-level'
+
+describe('historical lab labels resolve to stored research keys', () => {
+  it.each([
+    ['Super Crit Multi', 'super_crit_mult'],
+    ['Swamp Rend', 'swamp_rend_basic_enemies'],
+    ['Gold Bot - Duration', 'golden_bot_duration'],
+    ['Gold Bot - Cooldown', 'golden_bot_cooldown'],
+  ])('resolves %s without leaving its old label as a separate key', (label, slug) => {
+    expect(findCanonicalLabResearchSlug(label)).toBe(slug)
+    expect(normalizeLabsLabLevelMap({ [label]: 7, [slug]: 5 })).toEqual({ [slug]: 7 })
+  })
+})
 
 /**
  * labs-research.ts is hand-owned; labs-research-data.ts is generated.
