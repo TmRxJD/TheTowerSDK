@@ -46,6 +46,18 @@ type CatalogRow = {
 
 const rows = (RELIC_IMPORT_CATALOG as CatalogRow[]).filter(row => row?.label)
 
+it('retains the existing template IDs for the reviewed Epic relics', () => {
+  const ids = [
+    114, 116, 118, 120, 122, 124, 126, 128, 130, 132, 136, 138, 140, 143, 144,
+    151, 152, 154, 157, 158, 162, 164, 166, 168, 170, 172, 184, 186, 188,
+  ]
+  const templates = new Map(RELIC_TEMPLATES.map(row => [row.id, row.rarity]))
+  for (const suffix of ids) {
+    const id = `1-Rare-${suffix}`
+    expect(templates.get(id), id).toBe('Epic')
+  }
+})
+
 describe('the benefitType enum', () => {
   it('resolves each value to exactly one effect across the whole catalog', () => {
     const effects = new Map<number, Set<string>>()

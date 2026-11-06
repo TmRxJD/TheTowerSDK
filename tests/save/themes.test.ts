@@ -20,6 +20,18 @@ describe('themes-from-save', () => {
     expect(names).toContain('Star')
   })
 
+  it.each([
+    ['towerUnlocked', 84, 'Fractal Tower'],
+    ['backgroundUnlocked', 57, 'Fairy Forest'],
+    ['backgroundUnlocked', 58, 'Steampunk'],
+    ['backgroundUnlocked', 59, 'Fractals'],
+    ['menuUnlocked', 11, 'Fairy Forest'],
+    ['profileBannerUnlocked', 12, 'Fairy Forest'],
+  ] as const)('reads %s slot %i as %s', (key, slot, label) => {
+    const flags = Array.from({ length: slot + 1 }, (_, index) => index === slot)
+    expect(readCollectedThemeNamesFromSaveRoot({ [key]: flags })).toEqual([label])
+  })
+
   it('returns empty list when save has no unlock arrays', () => {
     expect(readCollectedThemeNamesFromSaveRoot({})).toEqual([])
     expect(readCollectedThemeNamesFromSaveRoot(null)).toEqual([])
